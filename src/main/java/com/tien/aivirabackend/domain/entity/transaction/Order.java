@@ -1,0 +1,75 @@
+package com.tien.aivirabackend.domain.entity.transaction;
+
+import com.tien.aivirabackend.constant.OrderStatus;
+import com.tien.aivirabackend.domain.entity.BaseEntity;
+import com.tien.aivirabackend.domain.entity.transaction.payment.Payment;
+import com.tien.aivirabackend.domain.entity.user.Address;
+import com.tien.aivirabackend.domain.entity.user.User;
+import jakarta.persistence.*;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "orders")
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class Order extends BaseEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
+
+    @Column(name = "order_code", nullable = false, unique = true, length = 50)
+    String orderCode; // mã đơn hiển thị cho user
+
+    @Column(name = "subtotal", nullable = false, precision = 19, scale = 2)
+    BigDecimal subtotal;
+
+    @Column(name = "shipping_fee", nullable = false, precision = 19, scale = 2)
+    @Builder.Default
+    BigDecimal shippingFee = BigDecimal.ZERO;
+
+    @Column(name = "discount_amount", nullable = false, precision = 19, scale = 2)
+    @Builder.Default
+    BigDecimal discountAmount = BigDecimal.ZERO;
+
+    @Column(name = "total_amount", nullable = false, precision = 19, scale = 2)
+    BigDecimal totalAmount;
+
+    @Column(name = "coupon_code", length = 50)
+    String couponCode;
+
+    @Column(length = 500)
+    String notes;
+
+    @Column(name = "cancel_reason", length = 500)
+    String cancelReason;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
+    @Builder.Default
+    OrderStatus orderStatus = OrderStatus.PENDING;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "address_id", nullable = false)
+    Address shippingAddress;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    List<OrderItem> items = new ArrayList<>();
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    List<Payment> payments = new ArrayList<>();
+}

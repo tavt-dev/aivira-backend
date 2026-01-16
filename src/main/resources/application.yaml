@@ -1,1 +1,25 @@
-spring.application.name=aivira-backend
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/aivira
+      ?useSSL=false
+      &allowPublicKeyRetrieval=true
+      &serverTimezone=Asia/Ho_Chi_Minh
+      &characterEncoding=utf8
+      &useUnicode=true
+    username: root
+    password: 814362
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
