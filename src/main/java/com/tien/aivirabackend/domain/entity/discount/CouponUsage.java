@@ -1,6 +1,7 @@
 package com.tien.aivirabackend.domain.entity.discount;
 
 
+import com.tien.aivirabackend.domain.entity.BaseEntity;
 import com.tien.aivirabackend.domain.entity.transaction.Order;
 import com.tien.aivirabackend.domain.entity.user.User;
 import jakarta.persistence.*;
@@ -18,7 +19,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CouponUsage {
+public class CouponUsage extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;

@@ -7,7 +7,8 @@ import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 
-@Entity(name = "product_variations")
+@Entity
+@Table(name = "product_variations")
 @Getter
 @Setter
 @Builder

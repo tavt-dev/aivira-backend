@@ -1,5 +1,6 @@
 package com.tien.aivirabackend.domain.entity.review;
 
+import com.tien.aivirabackend.domain.entity.BaseEntity;
 import com.tien.aivirabackend.domain.entity.catalog.Product;
 import com.tien.aivirabackend.domain.entity.catalog.ProductVariation;
 import com.tien.aivirabackend.domain.entity.transaction.Order;
@@ -21,7 +22,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Review {
+public class Review extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
@@ -47,6 +48,10 @@ public class Review {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
+    Product product;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_variation_id", nullable = false)

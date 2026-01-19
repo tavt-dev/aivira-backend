@@ -2,6 +2,7 @@ package com.tien.aivirabackend.domain.entity.discount;
 
 import com.tien.aivirabackend.constant.PromotionScope;
 import com.tien.aivirabackend.constant.PromotionType;
+import com.tien.aivirabackend.domain.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -17,7 +18,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Promotion {
+public class Promotion extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;

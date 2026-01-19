@@ -1,11 +1,13 @@
 package com.tien.aivirabackend.domain.entity.catalog;
 
 import com.tien.aivirabackend.domain.entity.BaseEntity;
+import com.tien.aivirabackend.domain.entity.review.Review;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -85,9 +87,13 @@ public class Product extends BaseEntity {
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
-    Set<ProductImage> productImages = Set.of();
+    Set<ProductImage> productImages = new HashSet<>();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
-    Set<ProductVariation> productVariations = Set.of();
+    Set<ProductVariation> productVariations = new HashSet<>();
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    Set<Review> reviews = new HashSet<>();
 }

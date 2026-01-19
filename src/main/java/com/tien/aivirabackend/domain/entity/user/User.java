@@ -4,6 +4,7 @@ import com.tien.aivirabackend.constant.Gender;
 import com.tien.aivirabackend.constant.SignInProvider;
 import com.tien.aivirabackend.domain.entity.BaseEntity;
 import com.tien.aivirabackend.domain.entity.review.Review;
+import com.tien.aivirabackend.domain.entity.transaction.Cart;
 import com.tien.aivirabackend.domain.entity.transaction.Order;
 import jakarta.persistence.*;
 import lombok.*;
@@ -92,6 +93,9 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     Set<Address> addresses = new HashSet<>();
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    Cart cart;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default

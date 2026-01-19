@@ -1,5 +1,6 @@
 package com.tien.aivirabackend.domain.entity.transaction;
 
+import com.tien.aivirabackend.domain.entity.BaseEntity;
 import com.tien.aivirabackend.domain.entity.catalog.ProductVariation;
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,7 +14,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CartItem {
+public class CartItem extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
