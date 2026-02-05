@@ -80,6 +80,10 @@ public class User extends BaseEntity {
     @Builder.Default
     Boolean isDeleted = false;
 
+    @Builder.Default
+    @Column(name = "token_version", nullable = false)
+    Integer tokenVersion = 0;
+
     /* RELATIONSHIPS */
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

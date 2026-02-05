@@ -23,3 +23,18 @@ spring:
     properties:
       hibernate:
         format_sql: true
+security:
+  public-endpoints: /oauth2/**, /auth/**, /api/v1/auth/**, /api/v1/payment/**
+jwt:
+  signerKey: ${JWT_SIGNER_KEY:5Jf8K9mN2pQ3rT6vW8xZ1aB4cD7eF0gH3iJ6kL9mN2pQ5rT8vW1xZ4aB7cD0eF3gH6iJ9kL2mN5pQ8rT1vW4xZ7aB0cD3eF}
+  issuer: "aivira.com"
+  valid-duration: 3600
+  refreshable-duration: 36000
+
+app:
+  seed:
+    enabled: true
+    admin:
+      username: admin
+      password: admin
+      email: admin@yopmail.com

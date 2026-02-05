@@ -12,15 +12,16 @@ import java.util.UUID;
 @Table(name = "roles")
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Role {
 
     @Id
-    @GeneratedValue(strategy =  GenerationType.UUID)
+    @GeneratedValue(strategy =  GenerationType.IDENTITY)
     @Column(nullable = false, updatable = false)
-    UUID id;
+    Long id;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, unique = true)
