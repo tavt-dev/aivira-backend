@@ -6,11 +6,14 @@ import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.tien.aivirabackend.constant.TokenType;
+import com.tien.aivirabackend.domain.entity.InvalidatedToken;
 import com.tien.aivirabackend.domain.entity.user.Role;
 import com.tien.aivirabackend.domain.entity.user.User;
 import com.tien.aivirabackend.exception.AppException;
 import com.tien.aivirabackend.exception.errorCode.AuthErrorCode;
+import com.tien.aivirabackend.exception.errorCode.JwtErrorCode;
 import com.tien.aivirabackend.exception.errorCode.UserErrorCode;
+import com.tien.aivirabackend.repository.InvalidatedTokenRepository;
 import com.tien.aivirabackend.repository.UserRepository;
 import com.tien.aivirabackend.service.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +23,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -33,6 +37,8 @@ public class JwtServiceImpl implements JwtService {
     private static final String ROLE_PREFIX = "ROLE_";
     private static final String TOKEN_TYPE_CLAIM = "token_type";
     private static final String USER_ID_CLAIM = "user_id";
+    private static final String TOKEN_VERSION_CLAIM = "token_version";
+
     //private static final String ROLES_CLAIM = "roles";
 
     @NonFinal
@@ -52,6 +58,8 @@ public class JwtServiceImpl implements JwtService {
     private long refreshableDuration;
 
     private final UserRepository userRepository;
+
+    private final InvalidatedTokenRepository invalidatedTokenRepository;
 
     @Override
     public String createAccessToken(User user) {
@@ -79,12 +87,47 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public void revokeRefreshToken(String refreshToken) {
+        try{
+            SignedJWT signedJWT = SignedJWT.parse(refreshToken);
+            JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
 
+            String jti = claimsSet.getJWTID();
+            Date expirationTime = claimsSet.getExpirationTime();
+
+            if(jti == null && expirationTime == null){
+                log.warn("Token missing jti or expiration time");
+                throw new AppException(JwtErrorCode.TOKEN_INVALID);
+            }
+
+            // check if token is already revoked
+            if(invalidatedTokenRepository.existsById(jti)){
+                log.debug("Token already revoked: {}", jti);
+                throw new AppException(JwtErrorCode.TOKEN_REVOKED);
+            }
+
+            InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                    .id(jti)
+                    .expiryTime(expirationTime.toInstant())
+                    .build();
+
+            invalidatedTokenRepository.save(invalidatedToken);
+        } catch (ParseException e){
+            log.error("failed to parse JWT token for revocation", e);
+            throw new AppException(JwtErrorCode.TOKEN_MALFORMED);
+        }
     }
 
     @Override
     public void revokeAllTokensOfUser(Long userId) {
 
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND_BY_ID));
+
+        Integer tokenVersion = user.getTokenVersion();
+        user.setTokenVersion(tokenVersion == null ? 1 : tokenVersion + 1);
+        userRepository.save(user);
+
+        log.info("Incremented token version for user {} to {}", user.getUsername(), user.getTokenVersion());
     }
 
     private String createToken(User user, TokenType tokenType, long validDuration) {
@@ -111,48 +154,68 @@ public class JwtServiceImpl implements JwtService {
     }
 
     private SignedJWT verifyToken(String token, TokenType tokenType) {
-        try{
+        if (token == null || token.isBlank()) {
+            log.warn("Token is null or blank");
+            throw new AppException(JwtErrorCode.TOKEN_MISSING);
+        }
+
+        try {
             SignedJWT signedJWT = SignedJWT.parse(token);
 
             JWSVerifier verifier = new MACVerifier(getSignerKeyBytes());
-
             if (!signedJWT.verify(verifier)) {
                 log.warn("Token signature verification failed");
-                throw new AppException(AuthErrorCode.TOKEN_INVALID);
+                throw new AppException(JwtErrorCode.TOKEN_INVALID);
             }
 
             JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
 
             Date expirationTime = claimsSet.getExpirationTime();
-            if (expirationTime == null || new Date().after(expirationTime)) {
+            if (expirationTime == null || expirationTime.before(new Date())) {
                 log.warn("Token has expired");
-                throw new AppException(AuthErrorCode.TOKEN_EXPIRED);
+                throw new AppException(JwtErrorCode.TOKEN_EXPIRED);
             }
 
-            if(!issuer.equals(claimsSet.getIssuer())){
-                log.warn("Invalid token issuer: {}", claimsSet.getIssuer());
-                throw new AppException(AuthErrorCode.TOKEN_EXPIRED);
+            String tokenIssuer = claimsSet.getIssuer();
+            if (tokenIssuer == null || !issuer.equals(tokenIssuer)) {
+                log.warn("Invalid token issuer. Expected: {}, Found: {}", issuer, tokenIssuer);
+                throw new AppException(JwtErrorCode.TOKEN_INVALID);
+            }
+
+            if (tokenType == null) {
+                log.error("Expected tokenType is null (programming error)");
+                throw new AppException(JwtErrorCode.TOKEN_INVALID);
             }
 
             String tokenTypeInToken = claimsSet.getStringClaim(TOKEN_TYPE_CLAIM);
-
-            if (tokenType == null || !tokenTypeInToken.equals(tokenType.name())) {
-                log.error("JWT token type mismatch. Expected: {}, Found: {}", tokenType, tokenTypeInToken);
-                throw new AppException(AuthErrorCode.TOKEN_INVALID);
+            if (tokenTypeInToken == null || tokenTypeInToken.isBlank()) {
+                log.warn("Token missing '{}' claim", TOKEN_TYPE_CLAIM);
+                throw new AppException(JwtErrorCode.TOKEN_MALFORMED);
             }
 
-            log.debug("Token verified successfully for type: {}", tokenType);
+            if (!tokenType.name().equals(tokenTypeInToken)) {
+                log.warn("JWT token type mismatch. Expected: {}, Found: {}",
+                        tokenType.name(), tokenTypeInToken);
+                throw new AppException(JwtErrorCode.TOKEN_TYPE_INVALID);
+            }
 
+            log.debug("Token verified successfully for type: {}", tokenType.name());
             return signedJWT;
 
-        }
-        catch (JOSEException e) {
-            log.error("Failed to verify JWT token", e);
-            throw new AppException(AuthErrorCode.TOKEN_INVALID);
-        }
-        catch (Exception e) {
-            log.error("Failed to parse JWT token", e);
-            throw new AppException(AuthErrorCode.TOKEN_INVALID);
+        } catch (AppException e) {
+            throw e;
+
+        } catch (JOSEException e) {
+            log.error("JOSE error during JWT verification", e);
+            throw new AppException(JwtErrorCode.TOKEN_INVALID);
+
+        } catch (java.text.ParseException e) {
+            log.warn("JWT parse failed (malformed token)", e);
+            throw new AppException(JwtErrorCode.TOKEN_MALFORMED);
+
+        } catch (Exception e) {
+            log.error("Unexpected error during JWT verification", e);
+            throw new AppException(JwtErrorCode.TOKEN_INVALID);
         }
     }
 
@@ -169,6 +232,7 @@ public class JwtServiceImpl implements JwtService {
                 .jwtID(UUID.randomUUID().toString())
                 .claim(TOKEN_TYPE_CLAIM, tokenType.name())
                 .claim(USER_ID_CLAIM, user.getId())
+                .claim(TOKEN_VERSION_CLAIM, user.getTokenVersion() != null ? user.getTokenVersion() : 0)
                 .claim(SCOPE_CLAIM, buildRoles(user.getRoles()))
                 .build();
     }
