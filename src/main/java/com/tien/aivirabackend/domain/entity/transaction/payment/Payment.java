@@ -1,15 +1,17 @@
 package com.tien.aivirabackend.domain.entity.transaction.payment;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.*;
+
 import com.tien.aivirabackend.constant.PaymentMethod;
 import com.tien.aivirabackend.constant.PaymentStatus;
 import com.tien.aivirabackend.domain.entity.BaseEntity;
 import com.tien.aivirabackend.domain.entity.transaction.Order;
-import jakarta.persistence.*;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "payments")

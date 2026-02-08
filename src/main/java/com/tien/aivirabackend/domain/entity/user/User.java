@@ -1,19 +1,21 @@
 package com.tien.aivirabackend.domain.entity.user;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import jakarta.persistence.*;
+
 import com.tien.aivirabackend.constant.Gender;
 import com.tien.aivirabackend.constant.SignInProvider;
 import com.tien.aivirabackend.domain.entity.BaseEntity;
 import com.tien.aivirabackend.domain.entity.review.Review;
 import com.tien.aivirabackend.domain.entity.transaction.Cart;
 import com.tien.aivirabackend.domain.entity.transaction.Order;
-import jakarta.persistence.*;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -89,8 +91,7 @@ public class User extends BaseEntity {
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
     @Builder.Default
     Set<Role> roles = new HashSet<>();
 
@@ -109,4 +110,3 @@ public class User extends BaseEntity {
     @Builder.Default
     List<Review> reviews = new ArrayList<>();
 }
-

@@ -1,8 +1,10 @@
 package com.tien.aivirabackend.domain.entity.transaction;
 
+import jakarta.persistence.*;
+
 import com.tien.aivirabackend.domain.entity.BaseEntity;
 import com.tien.aivirabackend.domain.entity.catalog.ProductVariation;
-import jakarta.persistence.*;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 

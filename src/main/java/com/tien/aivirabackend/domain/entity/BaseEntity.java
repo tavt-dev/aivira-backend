@@ -1,12 +1,14 @@
 package com.tien.aivirabackend.domain.entity;
 
+import java.time.Instant;
+
 import jakarta.persistence.*;
-import lombok.*;
-import lombok.experimental.FieldDefaults;
+
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.Instant;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @MappedSuperclass
 @Getter

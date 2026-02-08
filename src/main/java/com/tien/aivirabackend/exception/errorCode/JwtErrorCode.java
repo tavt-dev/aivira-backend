@@ -1,9 +1,11 @@
 package com.tien.aivirabackend.exception.errorCode;
 
+import org.springframework.http.HttpStatus;
+
 import com.tien.aivirabackend.exception.ErrorCode;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 
 @Getter
 @RequiredArgsConstructor
@@ -17,7 +19,8 @@ public enum JwtErrorCode implements ErrorCode {
 
     REFRESH_TOKEN_EXPIRED("E2104", "Refresh token đã hết hạn. Vui lòng đăng nhập lại.", HttpStatus.UNAUTHORIZED),
     REFRESH_TOKEN_INVALID("E2105", "Refresh token không hợp lệ.", HttpStatus.UNAUTHORIZED),
-    REFRESH_TOKEN_REUSED("E2106", "Refresh token đã được sử dụng lại. Vui lòng đăng nhập lại.", HttpStatus.UNAUTHORIZED),
+    REFRESH_TOKEN_REUSED(
+            "E2106", "Refresh token đã được sử dụng lại. Vui lòng đăng nhập lại.", HttpStatus.UNAUTHORIZED),
 
     TOKEN_MISSING("E2107", "Thiếu token xác thực.", HttpStatus.UNAUTHORIZED),
     TOKEN_UNSUPPORTED("E2108", "Token không được hỗ trợ.", HttpStatus.UNAUTHORIZED),

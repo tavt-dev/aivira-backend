@@ -1,7 +1,9 @@
 package com.tien.aivirabackend.domain.entity.catalog;
 
-import com.tien.aivirabackend.domain.entity.BaseEntity;
 import jakarta.persistence.*;
+
+import com.tien.aivirabackend.domain.entity.BaseEntity;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -25,7 +27,7 @@ public class ProductImage extends BaseEntity {
     @Column(name = "image_public_id", nullable = false)
     String imagePublicId;
 
-    @Column(name="alt_text", length=255)
+    @Column(name = "alt_text", length = 255)
     String altText;
 
     /* DISPLAY ORDER */

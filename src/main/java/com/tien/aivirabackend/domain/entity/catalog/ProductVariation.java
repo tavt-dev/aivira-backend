@@ -1,11 +1,13 @@
 package com.tien.aivirabackend.domain.entity.catalog;
 
-import com.tien.aivirabackend.domain.entity.BaseEntity;
+import java.math.BigDecimal;
+
 import jakarta.persistence.*;
+
+import com.tien.aivirabackend.domain.entity.BaseEntity;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.math.BigDecimal;
 
 @Entity
 @Table(name = "product_variations")

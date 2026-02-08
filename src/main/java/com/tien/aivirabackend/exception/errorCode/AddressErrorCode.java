@@ -1,9 +1,11 @@
 package com.tien.aivirabackend.exception.errorCode;
 
+import org.springframework.http.HttpStatus;
+
 import com.tien.aivirabackend.exception.ErrorCode;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 
 @Getter
 @RequiredArgsConstructor

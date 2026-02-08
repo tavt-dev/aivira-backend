@@ -1,12 +1,14 @@
 package com.tien.aivirabackend.domain.entity.catalog;
 
-import com.tien.aivirabackend.domain.entity.BaseEntity;
-import jakarta.persistence.*;
-import lombok.*;
-import lombok.experimental.FieldDefaults;
-
 import java.util.HashSet;
 import java.util.Set;
+
+import jakarta.persistence.*;
+
+import com.tien.aivirabackend.domain.entity.BaseEntity;
+
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Entity
 @Table(name = "categories")
@@ -42,7 +44,7 @@ public class Category extends BaseEntity {
     Integer displayOrder = 0;
 
     /* CATEGORY TREE */
-    @ManyToOne(fetch =  FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     Category parentCategory;
 

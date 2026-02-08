@@ -1,18 +1,20 @@
 package com.tien.aivirabackend.domain.entity.review;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+
 import com.tien.aivirabackend.domain.entity.BaseEntity;
 import com.tien.aivirabackend.domain.entity.catalog.Product;
 import com.tien.aivirabackend.domain.entity.catalog.ProductVariation;
 import com.tien.aivirabackend.domain.entity.transaction.Order;
 import com.tien.aivirabackend.domain.entity.user.User;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "reviews")

@@ -1,9 +1,5 @@
 package com.tien.aivirabackend.config;
 
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
-import lombok.experimental.NonFinal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +15,10 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 
 @Configuration
 @EnableWebSecurity
@@ -35,30 +35,30 @@ public class SecurityConfig {
     @Value("${security.public-endpoints}")
     String[] publicEndpoints;
 
-//    @Value("${security.endpoints.user}")
-//    private String[] userEndpoints;
-//
-//    @Value("${security.endpoints.admin}")
-//    private String[] adminEndpoints;
+    //    @Value("${security.endpoints.user}")
+    //    private String[] userEndpoints;
+    //
+    //    @Value("${security.endpoints.admin}")
+    //    private String[] adminEndpoints;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
                 // Stateless
-                .sessionManagement(sm ->
-                        sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // Disable CSRF
                 .csrf(AbstractHttpConfigurer::disable)
                 // CORS
                 .cors(Customizer.withDefaults())
                 // Authorize requests
-                .authorizeHttpRequests(request -> request
-                        .requestMatchers(publicEndpoints).permitAll()
-//                        .requestMatchers(userEndpoints)
-//                        .hasAnyAuthority("USER", "ADMIN")
-//                        .requestMatchers(adminEndpoints)
-//                        .hasAuthority("ADMIN")
-                        .anyRequest().authenticated());
+                .authorizeHttpRequests(request -> request.requestMatchers(publicEndpoints)
+                        .permitAll()
+                        //                        .requestMatchers(userEndpoints)
+                        //                        .hasAnyAuthority("USER", "ADMIN")
+                        //                        .requestMatchers(adminEndpoints)
+                        //                        .hasAuthority("ADMIN")
+                        .anyRequest()
+                        .authenticated());
         httpSecurity.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwtConfigurer -> jwtConfigurer
                         .decoder(customJwtDecoder)
                         .jwtAuthenticationConverter(jwtAuthenticationConverter()))
@@ -80,6 +80,6 @@ public class SecurityConfig {
 
     @Bean
     PasswordEncoder passwordEncoder() {
-        return  new BCryptPasswordEncoder(10);
+        return new BCryptPasswordEncoder(10);
     }
 }

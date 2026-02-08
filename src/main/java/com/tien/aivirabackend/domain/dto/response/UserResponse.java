@@ -1,16 +1,17 @@
 package com.tien.aivirabackend.domain.dto.response;
 
+import java.time.Instant;
+import java.util.Set;
+
 import com.tien.aivirabackend.constant.Gender;
 import com.tien.aivirabackend.constant.SignInProvider;
 import com.tien.aivirabackend.domain.entity.user.Role;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-
-import java.time.Instant;
-import java.util.Set;
 
 @Data
 @Builder

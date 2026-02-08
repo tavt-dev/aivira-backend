@@ -1,14 +1,16 @@
 package com.tien.aivirabackend.domain.entity.catalog;
 
-import com.tien.aivirabackend.domain.entity.BaseEntity;
-import com.tien.aivirabackend.domain.entity.review.Review;
-import jakarta.persistence.*;
-import lombok.*;
-import lombok.experimental.FieldDefaults;
-
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
+
+import jakarta.persistence.*;
+
+import com.tien.aivirabackend.domain.entity.BaseEntity;
+import com.tien.aivirabackend.domain.entity.review.Review;
+
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Entity
 @Table(name = "products")
@@ -50,8 +52,8 @@ public class Product extends BaseEntity {
     String thumbnailPublicId;
 
     /* PRICING */
-    @Column(nullable = false, precision =  19, scale = 2)
-    BigDecimal price;// giá base
+    @Column(nullable = false, precision = 19, scale = 2)
+    BigDecimal price; // giá base
 
     @Column(name = "original_price", precision = 19, scale = 2)
     BigDecimal originalPrice;
@@ -63,7 +65,7 @@ public class Product extends BaseEntity {
     BigDecimal weight; // in kg
 
     /* INVENTORY */
-    @Column(name ="stock_quantity", nullable = false)
+    @Column(name = "stock_quantity", nullable = false)
     @Builder.Default
     Integer stockQuantity = 0;
 

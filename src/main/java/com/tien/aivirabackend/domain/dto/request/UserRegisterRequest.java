@@ -1,19 +1,19 @@
 package com.tien.aivirabackend.domain.dto.request;
 
+import static lombok.AccessLevel.PRIVATE;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 @Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@FieldDefaults(level = lombok.AccessLevel.PRIVATE)
+@FieldDefaults(level = PRIVATE)
 public class UserRegisterRequest {
     @Size(min = 4, message = "Tên đăng nhập không được nhỏ hơn 4 ký tự")
     String username;

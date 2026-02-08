@@ -1,5 +1,14 @@
 package com.tien.aivirabackend.service.impl;
 
+import java.text.ParseException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
@@ -16,17 +25,10 @@ import com.tien.aivirabackend.exception.errorCode.UserErrorCode;
 import com.tien.aivirabackend.repository.InvalidatedTokenRepository;
 import com.tien.aivirabackend.repository.UserRepository;
 import com.tien.aivirabackend.service.JwtService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-
-import java.text.ParseException;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -39,7 +41,7 @@ public class JwtServiceImpl implements JwtService {
     private static final String USER_ID_CLAIM = "user_id";
     private static final String TOKEN_VERSION_CLAIM = "token_version";
 
-    //private static final String ROLES_CLAIM = "roles";
+    // private static final String ROLES_CLAIM = "roles";
 
     @NonFinal
     @Value("${jwt.signerKey}")
@@ -87,20 +89,20 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public void revokeRefreshToken(String refreshToken) {
-        try{
+        try {
             SignedJWT signedJWT = SignedJWT.parse(refreshToken);
             JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
 
             String jti = claimsSet.getJWTID();
             Date expirationTime = claimsSet.getExpirationTime();
 
-            if(jti == null && expirationTime == null){
+            if (jti == null && expirationTime == null) {
                 log.warn("Token missing jti or expiration time");
                 throw new AppException(JwtErrorCode.TOKEN_INVALID);
             }
 
             // check if token is already revoked
-            if(invalidatedTokenRepository.existsById(jti)){
+            if (invalidatedTokenRepository.existsById(jti)) {
                 log.debug("Token already revoked: {}", jti);
                 throw new AppException(JwtErrorCode.TOKEN_REVOKED);
             }
@@ -111,17 +113,17 @@ public class JwtServiceImpl implements JwtService {
                     .build();
 
             invalidatedTokenRepository.save(invalidatedToken);
-        } catch (ParseException e){
+        } catch (ParseException e) {
             log.error("failed to parse JWT token for revocation", e);
             throw new AppException(JwtErrorCode.TOKEN_MALFORMED);
         }
     }
 
     @Override
-    public void revokeAllTokensOfUser(Long userId) {
+    public void revokeAllTokensOfUser(String userId) {
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND_BY_ID));
+        User user =
+                userRepository.findById(userId).orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND_BY_ID));
 
         Integer tokenVersion = user.getTokenVersion();
         user.setTokenVersion(tokenVersion == null ? 1 : tokenVersion + 1);
@@ -194,8 +196,7 @@ public class JwtServiceImpl implements JwtService {
             }
 
             if (!tokenType.name().equals(tokenTypeInToken)) {
-                log.warn("JWT token type mismatch. Expected: {}, Found: {}",
-                        tokenType.name(), tokenTypeInToken);
+                log.warn("JWT token type mismatch. Expected: {}, Found: {}", tokenType.name(), tokenTypeInToken);
                 throw new AppException(JwtErrorCode.TOKEN_TYPE_INVALID);
             }
 
@@ -244,7 +245,7 @@ public class JwtServiceImpl implements JwtService {
 
         return roles.stream()
                 .filter(Objects::nonNull)
-                .map(Role::getCode)              // "USER", "ADMIN"
+                .map(Role::getCode) // "USER", "ADMIN"
                 .filter(Objects::nonNull)
                 .map(Enum::name)
                 .map(code -> ROLE_PREFIX + code) // "ROLE_USER", "ROLE_ADMIN"

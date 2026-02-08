@@ -1,12 +1,13 @@
 package com.tien.aivirabackend.domain.entity.user;
 
-import com.tien.aivirabackend.constant.PredefinedRole;
+import java.util.Set;
+
 import jakarta.persistence.*;
+
+import com.tien.aivirabackend.constant.PredefinedRole;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.Set;
-import java.util.UUID;
 
 @Entity
 @Table(name = "roles")
@@ -19,7 +20,7 @@ import java.util.UUID;
 public class Role {
 
     @Id
-    @GeneratedValue(strategy =  GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false, updatable = false)
     Long id;
 
@@ -33,4 +34,3 @@ public class Role {
     @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
     Set<User> users;
 }
-

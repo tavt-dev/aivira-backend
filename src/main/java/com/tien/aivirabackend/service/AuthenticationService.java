@@ -9,4 +9,10 @@ public interface AuthenticationService {
     AuthenticationResponse authenticate(AuthenticationRequest request);
 
     UserResponse register(UserRegisterRequest request);
+
+    AuthenticationResponse refreshToken(String refreshToken);
+
+    void logout(String refreshToken);
+
+    void logoutAllSessions();
 }

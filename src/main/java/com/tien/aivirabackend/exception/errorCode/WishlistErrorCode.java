@@ -1,4 +1,3 @@
 package com.tien.aivirabackend.exception.errorCode;
 
-public enum WishlistErrorCode {
-}
+public enum WishlistErrorCode {}

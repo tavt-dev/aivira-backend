@@ -1,9 +1,9 @@
 package com.tien.aivirabackend.exception;
 
-import com.tien.aivirabackend.domain.dto.ApiResponse;
-import com.tien.aivirabackend.exception.errorCode.AuthErrorCode;
-import com.tien.aivirabackend.exception.errorCode.CommonErrorCode;
-import lombok.extern.slf4j.Slf4j;
+import java.util.HashMap;
+import java.util.Map;
+import javax.security.sasl.AuthenticationException;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -16,31 +16,29 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import javax.security.sasl.AuthenticationException;
-import java.util.HashMap;
-import java.util.Map;
+import com.tien.aivirabackend.domain.dto.ApiResponse;
+import com.tien.aivirabackend.exception.errorCode.AccountErrorCode;
+import com.tien.aivirabackend.exception.errorCode.AuthErrorCode;
+import com.tien.aivirabackend.exception.errorCode.CommonErrorCode;
+
+import lombok.extern.slf4j.Slf4j;
 
 @RestControllerAdvice
 @Slf4j
-    public class GlobalExceptionHandler {
+public class GlobalExceptionHandler {
 
-    //Core - Custom Application Exception Handler
+    // Core - Custom Application Exception Handler
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ApiResponse<Map<String, Object>>> handleAppException(AppException ex) {
 
-        log.warn("AppException [{}] {}",
-                ex.getErrorCode().getCode(), ex.getMessage());
+        log.warn("AppException [{}] {}", ex.getErrorCode().getCode(), ex.getMessage());
 
-        return ResponseEntity
-                .status(ex.getErrorCode().getHttpStatus())
+        return ResponseEntity.status(ex.getErrorCode().getHttpStatus())
                 .body(ApiResponse.error(
-                        ex.getErrorCode().getCode(),
-                        ex.getMessage(),
-                        ex.hasDetails() ? ex.getDetails() : null
-                ));
+                        ex.getErrorCode().getCode(), ex.getMessage(), ex.hasDetails() ? ex.getDetails() : null));
     }
 
-    //SECURITY
+    // SECURITY
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiResponse<Void>> handleBadCredentials() {
@@ -59,38 +57,32 @@ import java.util.Map;
 
     @ExceptionHandler(LockedException.class)
     public ResponseEntity<ApiResponse<Void>> handleLocked() {
-        return build(AuthErrorCode.ACCOUNT_LOCKED);
+        return build(AccountErrorCode.ACCOUNT_LOCKED);
     }
 
     @ExceptionHandler(DisabledException.class)
     public ResponseEntity<ApiResponse<Void>> handleDisabled() {
-        return build(AuthErrorCode.ACCOUNT_DISABLED);
+        return build(AccountErrorCode.ACCOUNT_DISABLED);
     }
 
     /* ================= VALIDATION ================= */
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidation(
-            MethodArgumentNotValidException ex) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidation(MethodArgumentNotValidException ex) {
 
         Map<String, String> errors = new HashMap<>();
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
             errors.put(error.getField(), error.getDefaultMessage());
         }
 
-        return ResponseEntity
-                .status(CommonErrorCode.VALIDATION_FAILED.getHttpStatus())
+        return ResponseEntity.status(CommonErrorCode.VALIDATION_FAILED.getHttpStatus())
                 .body(ApiResponse.error(
                         CommonErrorCode.VALIDATION_FAILED.getCode(),
                         CommonErrorCode.VALIDATION_FAILED.getMessage(),
-                        errors
-                ));
+                        errors));
     }
 
-    @ExceptionHandler({
-            MissingServletRequestParameterException.class,
-            MethodArgumentTypeMismatchException.class
-    })
+    @ExceptionHandler({MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class})
     public ResponseEntity<ApiResponse<Void>> handleBadRequest() {
         return build(CommonErrorCode.INVALID_INPUT);
     }
@@ -106,11 +98,7 @@ import java.util.Map;
     /* ================= UTIL ================= */
 
     private ResponseEntity<ApiResponse<Void>> build(ErrorCode errorCode) {
-        return ResponseEntity
-                .status(errorCode.getHttpStatus())
-                .body(ApiResponse.error(
-                        errorCode.getCode(),
-                        errorCode.getMessage()
-                ));
+        return ResponseEntity.status(errorCode.getHttpStatus())
+                .body(ApiResponse.error(errorCode.getCode(), errorCode.getMessage()));
     }
 }

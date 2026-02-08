@@ -1,9 +1,11 @@
 package com.tien.aivirabackend.exception.errorCode;
 
+import org.springframework.http.HttpStatus;
+
 import com.tien.aivirabackend.exception.ErrorCode;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 
 @Getter
 @RequiredArgsConstructor
@@ -26,7 +28,8 @@ public enum UserErrorCode implements ErrorCode {
     PROFILE_UPDATE_FAILED("E3200", "Cập nhật hồ sơ thất bại.", HttpStatus.INTERNAL_SERVER_ERROR),
     AVATAR_UPLOAD_FAILED("E3201", "Tải ảnh đại diện thất bại.", HttpStatus.INTERNAL_SERVER_ERROR),
     AVATAR_TOO_LARGE("E3202", "Kích thước ảnh đại diện vượt quá giới hạn cho phép.", HttpStatus.BAD_REQUEST),
-    INVALID_AVATAR_FORMAT("E3203", "Định dạng ảnh đại diện không hợp lệ. Hỗ trợ: JPG, PNG, GIF.", HttpStatus.BAD_REQUEST),
+    INVALID_AVATAR_FORMAT(
+            "E3203", "Định dạng ảnh đại diện không hợp lệ. Hỗ trợ: JPG, PNG, GIF.", HttpStatus.BAD_REQUEST),
     PROFILE_INCOMPLETE("E3204", "Vui lòng hoàn thiện hồ sơ của bạn.", HttpStatus.BAD_REQUEST),
 
     // === E33xx: Lỗi vai trò / phân quyền người dùng (User Role/Permission Errors) ===

@@ -1,10 +1,11 @@
 package com.tien.aivirabackend.domain.entity.transaction;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.*;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.math.BigDecimal;
 
 @Entity
 @Table(name = "order_items")

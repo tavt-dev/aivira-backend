@@ -1,6 +1,7 @@
 package com.tien.aivirabackend.domain.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -13,11 +14,11 @@ import lombok.experimental.FieldDefaults;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
 
-    boolean success;      // true | false
-    String errorCode;     // null nếu success
-    String message;       // success hoặc error message
-    T data;               // payload
-    long timestamp;       // epoch millis
+    boolean success; // true | false
+    String errorCode; // null nếu success
+    String message; // success hoặc error message
+    T data; // payload
+    long timestamp; // epoch millis
 
     /* ================= SUCCESS ================= */
 

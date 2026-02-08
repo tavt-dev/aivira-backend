@@ -4,18 +4,18 @@ import com.nimbusds.jwt.SignedJWT;
 import com.tien.aivirabackend.domain.entity.user.User;
 
 public interface JwtService {
-    //Tạo Token
+    // Tạo Token
     String createAccessToken(User user);
 
-    //Làm mới Token
+    // Làm mới Token
     String createRefreshToken(User user);
 
-    //Xác thực Token
+    // Xác thực Token
     SignedJWT verifyAccessToken(String token);
 
     SignedJWT verifyRefreshToken(String token);
 
     void revokeRefreshToken(String refreshToken);
 
-    void revokeAllTokensOfUser(Long userId);
+    void revokeAllTokensOfUser(String userId);
 }

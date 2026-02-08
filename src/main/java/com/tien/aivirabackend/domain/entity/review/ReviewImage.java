@@ -1,7 +1,9 @@
 package com.tien.aivirabackend.domain.entity.review;
 
-import com.tien.aivirabackend.domain.entity.BaseEntity;
 import jakarta.persistence.*;
+
+import com.tien.aivirabackend.domain.entity.BaseEntity;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 

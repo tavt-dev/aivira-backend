@@ -1,14 +1,16 @@
 package com.tien.aivirabackend.domain.entity.discount;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.*;
+
 import com.tien.aivirabackend.constant.PromotionScope;
 import com.tien.aivirabackend.constant.PromotionType;
 import com.tien.aivirabackend.domain.entity.BaseEntity;
-import jakarta.persistence.*;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "promotions")

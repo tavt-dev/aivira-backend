@@ -1,15 +1,17 @@
 package com.tien.aivirabackend.domain.entity.discount;
 
-import com.tien.aivirabackend.constant.CouponType;
-import com.tien.aivirabackend.domain.entity.BaseEntity;
-import jakarta.persistence.*;
-import lombok.*;
-import lombok.experimental.FieldDefaults;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import jakarta.persistence.*;
+
+import com.tien.aivirabackend.constant.CouponType;
+import com.tien.aivirabackend.domain.entity.BaseEntity;
+
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Entity
 @Table(name = "coupons")

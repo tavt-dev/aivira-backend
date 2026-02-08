@@ -9,5 +9,4 @@ public class AiviraBackendApplication {
     public static void main(String[] args) {
         SpringApplication.run(AiviraBackendApplication.class, args);
     }
-
 }
