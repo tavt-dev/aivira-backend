@@ -1,5 +1,6 @@
 package com.tien.aivirabackend.service.impl;
 
+import com.tien.aivirabackend.domain.dto.response.ActiveSessionResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
 
 @Service
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
@@ -69,7 +72,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         String accessToken = jwtService.createAccessToken(user);
-        String refreshToken = jwtService.createRefreshToken(user, deviceInfo, ipAddress. mull);
+        String refreshToken = jwtService.createRefreshToken(user, deviceInfo, ipAddress, null);
 
         log.info("User: {} authenticated successfully.", request.getUsername());
 
@@ -122,7 +125,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     @Transactional
-    public AuthenticationResponse refreshToken(String refreshToken) {
+    public AuthenticationResponse refreshToken(String refreshToken, String deviceInfo, String ipAddress) {
         SignedJWT signedJWT = jwtService.verifyRefreshToken(refreshToken);
 
         try {
@@ -144,11 +147,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 throw new AppException(AccountErrorCode.ACCOUNT_LOCKED);
             }
 
+            String familyId = jwtService.getTokenFamilyId(refreshToken);
+
             // Revoke old refresh token
             jwtService.revokeRefreshToken(refreshToken);
 
             String newAccessToken = jwtService.createAccessToken(user);
-            String newRefreshToken = jwtService.createRefreshToken(user);
+            String newRefreshToken = jwtService.createRefreshToken(user, deviceInfo, ipAddress, familyId);
+
             log.info("Refresh token successful for user: {}", username);
 
             return AuthenticationResponse.builder()
@@ -172,7 +178,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     @Transactional
-    public void logoutAllSessions() {
+    public void logoutAll() {
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -183,5 +189,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         jwtService.revokeAllTokensOfUser(user.getId());
 
         log.info("All sessions logged out successfully for user: {}", username);
+    }
+
+    @Override
+    public List<ActiveSessionResponse> getActiveSessions(String currentSessionId) {
+        return List.of();
+    }
+
+    @Override
+    public void revokeSession(String sessionId) {
+
     }
 }

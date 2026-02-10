@@ -127,8 +127,8 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     @Transactional
-    public SignedJWT verifyRefreshToken(String token) {
-        SignedJWT signedJWT = verifyToken(token, TokenType.REFRESH);
+    public SignedJWT verifyRefreshToken(String refreshToken) {
+        SignedJWT signedJWT = verifyToken(refreshToken, TokenType.REFRESH);
 
         try{
             JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
@@ -230,6 +230,17 @@ public class JwtServiceImpl implements JwtService {
                 RevocationReason.USER_LOGOUT_ALL
         );
         log.info("Incremented token version for user {} to {}", user.getUsername(), user.getTokenVersion());
+    }
+
+    @Override
+    public String getTokenFamilyId(String refreshToken) {
+        SignedJWT signedJWT = verifyToken(refreshToken, TokenType.REFRESH);
+        try{
+            return signedJWT.getJWTClaimsSet().getStringClaim(FAMILY_ID_CLAIM);
+        } catch (ParseException e) {
+            log.error("Failed to parse refresh token claims to get family ID", e);
+            throw new AppException(JwtErrorCode.TOKEN_INVALID);
+        }
     }
 
     @Override

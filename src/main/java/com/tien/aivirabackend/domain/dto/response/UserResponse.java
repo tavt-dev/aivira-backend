@@ -32,7 +32,7 @@ public class UserResponse {
 
     String avatarUrl;
 
-    Set<Role> roles;
+    Set<RoleResponse> roles;
     Instant createdAt;
     Instant updatedAt;
 }

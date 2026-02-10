@@ -16,11 +16,13 @@ public interface JwtService {
     // Xác thực Token
     SignedJWT verifyAccessToken(String token);
 
-    SignedJWT verifyRefreshToken(String token);
+    SignedJWT verifyRefreshToken(String refreshToken);
 
     void revokeRefreshToken(String refreshToken);
 
     void revokeAllTokensOfUser(String userId);
+
+    String getTokenFamilyId(String refreshToken);
 
     void revokeSession(String userId, String sessionId);
 
