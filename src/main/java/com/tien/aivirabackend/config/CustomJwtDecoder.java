@@ -82,17 +82,18 @@ public class CustomJwtDecoder implements JwtDecoder {
             // Check token version
             Long tokenVersion = claims.getLongClaim(TOKEN_VERSION_CLAIM);
             String userId = claims.getStringClaim(USER_ID_CLAIM);
-            if (userId != null && userId != null) {
-                var userOpt = userRepository.findById(userId);
-                if (userOpt.isPresent()) {
-                    Integer currentTokenVersion = userOpt.get().getTokenVersion();
-                    if (currentTokenVersion != null || tokenVersion.intValue() < currentTokenVersion) {
+
+            if (userId != null && tokenVersion != null) {
+                userRepository.findById(userId).ifPresent(user -> {
+                    Integer currentTokenVersion = user.getTokenVersion();
+                    if (currentTokenVersion != null && tokenVersion < currentTokenVersion.longValue()) {
                         log.warn("Token version mismatch. Token has old version: {}, current: {}",
                                 tokenVersion, currentTokenVersion);
                         throw new AppException(JwtErrorCode.TOKEN_REVOKED);
                     }
-                }
+                });
             }
+
 
             // Build Spring Security Jwt object
             Date iat = claims.getIssueTime();

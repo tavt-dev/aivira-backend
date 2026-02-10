@@ -24,7 +24,8 @@ public enum JwtErrorCode implements ErrorCode {
 
     TOKEN_MISSING("E2107", "Thiếu token xác thực.", HttpStatus.UNAUTHORIZED),
     TOKEN_UNSUPPORTED("E2108", "Token không được hỗ trợ.", HttpStatus.UNAUTHORIZED),
-    TOKEN_TYPE_INVALID("E2109", "Loại token không hợp lệ.", HttpStatus.UNAUTHORIZED);
+    TOKEN_TYPE_INVALID("E2109", "Loại token không hợp lệ.", HttpStatus.UNAUTHORIZED),
+    TOKEN_HASHING_FAILED("E2110", "Lỗi trong quá trình băm token.", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String code;
     private final String message;

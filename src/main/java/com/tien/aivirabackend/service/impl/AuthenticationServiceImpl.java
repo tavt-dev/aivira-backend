@@ -44,7 +44,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     JwtService jwtService;
 
     @Override
-    public AuthenticationResponse authenticate(AuthenticationRequest request) {
+    @Transactional
+    public AuthenticationResponse authenticate(AuthenticationRequest request, String deviceInfo, String ipAddress) {
         User user = userRepository
                 .findByUsername(request.getUsername())
                 .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
@@ -68,7 +69,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         String accessToken = jwtService.createAccessToken(user);
-        String refreshToken = jwtService.createRefreshToken(user);
+        String refreshToken = jwtService.createRefreshToken(user, deviceInfo, ipAddress. mull);
 
         log.info("User: {} authenticated successfully.", request.getUsername());
 
