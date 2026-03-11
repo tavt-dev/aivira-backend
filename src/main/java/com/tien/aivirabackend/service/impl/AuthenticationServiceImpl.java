@@ -1,6 +1,13 @@
 package com.tien.aivirabackend.service.impl;
 
+import com.tien.aivirabackend.domain.dto.request.*;
 import com.tien.aivirabackend.domain.dto.response.ActiveSessionResponse;
+import com.tien.aivirabackend.constant.OtpType;
+import com.tien.aivirabackend.domain.entity.user.UserOtp;
+import com.tien.aivirabackend.exception.errorCode.OtpErrorCode;
+import com.tien.aivirabackend.repository.UserOtpRepository;
+import com.tien.aivirabackend.service.EmailService;
+import com.tien.aivirabackend.service.UserOtpService;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -10,8 +17,6 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.tien.aivirabackend.constant.PredefinedRole;
 import com.tien.aivirabackend.constant.SignInProvider;
-import com.tien.aivirabackend.domain.dto.request.AuthenticationRequest;
-import com.tien.aivirabackend.domain.dto.request.UserRegisterRequest;
 import com.tien.aivirabackend.domain.dto.response.AuthenticationResponse;
 import com.tien.aivirabackend.domain.dto.response.UserResponse;
 import com.tien.aivirabackend.domain.entity.user.User;
@@ -45,6 +50,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     UserMapper userMapper;
 
     JwtService jwtService;
+
+    UserOtpService userOtpService;
+
+    UserOtpRepository userOtpRepository;
+
+    EmailService emailService;
 
     @Override
     @Transactional
@@ -85,6 +96,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
+    @Transactional
     public UserResponse register(UserRegisterRequest request) {
         // Validate
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -117,6 +129,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         user.getRoles().add(role);
 
         User savedUser = userRepository.save(user);
+
+        // Create and send registration OTP
+        userOtpService.deactivateOldOtps(savedUser.getId(), OtpType.REGISTER);
+        UserOtp otp = userOtpService.createOtp(savedUser, OtpType.REGISTER, 10);
+        emailService.sendRegistrationOtpByEmail(savedUser.getEmail(), savedUser.getUsername(), otp.getOtpCode());
 
         log.info("User registered successfully. Username: {}", savedUser.getUsername());
 
@@ -199,5 +216,84 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public void revokeSession(String sessionId) {
 
+    }
+
+    @Override
+    @Transactional
+    public void verifyUser(VerifyUserRequest request) {
+        User user = userRepository
+                .findByEmail(request.getEmail())
+                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
+
+        var userOtp = userOtpService.findLatestOtp(user, OtpType.REGISTER);
+
+        userOtpService.validateOtp(userOtp, request.getOtpCode());
+
+        user.setEmailVerified(true);
+        user.setIsActive(true);
+        userRepository.save(user);
+
+        log.info("User email verified successfully: {}", request.getEmail());
+    }
+
+    @Override
+    @Transactional
+    public void resendVerificationOtp(ResendOtpRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
+        if(user.getIsActive() && user.getEmailVerified()) {
+            log.warn("User: {} is already verified and active. No OTP sent.", request.getEmail());
+            throw new AppException(UserErrorCode.USER_ALREADY_VERIFIED);
+        }
+
+        userOtpService.checkOtpFrequency(user, OtpType.REGISTER);
+        userOtpService.deactivateOldOtps(user.getId(), OtpType.REGISTER);
+
+        UserOtp newOtp = userOtpService.createOtp(user, OtpType.REGISTER, 10);
+        emailService.sendRegistrationOtpByEmail(user.getEmail(), user.getUsername(), newOtp.getOtpCode());
+
+        log.info("Resend verification OTP sent to: {}", request.getEmail());
+    }
+
+    @Override
+    @Transactional
+    public void forgotPassword(ForgotPasswordRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
+
+        if(!user.getEmailVerified()) {
+            log.warn("User: {} email is not verified. Cannot send password reset OTP.", request.getEmail());
+            throw new AppException(UserErrorCode.EMAIL_NOT_VERIFIED);
+        }
+
+        userOtpService.checkOtpFrequency(user, OtpType.RESET_PASSWORD);
+        userOtpService.deactivateOldOtps(user.getId(), OtpType.RESET_PASSWORD);
+
+        UserOtp newOtp = userOtpService.createOtp(user, OtpType.RESET_PASSWORD, 10);
+        emailService.sendForgotPasswordOtpByEmail(user.getEmail(), user.getUsername(), newOtp.getOtpCode());
+
+        log.info("Forgot password OTP sent to: {}", request.getEmail());
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
+
+        if(!user.getEmailVerified()) {
+            log.warn("User: {} email is not verified. Cannot reset password.", request.getEmail());
+            throw new AppException(UserErrorCode.EMAIL_NOT_VERIFIED);
+        }
+
+        var userOtp = userOtpService.findLatestOtp(user, OtpType.RESET_PASSWORD);
+        userOtpService.validateOtp(userOtp, request.getOtpCode());
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        userOtpService.markOtpAsUsed(userOtp);
+
+        log.info("User password reset successfully: {}", request.getEmail());
     }
 }

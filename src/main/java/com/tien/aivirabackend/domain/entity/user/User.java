@@ -50,7 +50,7 @@ public class User extends BaseEntity {
 
     @Builder.Default
     @Column(nullable = false, name = "email_verified")
-    boolean emailVerified = false;
+    Boolean emailVerified = false;
 
     /* PROFILE */
     @Column(name = "first_name", length = 50)

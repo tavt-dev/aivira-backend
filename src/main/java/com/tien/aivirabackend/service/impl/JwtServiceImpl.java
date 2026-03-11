@@ -23,7 +23,6 @@ import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.tien.aivirabackend.constant.TokenType;
-import com.tien.aivirabackend.domain.entity.InvalidatedToken;
 import com.tien.aivirabackend.domain.entity.user.Role;
 import com.tien.aivirabackend.domain.entity.user.User;
 import com.tien.aivirabackend.exception.AppException;

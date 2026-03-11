@@ -28,6 +28,10 @@ public class UserResponse {
     SignInProvider provider;
     Gender gender;
 
+    Boolean isActive;
+
+    Boolean emailVerified;
+
     String phoneNumber;
 
     String avatarUrl;
@@ -35,4 +39,6 @@ public class UserResponse {
     Set<RoleResponse> roles;
     Instant createdAt;
     Instant updatedAt;
+
+
 }

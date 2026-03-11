@@ -23,6 +23,8 @@ public enum UserErrorCode implements ErrorCode {
     USERNAME_ALREADY_EXISTS("E3102", "Tên người dùng này đã tồn tại.", HttpStatus.CONFLICT),
     INVALID_EMAIL_FORMAT("E3103", "Định dạng email không hợp lệ.", HttpStatus.BAD_REQUEST),
     INVALID_PHONE_FORMAT("E3104", "Định dạng số điện thoại không hợp lệ.", HttpStatus.BAD_REQUEST),
+    USER_ALREADY_VERIFIED("E3105", "Tài khoản đã được xác thực.", HttpStatus.BAD_REQUEST),
+    EMAIL_NOT_VERIFIED("E3106", "Email chưa được xác thực.", HttpStatus.BAD_REQUEST),
 
     // === E32xx: Lỗi hồ sơ người dùng (User Profile Errors) ===
     PROFILE_UPDATE_FAILED("E3200", "Cập nhật hồ sơ thất bại.", HttpStatus.INTERNAL_SERVER_ERROR),

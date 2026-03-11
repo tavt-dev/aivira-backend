@@ -1,7 +1,6 @@
 package com.tien.aivirabackend.controller;
 
-import com.tien.aivirabackend.domain.dto.request.LogoutRequest;
-import com.tien.aivirabackend.domain.dto.request.RefreshTokenRequest;
+import com.tien.aivirabackend.domain.dto.request.*;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -12,8 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.tien.aivirabackend.domain.dto.ApiResponse;
-import com.tien.aivirabackend.domain.dto.request.AuthenticationRequest;
-import com.tien.aivirabackend.domain.dto.request.UserRegisterRequest;
 import com.tien.aivirabackend.domain.dto.response.AuthenticationResponse;
 import com.tien.aivirabackend.domain.dto.response.UserResponse;
 import com.tien.aivirabackend.service.AuthenticationService;
@@ -82,4 +79,33 @@ public class AuthenticationController {
         authenticationService.logoutAll();
         return ResponseEntity.ok(ApiResponse.success("Logout all successful", null));
     }
+
+    @PostMapping(value = "verify-user")
+    public  ResponseEntity<ApiResponse<Void>> verifyUser(@RequestBody VerifyUserRequest request) {
+        log.info("Verify user request: email={}", request.getEmail());
+        authenticationService.verifyUser(request);
+        return ResponseEntity.ok(ApiResponse.success("User verified successfully", null));
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<ApiResponse<Void>> resendVerificationEmail(@RequestBody ResendOtpRequest request) {
+        log.info("Resend verification email request: email={}", request.getEmail());
+        authenticationService.resendVerificationOtp(request);
+        return ResponseEntity.ok(ApiResponse.success("Verification email resent successfully", null));
+    }
+
+    @PostMapping("forgot-password")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        log.info("Forgot password request: email={}", request.getEmail());
+        authenticationService.forgotPassword(request);
+        return ResponseEntity.ok(ApiResponse.success("Password reset OTP sent successfully", null));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@RequestBody ResetPasswordRequest request) {
+        log.info("Reset password request: email={}", request.getEmail());
+        authenticationService.resetPassword(request);
+        return ResponseEntity.ok(ApiResponse.success("Password reset email sent successfully", null));
+    }
+
 }

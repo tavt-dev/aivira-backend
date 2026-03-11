@@ -1,7 +1,6 @@
 package com.tien.aivirabackend.service;
 
-import com.tien.aivirabackend.domain.dto.request.AuthenticationRequest;
-import com.tien.aivirabackend.domain.dto.request.UserRegisterRequest;
+import com.tien.aivirabackend.domain.dto.request.*;
 import com.tien.aivirabackend.domain.dto.response.ActiveSessionResponse;
 import com.tien.aivirabackend.domain.dto.response.AuthenticationResponse;
 import com.tien.aivirabackend.domain.dto.response.UserResponse;
@@ -22,4 +21,12 @@ public interface AuthenticationService {
     List<ActiveSessionResponse> getActiveSessions(String currentSessionId);
 
     void revokeSession(String sessionId);
+
+    void verifyUser(VerifyUserRequest request);
+
+    void resendVerificationOtp(ResendOtpRequest request);
+
+    void forgotPassword(ForgotPasswordRequest request);
+
+    void resetPassword(ResetPasswordRequest request);
 }
