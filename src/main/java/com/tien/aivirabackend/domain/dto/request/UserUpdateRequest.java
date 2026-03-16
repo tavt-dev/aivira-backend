@@ -2,6 +2,7 @@ package com.tien.aivirabackend.domain.dto.request;
 
 import static lombok.AccessLevel.PRIVATE;
 
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import com.tien.aivirabackend.constant.Gender;
@@ -22,9 +23,4 @@ public class UserUpdateRequest {
     String lastName;
 
     Gender gender;
-
-    @Size(max = 15, message = "Phone number must not exceed 15 characters")
-    String phoneNumber;
-
-    String avatarUrl;
 }

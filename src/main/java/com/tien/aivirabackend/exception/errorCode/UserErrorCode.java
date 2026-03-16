@@ -26,13 +26,19 @@ public enum UserErrorCode implements ErrorCode {
     USER_ALREADY_VERIFIED("E3105", "Tài khoản đã được xác thực.", HttpStatus.BAD_REQUEST),
     EMAIL_NOT_VERIFIED("E3106", "Email chưa được xác thực.", HttpStatus.BAD_REQUEST),
 
-    // === E32xx: Lỗi hồ sơ người dùng (User Profile Errors) ===
+    // === E32xx: Lỗi hồ sơ / tài khoản người dùng (User Profile & Account Errors) ===
     PROFILE_UPDATE_FAILED("E3200", "Cập nhật hồ sơ thất bại.", HttpStatus.INTERNAL_SERVER_ERROR),
     AVATAR_UPLOAD_FAILED("E3201", "Tải ảnh đại diện thất bại.", HttpStatus.INTERNAL_SERVER_ERROR),
     AVATAR_TOO_LARGE("E3202", "Kích thước ảnh đại diện vượt quá giới hạn cho phép.", HttpStatus.BAD_REQUEST),
-    INVALID_AVATAR_FORMAT(
-            "E3203", "Định dạng ảnh đại diện không hợp lệ. Hỗ trợ: JPG, PNG, GIF.", HttpStatus.BAD_REQUEST),
+    INVALID_AVATAR_FORMAT("E3203", "Định dạng ảnh đại diện không hợp lệ. Hỗ trợ: JPG, PNG, WEBP.", HttpStatus.BAD_REQUEST),
     PROFILE_INCOMPLETE("E3204", "Vui lòng hoàn thiện hồ sơ của bạn.", HttpStatus.BAD_REQUEST),
+    USER_PASSWORD_NOT_SET("E3205", "Người dùng chưa thiết lập mật khẩu.", HttpStatus.BAD_REQUEST),
+    INVALID_CURRENT_PASSWORD("E3206", "Mật khẩu hiện tại không chính xác.", HttpStatus.BAD_REQUEST),
+    PASSWORD_CONFIRMATION_DOES_NOT_MATCH("E3207", "Xác nhận mật khẩu không khớp.", HttpStatus.BAD_REQUEST),
+    NEW_PASSWORD_MUST_BE_DIFFERENT("E3208", "Mật khẩu mới phải khác mật khẩu hiện tại.", HttpStatus.BAD_REQUEST),
+    USER_ACCOUNT_INACTIVE("E3209", "Tài khoản người dùng chưa được kích hoạt.", HttpStatus.FORBIDDEN),
+    USER_ACCOUNT_LOCKED("E3210", "Tài khoản người dùng đã bị khóa.", HttpStatus.FORBIDDEN),
+    USER_ACCOUNT_DELETED("E3211", "Tài khoản người dùng không còn khả dụng.", HttpStatus.FORBIDDEN),
 
     // === E33xx: Lỗi vai trò / phân quyền người dùng (User Role/Permission Errors) ===
     ROLE_NOT_FOUND("E3300", "Không tìm thấy vai trò.", HttpStatus.NOT_FOUND),
