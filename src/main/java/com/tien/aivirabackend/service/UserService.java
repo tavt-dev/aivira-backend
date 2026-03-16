@@ -1,17 +1,24 @@
 package com.tien.aivirabackend.service;
 
-import org.springframework.data.domain.Pageable;
-
-import com.tien.aivirabackend.domain.dto.PageResponse;
+import com.tien.aivirabackend.domain.dto.request.UpdatePasswordRequest;
 import com.tien.aivirabackend.domain.dto.request.UserUpdateRequest;
 import com.tien.aivirabackend.domain.dto.response.UserResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface UserService {
-    UserResponse getCurrentUser();
+    UserResponse getMyProfile();
 
-    UserResponse updateCurrentUser(UserUpdateRequest request);
+    UserResponse updateMyProfile(UserUpdateRequest request);
 
-    PageResponse<UserResponse> getAllUsers(Pageable pageable);
+    UserResponse updateMyAvatar(MultipartFile avatarFile);
 
-    UserResponse getUserById(String userId);
+    void changeMyPassword(UpdatePasswordRequest request);
+
+    void requestDeactivateMyAccount();
+
+//    void requestEmailChange(ChangeEmailRequest request);
+//    void confirmEmailChange(VerifyEmailChangeRequest request);
+//
+//    void requestPhoneChange(ChangePhoneRequest request);
+//    void confirmPhoneChange(VerifyPhoneChangeRequest request);
 }

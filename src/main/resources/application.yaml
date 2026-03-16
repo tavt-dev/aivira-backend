@@ -56,3 +56,7 @@ app:
   mail:
     from: tavantien786@gmail.com
     from-name: Aivira Store
+cloudinary:
+  cloud-name: ${CLOUD_NAME:ddwtgfte7}
+  api-key: ${API_KEY:681862513344229}
+  api-secret: ${API_SECRET:CWl1iBL-EGpuhtXYLIezgqWbJRs}
