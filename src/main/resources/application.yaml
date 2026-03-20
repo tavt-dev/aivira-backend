@@ -1,25 +1,20 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
   servlet:
     context-path: /api/v1
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/aivira
-      ?useSSL=false
-      &allowPublicKeyRetrieval=true
-      &serverTimezone=Asia/Ho_Chi_Minh
-      &characterEncoding=utf8
-      &useUnicode=true
-    username: root
-    password: 814362
+    url: ${DB_URL:jdbc:mysql://localhost:3306/aivira?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh&characterEncoding=utf8&useUnicode=true}
+    username: ${USERNAME_DB}
+    password: ${PASSWORD_DB}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   mail:
-    host: smtp-relay.brevo.com
-    port: 587
-    username: ${BREVO_SMTP_LOGIN:9519ac001@smtp-brevo.com}
-    password: ${BREVO_SMTP_KEY:xsmtpsib-a0b94a694214292159062c240d29383fd38918e99aa65bb9bad43957b22e33aa-ueFC6UqCPm5mGzcr}
+    host: ${MAIL_HOST:smtp-relay.brevo.com}
+    port: ${MAIL_PORT:587}
+    username: ${BREVO_SMTP_LOGIN}
+    password: ${BREVO_SMTP_KEY}
     properties:
       mail:
         smtp:
@@ -33,30 +28,33 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: ${DDL_AUTO:update}
+    show-sql: ${SHOW_SQL:false}
     properties:
       hibernate:
         format_sql: true
+
 security:
-  public-endpoints: /oauth2/**, /auth/**, /api/v1/auth/****
+  public-endpoints: ${PUBLIC_ENDPOINTS:/oauth2/**,/auth/**,/api/v1/auth/**}
+
 jwt:
-  signerKey: ${JWT_SIGNER_KEY:5Jf8K9mN2pQ3rT6vW8xZ1aB4cD7eF0gH3iJ6kL9mN2pQ5rT8vW1xZ4aB7cD0eF3gH6iJ9kL2mN5pQ8rT1vW4xZ7aB0cD3eF}
-  issuer: "aivira.com"
-  valid-duration: 3600
-  refreshable-duration: 36000
+  signerKey: ${JWT_SIGNER_KEY}
+  issuer: ${JWT_ISSUER:aivira.com}
+  valid-duration: ${JWT_VALID_DURATION:3600}
+  refreshable-duration: ${JWT_REFRESHABLE_DURATION:36000}
 
 app:
   seed:
-    enabled: true
+    enabled: ${SEED_ENABLED:false}
     admin:
-      username: admin
-      password: admin
-      email: admin@yopmail.com
+      username: ${SEED_ADMIN_USERNAME:}
+      password: ${SEED_ADMIN_PASSWORD:}
+      email: ${SEED_ADMIN_EMAIL:}
   mail:
-    from: tavantien786@gmail.com
-    from-name: Aivira Store
+    from: ${MAIL_FROM:tavantien786@gmail.com}
+    from-name: ${MAIL_FROM_NAME:Aivira Store}
+
 cloudinary:
-  cloud-name: ${CLOUD_NAME:ddwtgfte7}
-  api-key: ${API_KEY:681862513344229}
-  api-secret: ${API_SECRET:CWl1iBL-EGpuhtXYLIezgqWbJRs}
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
