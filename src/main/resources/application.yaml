@@ -35,13 +35,33 @@ spring:
         format_sql: true
 
 security:
-  public-endpoints: ${PUBLIC_ENDPOINTS:/oauth2/**,/auth/**,/api/v1/auth/**}
+  public-endpoints: ${PUBLIC_ENDPOINTS:/oauth2/**,/auth/token,/auth/register,/auth/verify-user,/auth/resend-verification,/auth/forgot-password,/auth/reset-password,/auth/refresh-token,/auth/logout,/swagger-ui.html,/swagger-ui/**,/v3/api-docs,/v3/api-docs/**,/v3/api-docs.yaml,/api/v1/auth/token,/api/v1/auth/register,/api/v1/auth/verify-user,/api/v1/auth/resend-verification,/api/v1/auth/forgot-password,/api/v1/auth/reset-password,/api/v1/auth/refresh-token,/api/v1/auth/logout,/api/v1/swagger-ui.html,/api/v1/swagger-ui/**,/api/v1/v3/api-docs,/api/v1/v3/api-docs/**,/api/v1/v3/api-docs.yaml}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+    allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,PATCH,DELETE,OPTIONS}
+    allowed-headers: ${CORS_ALLOWED_HEADERS:Authorization,Content-Type,Accept,Origin,X-Requested-With}
 
 jwt:
   signerKey: ${JWT_SIGNER_KEY}
   issuer: ${JWT_ISSUER:aivira.com}
   valid-duration: ${JWT_VALID_DURATION:3600}
   refreshable-duration: ${JWT_REFRESHABLE_DURATION:36000}
+
+auth:
+  refresh-token:
+    body-enabled: ${AUTH_REFRESH_TOKEN_BODY_ENABLED:true}
+    cookie-name: ${AUTH_REFRESH_TOKEN_COOKIE_NAME:refreshToken}
+    cookie-path: ${AUTH_REFRESH_TOKEN_COOKIE_PATH:/api/v1/auth}
+    cookie-same-site: ${AUTH_REFRESH_TOKEN_COOKIE_SAME_SITE:Lax}
+    cookie-secure: ${AUTH_REFRESH_TOKEN_COOKIE_SECURE:true}
+    cookie-http-only: ${AUTH_REFRESH_TOKEN_COOKIE_HTTP_ONLY:true}
+  brute-force:
+    max-attempts: ${AUTH_BRUTE_FORCE_MAX_ATTEMPTS:5}
+    window-minutes: ${AUTH_BRUTE_FORCE_WINDOW_MINUTES:15}
+    lock-minutes: ${AUTH_BRUTE_FORCE_LOCK_MINUTES:15}
+  cleanup:
+    cron: ${AUTH_CLEANUP_CRON:0 0 * * * *}
+    otp-used-retention-hours: ${AUTH_CLEANUP_OTP_USED_RETENTION_HOURS:24}
 
 app:
   seed:
