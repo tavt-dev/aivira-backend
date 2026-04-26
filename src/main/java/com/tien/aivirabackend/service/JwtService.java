@@ -1,6 +1,7 @@
 package com.tien.aivirabackend.service;
 
 import com.nimbusds.jwt.SignedJWT;
+import com.tien.aivirabackend.constant.RevocationReason;
 import com.tien.aivirabackend.domain.dto.response.ActiveSessionResponse;
 import com.tien.aivirabackend.domain.entity.user.User;
 
@@ -20,9 +21,15 @@ public interface JwtService {
 
     void revokeRefreshToken(String refreshToken);
 
+    void revokeRefreshToken(String refreshToken, RevocationReason reason, String replacedBy);
+
     void revokeAllTokensOfUser(String userId);
 
+    void revokeAllTokensOfUser(String userId, RevocationReason reason);
+
     String getTokenFamilyId(String refreshToken);
+
+    String getTokenJti(String token);
 
     void revokeSession(String userId, String sessionId);
 

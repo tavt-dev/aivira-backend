@@ -166,6 +166,9 @@ public class JwtServiceImpl implements JwtService {
                 throw new AppException(JwtErrorCode.REFRESH_TOKEN_EXPIRED);
             }
 
+            storedToken.markUsed(Instant.now());
+            refreshTokenRepository.save(storedToken);
+
             return signedJWT;
 
         } catch (ParseException e) {
@@ -177,6 +180,12 @@ public class JwtServiceImpl implements JwtService {
     @Override
     @Transactional
     public void revokeRefreshToken(String refreshToken) {
+        revokeRefreshToken(refreshToken, RevocationReason.TOKEN_REFRESH, null);
+    }
+
+    @Override
+    @Transactional
+    public void revokeRefreshToken(String refreshToken, RevocationReason reason, String replacedBy) {
         try {
             SignedJWT signedJWT = SignedJWT.parse(refreshToken);
             JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
@@ -193,9 +202,16 @@ public class JwtServiceImpl implements JwtService {
             if (storedTokenOpt.isPresent()) {
                 RefreshToken storedToken = storedTokenOpt.get();
                 if (!storedToken.isRevoked()) {
-                    storedToken.revoke(RevocationReason.TOKEN_REFRESH);
+                    storedToken.revoke(reason == null ? RevocationReason.TOKEN_REFRESH : reason);
+                    if (replacedBy != null && !replacedBy.isBlank()) {
+                        storedToken.setReplacedBy(replacedBy);
+                    }
                     refreshTokenRepository.save(storedToken);
-                    log.info("Token revoked successfully: {}", jti);
+                    log.info(
+                            "Refresh token revoked successfully: jti={} reason={} replacedBy={}",
+                            jti,
+                            storedToken.getRevocationReason(),
+                            storedToken.getReplacedBy());
                 } else {
                     log.debug("Token already revoked: {}", jti);
                 }
@@ -212,6 +228,12 @@ public class JwtServiceImpl implements JwtService {
     @Override
     @Transactional
     public void revokeAllTokensOfUser(String userId) {
+        revokeAllTokensOfUser(userId, RevocationReason.USER_LOGOUT_ALL);
+    }
+
+    @Override
+    @Transactional
+    public void revokeAllTokensOfUser(String userId, RevocationReason reason) {
 
         User user =
                 userRepository.findById(userId).orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND_BY_ID));
@@ -226,9 +248,13 @@ public class JwtServiceImpl implements JwtService {
         int revokedCount = refreshTokenRepository.revokeAllByUserId(
                 userId,
                 Instant.now(),
-                RevocationReason.USER_LOGOUT_ALL
+                reason == null ? RevocationReason.USER_LOGOUT_ALL : reason
         );
-        log.info("Incremented token version for user {} to {}", user.getUsername(), user.getTokenVersion());
+        log.info(
+                "Revoked {} refresh tokens and incremented token version for user {} to {}",
+                revokedCount,
+                user.getUsername(),
+                user.getTokenVersion());
     }
 
     @Override
@@ -238,6 +264,17 @@ public class JwtServiceImpl implements JwtService {
             return signedJWT.getJWTClaimsSet().getStringClaim(FAMILY_ID_CLAIM);
         } catch (ParseException e) {
             log.error("Failed to parse refresh token claims to get family ID", e);
+            throw new AppException(JwtErrorCode.TOKEN_INVALID);
+        }
+    }
+
+    @Override
+    public String getTokenJti(String token) {
+        SignedJWT signedJWT = verifyToken(token, TokenType.REFRESH);
+        try {
+            return signedJWT.getJWTClaimsSet().getJWTID();
+        } catch (ParseException e) {
+            log.error("Failed to parse token claims to get JTI", e);
             throw new AppException(JwtErrorCode.TOKEN_INVALID);
         }
     }
@@ -407,7 +444,7 @@ public class JwtServiceImpl implements JwtService {
         if (signerKey == null || signerKey.isBlank()) {
             throw new IllegalStateException("JWT signer key is not configured");
         }
-        return signerKey.getBytes();
+        return signerKey.getBytes(StandardCharsets.UTF_8);
     }
 
     private void validateUser(User user) {

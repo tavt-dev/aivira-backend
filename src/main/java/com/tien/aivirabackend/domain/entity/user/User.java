@@ -2,6 +2,7 @@ package com.tien.aivirabackend.domain.entity.user;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
@@ -85,6 +86,16 @@ public class User extends BaseEntity {
     @Builder.Default
     @Column(name = "token_version", nullable = false)
     Integer tokenVersion = 0;
+
+    @Builder.Default
+    @Column(name = "failed_login_attempts", nullable = false)
+    Integer failedLoginAttempts = 0;
+
+    @Column(name = "first_failed_login_at")
+    Instant firstFailedLoginAt;
+
+    @Column(name = "lockout_until")
+    Instant lockoutUntil;
 
     /* RELATIONSHIPS */
     @ManyToMany(fetch = FetchType.LAZY)

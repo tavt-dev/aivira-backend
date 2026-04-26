@@ -1,13 +1,14 @@
 package com.tien.aivirabackend.config.properties;
 
+import java.util.List;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
-import lombok.Data;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.List;
+import lombok.Data;
 
 @Data
 @Validated
@@ -26,11 +27,8 @@ public class FileUploadProperties {
             "image/jpeg",
             "image/png",
             "image/gif",
-            "image/webp"
-    );
+            "image/webp");
 
     @NotEmpty
-    private List<String> allowedDocumentTypes = List.of(
-            "application/pdf"
-    );
+    private List<String> allowedDocumentTypes = List.of("application/pdf");
 }

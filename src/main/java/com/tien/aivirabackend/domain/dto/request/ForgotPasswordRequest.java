@@ -1,5 +1,6 @@
 package com.tien.aivirabackend.domain.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -13,7 +14,9 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Schema(description = "Forgot-password request")
 public class ForgotPasswordRequest {
+    @Schema(description = "Verified email address", example = "postman_user@example.com")
     @NotBlank(message = "Email không được để trống")
     String email;
 }

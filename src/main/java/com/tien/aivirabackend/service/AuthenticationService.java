@@ -18,7 +18,7 @@ public interface AuthenticationService {
 
     void logoutAll();
 
-    List<ActiveSessionResponse> getActiveSessions(String currentSessionId);
+    List<ActiveSessionResponse> getActiveSessions();
 
     void revokeSession(String sessionId);
 

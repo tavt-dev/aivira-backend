@@ -1,7 +1,7 @@
 package com.tien.aivirabackend.domain.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -12,13 +12,23 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Schema(description = "Standard API response envelope")
 public class ApiResponse<T> {
 
-    boolean success; // true | false
-    String errorCode; // null nếu success
-    String message; // success hoặc error message
-    T data; // payload
-    long timestamp; // epoch millis
+    @Schema(description = "Whether the request completed successfully", example = "true")
+    boolean success;
+
+    @Schema(description = "Application error code. Null for successful responses.", example = "E2107")
+    String errorCode;
+
+    @Schema(description = "Human-readable response message", example = "Authentication successful")
+    String message;
+
+    @Schema(description = "Response payload")
+    T data;
+
+    @Schema(description = "Response timestamp in epoch milliseconds", example = "1766558400000")
+    long timestamp;
 
     /* ================= SUCCESS ================= */
 

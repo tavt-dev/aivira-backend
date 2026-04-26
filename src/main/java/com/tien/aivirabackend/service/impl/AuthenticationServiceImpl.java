@@ -3,13 +3,13 @@ package com.tien.aivirabackend.service.impl;
 import com.tien.aivirabackend.domain.dto.request.*;
 import com.tien.aivirabackend.domain.dto.response.ActiveSessionResponse;
 import com.tien.aivirabackend.constant.OtpType;
+import com.tien.aivirabackend.constant.RevocationReason;
 import com.tien.aivirabackend.domain.entity.user.UserOtp;
-import com.tien.aivirabackend.exception.errorCode.OtpErrorCode;
-import com.tien.aivirabackend.repository.UserOtpRepository;
 import com.tien.aivirabackend.service.EmailService;
 import com.tien.aivirabackend.service.UserOtpService;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,9 +31,15 @@ import com.tien.aivirabackend.service.JwtService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
+
+import org.springframework.beans.factory.annotation.Value;
 
 @Service
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
@@ -53,9 +59,23 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     UserOtpService userOtpService;
 
-    UserOtpRepository userOtpRepository;
-
     EmailService emailService;
+
+    @NonFinal
+    @Value("${auth.brute-force.max-attempts:5}")
+    int maxFailedLoginAttempts;
+
+    @NonFinal
+    @Value("${auth.brute-force.window-minutes:15}")
+    int failedLoginWindowMinutes;
+
+    @NonFinal
+    @Value("${auth.brute-force.lock-minutes:15}")
+    int lockMinutes;
+
+    @NonFinal
+    @Value("${jwt.valid-duration}")
+    long accessTokenExpiresIn;
 
     @Override
     @Transactional
@@ -64,35 +84,34 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .findByUsername(request.getUsername())
                 .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
 
+        validateAccountForAuth(user);
+
         boolean isAuthenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
 
-        if (Boolean.TRUE.equals(user.getIsDeleted())) {
-            log.error("Authentication failed for user: {}. Reason: Account is deleted.", request.getUsername());
-            throw new AppException(AccountErrorCode.ACCOUNT_DELETED);
-        }
-
-        // Check account status
-        if (Boolean.TRUE.equals(user.getIsLocked())) {
-            log.error("Authentication failed for user: {}. Reason: Account is locked.", request.getUsername());
-            throw new AppException(AccountErrorCode.ACCOUNT_LOCKED);
-        }
-
         if (!isAuthenticated) {
-            log.error("Authentication failed for user: {}", request.getUsername());
+            registerFailedLoginAttempt(user, ipAddress, deviceInfo);
+            log.warn(
+                    "auth_login_failed userId={} username={} ip={} device={} reason=invalid_password",
+                    user.getId(),
+                    user.getUsername(),
+                    ipAddress,
+                    deviceInfo);
             throw new AppException(PasswordErrorCode.PASSWORD_INCORRECT);
         }
+
+        clearFailedLoginState(user);
 
         String accessToken = jwtService.createAccessToken(user);
         String refreshToken = jwtService.createRefreshToken(user, deviceInfo, ipAddress, null);
 
-        log.info("User: {} authenticated successfully.", request.getUsername());
+        log.info(
+                "auth_login_success userId={} username={} ip={} device={}",
+                user.getId(),
+                user.getUsername(),
+                ipAddress,
+                deviceInfo);
 
-        return AuthenticationResponse.builder()
-                .token(accessToken)
-                // Todo: Set HttpOnly cookie for refresh token in controller
-                .refreshToken(refreshToken)
-                .authenticated(true)
-                .build();
+        return buildAuthenticationResponse(accessToken, refreshToken);
     }
 
     @Override
@@ -121,6 +140,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         user.setIsLocked(false);
         user.setIsDeleted(false);
         user.setTokenVersion(0);
+        user.setFailedLoginAttempts(0);
+        user.setFirstFailedLoginAt(null);
+        user.setLockoutUntil(null);
 
         var role = roleRepository
                 .findByCode(PredefinedRole.USER)
@@ -153,33 +175,28 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .findByUsername(username)
                     .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
 
-            // Check account status
-            if (Boolean.TRUE.equals(user.getIsDeleted())) {
-                log.error("Refresh token failed for user: {}. Reason: Account is deleted.", username);
-                throw new AppException(AccountErrorCode.ACCOUNT_DELETED);
-            }
-
-            if (Boolean.TRUE.equals(user.getIsLocked())) {
-                log.error("Refresh token failed for user: {}. Reason: Account is locked.", username);
-                throw new AppException(AccountErrorCode.ACCOUNT_LOCKED);
-            }
+            validateAccountForAuth(user);
 
             String familyId = jwtService.getTokenFamilyId(refreshToken);
 
-            // Revoke old refresh token
-            jwtService.revokeRefreshToken(refreshToken);
-
             String newAccessToken = jwtService.createAccessToken(user);
             String newRefreshToken = jwtService.createRefreshToken(user, deviceInfo, ipAddress, familyId);
+            String replacementJti = jwtService.getTokenJti(newRefreshToken);
 
-            log.info("Refresh token successful for user: {}", username);
+            jwtService.revokeRefreshToken(refreshToken, RevocationReason.TOKEN_REFRESH, replacementJti);
 
-            return AuthenticationResponse.builder()
-                    .token(newAccessToken)
-                    .refreshToken(newRefreshToken)
-                    .authenticated(true)
-                    .build();
+            log.info(
+                    "auth_refresh_success userId={} username={} ip={} device={} replacementJti={}",
+                    user.getId(),
+                    username,
+                    ipAddress,
+                    deviceInfo,
+                    replacementJti);
 
+            return buildAuthenticationResponse(newAccessToken, newRefreshToken);
+
+        } catch (AppException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Failed to refresh token", e);
             throw new AppException(JwtErrorCode.REFRESH_TOKEN_INVALID);
@@ -189,33 +206,40 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     @Transactional
     public void logout(String refreshToken) {
-        jwtService.revokeRefreshToken(refreshToken);
-        log.info("User logged out successfully");
+        String tokenJti = jwtService.getTokenJti(refreshToken);
+        jwtService.revokeRefreshToken(refreshToken, RevocationReason.USER_LOGOUT, null);
+        log.info("auth_logout_success tokenJti={}", tokenJti);
     }
 
     @Override
     @Transactional
     public void logoutAll() {
-
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        User user = userRepository
-                .findByUsername(username)
-                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
-
-        jwtService.revokeAllTokensOfUser(user.getId());
-
-        log.info("All sessions logged out successfully for user: {}", username);
+        User user = getCurrentUserFromSecurityContext();
+        jwtService.revokeAllTokensOfUser(user.getId(), RevocationReason.USER_LOGOUT_ALL);
+        log.info("auth_logout_all_success userId={} username={}", user.getId(), user.getUsername());
     }
 
     @Override
-    public List<ActiveSessionResponse> getActiveSessions(String currentSessionId) {
-        return List.of();
+    @Transactional(readOnly = true)
+    public List<ActiveSessionResponse> getActiveSessions() {
+        User user = getCurrentUserFromSecurityContext();
+        String currentSessionJti = getCurrentJwtFromSecurityContext().getId();
+        List<ActiveSessionResponse> sessions = jwtService.getActiveSessions(user.getId(), currentSessionJti);
+
+        log.info(
+                "auth_get_sessions userId={} username={} activeSessionCount={}",
+                user.getId(),
+                user.getUsername(),
+                sessions.size());
+        return sessions;
     }
 
     @Override
+    @Transactional
     public void revokeSession(String sessionId) {
-
+        User user = getCurrentUserFromSecurityContext();
+        jwtService.revokeSession(user.getId(), sessionId);
+        log.info("auth_revoke_session_success userId={} username={} sessionId={}", user.getId(), user.getUsername(), sessionId);
     }
 
     @Override
@@ -292,8 +316,128 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
 
+        jwtService.revokeAllTokensOfUser(user.getId(), RevocationReason.PASSWORD_CHANGE);
         userOtpService.markOtpAsUsed(userOtp);
 
-        log.info("User password reset successfully: {}", request.getEmail());
+        log.info(
+                "auth_reset_password_success userId={} username={} email={}",
+                user.getId(),
+                user.getUsername(),
+                request.getEmail());
+    }
+
+    private AuthenticationResponse buildAuthenticationResponse(String accessToken, String refreshToken) {
+        return AuthenticationResponse.builder()
+                .token(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType("Bearer")
+                .accessTokenExpiresIn(accessTokenExpiresIn)
+                .authenticated(true)
+                .build();
+    }
+
+    private void validateAccountForAuth(User user) {
+        if (Boolean.TRUE.equals(user.getIsDeleted())) {
+            throw new AppException(AccountErrorCode.ACCOUNT_DELETED);
+        }
+
+        if (Boolean.TRUE.equals(user.getIsLocked())) {
+            throw new AppException(AccountErrorCode.ACCOUNT_LOCKED);
+        }
+
+        Instant now = Instant.now();
+        if (user.getLockoutUntil() != null && user.getLockoutUntil().isAfter(now)) {
+            throw new AppException(AccountErrorCode.ACCOUNT_LOCKED);
+        }
+
+        if (user.getLockoutUntil() != null && !user.getLockoutUntil().isAfter(now)) {
+            user.setLockoutUntil(null);
+            user.setFailedLoginAttempts(0);
+            user.setFirstFailedLoginAt(null);
+            userRepository.save(user);
+        }
+
+        if (!Boolean.TRUE.equals(user.getEmailVerified())) {
+            throw new AppException(AccountErrorCode.ACCOUNT_NOT_VERIFIED);
+        }
+
+        if (!Boolean.TRUE.equals(user.getIsActive())) {
+            throw new AppException(UserErrorCode.USER_ACCOUNT_INACTIVE);
+        }
+    }
+
+    private void registerFailedLoginAttempt(User user, String ipAddress, String deviceInfo) {
+        Instant now = Instant.now();
+        Instant boundary = now.minus(failedLoginWindowMinutes, ChronoUnit.MINUTES);
+
+        Integer currentAttempts = Objects.requireNonNullElse(user.getFailedLoginAttempts(), 0);
+        Instant firstFailedAt = user.getFirstFailedLoginAt();
+
+        if (firstFailedAt == null || firstFailedAt.isBefore(boundary)) {
+            firstFailedAt = now;
+            currentAttempts = 0;
+        }
+
+        int newAttempts = currentAttempts + 1;
+        user.setFirstFailedLoginAt(firstFailedAt);
+        user.setFailedLoginAttempts(newAttempts);
+
+        if (newAttempts >= maxFailedLoginAttempts) {
+            user.setLockoutUntil(now.plus(lockMinutes, ChronoUnit.MINUTES));
+            user.setFailedLoginAttempts(0);
+            user.setFirstFailedLoginAt(null);
+            log.warn(
+                    "auth_login_lockout userId={} username={} ip={} device={} lockUntil={}",
+                    user.getId(),
+                    user.getUsername(),
+                    ipAddress,
+                    deviceInfo,
+                    user.getLockoutUntil());
+        }
+
+        userRepository.save(user);
+    }
+
+    private void clearFailedLoginState(User user) {
+        boolean changed = false;
+        if (!Objects.equals(user.getFailedLoginAttempts(), 0)) {
+            user.setFailedLoginAttempts(0);
+            changed = true;
+        }
+        if (user.getFirstFailedLoginAt() != null) {
+            user.setFirstFailedLoginAt(null);
+            changed = true;
+        }
+        if (user.getLockoutUntil() != null) {
+            user.setLockoutUntil(null);
+            changed = true;
+        }
+        if (changed) {
+            userRepository.save(user);
+        }
+    }
+
+    private User getCurrentUserFromSecurityContext() {
+        Jwt jwt = getCurrentJwtFromSecurityContext();
+        String userId = jwt.getClaimAsString("user_id");
+
+        if (userId == null || userId.isBlank()) {
+            throw new AppException(AuthErrorCode.AUTHENTICATION_FAILED);
+        }
+
+        return userRepository.findById(userId).orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND_BY_ID));
+    }
+
+    private Jwt getCurrentJwtFromSecurityContext() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(AuthErrorCode.AUTHENTICATION_FAILED);
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (!(principal instanceof Jwt jwt)) {
+            throw new AppException(AuthErrorCode.AUTHENTICATION_FAILED);
+        }
+        return jwt;
     }
 }
