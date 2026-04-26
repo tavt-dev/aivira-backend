@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.Optional;
 
 @Repository
@@ -19,4 +20,8 @@ public interface UserOtpRepository extends JpaRepository<UserOtp, Long> {
     @Modifying
     @Query("UPDATE UserOtp u SET u.used = true WHERE u.user.id = :userId AND u.otpType = :type AND u.used = false")
     void deactivateOldOtp(@Param("userId") String userId, @Param("type") OtpType type);
+
+    @Modifying
+    @Query("DELETE FROM UserOtp u WHERE u.expiresTime < :now OR (u.used = true AND u.usedAt < :usedBefore)")
+    int deleteExpiredOrUsedBefore(@Param("now") Instant now, @Param("usedBefore") Instant usedBefore);
 }

@@ -68,6 +68,9 @@ public class UserOtpServiceImpl implements UserOtpService {
     @Transactional
     public void markOtpAsUsed(UserOtp userOtp) {
         userOtp.setUsed(true);
+        if (userOtp.getUsedAt() == null) {
+            userOtp.setUsedAt(Instant.now());
+        }
         userOtpRepository.save(userOtp);
     }
 

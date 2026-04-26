@@ -1,6 +1,6 @@
 package com.tien.aivirabackend.domain.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -9,8 +9,8 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Schema(description = "Logout request")
 public class LogoutRequest {
-
-    @NotBlank(message = "Refresh token is required")
+    @Schema(description = "Refresh token to revoke")
     String refreshToken;
 }
