@@ -17,6 +17,7 @@ import com.tien.aivirabackend.domain.entity.user.Role;
 import com.tien.aivirabackend.domain.entity.user.User;
 import com.tien.aivirabackend.repository.RoleRepository;
 import com.tien.aivirabackend.repository.UserRepository;
+import com.tien.aivirabackend.service.PermissionService;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -41,9 +42,12 @@ public class ApplicationInitConfig {
 
     @Bean
     @ConditionalOnProperty(prefix = "app.seed", name = "enabled", havingValue = "true")
-    ApplicationRunner applicationRunner(UserRepository userRepository, RoleRepository roleRepository) {
+    ApplicationRunner applicationRunner(
+            UserRepository userRepository, RoleRepository roleRepository, PermissionService permissionService) {
         return args -> {
             log.info("[INIT] Seeding default data...");
+
+            permissionService.seedDefaultPermissions();
 
             if (!StringUtils.hasText(adminUsername)
                     || !StringUtils.hasText(adminPassword)
@@ -52,7 +56,6 @@ public class ApplicationInitConfig {
                 return;
             }
 
-            //
             Role userRole = getOrCreateRole(roleRepository, PredefinedRole.USER, "USER ROLE");
             Role adminRole = getOrCreateRole(roleRepository, PredefinedRole.ADMIN, "ADMIN ROLE");
 
