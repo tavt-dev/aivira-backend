@@ -1,0 +1,23 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+
+jwt:
+  signerKey: test-secret-key-with-at-least-32-characters
+  issuer: aivira-test
+  valid-duration: 3600
+  refreshable-duration: 36000
+
+auth:
+  refresh-token:
+    cookie-secure: false
+
+cloudinary:
+  cloud-name: test-cloud
+  api-key: test-key
+  api-secret: test-secret

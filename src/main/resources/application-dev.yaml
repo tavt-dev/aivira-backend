@@ -1,0 +1,11 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: ${DDL_AUTO:validate}
+  flyway:
+    enabled: ${FLYWAY_ENABLED:true}
+    baseline-on-migrate: ${FLYWAY_BASELINE_ON_MIGRATE:false}
+
+auth:
+  refresh-token:
+    cookie-secure: ${AUTH_REFRESH_TOKEN_COOKIE_SECURE:true}
