@@ -55,8 +55,10 @@ public class UserPermissionServiceImpl implements UserPermissionService {
         effectiveCodes.addAll(rolePermissionCodes);
         effectiveCodes.addAll(directActiveCodes);
 
-        Map<PermissionCode, Permission> permissionsByCode = permissionRepository.findByCodeIn(effectiveCodes).stream()
-                .collect(Collectors.toMap(Permission::getCode, permission -> permission));
+        Map<PermissionCode, Permission> permissionsByCode = effectiveCodes.isEmpty()
+                ? Map.of()
+                : permissionRepository.findByCodeIn(effectiveCodes).stream()
+                        .collect(Collectors.toMap(Permission::getCode, permission -> permission));
 
         List<UserPermissionResponse> directPermissions = userPermissionRepository.findAllByUserId(userId).stream()
                 .map(permission -> toUserPermissionResponse(permission, now))
