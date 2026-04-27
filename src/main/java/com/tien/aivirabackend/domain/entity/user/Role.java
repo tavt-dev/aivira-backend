@@ -1,5 +1,6 @@
 package com.tien.aivirabackend.domain.entity.user;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import jakarta.persistence.*;
@@ -30,6 +31,14 @@ public class Role {
 
     @Column(length = 255)
     String description;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "role_permissions",
+            joinColumns = @JoinColumn(name = "role_id"),
+            inverseJoinColumns = @JoinColumn(name = "permission_id"))
+    @Builder.Default
+    Set<Permission> permissions = new HashSet<>();
 
     @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
     Set<User> users;
