@@ -23,6 +23,7 @@ final class DefaultPermissionMatrix {
                 PermissionCode.USER_UPDATE_SELF,
                 PermissionCode.USER_CHANGE_PASSWORD_SELF,
                 PermissionCode.USER_DEACTIVATE_SELF,
+                PermissionCode.SELLER_APPLY,
                 PermissionCode.ADDRESS_READ_SELF,
                 PermissionCode.ADDRESS_CREATE_SELF,
                 PermissionCode.ADDRESS_UPDATE_SELF,

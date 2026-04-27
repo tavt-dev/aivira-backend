@@ -23,23 +23,36 @@ class FoundationMigrationIntegrationTest extends AbstractIntegrationTest {
 
         Integer adminPermissionCount = jdbcTemplate.queryForObject(
                 """
-                SELECT COUNT(*)
-                FROM role_permissions rp
-                JOIN roles r ON r.id = rp.role_id
-                WHERE r.code = 'ADMIN'
-                """,
+				SELECT COUNT(*)
+				FROM role_permissions rp
+				JOIN roles r ON r.id = rp.role_id
+				WHERE r.code = 'ADMIN'
+				""",
                 Integer.class);
 
         Integer userPermissionCount = jdbcTemplate.queryForObject(
                 """
-                SELECT COUNT(*)
-                FROM role_permissions rp
-                JOIN roles r ON r.id = rp.role_id
-                WHERE r.code = 'USER'
-                """,
+				SELECT COUNT(*)
+				FROM role_permissions rp
+				JOIN roles r ON r.id = rp.role_id
+				WHERE r.code = 'USER'
+				""",
                 Integer.class);
 
         assertThat(adminPermissionCount).isEqualTo(PermissionCode.values().length);
         assertThat(userPermissionCount).isGreaterThan(0);
+
+        Integer userSellerApplyCount = jdbcTemplate.queryForObject(
+                """
+				SELECT COUNT(*)
+				FROM role_permissions rp
+				JOIN roles r ON r.id = rp.role_id
+				JOIN permissions p ON p.id = rp.permission_id
+				WHERE r.code = 'USER'
+				AND p.code = 'SELLER_APPLY'
+				""",
+                Integer.class);
+
+        assertThat(userSellerApplyCount).isEqualTo(1);
     }
 }

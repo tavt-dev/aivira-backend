@@ -1,6 +1,6 @@
 # Aivira Backend
 
-Backend API cho hệ thống e-commerce Aivira, xây dựng bằng Spring Boot. Project hiện là một monolith backend với phần API đã hoàn thiện chủ yếu ở xác thực người dùng, quản lý phiên đăng nhập và hồ sơ cá nhân. Các domain e-commerce như catalog, giỏ hàng, đơn hàng, thanh toán, khuyến mãi và review đã có entity nền để phát triển tiếp.
+Backend API cho hệ thống e-commerce marketplace Aivira, xây dựng bằng Spring Boot. Project hiện là một monolith backend với phần API đã hoàn thiện ở xác thực người dùng, quản lý phiên đăng nhập, hồ sơ cá nhân, Hybrid RBAC và Seller Marketplace MVP. Các domain e-commerce như catalog, giỏ hàng, đơn hàng, thanh toán, khuyến mãi và review đã có entity nền để phát triển tiếp.
 
 ## Tổng Quan
 
@@ -11,6 +11,7 @@ Backend API cho hệ thống e-commerce Aivira, xây dựng bằng Spring Boot. 
 - Quản lý access token/refresh token, session thiết bị, token rotation và phát hiện reuse refresh token.
 - Bảo vệ API bằng Spring Security OAuth2 Resource Server với JWT.
 - Quản lý hồ sơ người dùng hiện tại qua `/users/me`.
+- Seller onboarding, shop profile, admin shop moderation và seller ownership guard nền.
 - Nền tảng dữ liệu cho e-commerce: product, category, cart, order, payment, coupon, promotion, review.
 
 ## Công Nghệ
@@ -55,6 +56,7 @@ Các file cấu hình chính:
 - `src/main/resources/application-prod.yaml`: cấu hình production, bắt buộc Flyway + Hibernate validate, không dùng `ddl-auto=update`.
 - `src/main/resources/application-test.yaml`: cấu hình test, dùng Flyway/Hibernate validate và secret test.
 - `src/main/resources/db/migration/V1__init_schema.sql`: migration khởi tạo schema và seed RBAC reference data.
+- `src/main/resources/db/migration/V2__seller_marketplace.sql`: migration Seller Marketplace MVP, tạo bảng `shops` và bổ sung `SELLER_APPLY` cho role `USER`.
 - `.env.example`: danh sách biến môi trường tham khảo.
 - `Aivira Backend API.postman_collection.json`: Postman collection.
 
@@ -86,11 +88,18 @@ Các file cấu hình chính:
   - Xem effective permissions của từng user.
   - Grant direct permission cho một user cụ thể.
   - Revoke direct permission đang active của user.
+- Seller marketplace:
+  - User đăng ký mở shop và nhận trạng thái `PENDING`.
+  - Seller xem/cập nhật hồ sơ shop, resubmit shop bị từ chối và upload logo shop lên Cloudinary.
+  - Admin xem danh sách shop, duyệt, từ chối, khóa và mở khóa shop.
+  - Khi admin duyệt shop, owner được gán role `SELLER`.
+  - Seller dashboard Phase 3 trả summary placeholder với số liệu `0` cho đến khi catalog/order hoàn thiện.
 
 ### Đã Có Entity Nền
 
 - User/Auth: `User`, `Role`, `Permission`, `UserPermission`, `Address`, `UserOtp`, `RefreshToken`, `InvalidatedToken`
 - Permission mappings: `user_roles`, `role_permissions`, `user_permissions`
+- Marketplace: `Shop`
 - Catalog: `Category`, `Product`, `ProductVariation`, `ProductMedia`
 - Transaction: `Cart`, `CartItem`, `Order`, `OrderItem`, `Payment`
 - Discount: `Coupon`, `CouponUsage`, `Promotion`
@@ -144,6 +153,19 @@ Authorization: Bearer <access-token>
 | `PUT` | `/users/me/password` | Đổi mật khẩu |
 | `POST` | `/users/me/deactivate` | Vô hiệu hóa và đánh dấu xóa tài khoản hiện tại |
 
+### Seller Shop Endpoints
+
+Cần bearer token và permission phù hợp như `SELLER_APPLY`, `SHOP_READ_SELF`, `SHOP_UPDATE_SELF` hoặc `DASHBOARD_READ_SELLER`.
+
+| Method | Endpoint | Mô tả |
+|---|---|---|
+| `POST` | `/seller/shop/apply` | Tạo shop application trạng thái `PENDING` cho user hiện tại |
+| `GET` | `/seller/shop` | Lấy shop của user hiện tại |
+| `PUT` | `/seller/shop` | Cập nhật hồ sơ shop khi shop chưa bị khóa/inactive |
+| `POST` | `/seller/shop/resubmit` | Gửi lại shop bị `REJECTED` để admin duyệt lại |
+| `PUT` | `/seller/shop/logo` | Upload logo shop qua multipart field `logo` |
+| `GET` | `/seller/dashboard` | Lấy dashboard placeholder Phase 3 của seller |
+
 ### Admin Permission Endpoints
 
 Cần bearer token và permission phù hợp như `PERMISSION_MANAGE`, `ROLE_MANAGE` hoặc nhóm `USER_PERMISSION_*`.
@@ -157,6 +179,19 @@ Cần bearer token và permission phù hợp như `PERMISSION_MANAGE`, `ROLE_MAN
 | `GET` | `/admin/users/{userId}/permissions` | Lấy role permissions, direct permissions và effective permissions của user |
 | `POST` | `/admin/users/{userId}/permissions` | Grant direct permission cho user |
 | `DELETE` | `/admin/users/{userId}/permissions/{permissionCode}` | Revoke direct permission đang active của user |
+
+### Admin Shop Endpoints
+
+Cần bearer token và permission phù hợp như `SHOP_READ_ALL`, `SHOP_APPROVE`, `SHOP_REJECT`, `SHOP_LOCK`, `SHOP_UNLOCK` hoặc `SHOP_MANAGE_ALL`.
+
+| Method | Endpoint | Mô tả |
+|---|---|---|
+| `GET` | `/admin/shops` | Lấy danh sách shop có pagination, filter `status`, `keyword` |
+| `GET` | `/admin/shops/{shopId}` | Lấy chi tiết shop |
+| `PUT` | `/admin/shops/{shopId}/approve` | Duyệt shop `PENDING` và gán role `SELLER` cho owner |
+| `PUT` | `/admin/shops/{shopId}/reject` | Từ chối shop `PENDING`, body có `reason` |
+| `PUT` | `/admin/shops/{shopId}/lock` | Khóa shop `APPROVED`, body có `reason` |
+| `PUT` | `/admin/shops/{shopId}/unlock` | Mở khóa shop `LOCKED` về `APPROVED` |
 
 ## Payload Mẫu
 
@@ -217,6 +252,31 @@ Refresh token được ưu tiên đọc từ cookie `refreshToken`. Nếu `AUTH_
   "firstName": "Updated",
   "lastName": "User",
   "gender": "MALE"
+}
+```
+
+### Đăng Ký Mở Shop
+
+```json
+{
+  "shopName": "Aivira Fashion",
+  "description": "Thời trang nữ tuyển chọn",
+  "businessEmail": "shop@example.com",
+  "phoneNumber": "0900000000",
+  "legalName": "Aivira Fashion LLC",
+  "taxCode": "0312345678",
+  "pickupAddressLine": "123 Nguyễn Trãi",
+  "pickupWard": "Phường 7",
+  "pickupDistrict": "Quận 5",
+  "pickupCity": "TP. Hồ Chí Minh"
+}
+```
+
+### Từ Chối Hoặc Khóa Shop
+
+```json
+{
+  "reason": "Thông tin xác minh chưa đầy đủ."
 }
 ```
 
@@ -301,6 +361,7 @@ CREATE DATABASE aivira CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 Các bảng lõi theo entity hiện tại:
 
 - Auth/User: `users`, `roles`, `user_roles`, `addresses`, `user_otp`, `refresh_tokens`, `invalidated_tokens`
+- Marketplace: `shops`
 - Catalog: `categories`, `products`, `product_variations`, `product_media`
 - Transaction: `carts`, `cart_items`, `orders`, `order_items`, `payments`
 - Discount: `coupons`, `coupon_usages`, `promotions`
@@ -310,6 +371,12 @@ Project hiện dùng Flyway để version schema. Migration khởi tạo nằm �
 
 ```text
 src/main/resources/db/migration/V1__init_schema.sql
+```
+
+Migration Phase 3 Seller Marketplace nằm ở:
+
+```text
+src/main/resources/db/migration/V2__seller_marketplace.sql
 ```
 
 `spring.jpa.hibernate.ddl-auto` mặc định là `validate`. Production không dùng `ddl-auto=update`; mọi thay đổi schema mới phải đi qua migration versioned. Flyway cũng seed dữ liệu RBAC nền gồm `roles`, `permissions` và `role_permissions`. Admin account vẫn được seed qua `ApplicationRunner` khi bật `SEED_ENABLED=true` vì cần password lấy từ environment variable.
@@ -470,6 +537,8 @@ Test hiện có:
 - Unit test `RefreshTokenCookieServiceTest`.
 - Unit test `AuthenticationServiceImplTest` cho flow account chưa verify và lockout sau failed login.
 - Unit test RBAC/user permission, authorization resolver, user service và upload validator.
+- Unit test Seller Marketplace cho shop apply, chống tạo shop thứ hai, resubmit, lock/unlock, approve và gán role `SELLER`.
+- Migration test kiểm tra role `USER` có quyền `SELLER_APPLY`.
 
 Integration test sẽ chạy khi Docker daemon khả dụng. Nếu Docker chưa chạy, Testcontainers test được skip để unit test và build local vẫn chạy được.
 
@@ -482,6 +551,8 @@ Format code:
 ## Lưu Ý Hiện Tại
 
 - Avatar cũ trên Cloudinary hiện được giữ lại khi user upload avatar mới; chưa có cleanup job cho media cũ.
+- Shop logo cũ trên Cloudinary hiện được giữ lại khi seller upload logo mới; chưa có cleanup job cho media cũ.
+- Seller dashboard Phase 3 chỉ trả số liệu placeholder `0` vì product/order service chưa được triển khai.
 - Các module catalog/cart/order/payment/discount/review mới có entity, chưa có API nghiệp vụ đầy đủ.
 - Đã có Flyway migration versioning từ `V1__init_schema.sql`; các thay đổi schema tiếp theo phải tạo migration mới.
 - `.env` chỉ là file tham khảo, app không tự load file này nếu không thêm cơ chế load riêng.
@@ -672,7 +743,7 @@ Ví dụ guard cần có:
 - `hasPermission("ORDER_MANAGE_ALL")` cho admin quản lý mọi order.
 - `hasPermission("REPORT_EXPORT_ALL")` có thể đến từ role `ADMIN` hoặc direct permission cấp riêng cho một user.
 
-API quản lý permission đề xuất:
+API quản lý permission hiện có:
 
 - `GET /admin/permissions`: xem toàn bộ permission hệ thống.
 - `GET /admin/roles`: xem role và quyền được gán cho role.
@@ -684,26 +755,37 @@ API quản lý permission đề xuất:
 
 ### Seller Và Shop Marketplace
 
-Chức năng seller/shop cần có:
+Seller Marketplace MVP hiện đã có:
 
-- Customer gửi yêu cầu trở thành seller.
-- Seller tạo hồ sơ shop: tên shop, slug, logo, mô tả, email, số điện thoại, địa chỉ lấy hàng.
+- Customer/user gửi yêu cầu trở thành seller qua shop application.
+- Seller tạo hồ sơ shop: tên shop, slug, logo, mô tả, email, số điện thoại, legal name, tax code optional và địa chỉ lấy hàng.
 - Shop có trạng thái: `PENDING`, `APPROVED`, `REJECTED`, `LOCKED`, `INACTIVE`.
 - Admin duyệt, từ chối, khóa hoặc mở khóa shop.
-- Seller chỉ được đăng sản phẩm sau khi shop được duyệt.
-- Seller dashboard hiển thị doanh thu, số đơn, sản phẩm bán chạy, tồn kho thấp, tỷ lệ hủy đơn.
+- Seller chỉ nên được đăng sản phẩm sau khi shop được duyệt; guard nền đã có qua `ShopOwnershipService`.
+- Seller dashboard Phase 3 trả placeholder summary vì product/order chưa có service.
 
-Entity/API đề xuất:
+Entity/API hiện có:
 
-- `Shop`, `SellerProfile`, `SellerVerification`.
-- `POST /seller/apply`
+- `Shop`.
+- `POST /seller/shop/apply`
 - `GET /seller/shop`
 - `PUT /seller/shop`
+- `POST /seller/shop/resubmit`
+- `PUT /seller/shop/logo`
 - `GET /seller/dashboard`
 - `GET /admin/shops`
-- `PUT /admin/shops/{id}/approve`
-- `PUT /admin/shops/{id}/reject`
-- `PUT /admin/shops/{id}/lock`
+- `GET /admin/shops/{shopId}`
+- `PUT /admin/shops/{shopId}/approve`
+- `PUT /admin/shops/{shopId}/reject`
+- `PUT /admin/shops/{shopId}/lock`
+- `PUT /admin/shops/{shopId}/unlock`
+
+Chưa có trong Phase 3:
+
+- Audit log thật cho approve/reject/lock/unlock.
+- Notification/email seller approved/rejected/locked.
+- Dashboard doanh thu/sản phẩm/đơn hàng thật.
+- Full KYC/document upload.
 
 ### Catalog, Search Và Inventory
 
@@ -1198,7 +1280,7 @@ Kết quả mong muốn:
 - Đã áp dụng `@PreAuthorize` cho admin permission APIs.
 - Đã thêm admin APIs để xem/cập nhật role permissions và grant/revoke direct user permission.
 - Đã có unit test cho permission seed, role permission, direct user permission và authorization resolver.
-- Còn lại: ownership guard cho seller resource, audit log chi tiết và cache invalidation.
+- Còn lại: audit log chi tiết và cache invalidation.
 
 Kết quả mong muốn:
 
@@ -1206,21 +1288,31 @@ Kết quả mong muốn:
 - Permission được seed idempotent, chạy lại không tạo trùng dữ liệu.
 - Admin có API để quản lý role permissions và direct user permissions.
 - Effective permissions được resolve từ database, không phụ thuộc JWT permission claim.
-- Các phần còn lại sẽ được xử lý khi có seller/shop ownership và audit log module.
+- Audit log chi tiết và cache invalidation sẽ được xử lý ở module vận hành/production readiness.
 
-### Phase 3: Seller Marketplace
+### Phase 3: Seller Marketplace - Done
 
-- Thêm shop/seller profile.
-- Seller onboarding.
-- Admin approve/reject/lock shop.
-- Seller dashboard cơ bản.
-- Ownership guard cho mọi API seller.
+- Đã thêm Flyway migration `V2__seller_marketplace.sql`.
+- Đã thêm `Shop` entity, `ShopRepository`, DTO, mapper, service và error code.
+- Đã thêm seller APIs cho apply, read/update shop, resubmit, upload logo và dashboard placeholder.
+- Đã thêm admin APIs cho list/detail shop, approve, reject, lock và unlock.
+- Đã thêm `ShopOwnershipService` để lấy shop hiện tại, kiểm tra owner và yêu cầu shop đã `APPROVED`.
+- Đã bổ sung `SELLER_APPLY` cho role `USER`; user chưa là seller vẫn có thể đăng ký shop và chỉnh hồ sơ pending/rejected.
+- Khi admin approve shop, owner được gán role `SELLER`.
+- Đã có unit test cho seller flow và admin moderation flow.
 
 Kết quả mong muốn:
 
 - User có thể đăng ký làm seller.
-- Admin có thể duyệt seller.
-- Seller có shop riêng và chỉ thao tác trong phạm vi shop.
+- Admin có thể duyệt/từ chối/khóa/mở khóa seller shop.
+- Seller có shop riêng và có guard nền để các API Phase 4+ chỉ thao tác trong phạm vi shop.
+
+Còn lại để làm ở phase sau:
+
+- Audit log thật cho thao tác approve/reject/lock/unlock.
+- Notification/email khi shop được duyệt/từ chối/khóa.
+- Dashboard doanh thu/sản phẩm/đơn hàng thật sau khi có catalog/order.
+- Full KYC/document upload.
 
 ### Phase 4: Catalog
 
@@ -1372,8 +1464,8 @@ Kết quả mong muốn:
 
 Thứ tự nên làm ngay sau nền auth/user hiện tại:
 
-1. Thêm seller/shop để xác định ownership cho product/order/promotion.
-2. Làm category/product/variation/media.
-3. Làm address/cart/checkout/order.
-4. Làm COD trước, sau đó VNPay/Momo.
-5. Làm promotion/review/refund/dashboard sau khi order flow ổn định.
+1. Làm category/product/variation/media gắn với shop đã được approve.
+2. Làm address/cart/checkout/order.
+3. Làm COD trước, sau đó VNPay/Momo.
+4. Làm promotion/review/refund/dashboard sau khi order flow ổn định.
+5. Bổ sung audit log, notification/email và dashboard thật khi các domain nghiệp vụ đã có dữ liệu.
