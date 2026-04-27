@@ -1,5 +1,7 @@
 package com.tien.aivirabackend.integration;
 
+import jakarta.servlet.Filter;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,8 +20,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tien.aivirabackend.service.CloudinaryStorageService;
 import com.tien.aivirabackend.service.EmailService;
-
-import jakarta.servlet.Filter;
 
 @Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest
@@ -80,6 +80,7 @@ public abstract class AbstractIntegrationTest {
         jdbcTemplate.execute("TRUNCATE TABLE categories");
         jdbcTemplate.execute("TRUNCATE TABLE user_permissions");
         jdbcTemplate.execute("TRUNCATE TABLE user_roles");
+        jdbcTemplate.execute("TRUNCATE TABLE shops");
         jdbcTemplate.execute("TRUNCATE TABLE addresses");
         jdbcTemplate.execute("TRUNCATE TABLE user_otp");
         jdbcTemplate.execute("TRUNCATE TABLE refresh_tokens");

@@ -44,7 +44,8 @@ class PermissionServiceImplTest {
         Permission permission = buildPermission(PermissionCode.USER_READ_SELF);
 
         when(roleRepository.findWithPermissionsByCode(PredefinedRole.USER)).thenReturn(Optional.of(role));
-        when(permissionRepository.findByCodeIn(Set.of(PermissionCode.USER_READ_SELF))).thenReturn(List.of(permission));
+        when(permissionRepository.findByCodeIn(Set.of(PermissionCode.USER_READ_SELF)))
+                .thenReturn(List.of(permission));
         when(roleRepository.save(any(Role.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         var response = permissionService.updateRolePermissions(
@@ -112,7 +113,9 @@ class PermissionServiceImplTest {
         permissionService.seedDefaultPermissions();
 
         assertThat(savedPermissions).hasSize(PermissionCode.values().length);
-        assertThat(userRole.getPermissions()).extracting(Permission::getCode).contains(PermissionCode.USER_READ_SELF);
+        assertThat(userRole.getPermissions())
+                .extracting(Permission::getCode)
+                .contains(PermissionCode.USER_READ_SELF, PermissionCode.SELLER_APPLY);
         assertThat(sellerRole.getPermissions())
                 .extracting(Permission::getCode)
                 .contains(PermissionCode.PRODUCT_CREATE_OWN_SHOP);
