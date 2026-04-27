@@ -5,7 +5,7 @@ server:
 
 spring:
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/aivira?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh&characterEncoding=utf8&useUnicode=true}
+    url: ${DB_URL}
     username: ${USERNAME_DB}
     password: ${PASSWORD_DB}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -28,11 +28,16 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
-      ddl-auto: ${DDL_AUTO:update}
+      ddl-auto: ${DDL_AUTO:validate}
     show-sql: ${SHOW_SQL:false}
     properties:
       hibernate:
         format_sql: true
+
+  flyway:
+    enabled: ${FLYWAY_ENABLED:true}
+    locations: ${FLYWAY_LOCATIONS:classpath:db/migration}
+    baseline-on-migrate: ${FLYWAY_BASELINE_ON_MIGRATE:false}
 
 security:
   public-endpoints: ${PUBLIC_ENDPOINTS:/oauth2/**,/auth/token,/auth/register,/auth/verify-user,/auth/resend-verification,/auth/forgot-password,/auth/reset-password,/auth/refresh-token,/auth/logout,/swagger-ui.html,/swagger-ui/**,/v3/api-docs,/v3/api-docs/**,/v3/api-docs.yaml,/api/v1/auth/token,/api/v1/auth/register,/api/v1/auth/verify-user,/api/v1/auth/resend-verification,/api/v1/auth/forgot-password,/api/v1/auth/reset-password,/api/v1/auth/refresh-token,/api/v1/auth/logout,/api/v1/swagger-ui.html,/api/v1/swagger-ui/**,/api/v1/v3/api-docs,/api/v1/v3/api-docs/**,/api/v1/v3/api-docs.yaml}

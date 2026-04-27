@@ -1,0 +1,13 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+
+auth:
+  refresh-token:
+    cookie-secure: true
+    cookie-http-only: true
