@@ -1,28 +1,37 @@
 package com.tien.aivirabackend.service.impl;
 
+import static org.springframework.util.StringUtils.truncate;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
-import com.tien.aivirabackend.constant.RevocationReason;
-import com.tien.aivirabackend.domain.dto.response.ActiveSessionResponse;
-import com.tien.aivirabackend.domain.entity.RefreshToken;
-import com.tien.aivirabackend.repository.RefreshTokenRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import com.nimbusds.jose.*;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.tien.aivirabackend.constant.RevocationReason;
 import com.tien.aivirabackend.constant.TokenType;
+import com.tien.aivirabackend.domain.dto.response.ActiveSessionResponse;
+import com.tien.aivirabackend.domain.entity.RefreshToken;
 import com.tien.aivirabackend.domain.entity.user.Role;
 import com.tien.aivirabackend.domain.entity.user.User;
 import com.tien.aivirabackend.exception.AppException;
@@ -30,14 +39,13 @@ import com.tien.aivirabackend.exception.errorCode.AuthErrorCode;
 import com.tien.aivirabackend.exception.errorCode.JwtErrorCode;
 import com.tien.aivirabackend.exception.errorCode.UserErrorCode;
 import com.tien.aivirabackend.repository.InvalidatedTokenRepository;
+import com.tien.aivirabackend.repository.RefreshTokenRepository;
 import com.tien.aivirabackend.repository.UserRepository;
 import com.tien.aivirabackend.service.JwtService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
-
-import static org.springframework.util.StringUtils.truncate;
 
 @Service
 @RequiredArgsConstructor
@@ -88,33 +96,15 @@ public class JwtServiceImpl implements JwtService {
         validateUser(user);
         log.debug("Creating refresh token for user: {}", user.getUsername());
 
-        // Generate new familyId if not provided
         String tokenFamilyId = familyId != null ? familyId : UUID.randomUUID().toString();
 
         String token = createToken(user, TokenType.REFRESH, refreshableDuration, tokenFamilyId);
 
-        try{
-            SignedJWT signedJWT = SignedJWT.parse(token);
-            JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
-
-            RefreshToken refreshToken = RefreshToken.builder()
-                    .tokenHash(hashToken(token))
-                    .jti(claimsSet.getJWTID())
-                    .familyId(tokenFamilyId)
-                    .user(user)
-                    .issuedAt(claimsSet.getIssueTime().toInstant())
-                    .expiresAt(claimsSet.getExpirationTime().toInstant())
-                    .deviceInfo(truncate(deviceInfo, 512))
-                    .ipAddress(truncate(ipAddress, 45))
-                    .revoked(false)
-                    .build();
-
-            refreshTokenRepository.save(refreshToken);
-            log.debug("Refresh token stored successfully for user: {}", user.getUsername());
-        } catch ( ParseException e) {
-            log.error("Failed to parse JWT token for storing refresh token", e);
-            throw new AppException(JwtErrorCode.TOKEN_MALFORMED);
-        }
+        JWTClaimsSet claimsSet = parseClaims(token, JwtErrorCode.TOKEN_MALFORMED, "store refresh token");
+        RefreshToken refreshToken =
+                buildRefreshTokenRecord(user, token, tokenFamilyId, deviceInfo, ipAddress, claimsSet);
+        refreshTokenRepository.save(refreshToken);
+        log.debug("Refresh token stored successfully for user: {}", user.getUsername());
 
         return token;
     }
@@ -129,52 +119,13 @@ public class JwtServiceImpl implements JwtService {
     public SignedJWT verifyRefreshToken(String refreshToken) {
         SignedJWT signedJWT = verifyToken(refreshToken, TokenType.REFRESH);
 
-        try{
-            JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
+        JWTClaimsSet claimsSet = getClaimsSet(signedJWT, JwtErrorCode.TOKEN_INVALID, "verify refresh token");
+        RefreshToken storedToken = findStoredRefreshToken(claimsSet.getJWTID());
+        validateStoredRefreshToken(storedToken);
+        storedToken.markUsed(Instant.now());
+        refreshTokenRepository.save(storedToken);
 
-            String jti = claimsSet.getJWTID();
-
-            // Check if token exists and is valid in database
-            Optional<RefreshToken> storedTokenOpt = refreshTokenRepository.findByJti(jti);
-
-            if(storedTokenOpt.isEmpty()) {
-                log.warn("Refresh token not found in database: {}", jti);
-                throw new AppException(JwtErrorCode.REFRESH_TOKEN_INVALID);
-            }
-
-            RefreshToken storedToken = storedTokenOpt.get();
-
-            if(storedToken.isRevoked()){
-                // Token reuse detected
-                String familyId = storedToken.getFamilyId();
-                log.warn("SECURITY: Refresh token reuse detected! JTI: {}, Family: {}", jti, familyId);
-
-                // Revoke all tokens in the same family
-                int revokedCount = refreshTokenRepository.revokeAllByFamilyId(
-                        familyId,
-                        Instant.now(),
-                        RevocationReason.SECURITY_BREACH
-                );
-
-                log.warn("Revoked {} tokens in family {} due to reuse detection", revokedCount, familyId);
-
-                throw new AppException(JwtErrorCode.REFRESH_TOKEN_REUSED);
-            }
-
-            if(!storedToken.isValid()) {
-                log.warn("Refresh token is no longer valid (expired or revoked): {}", jti);
-                throw new AppException(JwtErrorCode.REFRESH_TOKEN_EXPIRED);
-            }
-
-            storedToken.markUsed(Instant.now());
-            refreshTokenRepository.save(storedToken);
-
-            return signedJWT;
-
-        } catch (ParseException e) {
-            log.error("Failed to parse refresh token claims", e);
-            throw new AppException(JwtErrorCode.TOKEN_INVALID);
-        }
+        return signedJWT;
     }
 
     @Override
@@ -200,21 +151,7 @@ public class JwtServiceImpl implements JwtService {
             Optional<RefreshToken> storedTokenOpt = refreshTokenRepository.findByJti(jti);
 
             if (storedTokenOpt.isPresent()) {
-                RefreshToken storedToken = storedTokenOpt.get();
-                if (!storedToken.isRevoked()) {
-                    storedToken.revoke(reason == null ? RevocationReason.TOKEN_REFRESH : reason);
-                    if (replacedBy != null && !replacedBy.isBlank()) {
-                        storedToken.setReplacedBy(replacedBy);
-                    }
-                    refreshTokenRepository.save(storedToken);
-                    log.info(
-                            "Refresh token revoked successfully: jti={} reason={} replacedBy={}",
-                            jti,
-                            storedToken.getRevocationReason(),
-                            storedToken.getReplacedBy());
-                } else {
-                    log.debug("Token already revoked: {}", jti);
-                }
+                revokeStoredRefreshToken(storedTokenOpt.get(), jti, reason, replacedBy);
             } else {
                 log.warn("Token not found in database: {}", jti);
             }
@@ -242,14 +179,10 @@ public class JwtServiceImpl implements JwtService {
         user.setTokenVersion(tokenVersion == null ? 1 : tokenVersion + 1);
         userRepository.save(user);
 
-
-        //Revoke all refresh tokens in database
+        // Revoke all refresh tokens in database
 
         int revokedCount = refreshTokenRepository.revokeAllByUserId(
-                userId,
-                Instant.now(),
-                reason == null ? RevocationReason.USER_LOGOUT_ALL : reason
-        );
+                userId, Instant.now(), reason == null ? RevocationReason.USER_LOGOUT_ALL : reason);
         log.info(
                 "Revoked {} refresh tokens and incremented token version for user {} to {}",
                 revokedCount,
@@ -260,28 +193,21 @@ public class JwtServiceImpl implements JwtService {
     @Override
     public String getTokenFamilyId(String refreshToken) {
         SignedJWT signedJWT = verifyToken(refreshToken, TokenType.REFRESH);
-        try{
-            return signedJWT.getJWTClaimsSet().getStringClaim(FAMILY_ID_CLAIM);
-        } catch (ParseException e) {
-            log.error("Failed to parse refresh token claims to get family ID", e);
-            throw new AppException(JwtErrorCode.TOKEN_INVALID);
-        }
+        JWTClaimsSet claimsSet = getClaimsSet(signedJWT, JwtErrorCode.TOKEN_INVALID, "read refresh token family ID");
+        return getStringClaim(claimsSet, FAMILY_ID_CLAIM, "read refresh token family ID");
     }
 
     @Override
     public String getTokenJti(String token) {
         SignedJWT signedJWT = verifyToken(token, TokenType.REFRESH);
-        try {
-            return signedJWT.getJWTClaimsSet().getJWTID();
-        } catch (ParseException e) {
-            log.error("Failed to parse token claims to get JTI", e);
-            throw new AppException(JwtErrorCode.TOKEN_INVALID);
-        }
+        return getClaimsSet(signedJWT, JwtErrorCode.TOKEN_INVALID, "read refresh token JTI")
+                .getJWTID();
     }
 
     @Override
     public void revokeSession(String userId, String sessionId) {
-        RefreshToken token = refreshTokenRepository.findById(sessionId)
+        RefreshToken token = refreshTokenRepository
+                .findById(sessionId)
                 .orElseThrow(() -> new AppException(JwtErrorCode.REFRESH_TOKEN_INVALID));
 
         // Verify token belongs to user
@@ -312,6 +238,100 @@ public class JwtServiceImpl implements JwtService {
                         .currentSession(token.getJti().equals(currentSessionJti))
                         .build())
                 .toList();
+    }
+
+    private JWTClaimsSet parseClaims(String token, JwtErrorCode errorCode, String operation) {
+        try {
+            return SignedJWT.parse(token).getJWTClaimsSet();
+        } catch (ParseException e) {
+            log.error("Failed to parse JWT claims for {}", operation, e);
+            throw new AppException(errorCode);
+        }
+    }
+
+    private JWTClaimsSet getClaimsSet(SignedJWT signedJWT, JwtErrorCode errorCode, String operation) {
+        try {
+            return signedJWT.getJWTClaimsSet();
+        } catch (ParseException e) {
+            log.error("Failed to parse JWT claims for {}", operation, e);
+            throw new AppException(errorCode);
+        }
+    }
+
+    private String getStringClaim(JWTClaimsSet claimsSet, String claimName, String operation) {
+        try {
+            return claimsSet.getStringClaim(claimName);
+        } catch (ParseException e) {
+            log.error("Failed to read JWT claim '{}' for {}", claimName, operation, e);
+            throw new AppException(JwtErrorCode.TOKEN_INVALID);
+        }
+    }
+
+    private RefreshToken buildRefreshTokenRecord(
+            User user,
+            String token,
+            String tokenFamilyId,
+            String deviceInfo,
+            String ipAddress,
+            JWTClaimsSet claimsSet) {
+        return RefreshToken.builder()
+                .tokenHash(hashToken(token))
+                .jti(claimsSet.getJWTID())
+                .familyId(tokenFamilyId)
+                .user(user)
+                .issuedAt(claimsSet.getIssueTime().toInstant())
+                .expiresAt(claimsSet.getExpirationTime().toInstant())
+                .deviceInfo(truncate(deviceInfo, 512))
+                .ipAddress(truncate(ipAddress, 45))
+                .revoked(false)
+                .build();
+    }
+
+    private RefreshToken findStoredRefreshToken(String jti) {
+        return refreshTokenRepository.findByJti(jti).orElseThrow(() -> {
+            log.warn("Refresh token not found in database: {}", jti);
+            return new AppException(JwtErrorCode.REFRESH_TOKEN_INVALID);
+        });
+    }
+
+    private void validateStoredRefreshToken(RefreshToken storedToken) {
+        if (storedToken.isRevoked()) {
+            revokeTokenFamilyAfterReuse(storedToken);
+            throw new AppException(JwtErrorCode.REFRESH_TOKEN_REUSED);
+        }
+
+        if (!storedToken.isValid()) {
+            log.warn("Refresh token is no longer valid (expired or revoked): {}", storedToken.getJti());
+            throw new AppException(JwtErrorCode.REFRESH_TOKEN_EXPIRED);
+        }
+    }
+
+    private void revokeTokenFamilyAfterReuse(RefreshToken storedToken) {
+        String familyId = storedToken.getFamilyId();
+        log.warn("SECURITY: Refresh token reuse detected! JTI: {}, Family: {}", storedToken.getJti(), familyId);
+
+        int revokedCount =
+                refreshTokenRepository.revokeAllByFamilyId(familyId, Instant.now(), RevocationReason.SECURITY_BREACH);
+        log.warn("Revoked {} tokens in family {} due to reuse detection", revokedCount, familyId);
+    }
+
+    private void revokeStoredRefreshToken(
+            RefreshToken storedToken, String jti, RevocationReason reason, String replacedBy) {
+        if (storedToken.isRevoked()) {
+            log.debug("Token already revoked: {}", jti);
+            return;
+        }
+
+        storedToken.revoke(reason == null ? RevocationReason.TOKEN_REFRESH : reason);
+        if (replacedBy != null && !replacedBy.isBlank()) {
+            storedToken.setReplacedBy(replacedBy);
+        }
+        refreshTokenRepository.save(storedToken);
+        log.info(
+                "Refresh token revoked successfully: jti={} reason={} replacedBy={}",
+                jti,
+                storedToken.getRevocationReason(),
+                storedToken.getReplacedBy());
     }
 
     private String createToken(User user, TokenType tokenType, long validDuration, String familyId) {
@@ -418,7 +438,7 @@ public class JwtServiceImpl implements JwtService {
                 .claim(TOKEN_VERSION_CLAIM, user.getTokenVersion() != null ? user.getTokenVersion() : 0)
                 .claim(SCOPE_CLAIM, buildRoles(user.getRoles()));
 
-        if(familyId != null && tokenType == TokenType.REFRESH) {
+        if (familyId != null && tokenType == TokenType.REFRESH) {
             builder.claim(FAMILY_ID_CLAIM, familyId);
         }
 

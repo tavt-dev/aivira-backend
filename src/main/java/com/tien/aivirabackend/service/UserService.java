@@ -1,9 +1,10 @@
 package com.tien.aivirabackend.service;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import com.tien.aivirabackend.domain.dto.request.UpdatePasswordRequest;
 import com.tien.aivirabackend.domain.dto.request.UserUpdateRequest;
 import com.tien.aivirabackend.domain.dto.response.UserResponse;
-import org.springframework.web.multipart.MultipartFile;
 
 public interface UserService {
     UserResponse getMyProfile();
@@ -16,9 +17,9 @@ public interface UserService {
 
     void requestDeactivateMyAccount();
 
-//    void requestEmailChange(ChangeEmailRequest request);
-//    void confirmEmailChange(VerifyEmailChangeRequest request);
-//
-//    void requestPhoneChange(ChangePhoneRequest request);
-//    void confirmPhoneChange(VerifyPhoneChangeRequest request);
+    //    void requestEmailChange(ChangeEmailRequest request);
+    //    void confirmEmailChange(VerifyEmailChangeRequest request);
+    //
+    //    void requestPhoneChange(ChangePhoneRequest request);
+    //    void confirmPhoneChange(VerifyPhoneChangeRequest request);
 }

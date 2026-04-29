@@ -1,24 +1,24 @@
 package com.tien.aivirabackend.controller;
 
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.tien.aivirabackend.domain.dto.ApiResponse;
 import com.tien.aivirabackend.domain.dto.request.UpdatePasswordRequest;
 import com.tien.aivirabackend.domain.dto.request.UserUpdateRequest;
 import com.tien.aivirabackend.domain.dto.response.UserResponse;
+import com.tien.aivirabackend.service.UserService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import com.tien.aivirabackend.service.UserService;
-
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j(topic = "USER-CONTROLLER")
 @RestController
@@ -56,7 +56,9 @@ public class UserController {
     }
 
     @PutMapping("/password")
-    @Operation(summary = "Change my password", description = "Changes the authenticated user's password and revokes existing sessions.")
+    @Operation(
+            summary = "Change my password",
+            description = "Changes the authenticated user's password and revokes existing sessions.")
     public ResponseEntity<ApiResponse<Void>> changeMyPassword(@RequestBody UpdatePasswordRequest request) {
         log.info("change my password request");
         userService.changeMyPassword(request);
@@ -64,7 +66,9 @@ public class UserController {
     }
 
     @PostMapping("/deactivate")
-    @Operation(summary = "Deactivate my account", description = "Marks the authenticated user's account inactive/deleted and revokes sessions.")
+    @Operation(
+            summary = "Deactivate my account",
+            description = "Marks the authenticated user's account inactive/deleted and revokes sessions.")
     public ResponseEntity<ApiResponse<Void>> requestDeactivateMyAccount() {
         log.info("request deactivate my account");
         userService.requestDeactivateMyAccount();

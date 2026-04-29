@@ -2,8 +2,10 @@ package com.tien.aivirabackend.domain.dto.request;
 
 import java.util.Set;
 
-import com.tien.aivirabackend.constant.PermissionCode;
 import jakarta.validation.constraints.NotNull;
+
+import com.tien.aivirabackend.constant.PermissionCode;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 

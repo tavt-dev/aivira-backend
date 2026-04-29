@@ -56,9 +56,7 @@ public class UserPermission extends BaseEntity {
     Boolean active = true;
 
     public boolean isCurrentlyActive(Instant now) {
-        return Boolean.TRUE.equals(active)
-                && revokedAt == null
-                && (expiresAt == null || expiresAt.isAfter(now));
+        return Boolean.TRUE.equals(active) && revokedAt == null && (expiresAt == null || expiresAt.isAfter(now));
     }
 
     public void revoke(Instant revokedAt) {

@@ -2,9 +2,11 @@ package com.tien.aivirabackend.domain.dto.request;
 
 import java.time.Instant;
 
-import com.tien.aivirabackend.constant.PermissionCode;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+
+import com.tien.aivirabackend.constant.PermissionCode;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 

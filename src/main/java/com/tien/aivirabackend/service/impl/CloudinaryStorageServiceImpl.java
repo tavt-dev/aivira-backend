@@ -32,19 +32,27 @@ public class CloudinaryStorageServiceImpl implements CloudinaryStorageService {
         try {
             Map<?, ?> result = cloudinary
                     .uploader()
-                    .upload(file.getBytes(), ObjectUtils.asMap(
-                            "folder", folder,
-                            "public_id", publicId,
-                            "resource_type", "image",
-                            "overwrite", false,
-                            "secure", true,
-                            "transformation", new Transformation<>()
-                                    .width(width)
-                                    .height(height)
-                                    .crop("fill")
-                                    .gravity("face")
-                                    .quality("auto")
-                                    .fetchFormat("auto")));
+                    .upload(
+                            file.getBytes(),
+                            ObjectUtils.asMap(
+                                    "folder",
+                                    folder,
+                                    "public_id",
+                                    publicId,
+                                    "resource_type",
+                                    "image",
+                                    "overwrite",
+                                    false,
+                                    "secure",
+                                    true,
+                                    "transformation",
+                                    new Transformation<>()
+                                            .width(width)
+                                            .height(height)
+                                            .crop("fill")
+                                            .gravity("face")
+                                            .quality("auto")
+                                            .fetchFormat("auto")));
 
             String secureUrl = (String) result.get("secure_url");
             String uploadedPublicId = (String) result.get("public_id");

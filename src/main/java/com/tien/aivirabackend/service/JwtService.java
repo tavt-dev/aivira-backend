@@ -1,11 +1,11 @@
 package com.tien.aivirabackend.service;
 
+import java.util.List;
+
 import com.nimbusds.jwt.SignedJWT;
 import com.tien.aivirabackend.constant.RevocationReason;
 import com.tien.aivirabackend.domain.dto.response.ActiveSessionResponse;
 import com.tien.aivirabackend.domain.entity.user.User;
-
-import java.util.List;
 
 public interface JwtService {
     // Tạo Token

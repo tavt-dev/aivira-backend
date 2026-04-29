@@ -91,7 +91,8 @@ public class PermissionServiceImpl implements PermissionService {
         Map<PermissionCode, Permission> permissionsByCode = seedPermissionCatalog();
 
         for (PredefinedRole roleCode : PredefinedRole.values()) {
-            Role role = roleRepository.findWithPermissionsByCode(roleCode)
+            Role role = roleRepository
+                    .findWithPermissionsByCode(roleCode)
                     .orElseGet(() -> roleRepository.save(Role.builder()
                             .code(roleCode)
                             .description(roleCode.name() + " ROLE")
@@ -103,9 +104,8 @@ public class PermissionServiceImpl implements PermissionService {
             }
 
             Set<PermissionCode> defaultCodes = DefaultPermissionMatrix.forRole(roleCode);
-            Set<PermissionCode> currentCodes = role.getPermissions().stream()
-                    .map(Permission::getCode)
-                    .collect(Collectors.toSet());
+            Set<PermissionCode> currentCodes =
+                    role.getPermissions().stream().map(Permission::getCode).collect(Collectors.toSet());
 
             Set<Permission> missingPermissions = defaultCodes.stream()
                     .map(permissionsByCode::get)
@@ -123,17 +123,19 @@ public class PermissionServiceImpl implements PermissionService {
 
     private Map<PermissionCode, Permission> seedPermissionCatalog() {
         List<Permission> existingPermissions = permissionRepository.findAll();
-        Map<PermissionCode, Permission> permissionsByCode = existingPermissions.stream()
-                .collect(Collectors.toMap(Permission::getCode, Function.identity()));
+        Map<PermissionCode, Permission> permissionsByCode =
+                existingPermissions.stream().collect(Collectors.toMap(Permission::getCode, Function.identity()));
 
         for (PermissionCode code : PermissionCode.values()) {
-            permissionsByCode.computeIfAbsent(code, permissionCode -> permissionRepository.save(Permission.builder()
-                    .code(permissionCode)
-                    .name(toDisplayName(permissionCode))
-                    .description("System permission " + permissionCode.name())
-                    .group(permissionCode.getGroup())
-                    .system(true)
-                    .build()));
+            permissionsByCode.computeIfAbsent(
+                    code,
+                    permissionCode -> permissionRepository.save(Permission.builder()
+                            .code(permissionCode)
+                            .name(toDisplayName(permissionCode))
+                            .description("System permission " + permissionCode.name())
+                            .group(permissionCode.getGroup())
+                            .system(true)
+                            .build()));
         }
 
         return permissionsByCode;

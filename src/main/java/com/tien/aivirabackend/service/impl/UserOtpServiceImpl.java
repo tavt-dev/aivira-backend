@@ -1,5 +1,13 @@
 package com.tien.aivirabackend.service.impl;
 
+import java.security.SecureRandom;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.tien.aivirabackend.constant.OtpType;
 import com.tien.aivirabackend.domain.entity.user.User;
 import com.tien.aivirabackend.domain.entity.user.UserOtp;
@@ -7,15 +15,9 @@ import com.tien.aivirabackend.exception.AppException;
 import com.tien.aivirabackend.exception.errorCode.OtpErrorCode;
 import com.tien.aivirabackend.repository.UserOtpRepository;
 import com.tien.aivirabackend.service.UserOtpService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.security.SecureRandom;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +40,6 @@ public class UserOtpServiceImpl implements UserOtpService {
                 .build();
 
         UserOtp saved = userOtpRepository.save(userOtp);
-
 
         log.info("OTP created for user: {}, type: {}, expires: {}", user.getUsername(), type, saved.getExpiresTime());
         return saved;
@@ -76,15 +77,17 @@ public class UserOtpServiceImpl implements UserOtpService {
 
     @Override
     public UserOtp findLatestOtp(User user, OtpType type) {
-        return userOtpRepository.findTopByUserAndOtpTypeAndUsedFalseOrderByCreatedAtDesc(user, type)
+        return userOtpRepository
+                .findTopByUserAndOtpTypeAndUsedFalseOrderByCreatedAtDesc(user, type)
                 .orElseThrow(() -> new AppException(OtpErrorCode.OTP_NOT_FOUND));
     }
 
     @Override
     public void checkOtpFrequency(User user, OtpType type) {
-        Optional<UserOtp> lastOtp = userOtpRepository.findTopByUserAndOtpTypeAndUsedFalseOrderByCreatedAtDesc(user, type);
-        if(lastOtp.isPresent()
-        && lastOtp.get().getCreatedAt().isAfter(Instant.now().minus(1, ChronoUnit.MINUTES))) {
+        Optional<UserOtp> lastOtp =
+                userOtpRepository.findTopByUserAndOtpTypeAndUsedFalseOrderByCreatedAtDesc(user, type);
+        if (lastOtp.isPresent()
+                && lastOtp.get().getCreatedAt().isAfter(Instant.now().minus(1, ChronoUnit.MINUTES))) {
             log.warn("OTP request too frequent for user: {}, type: {}", user.getUsername(), type);
             throw new AppException(OtpErrorCode.OTP_REQUEST_TOO_FREQUENT);
         }

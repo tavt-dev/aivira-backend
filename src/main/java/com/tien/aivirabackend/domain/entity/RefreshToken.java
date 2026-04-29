@@ -1,12 +1,14 @@
 package com.tien.aivirabackend.domain.entity;
 
+import java.time.Instant;
+
+import jakarta.persistence.*;
+
 import com.tien.aivirabackend.constant.RevocationReason;
 import com.tien.aivirabackend.domain.entity.user.User;
-import jakarta.persistence.*;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.time.Instant;
 
 @Entity
 @Table(name = "refresh_tokens")
@@ -16,7 +18,7 @@ import java.time.Instant;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class RefreshToken extends BaseEntity{
+public class RefreshToken extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(nullable = false, updatable = false, unique = true, length = 36)

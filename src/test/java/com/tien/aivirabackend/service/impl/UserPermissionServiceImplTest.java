@@ -75,7 +75,8 @@ class UserPermissionServiceImplTest {
         when(userRepository.existsById("user-1")).thenReturn(true);
         when(userRepository.findRolePermissionCodesByUserId("user-1"))
                 .thenReturn(Set.of(PermissionCode.USER_READ_SELF));
-        when(userPermissionRepository.findActivePermissionCodesByUserId(org.mockito.ArgumentMatchers.eq("user-1"), any()))
+        when(userPermissionRepository.findActivePermissionCodesByUserId(
+                        org.mockito.ArgumentMatchers.eq("user-1"), any()))
                 .thenReturn(Set.of(PermissionCode.REPORT_EXPORT_ALL));
         when(permissionRepository.findByCodeIn(Set.of(PermissionCode.USER_READ_SELF, PermissionCode.REPORT_EXPORT_ALL)))
                 .thenReturn(List.of(rolePermission, directPermission));

@@ -12,12 +12,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.Map;
 
-import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MvcResult;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.nimbusds.jwt.SignedJWT;
 import com.tien.aivirabackend.constant.OtpType;
 import com.tien.aivirabackend.constant.RevocationReason;
 import com.tien.aivirabackend.domain.entity.RefreshToken;
@@ -64,20 +64,24 @@ class AuthProfileSessionIntegrationTest extends AbstractIntegrationTest {
         String refreshToken = read(login, "/data/refreshToken").asText();
         assertThat(accessToken).isNotBlank();
         assertThat(refreshToken).isNotBlank();
-        assertThat(refreshTokenRepository.countActiveSessionsByUserId(user.getId(), java.time.Instant.now())).isEqualTo(1);
+        assertThat(refreshTokenRepository.countActiveSessionsByUserId(user.getId(), java.time.Instant.now()))
+                .isEqualTo(1);
     }
 
     @Test
     void login_shouldRejectUnverifiedAccount() throws Exception {
         register("unverified", "unverified@example.com");
 
-        login("unverified", PASSWORD).andExpect(status().isUnauthorized()).andExpect(jsonPath("$.success").value(false));
+        login("unverified", PASSWORD)
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false));
     }
 
     @Test
     void refreshToken_shouldRotateAndDetectReuse() throws Exception {
         registerAndVerify("rotator", "rotator@example.com");
-        String firstRefreshToken = read(login("rotator", PASSWORD).andReturn(), "/data/refreshToken").asText();
+        String firstRefreshToken = read(login("rotator", PASSWORD).andReturn(), "/data/refreshToken")
+                .asText();
 
         MvcResult refreshResult = mockMvc.perform(post("/auth/refresh-token")
                         .contentType(APPLICATION_JSON)
@@ -90,8 +94,10 @@ class AuthProfileSessionIntegrationTest extends AbstractIntegrationTest {
         String secondJti = jwtId(secondRefreshToken);
         String familyId = jwtFamilyId(firstRefreshToken);
 
-        RefreshToken firstStoredToken = refreshTokenRepository.findByJti(firstJti).orElseThrow();
-        RefreshToken secondStoredToken = refreshTokenRepository.findByJti(secondJti).orElseThrow();
+        RefreshToken firstStoredToken =
+                refreshTokenRepository.findByJti(firstJti).orElseThrow();
+        RefreshToken secondStoredToken =
+                refreshTokenRepository.findByJti(secondJti).orElseThrow();
 
         assertThat(firstStoredToken.isRevoked()).isTrue();
         assertThat(firstStoredToken.getRevocationReason()).isEqualTo(RevocationReason.TOKEN_REFRESH);
@@ -105,7 +111,8 @@ class AuthProfileSessionIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.errorCode").value("E2106"));
 
-        assertThat(refreshTokenRepository.findByJti(secondJti).orElseThrow().isRevoked()).isTrue();
+        assertThat(refreshTokenRepository.findByJti(secondJti).orElseThrow().isRevoked())
+                .isTrue();
         assertThat(refreshTokenRepository.findByJti(secondJti).orElseThrow().getRevocationReason())
                 .isEqualTo(RevocationReason.SECURITY_BREACH);
     }
@@ -113,20 +120,25 @@ class AuthProfileSessionIntegrationTest extends AbstractIntegrationTest {
     @Test
     void logout_shouldRevokeCurrentRefreshTokenAndClearCookie() throws Exception {
         registerAndVerify("logout_user", "logout@example.com");
-        String refreshToken = read(login("logout_user", PASSWORD).andReturn(), "/data/refreshToken").asText();
+        String refreshToken = read(login("logout_user", PASSWORD).andReturn(), "/data/refreshToken")
+                .asText();
         String jti = jwtId(refreshToken);
 
-        mockMvc.perform(post("/auth/logout").contentType(APPLICATION_JSON).content(json(Map.of("refreshToken", refreshToken))))
+        mockMvc.perform(post("/auth/logout")
+                        .contentType(APPLICATION_JSON)
+                        .content(json(Map.of("refreshToken", refreshToken))))
                 .andExpect(status().isOk())
                 .andExpect(cookie().maxAge("refreshToken", 0));
 
-        assertThat(refreshTokenRepository.findByJti(jti).orElseThrow().isRevoked()).isTrue();
+        assertThat(refreshTokenRepository.findByJti(jti).orElseThrow().isRevoked())
+                .isTrue();
     }
 
     @Test
     void protectedProfileEndpoints_shouldRequireTokenAndAllowCurrentUserUpdates() throws Exception {
         registerAndVerify("profile_user", "profile@example.com");
-        String accessToken = read(login("profile_user", PASSWORD).andReturn(), "/data/token").asText();
+        String accessToken =
+                read(login("profile_user", PASSWORD).andReturn(), "/data/token").asText();
 
         mockMvc.perform(get("/users/me")).andExpect(status().isUnauthorized());
 
@@ -156,10 +168,12 @@ class AuthProfileSessionIntegrationTest extends AbstractIntegrationTest {
 
         String sessionId = read(sessions, "/data/0/sessionId").asText();
 
-        mockMvc.perform(delete("/auth/sessions/{sessionId}", sessionId).header("Authorization", "Bearer " + accessToken))
+        mockMvc.perform(delete("/auth/sessions/{sessionId}", sessionId)
+                        .header("Authorization", "Bearer " + accessToken))
                 .andExpect(status().isOk());
 
-        assertThat(refreshTokenRepository.findById(sessionId).orElseThrow().isRevoked()).isTrue();
+        assertThat(refreshTokenRepository.findById(sessionId).orElseThrow().isRevoked())
+                .isTrue();
     }
 
     @Test
@@ -174,7 +188,8 @@ class AuthProfileSessionIntegrationTest extends AbstractIntegrationTest {
         mockMvc.perform(get("/users/me").header("Authorization", "Bearer " + firstAccessToken))
                 .andExpect(status().isUnauthorized());
 
-        String secondAccessToken = read(login("version_user", PASSWORD).andReturn(), "/data/token").asText();
+        String secondAccessToken =
+                read(login("version_user", PASSWORD).andReturn(), "/data/token").asText();
 
         mockMvc.perform(put("/users/me/password")
                         .header("Authorization", "Bearer " + secondAccessToken)
@@ -207,7 +222,8 @@ class AuthProfileSessionIntegrationTest extends AbstractIntegrationTest {
     }
 
     private void verifyUser(User user) throws Exception {
-        UserOtp otp = userOtpRepository.findTopByUserAndOtpTypeAndUsedFalseOrderByCreatedAtDesc(user, OtpType.REGISTER)
+        UserOtp otp = userOtpRepository
+                .findTopByUserAndOtpTypeAndUsedFalseOrderByCreatedAtDesc(user, OtpType.REGISTER)
                 .orElseThrow();
 
         mockMvc.perform(post("/auth/verify-user")
@@ -216,7 +232,8 @@ class AuthProfileSessionIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(status().isOk());
     }
 
-    private org.springframework.test.web.servlet.ResultActions login(String username, String password) throws Exception {
+    private org.springframework.test.web.servlet.ResultActions login(String username, String password)
+            throws Exception {
         return mockMvc.perform(post("/auth/token")
                 .contentType(APPLICATION_JSON)
                 .content(json(Map.of("username", username, "password", password))));

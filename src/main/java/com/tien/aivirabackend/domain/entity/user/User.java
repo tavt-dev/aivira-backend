@@ -1,8 +1,8 @@
 package com.tien.aivirabackend.domain.entity.user;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 

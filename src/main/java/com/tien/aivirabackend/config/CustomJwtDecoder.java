@@ -5,7 +5,6 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.util.Date;
 
-import com.tien.aivirabackend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -19,6 +18,7 @@ import com.nimbusds.jwt.SignedJWT;
 import com.tien.aivirabackend.exception.AppException;
 import com.tien.aivirabackend.exception.errorCode.JwtErrorCode;
 import com.tien.aivirabackend.repository.InvalidatedTokenRepository;
+import com.tien.aivirabackend.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -87,13 +87,14 @@ public class CustomJwtDecoder implements JwtDecoder {
                 userRepository.findById(userId).ifPresent(user -> {
                     Integer currentTokenVersion = user.getTokenVersion();
                     if (currentTokenVersion != null && tokenVersion < currentTokenVersion.longValue()) {
-                        log.warn("Token version mismatch. Token has old version: {}, current: {}",
-                                tokenVersion, currentTokenVersion);
+                        log.warn(
+                                "Token version mismatch. Token has old version: {}, current: {}",
+                                tokenVersion,
+                                currentTokenVersion);
                         throw new AppException(JwtErrorCode.TOKEN_REVOKED);
                     }
                 });
             }
-
 
             // Build Spring Security Jwt object
             Date iat = claims.getIssueTime();

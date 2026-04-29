@@ -1,6 +1,7 @@
 package com.tien.aivirabackend.domain.dto.response;
 
 import com.tien.aivirabackend.constant.PredefinedRole;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.FieldDefaults;

@@ -1,16 +1,18 @@
 package com.tien.aivirabackend.service;
 
-import com.tien.aivirabackend.repository.RefreshTokenRepository;
-import com.tien.aivirabackend.repository.UserOtpRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import com.tien.aivirabackend.repository.RefreshTokenRepository;
+import com.tien.aivirabackend.repository.UserOtpRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor

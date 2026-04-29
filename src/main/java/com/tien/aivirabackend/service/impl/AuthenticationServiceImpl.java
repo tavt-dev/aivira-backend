@@ -1,12 +1,11 @@
 package com.tien.aivirabackend.service.impl;
 
-import com.tien.aivirabackend.domain.dto.request.*;
-import com.tien.aivirabackend.domain.dto.response.ActiveSessionResponse;
-import com.tien.aivirabackend.constant.OtpType;
-import com.tien.aivirabackend.constant.RevocationReason;
-import com.tien.aivirabackend.domain.entity.user.UserOtp;
-import com.tien.aivirabackend.service.EmailService;
-import com.tien.aivirabackend.service.UserOtpService;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Objects;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -15,31 +14,40 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.tien.aivirabackend.constant.OtpType;
 import com.tien.aivirabackend.constant.PredefinedRole;
+import com.tien.aivirabackend.constant.RevocationReason;
 import com.tien.aivirabackend.constant.SignInProvider;
+import com.tien.aivirabackend.domain.dto.request.AuthenticationRequest;
+import com.tien.aivirabackend.domain.dto.request.ForgotPasswordRequest;
+import com.tien.aivirabackend.domain.dto.request.ResendOtpRequest;
+import com.tien.aivirabackend.domain.dto.request.ResetPasswordRequest;
+import com.tien.aivirabackend.domain.dto.request.UserRegisterRequest;
+import com.tien.aivirabackend.domain.dto.request.VerifyUserRequest;
+import com.tien.aivirabackend.domain.dto.response.ActiveSessionResponse;
 import com.tien.aivirabackend.domain.dto.response.AuthenticationResponse;
 import com.tien.aivirabackend.domain.dto.response.UserResponse;
 import com.tien.aivirabackend.domain.entity.user.User;
+import com.tien.aivirabackend.domain.entity.user.UserOtp;
 import com.tien.aivirabackend.domain.mapper.UserMapper;
 import com.tien.aivirabackend.exception.AppException;
-import com.tien.aivirabackend.exception.errorCode.*;
+import com.tien.aivirabackend.exception.errorCode.AccountErrorCode;
+import com.tien.aivirabackend.exception.errorCode.AuthErrorCode;
+import com.tien.aivirabackend.exception.errorCode.JwtErrorCode;
+import com.tien.aivirabackend.exception.errorCode.PasswordErrorCode;
+import com.tien.aivirabackend.exception.errorCode.UserErrorCode;
 import com.tien.aivirabackend.repository.RoleRepository;
 import com.tien.aivirabackend.repository.UserRepository;
 import com.tien.aivirabackend.service.AuthenticationService;
+import com.tien.aivirabackend.service.EmailService;
 import com.tien.aivirabackend.service.JwtService;
+import com.tien.aivirabackend.service.UserOtpService;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Objects;
-
-import org.springframework.beans.factory.annotation.Value;
 
 @Service
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
@@ -129,20 +137,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         User user = userMapper.toUser(request);
 
-        // Set auth
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setProvider(SignInProvider.LOCAL);
-        user.setProviderUserId(null);
-
-        // Default status
-        user.setEmailVerified(false);
-        user.setIsActive(false);
-        user.setIsLocked(false);
-        user.setIsDeleted(false);
-        user.setTokenVersion(0);
-        user.setFailedLoginAttempts(0);
-        user.setFirstFailedLoginAt(null);
-        user.setLockoutUntil(null);
+        initializeLocalUser(user, request.getPassword());
 
         var role = roleRepository
                 .findByCode(PredefinedRole.USER)
@@ -152,10 +147,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         User savedUser = userRepository.save(user);
 
-        // Create and send registration OTP
-        userOtpService.deactivateOldOtps(savedUser.getId(), OtpType.REGISTER);
-        UserOtp otp = userOtpService.createOtp(savedUser, OtpType.REGISTER, 10);
-        emailService.sendRegistrationOtpByEmail(savedUser.getEmail(), savedUser.getUsername(), otp.getOtpCode());
+        sendRegistrationOtp(savedUser, false);
 
         log.info("User registered successfully. Username: {}", savedUser.getUsername());
 
@@ -239,15 +231,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public void revokeSession(String sessionId) {
         User user = getCurrentUserFromSecurityContext();
         jwtService.revokeSession(user.getId(), sessionId);
-        log.info("auth_revoke_session_success userId={} username={} sessionId={}", user.getId(), user.getUsername(), sessionId);
+        log.info(
+                "auth_revoke_session_success userId={} username={} sessionId={}",
+                user.getId(),
+                user.getUsername(),
+                sessionId);
     }
 
     @Override
     @Transactional
     public void verifyUser(VerifyUserRequest request) {
-        User user = userRepository
-                .findByEmail(request.getEmail())
-                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
+        User user = findUserByEmail(request.getEmail());
 
         var userOtp = userOtpService.findLatestOtp(user, OtpType.REGISTER);
 
@@ -263,18 +257,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     @Transactional
     public void resendVerificationOtp(ResendOtpRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
-        if(user.getIsActive() && user.getEmailVerified()) {
-            log.warn("User: {} is already verified and active. No OTP sent.", request.getEmail());
-            throw new AppException(UserErrorCode.USER_ALREADY_VERIFIED);
-        }
-
-        userOtpService.checkOtpFrequency(user, OtpType.REGISTER);
-        userOtpService.deactivateOldOtps(user.getId(), OtpType.REGISTER);
-
-        UserOtp newOtp = userOtpService.createOtp(user, OtpType.REGISTER, 10);
-        emailService.sendRegistrationOtpByEmail(user.getEmail(), user.getUsername(), newOtp.getOtpCode());
+        User user = findUserByEmail(request.getEmail());
+        ensureUserNeedsVerification(user, request.getEmail());
+        sendRegistrationOtp(user, true);
 
         log.info("Resend verification OTP sent to: {}", request.getEmail());
     }
@@ -282,19 +267,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     @Transactional
     public void forgotPassword(ForgotPasswordRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
-
-        if(!user.getEmailVerified()) {
-            log.warn("User: {} email is not verified. Cannot send password reset OTP.", request.getEmail());
-            throw new AppException(UserErrorCode.EMAIL_NOT_VERIFIED);
-        }
-
-        userOtpService.checkOtpFrequency(user, OtpType.RESET_PASSWORD);
-        userOtpService.deactivateOldOtps(user.getId(), OtpType.RESET_PASSWORD);
-
-        UserOtp newOtp = userOtpService.createOtp(user, OtpType.RESET_PASSWORD, 10);
-        emailService.sendForgotPasswordOtpByEmail(user.getEmail(), user.getUsername(), newOtp.getOtpCode());
+        User user = findUserByEmail(request.getEmail());
+        ensureEmailVerified(user, request.getEmail(), "send password reset OTP");
+        sendPasswordResetOtp(user);
 
         log.info("Forgot password OTP sent to: {}", request.getEmail());
     }
@@ -302,22 +277,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     @Transactional
     public void resetPassword(ResetPasswordRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
-
-        if(!user.getEmailVerified()) {
-            log.warn("User: {} email is not verified. Cannot reset password.", request.getEmail());
-            throw new AppException(UserErrorCode.EMAIL_NOT_VERIFIED);
-        }
+        User user = findUserByEmail(request.getEmail());
+        ensureEmailVerified(user, request.getEmail(), "reset password");
 
         var userOtp = userOtpService.findLatestOtp(user, OtpType.RESET_PASSWORD);
         userOtpService.validateOtp(userOtp, request.getOtpCode());
 
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        userRepository.save(user);
-
-        jwtService.revokeAllTokensOfUser(user.getId(), RevocationReason.PASSWORD_CHANGE);
-        userOtpService.markOtpAsUsed(userOtp);
+        resetPasswordAndRevokeSessions(user, request.getNewPassword(), userOtp);
 
         log.info(
                 "auth_reset_password_success userId={} username={} email={}",
@@ -334,6 +300,61 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .accessTokenExpiresIn(accessTokenExpiresIn)
                 .authenticated(true)
                 .build();
+    }
+
+    private void initializeLocalUser(User user, String rawPassword) {
+        user.setPassword(passwordEncoder.encode(rawPassword));
+        user.setProvider(SignInProvider.LOCAL);
+        user.setProviderUserId(null);
+        user.setEmailVerified(false);
+        user.setIsActive(false);
+        user.setIsLocked(false);
+        user.setIsDeleted(false);
+        user.setTokenVersion(0);
+        user.setFailedLoginAttempts(0);
+        user.setFirstFailedLoginAt(null);
+        user.setLockoutUntil(null);
+    }
+
+    private User findUserByEmail(String email) {
+        return userRepository.findByEmail(email).orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
+    }
+
+    private void ensureUserNeedsVerification(User user, String email) {
+        if (Boolean.TRUE.equals(user.getIsActive()) && Boolean.TRUE.equals(user.getEmailVerified())) {
+            log.warn("User {} is already verified and active. No OTP sent.", email);
+            throw new AppException(UserErrorCode.USER_ALREADY_VERIFIED);
+        }
+    }
+
+    private void ensureEmailVerified(User user, String email, String action) {
+        if (!Boolean.TRUE.equals(user.getEmailVerified())) {
+            log.warn("User {} email is not verified. Cannot {}.", email, action);
+            throw new AppException(UserErrorCode.EMAIL_NOT_VERIFIED);
+        }
+    }
+
+    private void sendRegistrationOtp(User user, boolean enforceFrequencyLimit) {
+        if (enforceFrequencyLimit) {
+            userOtpService.checkOtpFrequency(user, OtpType.REGISTER);
+        }
+        userOtpService.deactivateOldOtps(user.getId(), OtpType.REGISTER);
+        UserOtp otp = userOtpService.createOtp(user, OtpType.REGISTER, 10);
+        emailService.sendRegistrationOtpByEmail(user.getEmail(), user.getUsername(), otp.getOtpCode());
+    }
+
+    private void sendPasswordResetOtp(User user) {
+        userOtpService.checkOtpFrequency(user, OtpType.RESET_PASSWORD);
+        userOtpService.deactivateOldOtps(user.getId(), OtpType.RESET_PASSWORD);
+        UserOtp otp = userOtpService.createOtp(user, OtpType.RESET_PASSWORD, 10);
+        emailService.sendForgotPasswordOtpByEmail(user.getEmail(), user.getUsername(), otp.getOtpCode());
+    }
+
+    private void resetPasswordAndRevokeSessions(User user, String newPassword, UserOtp userOtp) {
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        jwtService.revokeAllTokensOfUser(user.getId(), RevocationReason.PASSWORD_CHANGE);
+        userOtpService.markOtpAsUsed(userOtp);
     }
 
     private void validateAccountForAuth(User user) {
