@@ -58,7 +58,6 @@ Các file cấu hình chính:
 - `src/main/resources/db/migration/V1__init_schema.sql`: migration khởi tạo schema và seed RBAC reference data.
 - `src/main/resources/db/migration/V2__seller_marketplace.sql`: migration Seller Marketplace MVP, tạo bảng `shops` và bổ sung `SELLER_APPLY` cho role `USER`.
 - `.env.example`: danh sách biến môi trường tham khảo.
-- `Aivira Backend API.postman_collection.json`: Postman collection.
 
 ## Trạng Thái Tính Năng
 
@@ -556,7 +555,6 @@ Format code:
 - Các module catalog/cart/order/payment/discount/review mới có entity, chưa có API nghiệp vụ đầy đủ.
 - Đã có Flyway migration versioning từ `V1__init_schema.sql`; các thay đổi schema tiếp theo phải tạo migration mới.
 - `.env` chỉ là file tham khảo, app không tự load file này nếu không thêm cơ chế load riêng.
-- Có Postman collection ở `Aivira Backend API.postman_collection.json` để import và test API nhanh.
 
 ## Roadmap Phát Triển Toàn Bộ Project
 

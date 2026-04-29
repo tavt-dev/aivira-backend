@@ -84,8 +84,8 @@ class UserServiceImplTest {
 
     @Test
     void updateMyAvatar_shouldValidateUploadAndSaveAvatarFields() {
-        MockMultipartFile file = new MockMultipartFile(
-                "avatar", "avatar.png", "image/png", new byte[] {(byte) 0x89, 0x50, 0x4E, 0x47});
+        MockMultipartFile file =
+                new MockMultipartFile("avatar", "avatar.png", "image/png", new byte[] {(byte) 0x89, 0x50, 0x4E, 0x47});
         User user = buildUser();
         UserResponse response = UserResponse.builder()
                 .id("user-1")
@@ -129,14 +129,15 @@ class UserServiceImplTest {
 
     @Test
     void updateMyAvatar_shouldNotSaveWhenCloudinaryUploadFails() {
-        MockMultipartFile file = new MockMultipartFile(
-                "avatar", "avatar.png", "image/png", new byte[] {(byte) 0x89, 0x50, 0x4E, 0x47});
+        MockMultipartFile file =
+                new MockMultipartFile("avatar", "avatar.png", "image/png", new byte[] {(byte) 0x89, 0x50, 0x4E, 0x47});
         User user = buildUser();
 
         when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
         when(cloudinaryProperties.getAvatarFolder()).thenReturn("aivira/users");
         when(cloudinaryStorageService.uploadImage(any(), any(), any(), eq(400), eq(400)))
-                .thenThrow(new AppException(com.tien.aivirabackend.exception.errorCode.UserErrorCode.AVATAR_UPLOAD_FAILED));
+                .thenThrow(new AppException(
+                        com.tien.aivirabackend.exception.errorCode.UserErrorCode.AVATAR_UPLOAD_FAILED));
 
         assertThatThrownBy(() -> userService.updateMyAvatar(file)).isInstanceOf(AppException.class);
 

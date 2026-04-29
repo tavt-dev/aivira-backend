@@ -23,11 +23,7 @@ public class FileUploadProperties {
     private long maxDocumentSize = 10 * 1024 * 1024L;
 
     @NotEmpty
-    private List<String> allowedImageTypes = List.of(
-            "image/jpeg",
-            "image/png",
-            "image/gif",
-            "image/webp");
+    private List<String> allowedImageTypes = List.of("image/jpeg", "image/png", "image/gif", "image/webp");
 
     @NotEmpty
     private List<String> allowedDocumentTypes = List.of("application/pdf");

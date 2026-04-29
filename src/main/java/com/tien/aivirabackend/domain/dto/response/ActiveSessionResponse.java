@@ -1,11 +1,12 @@
 package com.tien.aivirabackend.domain.dto.response;
 
+import java.time.Instant;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.time.Instant;
 
 @Getter
 @Setter

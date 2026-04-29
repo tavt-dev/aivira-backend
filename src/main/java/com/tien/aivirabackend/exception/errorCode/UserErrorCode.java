@@ -30,7 +30,8 @@ public enum UserErrorCode implements ErrorCode {
     PROFILE_UPDATE_FAILED("E3200", "Cập nhật hồ sơ thất bại.", HttpStatus.INTERNAL_SERVER_ERROR),
     AVATAR_UPLOAD_FAILED("E3201", "Tải ảnh đại diện thất bại.", HttpStatus.INTERNAL_SERVER_ERROR),
     AVATAR_TOO_LARGE("E3202", "Kích thước ảnh đại diện vượt quá giới hạn cho phép.", HttpStatus.BAD_REQUEST),
-    INVALID_AVATAR_FORMAT("E3203", "Định dạng ảnh đại diện không hợp lệ. Hỗ trợ: JPG, PNG, WEBP.", HttpStatus.BAD_REQUEST),
+    INVALID_AVATAR_FORMAT(
+            "E3203", "Định dạng ảnh đại diện không hợp lệ. Hỗ trợ: JPG, PNG, WEBP.", HttpStatus.BAD_REQUEST),
     PROFILE_INCOMPLETE("E3204", "Vui lòng hoàn thiện hồ sơ của bạn.", HttpStatus.BAD_REQUEST),
     USER_PASSWORD_NOT_SET("E3205", "Người dùng chưa thiết lập mật khẩu.", HttpStatus.BAD_REQUEST),
     INVALID_CURRENT_PASSWORD("E3206", "Mật khẩu hiện tại không chính xác.", HttpStatus.BAD_REQUEST),

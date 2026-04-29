@@ -1,12 +1,15 @@
 package com.tien.aivirabackend.domain.entity.user;
 
-import com.tien.aivirabackend.constant.OtpType;
+import java.time.Instant;
+
 import jakarta.persistence.*;
-import lombok.*;
+
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.Instant;
+import com.tien.aivirabackend.constant.OtpType;
+
+import lombok.*;
 
 @Entity
 @Table(name = "user_otp")

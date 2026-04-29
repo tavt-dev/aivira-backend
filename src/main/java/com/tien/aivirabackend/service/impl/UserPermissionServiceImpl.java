@@ -48,8 +48,7 @@ public class UserPermissionServiceImpl implements UserPermissionService {
 
         Instant now = Instant.now();
         Set<PermissionCode> rolePermissionCodes = userRepository.findRolePermissionCodesByUserId(userId);
-        Set<PermissionCode> directActiveCodes =
-                userPermissionRepository.findActivePermissionCodesByUserId(userId, now);
+        Set<PermissionCode> directActiveCodes = userPermissionRepository.findActivePermissionCodesByUserId(userId, now);
 
         Set<PermissionCode> effectiveCodes = EnumSet.noneOf(PermissionCode.class);
         effectiveCodes.addAll(rolePermissionCodes);
@@ -80,9 +79,8 @@ public class UserPermissionServiceImpl implements UserPermissionService {
             throw new AppException(CommonErrorCode.ACCESS_DENIED);
         }
 
-        User targetUser = userRepository
-                .findById(userId)
-                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND_BY_ID));
+        User targetUser =
+                userRepository.findById(userId).orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND_BY_ID));
         User grantedBy = StringUtils.hasText(currentUserId)
                 ? userRepository.findById(currentUserId).orElse(null)
                 : null;
@@ -90,7 +88,8 @@ public class UserPermissionServiceImpl implements UserPermissionService {
                 .findByCode(request.getPermissionCode())
                 .orElseThrow(() -> new AppException(CommonErrorCode.RESOURCE_NOT_FOUND));
 
-        if (userPermissionRepository.existsByUser_IdAndPermission_CodeAndActiveTrue(userId, request.getPermissionCode())) {
+        if (userPermissionRepository.existsByUser_IdAndPermission_CodeAndActiveTrue(
+                userId, request.getPermissionCode())) {
             throw new AppException(CommonErrorCode.RESOURCE_ALREADY_EXISTS);
         }
 

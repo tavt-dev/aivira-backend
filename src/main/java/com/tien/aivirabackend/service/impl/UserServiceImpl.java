@@ -144,7 +144,6 @@ public class UserServiceImpl implements UserService {
         log.info("User {} requested account deactivation", currentUser.getId());
     }
 
-
     private User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -162,8 +161,7 @@ public class UserServiceImpl implements UserService {
             throw new AppException(AuthErrorCode.AUTHENTICATION_FAILED);
         }
 
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
+        return userRepository.findById(userId).orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
     }
 
     private String buildAvatarFolder(String userId) {

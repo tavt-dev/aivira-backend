@@ -25,6 +25,9 @@ public class UserUpdateRequest {
     @Size(max = 50, message = "Last name must not exceed 50 characters")
     String lastName;
 
-    @Schema(description = "Gender", example = "MALE", allowableValues = {"MALE", "FEMALE", "OTHER"})
+    @Schema(
+            description = "Gender",
+            example = "MALE",
+            allowableValues = {"MALE", "FEMALE", "OTHER"})
     Gender gender;
 }

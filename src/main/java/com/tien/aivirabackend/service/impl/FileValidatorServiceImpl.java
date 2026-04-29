@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -52,7 +51,9 @@ public class FileValidatorServiceImpl implements FileValidatorService {
 
         log.debug(
                 "File validation passed: name={}, size={}, contentType={}",
-                file.getOriginalFilename(), file.getSize(), file.getContentType());
+                file.getOriginalFilename(),
+                file.getSize(),
+                file.getContentType());
     }
 
     private void validateNotEmpty(MultipartFile file) {
@@ -134,7 +135,8 @@ public class FileValidatorServiceImpl implements FileValidatorService {
             return "";
         }
 
-        String extension = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase(Locale.ROOT);
+        String extension =
+                originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase(Locale.ROOT);
         return EXTENSIONS_BY_MIME_TYPE.containsValue(extension) ? extension : "";
     }
 

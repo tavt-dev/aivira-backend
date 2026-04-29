@@ -1,12 +1,12 @@
 package com.tien.aivirabackend.service.impl;
 
-import com.tien.aivirabackend.exception.AppException;
-import com.tien.aivirabackend.exception.errorCode.EmailErrorCode;
-import com.tien.aivirabackend.service.EmailService;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.mail.MailException;
@@ -15,9 +15,12 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import com.tien.aivirabackend.exception.AppException;
+import com.tien.aivirabackend.exception.errorCode.EmailErrorCode;
+import com.tien.aivirabackend.service.EmailService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -37,9 +40,8 @@ public class EmailServiceImpl implements EmailService {
     @Async("emailTaskExecutor")
     public void sendRegistrationOtpByEmail(String to, String name, String otp) {
         String subject = "Xác thực tài khoản Aivira - Mã OTP của bạn";
-        String htmlContent = loadTemplate("registration-otp")
-                .replace("{{name}}", name)
-                .replace("{{otp}}", otp);
+        String htmlContent =
+                loadTemplate("registration-otp").replace("{{name}}", name).replace("{{otp}}", otp);
 
         sendHtmlEmail(to, subject, htmlContent);
         log.info("Registration OTP email sent to: {}", to);
@@ -49,9 +51,8 @@ public class EmailServiceImpl implements EmailService {
     @Async("emailTaskExecutor")
     public void sendForgotPasswordOtpByEmail(String to, String name, String otp) {
         String subject = "Đặt lại mật khẩu Aivira - Mã OTP của bạn";
-        String htmlContent = loadTemplate("forgot-password-otp")
-                .replace("{{name}}", name)
-                .replace("{{otp}}", otp);
+        String htmlContent =
+                loadTemplate("forgot-password-otp").replace("{{name}}", name).replace("{{otp}}", otp);
 
         sendHtmlEmail(to, subject, htmlContent);
         log.info("Forgot password OTP email sent to: {}", to);

@@ -61,6 +61,4 @@ public class UserResponse {
 
     @Schema(description = "Last update timestamp")
     Instant updatedAt;
-
-
 }

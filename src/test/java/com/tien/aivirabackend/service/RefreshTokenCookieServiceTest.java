@@ -1,13 +1,14 @@
 package com.tien.aivirabackend.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import jakarta.servlet.http.Cookie;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class RefreshTokenCookieServiceTest {
 

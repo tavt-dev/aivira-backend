@@ -53,7 +53,8 @@ class AuthorizationServiceImplTest {
     void hasPermission_shouldReturnTrueWhenCurrentUserHasPermission() {
         when(userRepository.findRolePermissionCodesByUserId("user-1"))
                 .thenReturn(Set.of(PermissionCode.PERMISSION_MANAGE));
-        when(userPermissionRepository.findActivePermissionCodesByUserId(org.mockito.ArgumentMatchers.eq("user-1"), org.mockito.ArgumentMatchers.any()))
+        when(userPermissionRepository.findActivePermissionCodesByUserId(
+                        org.mockito.ArgumentMatchers.eq("user-1"), org.mockito.ArgumentMatchers.any()))
                 .thenReturn(Set.of());
 
         assertThat(authorizationService.hasPermission("PERMISSION_MANAGE")).isTrue();
@@ -62,7 +63,8 @@ class AuthorizationServiceImplTest {
     @Test
     void hasPermission_shouldReturnTrueWhenCurrentUserHasDirectPermission() {
         when(userRepository.findRolePermissionCodesByUserId("user-1")).thenReturn(Set.of());
-        when(userPermissionRepository.findActivePermissionCodesByUserId(org.mockito.ArgumentMatchers.eq("user-1"), org.mockito.ArgumentMatchers.any()))
+        when(userPermissionRepository.findActivePermissionCodesByUserId(
+                        org.mockito.ArgumentMatchers.eq("user-1"), org.mockito.ArgumentMatchers.any()))
                 .thenReturn(Set.of(PermissionCode.REPORT_EXPORT_ALL));
 
         assertThat(authorizationService.hasPermission("REPORT_EXPORT_ALL")).isTrue();
@@ -75,11 +77,12 @@ class AuthorizationServiceImplTest {
 
     @Test
     void hasAnyPermission_shouldReturnTrueWhenAnyPermissionMatches() {
-        when(userRepository.findRolePermissionCodesByUserId("user-1"))
-                .thenReturn(Set.of(PermissionCode.ROLE_MANAGE));
-        when(userPermissionRepository.findActivePermissionCodesByUserId(org.mockito.ArgumentMatchers.eq("user-1"), org.mockito.ArgumentMatchers.any()))
+        when(userRepository.findRolePermissionCodesByUserId("user-1")).thenReturn(Set.of(PermissionCode.ROLE_MANAGE));
+        when(userPermissionRepository.findActivePermissionCodesByUserId(
+                        org.mockito.ArgumentMatchers.eq("user-1"), org.mockito.ArgumentMatchers.any()))
                 .thenReturn(Set.of());
 
-        assertThat(authorizationService.hasAnyPermission("PERMISSION_MANAGE", "ROLE_MANAGE")).isTrue();
+        assertThat(authorizationService.hasAnyPermission("PERMISSION_MANAGE", "ROLE_MANAGE"))
+                .isTrue();
     }
 }

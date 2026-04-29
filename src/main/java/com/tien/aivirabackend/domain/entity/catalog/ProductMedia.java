@@ -1,8 +1,8 @@
 package com.tien.aivirabackend.domain.entity.catalog;
 
-import com.tien.aivirabackend.constant.MediaType;
 import jakarta.persistence.*;
 
+import com.tien.aivirabackend.constant.MediaType;
 import com.tien.aivirabackend.domain.entity.BaseEntity;
 
 import lombok.*;
