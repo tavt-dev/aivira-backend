@@ -54,5 +54,17 @@ class FoundationMigrationIntegrationTest extends AbstractIntegrationTest {
                 Integer.class);
 
         assertThat(userSellerApplyCount).isEqualTo(1);
+
+        Integer productPhase4ColumnCount = jdbcTemplate.queryForObject(
+                """
+				SELECT COUNT(*)
+				FROM information_schema.columns
+				WHERE table_schema = DATABASE()
+				AND table_name = 'products'
+				AND column_name IN ('shop_id', 'status', 'rejection_reason', 'submitted_at', 'approved_by', 'approved_at', 'rejected_by', 'rejected_at')
+				""",
+                Integer.class);
+
+        assertThat(productPhase4ColumnCount).isEqualTo(8);
     }
 }
