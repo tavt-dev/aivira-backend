@@ -6,7 +6,9 @@ import java.util.Set;
 
 import jakarta.persistence.*;
 
+import com.tien.aivirabackend.constant.ProductStatus;
 import com.tien.aivirabackend.domain.entity.BaseEntity;
+import com.tien.aivirabackend.domain.entity.marketplace.Shop;
 import com.tien.aivirabackend.domain.entity.review.Review;
 
 import lombok.*;
@@ -24,6 +26,10 @@ public class Product extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shop_id", nullable = false)
+    Shop shop;
 
     /* BASIC INFO */
     @Column(nullable = false, unique = true, length = 50)
@@ -81,6 +87,29 @@ public class Product extends BaseEntity {
     @Column(name = "is_featured")
     @Builder.Default
     Boolean featured = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    @Builder.Default
+    ProductStatus status = ProductStatus.DRAFT;
+
+    @Column(name = "rejection_reason", length = 500)
+    String rejectionReason;
+
+    @Column(name = "submitted_at")
+    java.time.Instant submittedAt;
+
+    @Column(name = "approved_by")
+    String approvedBy;
+
+    @Column(name = "approved_at")
+    java.time.Instant approvedAt;
+
+    @Column(name = "rejected_by")
+    String rejectedBy;
+
+    @Column(name = "rejected_at")
+    java.time.Instant rejectedAt;
 
     /* RELATIONSHIP */
     @ManyToOne(fetch = FetchType.LAZY)

@@ -93,6 +93,12 @@ Các file cấu hình chính:
   - Admin xem danh sách shop, duyệt, từ chối, khóa và mở khóa shop.
   - Khi admin duyệt shop, owner được gán role `SELLER`.
   - Seller dashboard Phase 3 trả summary placeholder với số liệu `0` cho đến khi catalog/order hoàn thiện.
+- Catalog:
+  - Public xem category list/tree và search/detail product đang `ACTIVE`.
+  - Admin tạo, cập nhật và soft delete category.
+  - Seller tạo/sửa/soft delete product trong shop đã `APPROVED`, quản lý variation, stock và media.
+  - Seller submit product để admin duyệt; admin approve/reject product trước khi public.
+  - Product media upload lên Cloudinary, media primary cập nhật thumbnail product.
 
 ### Đã Có Entity Nền
 
@@ -192,6 +198,47 @@ Cần bearer token và permission phù hợp như `SHOP_READ_ALL`, `SHOP_APPROVE
 | `PUT` | `/admin/shops/{shopId}/lock` | Khóa shop `APPROVED`, body có `reason` |
 | `PUT` | `/admin/shops/{shopId}/unlock` | Mở khóa shop `LOCKED` về `APPROVED` |
 
+### Catalog Endpoints
+
+Public:
+
+| Method | Endpoint | Mô tả |
+|---|---|---|
+| `GET` | `/categories` | Lấy danh sách category active/visible |
+| `GET` | `/categories/tree` | Lấy cây category active/visible |
+| `GET` | `/products` | Search product public theo `keyword`, `categorySlug`, `shopSlug`, `brand`, `minPrice`, `maxPrice`, `available`, `sort`, `page`, `size` |
+| `GET` | `/products/{slug}` | Lấy chi tiết product public |
+
+Seller product, cần shop đã `APPROVED` và permission phù hợp:
+
+| Method | Endpoint | Mô tả |
+|---|---|---|
+| `GET` | `/seller/products` | Lấy product của shop hiện tại, filter `status`, `keyword` |
+| `GET` | `/seller/products/{productId}` | Lấy chi tiết product của shop hiện tại |
+| `POST` | `/seller/products` | Tạo product `DRAFT` kèm ít nhất một variation |
+| `PUT` | `/seller/products/{productId}` | Cập nhật product và đưa về `DRAFT` nếu đang chờ duyệt/đã public |
+| `DELETE` | `/seller/products/{productId}` | Soft delete product về `INACTIVE` |
+| `POST` | `/seller/products/{productId}/submit-review` | Gửi product `DRAFT`/`REJECTED` sang `PENDING_REVIEW` |
+| `POST` | `/seller/products/{productId}/media` | Upload ảnh product multipart field `media` |
+| `PUT` | `/seller/products/{productId}/media/{mediaId}` | Cập nhật alt text, sort order, primary hoặc active của media |
+| `DELETE` | `/seller/products/{productId}/media/{mediaId}` | Soft delete media |
+| `POST` | `/seller/products/{productId}/variations` | Thêm variation |
+| `PUT` | `/seller/products/{productId}/variations/{variationId}` | Cập nhật variation |
+| `DELETE` | `/seller/products/{productId}/variations/{variationId}` | Soft delete variation |
+| `PUT` | `/seller/products/{productId}/variations/{variationId}/stock` | Cập nhật tồn kho variation |
+
+Admin catalog/product:
+
+| Method | Endpoint | Mô tả |
+|---|---|---|
+| `POST` | `/admin/categories` | Tạo category |
+| `PUT` | `/admin/categories/{categoryId}` | Cập nhật category |
+| `DELETE` | `/admin/categories/{categoryId}` | Soft delete category |
+| `GET` | `/admin/products` | Lấy danh sách product, filter `status`, `shopId`, `categoryId`, `keyword` |
+| `GET` | `/admin/products/{productId}` | Lấy chi tiết product |
+| `PUT` | `/admin/products/{productId}/approve` | Duyệt product `PENDING_REVIEW` thành `ACTIVE` |
+| `PUT` | `/admin/products/{productId}/reject` | Từ chối product `PENDING_REVIEW`, body có `reason` |
+
 ## Payload Mẫu
 
 ### Đăng Ký
@@ -276,6 +323,44 @@ Refresh token được ưu tiên đọc từ cookie `refreshToken`. Nếu `AUTH_
 ```json
 {
   "reason": "Thông tin xác minh chưa đầy đủ."
+}
+```
+
+### Tạo Category
+
+```json
+{
+  "categoryName": "Thời trang nữ",
+  "description": "Danh mục thời trang nữ",
+  "displayOrder": 1,
+  "parentId": null,
+  "active": true,
+  "visible": true
+}
+```
+
+### Tạo Product Seller
+
+```json
+{
+  "sku": "DRESS-001",
+  "productName": "Đầm midi Aivira",
+  "description": "Đầm midi chất liệu cotton cao cấp",
+  "brand": "Aivira",
+  "material": "Cotton",
+  "categoryId": 1,
+  "price": 399000,
+  "originalPrice": 499000,
+  "weight": 0.35,
+  "variations": [
+    {
+      "sku": "DRESS-001-BLACK-M",
+      "color": "Black",
+      "size": "M",
+      "additionalPrice": 0,
+      "stockQuantity": 20
+    }
+  ]
 }
 ```
 
@@ -430,6 +515,7 @@ Spring Boot không tự nạp `.env` theo mặc định. Cần export biến mô
 | `CLOUDINARY_API_SECRET` | Không có | Cloudinary API secret |
 | `CLOUDINARY_SECURE` | `true` | Bật secure URL cho Cloudinary |
 | `CLOUDINARY_AVATAR_FOLDER` | `aivira/users` | Folder gốc lưu avatar |
+| `CLOUDINARY_PRODUCT_MEDIA_FOLDER` | `aivira/products` | Folder gốc lưu product media |
 | `SEED_ENABLED` | `false` | Bật seed role/admin |
 | `SEED_ADMIN_USERNAME` | Rỗng | Username admin seed |
 | `SEED_ADMIN_PASSWORD` | Rỗng | Password admin seed |
@@ -448,6 +534,8 @@ Bind qua prefix `app.upload`.
 | `app.upload.allowed-document-types` | `application/pdf` |
 
 Avatar upload hiện validate file không rỗng, giới hạn size theo `app.upload.max-image-size`, kiểm tra MIME whitelist và magic bytes. Ảnh được upload vào Cloudinary theo folder `{CLOUDINARY_AVATAR_FOLDER}/{userId}/avatar`, public ID sinh ngẫu nhiên, transformation avatar mặc định là ảnh vuông `400x400`.
+
+Product media upload dùng cùng validate ảnh, upload vào Cloudinary theo folder `{CLOUDINARY_PRODUCT_MEDIA_FOLDER}/{shopId}/{productId}` với transformation ảnh vuông `1200x1200`.
 
 ## Chạy Local
 
@@ -551,8 +639,9 @@ Format code:
 
 - Avatar cũ trên Cloudinary hiện được giữ lại khi user upload avatar mới; chưa có cleanup job cho media cũ.
 - Shop logo cũ trên Cloudinary hiện được giữ lại khi seller upload logo mới; chưa có cleanup job cho media cũ.
-- Seller dashboard Phase 3 chỉ trả số liệu placeholder `0` vì product/order service chưa được triển khai.
-- Các module catalog/cart/order/payment/discount/review mới có entity, chưa có API nghiệp vụ đầy đủ.
+- Product media cũ trên Cloudinary hiện được giữ lại khi seller update/delete media; chưa có cleanup job cho media cũ/orphan.
+- Seller dashboard Phase 3 chỉ trả số liệu placeholder `0` vì order service chưa được triển khai.
+- Các module cart/order/payment/discount/review mới có entity, chưa có API nghiệp vụ đầy đủ.
 - Đã có Flyway migration versioning từ `V1__init_schema.sql`; các thay đổi schema tiếp theo phải tạo migration mới.
 - `.env` chỉ là file tham khảo, app không tự load file này nếu không thêm cơ chế load riêng.
 
@@ -1312,21 +1401,28 @@ Còn lại để làm ở phase sau:
 - Dashboard doanh thu/sản phẩm/đơn hàng thật sau khi có catalog/order.
 - Full KYC/document upload.
 
-### Phase 4: Catalog
+### Phase 4: Catalog - Done
 
-- Thêm repository/service/controller cho category.
-- Thêm product CRUD cho seller.
-- Thêm variation/inventory CRUD.
-- Thêm product media upload qua Cloudinary.
-- Thêm product moderation cho admin.
-- Thêm public search/filter/sort/pagination.
-- Thêm wishlist và recently viewed.
+- Đã thêm Flyway migration `V3__catalog_phase4.sql`.
+- Đã thêm repository/service/controller cho category.
+- Đã thêm product CRUD cho seller gắn với shop đã `APPROVED`.
+- Đã thêm variation/inventory CRUD, stock product được tổng hợp từ variation active.
+- Đã thêm product media upload qua Cloudinary, primary media cập nhật thumbnail product.
+- Đã thêm product moderation cho admin: approve/reject product trước khi public.
+- Đã thêm public category list/tree và product search/filter/sort/pagination.
 
 Kết quả mong muốn:
 
 - Guest/customer xem được catalog public.
 - Seller đăng sản phẩm và quản lý tồn kho.
 - Admin kiểm duyệt được sản phẩm.
+
+Còn lại để làm ở phase sau:
+
+- Wishlist và recently viewed.
+- Audit log thật cho approve/reject product.
+- Notification/email khi product được duyệt/từ chối.
+- Media cleanup policy cho product media cũ/orphan.
 
 ### Phase 5: Cart Và Checkout
 

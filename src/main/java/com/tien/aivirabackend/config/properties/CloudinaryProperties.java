@@ -23,4 +23,6 @@ public class CloudinaryProperties {
     private boolean secure = true;
 
     private String avatarFolder = "aivira/users";
+
+    private String productMediaFolder = "aivira/products";
 }
