@@ -40,6 +40,10 @@ public class Address extends BaseEntity {
     @Column(name = "is_default")
     Boolean defaultAddress = false;
 
+    @Builder.Default
+    @Column(name = "is_active", nullable = false)
+    Boolean active = true;
+
     /* RELATIONSHIP */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

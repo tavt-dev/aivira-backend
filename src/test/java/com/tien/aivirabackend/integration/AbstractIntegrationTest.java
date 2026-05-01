@@ -69,7 +69,9 @@ public abstract class AbstractIntegrationTest {
         jdbcTemplate.execute("TRUNCATE TABLE review_images");
         jdbcTemplate.execute("TRUNCATE TABLE reviews");
         jdbcTemplate.execute("TRUNCATE TABLE coupon_usages");
+        jdbcTemplate.execute("TRUNCATE TABLE payment_callbacks");
         jdbcTemplate.execute("TRUNCATE TABLE payments");
+        jdbcTemplate.execute("TRUNCATE TABLE payment_groups");
         jdbcTemplate.execute("TRUNCATE TABLE order_items");
         jdbcTemplate.execute("TRUNCATE TABLE orders");
         jdbcTemplate.execute("TRUNCATE TABLE cart_items");

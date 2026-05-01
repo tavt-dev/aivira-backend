@@ -8,6 +8,7 @@ import jakarta.persistence.*;
 
 import com.tien.aivirabackend.constant.OrderStatus;
 import com.tien.aivirabackend.domain.entity.BaseEntity;
+import com.tien.aivirabackend.domain.entity.marketplace.Shop;
 import com.tien.aivirabackend.domain.entity.transaction.payment.Payment;
 import com.tien.aivirabackend.domain.entity.user.Address;
 import com.tien.aivirabackend.domain.entity.user.User;
@@ -57,15 +58,37 @@ public class Order extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     @Builder.Default
-    OrderStatus orderStatus = OrderStatus.PENDING;
+    OrderStatus orderStatus = OrderStatus.PENDING_PAYMENT;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "address_id", nullable = false)
+    @JoinColumn(name = "shop_id", nullable = false)
+    Shop shop;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "address_id")
     Address shippingAddress;
+
+    @Column(name = "shipping_recipient_name", nullable = false)
+    String shippingRecipientName;
+
+    @Column(name = "shipping_phone_number", nullable = false)
+    String shippingPhoneNumber;
+
+    @Column(name = "shipping_address_line", length = 500, nullable = false)
+    String shippingAddressLine;
+
+    @Column(name = "shipping_ward")
+    String shippingWard;
+
+    @Column(name = "shipping_district")
+    String shippingDistrict;
+
+    @Column(name = "shipping_city")
+    String shippingCity;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

@@ -99,6 +99,12 @@ Các file cấu hình chính:
   - Seller tạo/sửa/soft delete product trong shop đã `APPROVED`, quản lý variation, stock và media.
   - Seller submit product để admin duyệt; admin approve/reject product trước khi public.
   - Product media upload lên Cloudinary, media primary cập nhật thumbnail product.
+- Address, cart, checkout và payment v1:
+  - Customer quản lý address book, địa chỉ mặc định và soft delete địa chỉ.
+  - Customer quản lý cart active, add/update/remove/clear item và merge item trùng variation.
+  - Checkout selected cart item, split order theo shop, snapshot sản phẩm/địa chỉ/pricing và trừ stock trong transaction.
+  - Payment group gom nhiều order trong một lần checkout, hỗ trợ `COD`, `VNPAY`, `MOMO`.
+  - VNPay/MoMo có create payment URL, return/IPN callback verify signature, idempotency và expire pending payment.
 
 ### Đã Có Entity Nền
 
@@ -106,11 +112,11 @@ Các file cấu hình chính:
 - Permission mappings: `user_roles`, `role_permissions`, `user_permissions`
 - Marketplace: `Shop`
 - Catalog: `Category`, `Product`, `ProductVariation`, `ProductMedia`
-- Transaction: `Cart`, `CartItem`, `Order`, `OrderItem`, `Payment`
+- Transaction: `Cart`, `CartItem`, `Order`, `OrderItem`, `Payment`, `PaymentGroup`, `PaymentCallback`
 - Discount: `Coupon`, `CouponUsage`, `Promotion`
 - Review: `Review`, `ReviewImage`
 
-Các module catalog/cart/order/payment/discount/review hiện chưa có controller/service CRUD hoàn chỉnh.
+Các module discount/review hiện mới có entity nền, chưa có API nghiệp vụ đầy đủ. Order Phase 5 hiện tập trung vào tạo đơn từ checkout và payment status; order management cho customer/seller/admin sẽ làm tiếp ở Phase 7.
 
 ## API
 
@@ -239,6 +245,40 @@ Admin catalog/product:
 | `PUT` | `/admin/products/{productId}/approve` | Duyệt product `PENDING_REVIEW` thành `ACTIVE` |
 | `PUT` | `/admin/products/{productId}/reject` | Từ chối product `PENDING_REVIEW`, body có `reason` |
 
+### Address, Cart, Checkout Và Payment Endpoints
+
+Address, cần bearer token:
+
+| Method | Endpoint | Mô tả |
+|---|---|---|
+| `GET` | `/users/me/addresses` | Lấy danh sách địa chỉ active của user hiện tại |
+| `POST` | `/users/me/addresses` | Tạo địa chỉ mới |
+| `PUT` | `/users/me/addresses/{addressId}` | Cập nhật địa chỉ thuộc user hiện tại |
+| `DELETE` | `/users/me/addresses/{addressId}` | Soft delete địa chỉ |
+| `PUT` | `/users/me/addresses/{addressId}/default` | Đặt địa chỉ mặc định |
+
+Cart, cần bearer token:
+
+| Method | Endpoint | Mô tả |
+|---|---|---|
+| `GET` | `/cart` | Lấy giỏ hàng active của user hiện tại |
+| `POST` | `/cart/items` | Thêm variation vào cart; trùng variation thì cộng quantity |
+| `PUT` | `/cart/items/{cartItemId}` | Cập nhật quantity |
+| `DELETE` | `/cart/items/{cartItemId}` | Xóa một cart item |
+| `DELETE` | `/cart/items` | Xóa toàn bộ cart item |
+
+Checkout và payment:
+
+| Method | Endpoint | Mô tả |
+|---|---|---|
+| `POST` | `/checkout` | Checkout các `cartItemIds` được chọn, split order theo shop và tạo payment group |
+| `GET` | `/payments/groups/{paymentGroupCode}` | Lấy trạng thái payment group của user hiện tại |
+| `GET` | `/payments/{paymentId}` | Lấy payment allocation của user hiện tại |
+| `POST` | `/payments/groups/{paymentGroupCode}/retry` | Retry payment online bị fail/cancel/expired |
+| `GET` | `/payments/vnpay/return` | VNPay Return URL public, verify signature |
+| `GET` | `/payments/vnpay/ipn` | VNPay IPN public, verify signature và xử lý idempotent |
+| `POST` | `/payments/momo/ipn` | MoMo IPN public, verify signature và xử lý idempotent |
+
 ## Payload Mẫu
 
 ### Đăng Ký
@@ -363,6 +403,42 @@ Refresh token được ưu tiên đọc từ cookie `refreshToken`. Nếu `AUTH_
   ]
 }
 ```
+
+### Tạo Địa Chỉ
+
+```json
+{
+  "recipientName": "Nguyễn Văn A",
+  "phoneNumber": "0900000000",
+  "addressLine": "123 Nguyễn Trãi",
+  "ward": "Phường 7",
+  "district": "Quận 5",
+  "city": "TP. Hồ Chí Minh",
+  "defaultAddress": true
+}
+```
+
+### Thêm Cart Item
+
+```json
+{
+  "productVariationId": 1,
+  "quantity": 2
+}
+```
+
+### Checkout
+
+```json
+{
+  "addressId": 1,
+  "cartItemIds": [1, 2],
+  "paymentMethod": "VNPAY",
+  "notes": "Giao giờ hành chính"
+}
+```
+
+`paymentMethod` hỗ trợ `COD`, `VNPAY`, `MOMO`. Với multi-seller cart, checkout tạo nhiều order nhưng gom vào một `paymentGroupCode`.
 
 ## Response Chuẩn
 
@@ -516,6 +592,22 @@ Spring Boot không tự nạp `.env` theo mặc định. Cần export biến mô
 | `CLOUDINARY_SECURE` | `true` | Bật secure URL cho Cloudinary |
 | `CLOUDINARY_AVATAR_FOLDER` | `aivira/users` | Folder gốc lưu avatar |
 | `CLOUDINARY_PRODUCT_MEDIA_FOLDER` | `aivira/products` | Folder gốc lưu product media |
+| `PAYMENT_PENDING_TTL_MINUTES` | `15` | Thời gian giữ pending online payment trước khi expire |
+| `PAYMENT_EXPIRY_SCAN_DELAY_MS` | `60000` | Chu kỳ scan payment pending quá hạn |
+| `VNPAY_ENABLED` | `false` | Bật VNPay sandbox adapter |
+| `VNPAY_PAYMENT_URL` | Sandbox URL | URL cổng thanh toán VNPay |
+| `VNPAY_TMN_CODE` | Rỗng | VNPay merchant TMN code |
+| `VNPAY_HASH_SECRET` | Rỗng | Secret ký/verify VNPay |
+| `VNPAY_RETURN_URL` | Rỗng | Return URL frontend/backend gửi sang VNPay |
+| `VNPAY_IPN_URL` | Rỗng | IPN URL cấu hình với VNPay |
+| `MOMO_ENABLED` | `false` | Bật MoMo sandbox adapter |
+| `MOMO_ENDPOINT` | Sandbox URL | Endpoint `/v2/gateway/api/create` |
+| `MOMO_PARTNER_CODE` | Rỗng | MoMo partner code |
+| `MOMO_ACCESS_KEY` | Rỗng | MoMo access key |
+| `MOMO_SECRET_KEY` | Rỗng | Secret ký/verify MoMo |
+| `MOMO_REDIRECT_URL` | Rỗng | Redirect URL sau thanh toán MoMo |
+| `MOMO_IPN_URL` | Rỗng | IPN URL nhận kết quả MoMo |
+| `MOMO_REQUEST_TYPE` | `payWithMethod` | Request type MoMo |
 | `SEED_ENABLED` | `false` | Bật seed role/admin |
 | `SEED_ADMIN_USERNAME` | Rỗng | Username admin seed |
 | `SEED_ADMIN_PASSWORD` | Rỗng | Password admin seed |
@@ -641,7 +733,8 @@ Format code:
 - Shop logo cũ trên Cloudinary hiện được giữ lại khi seller upload logo mới; chưa có cleanup job cho media cũ.
 - Product media cũ trên Cloudinary hiện được giữ lại khi seller update/delete media; chưa có cleanup job cho media cũ/orphan.
 - Seller dashboard Phase 3 chỉ trả số liệu placeholder `0` vì order service chưa được triển khai.
-- Các module cart/order/payment/discount/review mới có entity, chưa có API nghiệp vụ đầy đủ.
+- Discount/review mới có entity, chưa có API nghiệp vụ đầy đủ.
+- Order management đầy đủ cho customer/seller/admin vẫn để Phase 7; Phase 5 hiện chỉ tạo order từ checkout và expose payment status.
 - Đã có Flyway migration versioning từ `V1__init_schema.sql`; các thay đổi schema tiếp theo phải tạo migration mới.
 - `.env` chỉ là file tham khảo, app không tự load file này nếu không thêm cơ chế load riêng.
 
@@ -1424,14 +1517,16 @@ Còn lại để làm ở phase sau:
 - Notification/email khi product được duyệt/từ chối.
 - Media cleanup policy cho product media cũ/orphan.
 
-### Phase 5: Cart Và Checkout
+### Phase 5: Address, Cart, Checkout Và Payment v1 - Done
 
-- Thêm address API.
-- Thêm cart API.
-- Validate stock khi add/update cart.
-- Checkout split order theo seller.
-- Snapshot product/address/pricing vào order.
-- Tính subtotal, shipping fee, discount, total.
+- Đã thêm Flyway migration `V4__phase5_checkout_payment.sql`.
+- Đã thêm address API cho address book, default address và soft delete.
+- Đã thêm cart API cho active cart, add/update/remove/clear item và merge variation trùng.
+- Đã thêm checkout selected cart item, validate stock, lock variation, split order theo seller/shop.
+- Đã snapshot product/address/pricing vào order item/order.
+- Đã tạo payment group gom nhiều order trong một lần checkout.
+- Đã hỗ trợ payment v1 gồm `COD`, `VNPAY`, `MOMO` với payment URL, callback verify signature và idempotency.
+- Đã thêm scheduled job expire online payment pending quá TTL và hoàn stock.
 
 Kết quả mong muốn:
 
@@ -1439,20 +1534,23 @@ Kết quả mong muốn:
 - Cart nhiều seller được tách thành nhiều order phù hợp.
 - Order không bị thay đổi lịch sử khi product/address thay đổi.
 
-### Phase 6: Payment
+Còn lại để làm ở phase sau:
 
-- Hoàn thiện COD flow.
-- Tích hợp VNPay create payment URL.
-- Tích hợp Momo create payment URL.
-- Thêm callback/webhook validate signature.
-- Thêm idempotency cho callback.
-- Sync payment status với order status.
+- Order history/detail/cancel cho customer.
+- Seller/admin order management và shipping lifecycle.
+- Promotion/coupon thật, shipping fee thật và refund flow.
+
+### Phase 6: Payment Provider Hardening
+
+- Bổ sung test tích hợp thực tế với sandbox VNPay/MoMo khi có credential thật.
+- Chuẩn hóa provider response theo yêu cầu production của từng cổng.
+- Bổ sung reconciliation/check transaction API nếu provider hỗ trợ.
+- Bổ sung monitoring/alert cho callback lỗi hoặc payment stuck.
 
 Kết quả mong muốn:
 
-- Customer thanh toán COD hoặc online.
-- Callback trùng không tạo side effect sai.
-- Payment/order status luôn nhất quán.
+- Payment online ổn định hơn trước khi đưa production.
+- Có quy trình đối soát khi callback bị thiếu hoặc trễ.
 
 ### Phase 7: Order Và Shipping
 
