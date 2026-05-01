@@ -1,9 +1,15 @@
 package com.tien.aivirabackend.constant;
 
 public enum OrderStatus {
-    PENDING, // tạo đơn
-    CONFIRMED, // xác nhận
-    SHIPPING, // đang giao
-    COMPLETED, // giao xong
-    CANCELLED // huỷ
+    PENDING_PAYMENT,
+    PAID,
+    PENDING_CONFIRMATION,
+    CONFIRMED,
+    PACKING,
+    SHIPPING,
+    COMPLETED,
+    CANCELLED,
+    PAYMENT_FAILED,
+    EXPIRED,
+    REFUNDED
 }

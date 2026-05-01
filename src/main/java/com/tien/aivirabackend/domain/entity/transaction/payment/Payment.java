@@ -1,7 +1,7 @@
 package com.tien.aivirabackend.domain.entity.transaction.payment;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import jakarta.persistence.*;
 
@@ -30,6 +30,10 @@ public class Payment extends BaseEntity {
     @JoinColumn(name = "order_id", nullable = false)
     Order order;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payment_group_id", nullable = false)
+    PaymentGroup paymentGroup;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     PaymentMethod method;
@@ -48,5 +52,5 @@ public class Payment extends BaseEntity {
     String providerResponse;
 
     @Column(name = "paid_at")
-    LocalDateTime paidAt;
+    Instant paidAt;
 }

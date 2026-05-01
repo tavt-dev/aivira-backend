@@ -1,6 +1,6 @@
 package com.tien.aivirabackend.constant;
 
-public enum PaymentMethod {
+public enum PaymentProvider {
     COD,
     VNPAY,
     MOMO
