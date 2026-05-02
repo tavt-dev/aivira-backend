@@ -4,6 +4,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: ${DDL_AUTO:validate}
+  flyway:
+    enabled: true
+    locations: ${FLYWAY_LOCATIONS:classpath:db/migration}
+    baseline-on-migrate: ${FLYWAY_BASELINE_ON_MIGRATE:false}
 
 auth:
   refresh-token:
