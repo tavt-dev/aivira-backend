@@ -13,4 +13,10 @@ import lombok.Data;
 public class PaymentProperties {
     @Min(1)
     private long pendingTtlMinutes = 15;
+
+    @Min(100)
+    private int providerConnectTimeoutMs = 5000;
+
+    @Min(100)
+    private int providerReadTimeoutMs = 30000;
 }

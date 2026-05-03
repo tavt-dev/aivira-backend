@@ -1,17 +1,14 @@
 package com.tien.aivirabackend.service.impl;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tien.aivirabackend.constant.ShopStatus;
 import com.tien.aivirabackend.domain.entity.marketplace.Shop;
 import com.tien.aivirabackend.exception.AppException;
-import com.tien.aivirabackend.exception.errorCode.AuthErrorCode;
 import com.tien.aivirabackend.exception.errorCode.ShopErrorCode;
 import com.tien.aivirabackend.repository.ShopRepository;
+import com.tien.aivirabackend.service.CurrentUserService;
 import com.tien.aivirabackend.service.ShopOwnershipService;
 
 import lombok.AccessLevel;
@@ -23,6 +20,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ShopOwnershipServiceImpl implements ShopOwnershipService {
     ShopRepository shopRepository;
+    CurrentUserService currentUserService;
 
     @Override
     @Transactional(readOnly = true)
@@ -53,20 +51,6 @@ public class ShopOwnershipServiceImpl implements ShopOwnershipService {
     }
 
     private String getCurrentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AppException(AuthErrorCode.AUTHENTICATION_FAILED);
-        }
-
-        Object principal = authentication.getPrincipal();
-        if (!(principal instanceof Jwt jwt)) {
-            throw new AppException(AuthErrorCode.AUTHENTICATION_FAILED);
-        }
-
-        String userId = jwt.getClaimAsString("user_id");
-        if (userId == null || userId.isBlank()) {
-            throw new AppException(AuthErrorCode.AUTHENTICATION_FAILED);
-        }
-        return userId;
+        return currentUserService.getCurrentUserId();
     }
 }

@@ -1,12 +1,14 @@
 package com.tien.aivirabackend.service.impl;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.EnumSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -25,6 +27,7 @@ import com.tien.aivirabackend.exception.errorCode.UserErrorCode;
 import com.tien.aivirabackend.repository.PermissionRepository;
 import com.tien.aivirabackend.repository.UserPermissionRepository;
 import com.tien.aivirabackend.repository.UserRepository;
+import com.tien.aivirabackend.service.CurrentUserService;
 import com.tien.aivirabackend.service.UserPermissionService;
 
 import lombok.AccessLevel;
@@ -40,6 +43,7 @@ public class UserPermissionServiceImpl implements UserPermissionService {
     UserRepository userRepository;
     PermissionRepository permissionRepository;
     UserPermissionRepository userPermissionRepository;
+    CurrentUserService currentUserService;
 
     @Override
     @Transactional(readOnly = true)
@@ -179,16 +183,6 @@ public class UserPermissionServiceImpl implements UserPermissionService {
     }
 
     private String getCurrentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return null;
-        }
-
-        Object principal = authentication.getPrincipal();
-        if (!(principal instanceof Jwt jwt)) {
-            return null;
-        }
-
-        return jwt.getClaimAsString("user_id");
+        return currentUserService.findCurrentUserId().orElse(null);
     }
 }

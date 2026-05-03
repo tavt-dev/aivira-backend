@@ -15,4 +15,5 @@ public class MomoPaymentProperties {
     private String redirectUrl = "";
     private String ipnUrl = "";
     private String requestType = "payWithMethod";
+    private String queryEndpoint = "https://test-payment.momo.vn/v2/gateway/api/query";
 }

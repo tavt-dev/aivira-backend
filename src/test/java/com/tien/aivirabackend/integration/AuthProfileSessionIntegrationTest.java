@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MvcResult;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.nimbusds.jwt.SignedJWT;
 import com.tien.aivirabackend.constant.OtpType;
 import com.tien.aivirabackend.constant.RevocationReason;
@@ -26,6 +25,8 @@ import com.tien.aivirabackend.domain.entity.user.UserOtp;
 import com.tien.aivirabackend.repository.RefreshTokenRepository;
 import com.tien.aivirabackend.repository.UserOtpRepository;
 import com.tien.aivirabackend.repository.UserRepository;
+
+import tools.jackson.databind.JsonNode;
 
 class AuthProfileSessionIntegrationTest extends AbstractIntegrationTest {
     private static final String PASSWORD = "Password123!";

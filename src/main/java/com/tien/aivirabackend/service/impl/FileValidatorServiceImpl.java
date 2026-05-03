@@ -28,13 +28,6 @@ public class FileValidatorServiceImpl implements FileValidatorService {
             "image/gif", new byte[] {0x47, 0x49, 0x46, 0x38},
             "application/pdf", new byte[] {0x25, 0x50, 0x44, 0x46});
 
-    private static final Map<String, String> EXTENSIONS_BY_MIME_TYPE = Map.of(
-            "image/jpeg", ".jpg",
-            "image/png", ".png",
-            "image/gif", ".gif",
-            "image/webp", ".webp",
-            "application/pdf", ".pdf");
-
     private final FileUploadProperties properties;
 
     @Override
@@ -128,16 +121,6 @@ public class FileValidatorServiceImpl implements FileValidatorService {
             }
         }
         return true;
-    }
-
-    private String extractSafeExtension(String originalFilename) {
-        if (!StringUtils.hasText(originalFilename) || !originalFilename.contains(".")) {
-            return "";
-        }
-
-        String extension =
-                originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase(Locale.ROOT);
-        return EXTENSIONS_BY_MIME_TYPE.containsValue(extension) ? extension : "";
     }
 
     private List<String> getAllowedMimeTypes(MediaType mediaType) {

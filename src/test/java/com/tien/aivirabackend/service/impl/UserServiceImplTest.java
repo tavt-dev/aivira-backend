@@ -12,7 +12,6 @@ import static org.mockito.Mockito.when;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +36,7 @@ import com.tien.aivirabackend.exception.errorCode.FileValidationErrorCode;
 import com.tien.aivirabackend.repository.UserRepository;
 import com.tien.aivirabackend.service.CloudinaryStorageService;
 import com.tien.aivirabackend.service.CloudinaryUploadResult;
+import com.tien.aivirabackend.service.CurrentUserService;
 import com.tien.aivirabackend.service.FileValidatorService;
 import com.tien.aivirabackend.service.JwtService;
 
@@ -63,6 +63,9 @@ class UserServiceImplTest {
     @Mock
     CloudinaryProperties cloudinaryProperties;
 
+    @Mock
+    CurrentUserService currentUserService;
+
     @InjectMocks
     UserServiceImpl userService;
 
@@ -75,6 +78,7 @@ class UserServiceImplTest {
                 Map.of("alg", "none"),
                 Map.of("user_id", "user-1", "sub", "alice"));
         SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt, List.of()));
+        org.mockito.Mockito.lenient().when(currentUserService.getCurrentUser()).thenReturn(buildUser());
     }
 
     @AfterEach
@@ -92,7 +96,7 @@ class UserServiceImplTest {
                 .avatarUrl("https://res.cloudinary.com/demo/avatar.png")
                 .build();
 
-        when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
+        when(currentUserService.getCurrentUser()).thenReturn(user);
         when(cloudinaryProperties.getAvatarFolder()).thenReturn("aivira/users");
         when(cloudinaryStorageService.uploadImage(
                         eq(file), eq("aivira/users/user-1/avatar"), eq("avatar-user-1"), eq(400), eq(400)))
@@ -116,7 +120,7 @@ class UserServiceImplTest {
         MockMultipartFile file = new MockMultipartFile("avatar", "avatar.txt", "text/plain", "hello".getBytes());
         User user = buildUser();
 
-        when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
+        when(currentUserService.getCurrentUser()).thenReturn(user);
         org.mockito.Mockito.doThrow(new AppException(FileValidationErrorCode.INVALID_MIME_TYPE))
                 .when(fileValidatorService)
                 .validateFile(file, MediaType.IMAGE);
@@ -133,7 +137,7 @@ class UserServiceImplTest {
                 new MockMultipartFile("avatar", "avatar.png", "image/png", new byte[] {(byte) 0x89, 0x50, 0x4E, 0x47});
         User user = buildUser();
 
-        when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
+        when(currentUserService.getCurrentUser()).thenReturn(user);
         when(cloudinaryProperties.getAvatarFolder()).thenReturn("aivira/users");
         when(cloudinaryStorageService.uploadImage(any(), any(), any(), eq(400), eq(400)))
                 .thenThrow(new AppException(

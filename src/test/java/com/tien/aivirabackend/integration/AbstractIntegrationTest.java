@@ -17,9 +17,10 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tien.aivirabackend.service.CloudinaryStorageService;
 import com.tien.aivirabackend.service.EmailService;
+
+import tools.jackson.databind.ObjectMapper;
 
 @Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest
@@ -70,6 +71,7 @@ public abstract class AbstractIntegrationTest {
         jdbcTemplate.execute("TRUNCATE TABLE reviews");
         jdbcTemplate.execute("TRUNCATE TABLE coupon_usages");
         jdbcTemplate.execute("TRUNCATE TABLE payment_callbacks");
+        jdbcTemplate.execute("TRUNCATE TABLE payment_attempts");
         jdbcTemplate.execute("TRUNCATE TABLE payments");
         jdbcTemplate.execute("TRUNCATE TABLE payment_groups");
         jdbcTemplate.execute("TRUNCATE TABLE order_items");

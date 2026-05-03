@@ -1,14 +1,9 @@
 package com.tien.aivirabackend.service.impl;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,17 +26,17 @@ import com.tien.aivirabackend.domain.entity.user.User;
 import com.tien.aivirabackend.domain.entity.user.UserOtp;
 import com.tien.aivirabackend.domain.mapper.UserMapper;
 import com.tien.aivirabackend.exception.AppException;
-import com.tien.aivirabackend.exception.errorCode.AccountErrorCode;
-import com.tien.aivirabackend.exception.errorCode.AuthErrorCode;
 import com.tien.aivirabackend.exception.errorCode.JwtErrorCode;
 import com.tien.aivirabackend.exception.errorCode.PasswordErrorCode;
 import com.tien.aivirabackend.exception.errorCode.UserErrorCode;
 import com.tien.aivirabackend.repository.RoleRepository;
 import com.tien.aivirabackend.repository.UserRepository;
 import com.tien.aivirabackend.service.AuthenticationService;
+import com.tien.aivirabackend.service.CurrentUserService;
 import com.tien.aivirabackend.service.EmailService;
 import com.tien.aivirabackend.service.JwtService;
 import com.tien.aivirabackend.service.UserOtpService;
+import com.tien.aivirabackend.service.auth.AccountAuthPolicy;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -69,17 +64,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     EmailService emailService;
 
-    @NonFinal
-    @Value("${auth.brute-force.max-attempts:5}")
-    int maxFailedLoginAttempts;
+    CurrentUserService currentUserService;
 
-    @NonFinal
-    @Value("${auth.brute-force.window-minutes:15}")
-    int failedLoginWindowMinutes;
-
-    @NonFinal
-    @Value("${auth.brute-force.lock-minutes:15}")
-    int lockMinutes;
+    AccountAuthPolicy accountAuthPolicy;
 
     @NonFinal
     @Value("${jwt.valid-duration}")
@@ -92,12 +79,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .findByUsername(request.getUsername())
                 .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
 
-        validateAccountForAuth(user);
+        accountAuthPolicy.validateAccountForAuth(user);
 
         boolean isAuthenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
 
         if (!isAuthenticated) {
-            registerFailedLoginAttempt(user, ipAddress, deviceInfo);
+            accountAuthPolicy.registerFailedLoginAttempt(user, ipAddress, deviceInfo);
             log.warn(
                     "auth_login_failed userId={} username={} ip={} device={} reason=invalid_password",
                     user.getId(),
@@ -107,7 +94,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new AppException(PasswordErrorCode.PASSWORD_INCORRECT);
         }
 
-        clearFailedLoginState(user);
+        accountAuthPolicy.clearFailedLoginState(user);
 
         String accessToken = jwtService.createAccessToken(user);
         String refreshToken = jwtService.createRefreshToken(user, deviceInfo, ipAddress, null);
@@ -167,7 +154,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .findByUsername(username)
                     .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
 
-            validateAccountForAuth(user);
+            accountAuthPolicy.validateAccountForAuth(user);
 
             String familyId = jwtService.getTokenFamilyId(refreshToken);
 
@@ -357,108 +344,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         userOtpService.markOtpAsUsed(userOtp);
     }
 
-    private void validateAccountForAuth(User user) {
-        if (Boolean.TRUE.equals(user.getIsDeleted())) {
-            throw new AppException(AccountErrorCode.ACCOUNT_DELETED);
-        }
-
-        if (Boolean.TRUE.equals(user.getIsLocked())) {
-            throw new AppException(AccountErrorCode.ACCOUNT_LOCKED);
-        }
-
-        Instant now = Instant.now();
-        if (user.getLockoutUntil() != null && user.getLockoutUntil().isAfter(now)) {
-            throw new AppException(AccountErrorCode.ACCOUNT_LOCKED);
-        }
-
-        if (user.getLockoutUntil() != null && !user.getLockoutUntil().isAfter(now)) {
-            user.setLockoutUntil(null);
-            user.setFailedLoginAttempts(0);
-            user.setFirstFailedLoginAt(null);
-            userRepository.save(user);
-        }
-
-        if (!Boolean.TRUE.equals(user.getEmailVerified())) {
-            throw new AppException(AccountErrorCode.ACCOUNT_NOT_VERIFIED);
-        }
-
-        if (!Boolean.TRUE.equals(user.getIsActive())) {
-            throw new AppException(UserErrorCode.USER_ACCOUNT_INACTIVE);
-        }
-    }
-
-    private void registerFailedLoginAttempt(User user, String ipAddress, String deviceInfo) {
-        Instant now = Instant.now();
-        Instant boundary = now.minus(failedLoginWindowMinutes, ChronoUnit.MINUTES);
-
-        Integer currentAttempts = Objects.requireNonNullElse(user.getFailedLoginAttempts(), 0);
-        Instant firstFailedAt = user.getFirstFailedLoginAt();
-
-        if (firstFailedAt == null || firstFailedAt.isBefore(boundary)) {
-            firstFailedAt = now;
-            currentAttempts = 0;
-        }
-
-        int newAttempts = currentAttempts + 1;
-        user.setFirstFailedLoginAt(firstFailedAt);
-        user.setFailedLoginAttempts(newAttempts);
-
-        if (newAttempts >= maxFailedLoginAttempts) {
-            user.setLockoutUntil(now.plus(lockMinutes, ChronoUnit.MINUTES));
-            user.setFailedLoginAttempts(0);
-            user.setFirstFailedLoginAt(null);
-            log.warn(
-                    "auth_login_lockout userId={} username={} ip={} device={} lockUntil={}",
-                    user.getId(),
-                    user.getUsername(),
-                    ipAddress,
-                    deviceInfo,
-                    user.getLockoutUntil());
-        }
-
-        userRepository.save(user);
-    }
-
-    private void clearFailedLoginState(User user) {
-        boolean changed = false;
-        if (!Objects.equals(user.getFailedLoginAttempts(), 0)) {
-            user.setFailedLoginAttempts(0);
-            changed = true;
-        }
-        if (user.getFirstFailedLoginAt() != null) {
-            user.setFirstFailedLoginAt(null);
-            changed = true;
-        }
-        if (user.getLockoutUntil() != null) {
-            user.setLockoutUntil(null);
-            changed = true;
-        }
-        if (changed) {
-            userRepository.save(user);
-        }
-    }
-
     private User getCurrentUserFromSecurityContext() {
-        Jwt jwt = getCurrentJwtFromSecurityContext();
-        String userId = jwt.getClaimAsString("user_id");
-
-        if (userId == null || userId.isBlank()) {
-            throw new AppException(AuthErrorCode.AUTHENTICATION_FAILED);
-        }
-
-        return userRepository.findById(userId).orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND_BY_ID));
+        return userRepository
+                .findById(currentUserService.getCurrentUserId())
+                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND_BY_ID));
     }
 
-    private Jwt getCurrentJwtFromSecurityContext() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AppException(AuthErrorCode.AUTHENTICATION_FAILED);
-        }
-
-        Object principal = authentication.getPrincipal();
-        if (!(principal instanceof Jwt jwt)) {
-            throw new AppException(AuthErrorCode.AUTHENTICATION_FAILED);
-        }
-        return jwt;
+    private org.springframework.security.oauth2.jwt.Jwt getCurrentJwtFromSecurityContext() {
+        return currentUserService.getCurrentJwt();
     }
 }

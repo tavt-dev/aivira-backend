@@ -275,9 +275,10 @@ Checkout và payment:
 | `GET` | `/payments/groups/{paymentGroupCode}` | Lấy trạng thái payment group của user hiện tại |
 | `GET` | `/payments/{paymentId}` | Lấy payment allocation của user hiện tại |
 | `POST` | `/payments/groups/{paymentGroupCode}/retry` | Retry payment online bị fail/cancel/expired |
+| `POST` | `/admin/payments/groups/{paymentGroupCode}/reconcile` | Admin đối soát trạng thái payment group với provider |
 | `GET` | `/payments/vnpay/return` | VNPay Return URL public, verify signature |
-| `GET` | `/payments/vnpay/ipn` | VNPay IPN public, verify signature và xử lý idempotent |
-| `POST` | `/payments/momo/ipn` | MoMo IPN public, verify signature và xử lý idempotent |
+| `GET` | `/payments/vnpay/ipn` | VNPay IPN public, trả response contract `RspCode`/`Message`, verify signature và xử lý idempotent |
+| `POST` | `/payments/momo/ipn` | MoMo IPN public, trả `204 No Content` khi accepted, verify signature và xử lý idempotent |
 
 ## Payload Mẫu
 
@@ -594,14 +595,18 @@ Spring Boot không tự nạp `.env` theo mặc định. Cần export biến mô
 | `CLOUDINARY_PRODUCT_MEDIA_FOLDER` | `aivira/products` | Folder gốc lưu product media |
 | `PAYMENT_PENDING_TTL_MINUTES` | `15` | Thời gian giữ pending online payment trước khi expire |
 | `PAYMENT_EXPIRY_SCAN_DELAY_MS` | `60000` | Chu kỳ scan payment pending quá hạn |
+| `PAYMENT_PROVIDER_CONNECT_TIMEOUT_MS` | `5000` | Timeout kết nối khi gọi provider |
+| `PAYMENT_PROVIDER_READ_TIMEOUT_MS` | `30000` | Timeout đọc response khi gọi provider |
 | `VNPAY_ENABLED` | `false` | Bật VNPay sandbox adapter |
 | `VNPAY_PAYMENT_URL` | Sandbox URL | URL cổng thanh toán VNPay |
+| `VNPAY_TRANSACTION_URL` | Sandbox URL | URL QueryDr/transaction của VNPay dùng cho reconciliation |
 | `VNPAY_TMN_CODE` | Rỗng | VNPay merchant TMN code |
 | `VNPAY_HASH_SECRET` | Rỗng | Secret ký/verify VNPay |
 | `VNPAY_RETURN_URL` | Rỗng | Return URL frontend/backend gửi sang VNPay |
 | `VNPAY_IPN_URL` | Rỗng | IPN URL cấu hình với VNPay |
 | `MOMO_ENABLED` | `false` | Bật MoMo sandbox adapter |
 | `MOMO_ENDPOINT` | Sandbox URL | Endpoint `/v2/gateway/api/create` |
+| `MOMO_QUERY_ENDPOINT` | Sandbox URL | Endpoint query transaction MoMo dùng cho reconciliation |
 | `MOMO_PARTNER_CODE` | Rỗng | MoMo partner code |
 | `MOMO_ACCESS_KEY` | Rỗng | MoMo access key |
 | `MOMO_SECRET_KEY` | Rỗng | Secret ký/verify MoMo |
@@ -676,6 +681,16 @@ Nếu không dùng profile `local`, cookie refresh token mặc định có `Secu
 
 Nếu database local đã từng được Hibernate tạo bằng `ddl-auto=update`, nên tạo database mới hoặc baseline thủ công trước khi dùng Flyway. Mặc định project không bật `FLYWAY_BASELINE_ON_MIGRATE` để tránh che lấp schema production chưa được kiểm soát.
 
+Nếu startup lỗi dạng `Schema validation: missing table [payment_attempts]`, database local chưa chạy migration Phase 6 hoặc Flyway đang không chạy trong run configuration. Với profile `local`, Flyway được bật để migrate trước Hibernate validate. Kiểm tra:
+
+```powershell
+$env:FLYWAY_ENABLED="true"
+$env:DDL_AUTO="validate"
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=local"
+```
+
+Nếu bảng vẫn chưa có, kiểm tra bảng `flyway_schema_history` trong MySQL để xác nhận migration `V5__payment_provider_hardening.sql` đã được apply; không dùng `DDL_AUTO=update` để tự sinh bảng production schema.
+
 ## Seed Role Và Admin
 
 Bật seed bằng biến:
@@ -709,6 +724,14 @@ $env:Path="$env:JAVA_HOME\bin;$env:Path"
 .\mvnw.cmd test
 ```
 
+Chạy nhanh trên Windows cho vòng lặp local:
+
+```powershell
+$env:JAVA_HOME="C:\Users\Admin\.jdks\ms-21.0.7"
+$env:Path="$env:JAVA_HOME\bin;$env:Path"
+.\mvnw.cmd -q test
+```
+
 Test hiện có:
 
 - Smoke test `contextLoads` với Flyway/Hibernate validate.
@@ -718,8 +741,14 @@ Test hiện có:
 - Unit test RBAC/user permission, authorization resolver, user service và upload validator.
 - Unit test Seller Marketplace cho shop apply, chống tạo shop thứ hai, resubmit, lock/unlock, approve và gán role `SELLER`.
 - Migration test kiểm tra role `USER` có quyền `SELLER_APPLY`.
+- Unit test Phase 6 payment provider cho VNPay/MoMo signature, parse callback, query mocked provider và provider disabled/error mapping.
+- Unit test Phase 6 payment service cho callback success, duplicate callback, late success conflict, retry tạo attempt mới và reconciliation dùng chung state transition.
+- Controller contract test Phase 6 cho VNPay IPN `RspCode`/`Message`, MoMo IPN `204 No Content`/invalid signature và permission `PAYMENT_RECONCILE`.
+- Migration test Phase 6 kiểm tra bảng `payment_attempts` và seed permission `PAYMENT_RECONCILE` cho role `ADMIN`.
 
 Integration test sẽ chạy khi Docker daemon khả dụng. Nếu Docker chưa chạy, Testcontainers test được skip để unit test và build local vẫn chạy được.
+
+Phase 6 không gọi sandbox VNPay/MoMo thật trong test mặc định. Smoke test sandbox thật chỉ chạy thủ công khi có credential thật và cấu hình riêng, không bắt buộc CI/local build.
 
 Format code:
 
@@ -1540,12 +1569,16 @@ Còn lại để làm ở phase sau:
 - Seller/admin order management và shipping lifecycle.
 - Promotion/coupon thật, shipping fee thật và refund flow.
 
-### Phase 6: Payment Provider Hardening
+### Phase 6: Payment Provider Hardening - Done
 
-- Bổ sung test tích hợp thực tế với sandbox VNPay/MoMo khi có credential thật.
-- Chuẩn hóa provider response theo yêu cầu production của từng cổng.
-- Bổ sung reconciliation/check transaction API nếu provider hỗ trợ.
-- Bổ sung monitoring/alert cho callback lỗi hoặc payment stuck.
+- Đã thêm Flyway migration `V5__payment_provider_hardening.sql`.
+- Đã thêm `payment_attempts` để lưu từng lần tạo payment URL/deeplink/QR, tránh mất provider reference khi retry.
+- Đã tách `PaymentProviderSupportService` để gom logic tạo attempt, apply provider result và metrics provider create/query cho checkout/retry/reconcile.
+- Đã chuẩn hóa VNPay IPN response theo contract `RspCode`/`Message`; MoMo IPN trả `204 No Content` khi callback hợp lệ/duplicate.
+- Đã lưu raw callback bằng JSON, callback/reconcile resolve theo payment attempt và xử lý idempotent.
+- Đã thêm admin reconciliation API `POST /admin/payments/groups/{paymentGroupCode}/reconcile` với permission `PAYMENT_RECONCILE`.
+- Đã thêm timeout cấu hình cho provider HTTP client, QueryDr VNPay và MoMo Query endpoint.
+- Đã thêm Actuator health/metrics và correlation ID header `X-Correlation-Id`.
 
 Kết quả mong muốn:
 

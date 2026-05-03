@@ -21,6 +21,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import com.tien.aivirabackend.constant.PermissionCode;
 import com.tien.aivirabackend.repository.UserPermissionRepository;
 import com.tien.aivirabackend.repository.UserRepository;
+import com.tien.aivirabackend.service.CurrentUserService;
 
 @ExtendWith(MockitoExtension.class)
 class AuthorizationServiceImplTest {
@@ -30,11 +31,15 @@ class AuthorizationServiceImplTest {
     @Mock
     UserPermissionRepository userPermissionRepository;
 
+    @Mock
+    CurrentUserService currentUserService;
+
     AuthorizationServiceImpl authorizationService;
 
     @BeforeEach
     void setUp() {
-        authorizationService = new AuthorizationServiceImpl(userRepository, userPermissionRepository);
+        authorizationService =
+                new AuthorizationServiceImpl(userRepository, userPermissionRepository, currentUserService);
         Jwt jwt = new Jwt(
                 "token",
                 Instant.now(),
@@ -42,6 +47,9 @@ class AuthorizationServiceImplTest {
                 Map.of("alg", "none"),
                 Map.of("user_id", "user-1", "sub", "alice"));
         SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt, List.of()));
+        org.mockito.Mockito.lenient()
+                .when(currentUserService.findCurrentUserId())
+                .thenReturn(java.util.Optional.of("user-1"));
     }
 
     @AfterEach

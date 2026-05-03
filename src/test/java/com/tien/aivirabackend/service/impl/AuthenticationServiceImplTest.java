@@ -12,7 +12,6 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,9 +24,11 @@ import com.tien.aivirabackend.exception.errorCode.AccountErrorCode;
 import com.tien.aivirabackend.exception.errorCode.PasswordErrorCode;
 import com.tien.aivirabackend.repository.RoleRepository;
 import com.tien.aivirabackend.repository.UserRepository;
+import com.tien.aivirabackend.service.CurrentUserService;
 import com.tien.aivirabackend.service.EmailService;
 import com.tien.aivirabackend.service.JwtService;
 import com.tien.aivirabackend.service.UserOtpService;
+import com.tien.aivirabackend.service.auth.AccountAuthPolicy;
 
 @ExtendWith(MockitoExtension.class)
 class AuthenticationServiceImplTest {
@@ -53,14 +54,27 @@ class AuthenticationServiceImplTest {
     @Mock
     EmailService emailService;
 
-    @InjectMocks
     AuthenticationServiceImpl authenticationService;
+
+    @Mock
+    CurrentUserService currentUserService;
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(authenticationService, "maxFailedLoginAttempts", 2);
-        ReflectionTestUtils.setField(authenticationService, "failedLoginWindowMinutes", 15);
-        ReflectionTestUtils.setField(authenticationService, "lockMinutes", 15);
+        AccountAuthPolicy accountAuthPolicy = new AccountAuthPolicy(userRepository);
+        ReflectionTestUtils.setField(accountAuthPolicy, "maxFailedLoginAttempts", 2);
+        ReflectionTestUtils.setField(accountAuthPolicy, "failedLoginWindowMinutes", 15);
+        ReflectionTestUtils.setField(accountAuthPolicy, "lockMinutes", 15);
+        authenticationService = new AuthenticationServiceImpl(
+                passwordEncoder,
+                userRepository,
+                roleRepository,
+                userMapper,
+                jwtService,
+                userOtpService,
+                emailService,
+                currentUserService,
+                accountAuthPolicy);
         ReflectionTestUtils.setField(authenticationService, "accessTokenExpiresIn", 3600L);
     }
 

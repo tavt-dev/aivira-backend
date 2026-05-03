@@ -35,6 +35,7 @@ import com.tien.aivirabackend.exception.AppException;
 import com.tien.aivirabackend.repository.RoleRepository;
 import com.tien.aivirabackend.repository.ShopRepository;
 import com.tien.aivirabackend.repository.UserRepository;
+import com.tien.aivirabackend.service.CurrentUserService;
 
 @ExtendWith(MockitoExtension.class)
 class AdminShopServiceImplTest {
@@ -50,6 +51,9 @@ class AdminShopServiceImplTest {
     @Mock
     ShopMapper shopMapper;
 
+    @Mock
+    CurrentUserService currentUserService;
+
     @InjectMocks
     AdminShopServiceImpl adminShopService;
 
@@ -62,6 +66,9 @@ class AdminShopServiceImplTest {
                 Map.of("alg", "none"),
                 Map.of("user_id", "admin-1", "sub", "admin"));
         SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt, List.of()));
+        org.mockito.Mockito.lenient()
+                .when(currentUserService.getCurrentUserId())
+                .thenReturn("admin-1");
     }
 
     @AfterEach
