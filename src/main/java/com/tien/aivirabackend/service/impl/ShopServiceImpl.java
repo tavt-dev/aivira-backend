@@ -1,12 +1,5 @@
 package com.tien.aivirabackend.service.impl;
 
-import java.text.Normalizer;
-import java.util.Locale;
-import java.util.regex.Pattern;
-
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -22,15 +15,16 @@ import com.tien.aivirabackend.domain.entity.marketplace.Shop;
 import com.tien.aivirabackend.domain.entity.user.User;
 import com.tien.aivirabackend.domain.mapper.ShopMapper;
 import com.tien.aivirabackend.exception.AppException;
-import com.tien.aivirabackend.exception.errorCode.AuthErrorCode;
 import com.tien.aivirabackend.exception.errorCode.ShopErrorCode;
 import com.tien.aivirabackend.exception.errorCode.UserErrorCode;
 import com.tien.aivirabackend.repository.ShopRepository;
 import com.tien.aivirabackend.repository.UserRepository;
 import com.tien.aivirabackend.service.CloudinaryStorageService;
 import com.tien.aivirabackend.service.CloudinaryUploadResult;
+import com.tien.aivirabackend.service.CurrentUserService;
 import com.tien.aivirabackend.service.FileValidatorService;
 import com.tien.aivirabackend.service.ShopService;
+import com.tien.aivirabackend.util.SlugUtils;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -44,14 +38,13 @@ import lombok.extern.slf4j.Slf4j;
 public class ShopServiceImpl implements ShopService {
     private static final int LOGO_WIDTH = 400;
     private static final int LOGO_HEIGHT = 400;
-    private static final Pattern NON_LATIN_SLUG_CHAR = Pattern.compile("[^a-z0-9]+");
-    private static final Pattern LEADING_TRAILING_DASH = Pattern.compile("(^-+|-+$)");
 
     ShopRepository shopRepository;
     UserRepository userRepository;
     ShopMapper shopMapper;
     FileValidatorService fileValidatorService;
     CloudinaryStorageService cloudinaryStorageService;
+    CurrentUserService currentUserService;
 
     @Override
     @Transactional
@@ -202,21 +195,7 @@ public class ShopServiceImpl implements ShopService {
     }
 
     private String getCurrentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AppException(AuthErrorCode.AUTHENTICATION_FAILED);
-        }
-
-        Object principal = authentication.getPrincipal();
-        if (!(principal instanceof Jwt jwt)) {
-            throw new AppException(AuthErrorCode.AUTHENTICATION_FAILED);
-        }
-
-        String userId = jwt.getClaimAsString("user_id");
-        if (!StringUtils.hasText(userId)) {
-            throw new AppException(AuthErrorCode.AUTHENTICATION_FAILED);
-        }
-        return userId;
+        return currentUserService.getCurrentUserId();
     }
 
     private void validateUpdateAllowed(Shop shop) {
@@ -226,7 +205,7 @@ public class ShopServiceImpl implements ShopService {
     }
 
     private String generateUniqueSlug(String shopName) {
-        String baseSlug = slugify(shopName);
+        String baseSlug = SlugUtils.slugify(shopName, "shop");
         String candidate = baseSlug;
         int suffix = 2;
         while (shopRepository.existsBySlug(candidate)) {
@@ -234,15 +213,6 @@ public class ShopServiceImpl implements ShopService {
             suffix++;
         }
         return candidate;
-    }
-
-    private String slugify(String value) {
-        String normalized = Normalizer.normalize(value, Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "")
-                .toLowerCase(Locale.ROOT);
-        String slug = NON_LATIN_SLUG_CHAR.matcher(normalized).replaceAll("-");
-        slug = LEADING_TRAILING_DASH.matcher(slug).replaceAll("");
-        return slug.isBlank() ? "shop" : slug;
     }
 
     private String trimToNull(String value) {

@@ -83,6 +83,7 @@ public enum PermissionCode {
     PAYMENT_READ_ALL(PermissionGroup.PAYMENT),
     PAYMENT_CALLBACK_PROCESS(PermissionGroup.PAYMENT),
     PAYMENT_RETRY_SELF(PermissionGroup.PAYMENT),
+    PAYMENT_RECONCILE(PermissionGroup.PAYMENT),
     PAYMENT_MANAGE_ALL(PermissionGroup.PAYMENT),
 
     REFUND_CREATE_SELF(PermissionGroup.REFUND),

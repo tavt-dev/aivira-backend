@@ -7,10 +7,12 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 import com.tien.aivirabackend.config.properties.MomoPaymentProperties;
 import com.tien.aivirabackend.constant.PaymentMethod;
-import com.tien.aivirabackend.domain.entity.transaction.payment.PaymentGroup;
+import com.tien.aivirabackend.constant.PaymentStatus;
+import com.tien.aivirabackend.domain.entity.transaction.payment.PaymentAttempt;
 import com.tien.aivirabackend.exception.AppException;
 import com.tien.aivirabackend.exception.errorCode.CheckoutErrorCode;
 
@@ -23,6 +25,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class MomoPaymentProviderClient implements PaymentProviderClient {
     MomoPaymentProperties properties;
+    RestClient paymentRestClient;
 
     @Override
     public PaymentMethod method() {
@@ -30,13 +33,14 @@ public class MomoPaymentProviderClient implements PaymentProviderClient {
     }
 
     @Override
-    public PaymentProviderResult createPayment(PaymentGroup paymentGroup) {
+    public PaymentProviderResult createPayment(PaymentProviderRequest providerRequest) {
         requireEnabled();
-        String requestId = paymentGroup.getPaymentCode() + "-" + System.currentTimeMillis();
-        String orderId = paymentGroup.getPaymentCode();
-        String amount = paymentGroup.getAmount().toBigInteger().toString();
+        PaymentAttempt attempt = providerRequest.paymentAttempt();
+        String requestId = attempt.getRequestId();
+        String orderId = attempt.getProviderTxnRef();
+        String amount = attempt.getAmount().toBigInteger().toString();
         String extraData = "";
-        String orderInfo = "Thanh toan " + paymentGroup.getPaymentCode();
+        String orderInfo = "Thanh toan " + providerRequest.paymentGroup().getPaymentCode();
         String rawSignature = "accessKey=" + properties.getAccessKey()
                 + "&amount=" + amount
                 + "&extraData=" + extraData
@@ -62,22 +66,28 @@ public class MomoPaymentProviderClient implements PaymentProviderClient {
         request.put("lang", "vi");
         request.put("signature", PaymentSignatureUtils.hmacSha256(rawSignature, properties.getSecretKey()));
 
-        Map<String, Object> response = RestClient.create()
-                .post()
-                .uri(properties.getEndpoint())
-                .body(request)
-                .retrieve()
-                .body(new ParameterizedTypeReference<>() {});
-        if (response == null) {
+        try {
+            Map<String, Object> response = paymentRestClient
+                    .post()
+                    .uri(properties.getEndpoint())
+                    .body(request)
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<>() {});
+            if (response == null) {
+                throw new AppException(CheckoutErrorCode.CHECKOUT_PAYMENT_PROVIDER_ERROR);
+            }
+            return new PaymentProviderResult(
+                    orderId,
+                    requestId,
+                    stringValue(response.get("transId")),
+                    stringValue(response.get("payUrl")),
+                    stringValue(response.get("deeplink")),
+                    stringValue(response.get("qrCodeUrl")),
+                    request.toString(),
+                    response.toString());
+        } catch (RestClientException ex) {
             throw new AppException(CheckoutErrorCode.CHECKOUT_PAYMENT_PROVIDER_ERROR);
         }
-        return new PaymentProviderResult(
-                requestId,
-                stringValue(response.get("transId")),
-                stringValue(response.get("payUrl")),
-                stringValue(response.get("deeplink")),
-                stringValue(response.get("qrCodeUrl")),
-                response.toString());
     }
 
     @Override
@@ -103,6 +113,61 @@ public class MomoPaymentProviderClient implements PaymentProviderClient {
                 + "&transId=" + stringValue(payload.get("transId"));
         return PaymentSignatureUtils.hmacSha256(rawSignature, properties.getSecretKey())
                 .equalsIgnoreCase(String.valueOf(signature));
+    }
+
+    @Override
+    public PaymentProviderCallbackResult parseCallback(Map<String, ?> payload) {
+        String orderId = stringValue(payload.get("orderId"));
+        String requestId = stringValue(payload.get("requestId"));
+        String transId = stringValue(payload.get("transId"));
+        String eventKey = "MOMO:" + orderId + ":" + (transId.isBlank() ? requestId : transId);
+        return new PaymentProviderCallbackResult(
+                orderId,
+                requestId,
+                transId,
+                new java.math.BigDecimal(stringValue(payload.get("amount"))),
+                "0".equals(stringValue(payload.get("resultCode"))) ? PaymentStatus.SUCCESS : PaymentStatus.FAILED,
+                eventKey,
+                payload);
+    }
+
+    @Override
+    public PaymentProviderQueryResult queryPayment(PaymentAttempt attempt) {
+        requireEnabled();
+        if (!StringUtils.hasText(properties.getQueryEndpoint())) {
+            throw new AppException(CheckoutErrorCode.CHECKOUT_PAYMENT_PROVIDER_DISABLED);
+        }
+        String rawSignature = "accessKey=" + properties.getAccessKey()
+                + "&orderId=" + attempt.getProviderTxnRef()
+                + "&partnerCode=" + properties.getPartnerCode()
+                + "&requestId=" + attempt.getRequestId();
+        Map<String, Object> request = new LinkedHashMap<>();
+        request.put("partnerCode", properties.getPartnerCode());
+        request.put("requestId", attempt.getRequestId());
+        request.put("orderId", attempt.getProviderTxnRef());
+        request.put("lang", "vi");
+        request.put("signature", PaymentSignatureUtils.hmacSha256(rawSignature, properties.getSecretKey()));
+        try {
+            Map<String, Object> response = paymentRestClient
+                    .post()
+                    .uri(properties.getQueryEndpoint())
+                    .body(request)
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<>() {});
+            if (response == null) {
+                throw new AppException(CheckoutErrorCode.CHECKOUT_PAYMENT_PROVIDER_ERROR);
+            }
+            return new PaymentProviderQueryResult(
+                    attempt.getProviderTxnRef(),
+                    attempt.getRequestId(),
+                    stringValue(response.get("transId")),
+                    new java.math.BigDecimal(stringValue(response.get("amount"))),
+                    "0".equals(stringValue(response.get("resultCode"))) ? PaymentStatus.SUCCESS : PaymentStatus.FAILED,
+                    stringValue(response.get("message")),
+                    response.toString());
+        } catch (RestClientException ex) {
+            throw new AppException(CheckoutErrorCode.CHECKOUT_PAYMENT_PROVIDER_ERROR);
+        }
     }
 
     private void requireEnabled() {

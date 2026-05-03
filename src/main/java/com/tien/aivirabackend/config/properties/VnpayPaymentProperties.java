@@ -13,4 +13,5 @@ public class VnpayPaymentProperties {
     private String hashSecret = "";
     private String returnUrl = "";
     private String ipnUrl = "";
+    private String transactionUrl = "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";
 }

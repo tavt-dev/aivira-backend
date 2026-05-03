@@ -1,9 +1,6 @@
 package com.tien.aivirabackend.service.impl;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,11 +14,11 @@ import com.tien.aivirabackend.domain.dto.response.UserResponse;
 import com.tien.aivirabackend.domain.entity.user.User;
 import com.tien.aivirabackend.domain.mapper.UserMapper;
 import com.tien.aivirabackend.exception.AppException;
-import com.tien.aivirabackend.exception.errorCode.AuthErrorCode;
 import com.tien.aivirabackend.exception.errorCode.UserErrorCode;
 import com.tien.aivirabackend.repository.UserRepository;
 import com.tien.aivirabackend.service.CloudinaryStorageService;
 import com.tien.aivirabackend.service.CloudinaryUploadResult;
+import com.tien.aivirabackend.service.CurrentUserService;
 import com.tien.aivirabackend.service.FileValidatorService;
 import com.tien.aivirabackend.service.JwtService;
 import com.tien.aivirabackend.service.UserService;
@@ -52,6 +49,8 @@ public class UserServiceImpl implements UserService {
     CloudinaryStorageService cloudinaryStorageService;
 
     CloudinaryProperties cloudinaryProperties;
+
+    CurrentUserService currentUserService;
 
     @Override
     @Transactional(readOnly = true)
@@ -145,23 +144,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AppException(AuthErrorCode.AUTHENTICATION_FAILED);
-        }
-
-        Object principal = authentication.getPrincipal();
-        if (!(principal instanceof Jwt jwt)) {
-            throw new AppException(AuthErrorCode.AUTHENTICATION_FAILED);
-        }
-
-        String userId = jwt.getClaimAsString("user_id");
-        if (userId == null || userId.isBlank()) {
-            throw new AppException(AuthErrorCode.AUTHENTICATION_FAILED);
-        }
-
-        return userRepository.findById(userId).orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
+        return currentUserService.getCurrentUser();
     }
 
     private String buildAvatarFolder(String userId) {

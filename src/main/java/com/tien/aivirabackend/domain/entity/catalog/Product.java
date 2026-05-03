@@ -6,6 +6,9 @@ import java.util.Set;
 
 import jakarta.persistence.*;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import com.tien.aivirabackend.constant.ProductStatus;
 import com.tien.aivirabackend.domain.entity.BaseEntity;
 import com.tien.aivirabackend.domain.entity.marketplace.Shop;
@@ -41,8 +44,8 @@ public class Product extends BaseEntity {
     @Column(length = 255, unique = true)
     String slug;
 
-    @Lob
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
     String description;
 
     @Column(length = 100)

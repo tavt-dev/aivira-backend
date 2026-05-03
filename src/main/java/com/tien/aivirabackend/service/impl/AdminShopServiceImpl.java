@@ -5,11 +5,7 @@ import java.time.Instant;
 import jakarta.persistence.criteria.Predicate;
 
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -24,13 +20,14 @@ import com.tien.aivirabackend.domain.entity.user.Role;
 import com.tien.aivirabackend.domain.entity.user.User;
 import com.tien.aivirabackend.domain.mapper.ShopMapper;
 import com.tien.aivirabackend.exception.AppException;
-import com.tien.aivirabackend.exception.errorCode.AuthErrorCode;
 import com.tien.aivirabackend.exception.errorCode.ShopErrorCode;
 import com.tien.aivirabackend.exception.errorCode.UserErrorCode;
 import com.tien.aivirabackend.repository.RoleRepository;
 import com.tien.aivirabackend.repository.ShopRepository;
 import com.tien.aivirabackend.repository.UserRepository;
 import com.tien.aivirabackend.service.AdminShopService;
+import com.tien.aivirabackend.service.CurrentUserService;
+import com.tien.aivirabackend.util.PageRequestUtils;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -46,13 +43,12 @@ public class AdminShopServiceImpl implements AdminShopService {
     UserRepository userRepository;
     RoleRepository roleRepository;
     ShopMapper shopMapper;
+    CurrentUserService currentUserService;
 
     @Override
     @Transactional(readOnly = true)
     public PageResponse<ShopResponse> getShops(ShopStatus status, String keyword, int page, int size) {
-        int pageIndex = Math.max(page - 1, 0);
-        int pageSize = Math.min(Math.max(size, 1), 100);
-        var pageable = PageRequest.of(pageIndex, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
+        PageRequest pageable = PageRequestUtils.newestFirst(page, size);
         var shopPage = shopRepository
                 .findAll(buildShopSpecification(status, keyword), pageable)
                 .map(shopMapper::toShopResponse);
@@ -188,20 +184,6 @@ public class AdminShopServiceImpl implements AdminShopService {
     }
 
     private String getCurrentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AppException(AuthErrorCode.AUTHENTICATION_FAILED);
-        }
-
-        Object principal = authentication.getPrincipal();
-        if (!(principal instanceof Jwt jwt)) {
-            throw new AppException(AuthErrorCode.AUTHENTICATION_FAILED);
-        }
-
-        String userId = jwt.getClaimAsString("user_id");
-        if (!StringUtils.hasText(userId)) {
-            throw new AppException(AuthErrorCode.AUTHENTICATION_FAILED);
-        }
-        return userId;
+        return currentUserService.getCurrentUserId();
     }
 }

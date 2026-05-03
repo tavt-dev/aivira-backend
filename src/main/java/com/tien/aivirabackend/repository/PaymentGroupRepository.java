@@ -4,8 +4,13 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import jakarta.persistence.LockModeType;
+
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.tien.aivirabackend.constant.PaymentMethod;
@@ -27,4 +32,8 @@ public interface PaymentGroupRepository extends JpaRepository<PaymentGroup, Long
 
     List<PaymentGroup> findByStatusAndMethodNotAndExpiresAtBefore(
             PaymentStatus status, PaymentMethod method, Instant expiresAt);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select g from PaymentGroup g where g.id = :id")
+    Optional<PaymentGroup> findByIdForUpdate(@Param("id") Long id);
 }

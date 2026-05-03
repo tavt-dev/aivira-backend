@@ -1,9 +1,12 @@
 package com.tien.aivirabackend.service.impl;
 
+import java.util.Optional;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import com.tien.aivirabackend.domain.entity.user.User;
 import com.tien.aivirabackend.exception.AppException;
@@ -20,10 +23,28 @@ import lombok.experimental.FieldDefaults;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CurrentUserServiceImpl implements CurrentUserService {
+    private static final String USER_ID_CLAIM = "user_id";
+
     UserRepository userRepository;
 
     @Override
     public User getCurrentUser() {
+        return userRepository
+                .findById(getCurrentUserId())
+                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
+    }
+
+    @Override
+    public String getCurrentUserId() {
+        String userId = getCurrentJwt().getClaimAsString(USER_ID_CLAIM);
+        if (!StringUtils.hasText(userId)) {
+            throw new AppException(AuthErrorCode.AUTHENTICATION_FAILED);
+        }
+        return userId;
+    }
+
+    @Override
+    public Jwt getCurrentJwt() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -35,11 +56,15 @@ public class CurrentUserServiceImpl implements CurrentUserService {
             throw new AppException(AuthErrorCode.AUTHENTICATION_FAILED);
         }
 
-        String userId = jwt.getClaimAsString("user_id");
-        if (userId == null || userId.isBlank()) {
-            throw new AppException(AuthErrorCode.AUTHENTICATION_FAILED);
-        }
+        return jwt;
+    }
 
-        return userRepository.findById(userId).orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
+    @Override
+    public Optional<String> findCurrentUserId() {
+        try {
+            return Optional.of(getCurrentUserId());
+        } catch (AppException ex) {
+            return Optional.empty();
+        }
     }
 }

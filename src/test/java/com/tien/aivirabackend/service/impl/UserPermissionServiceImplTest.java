@@ -30,6 +30,7 @@ import com.tien.aivirabackend.exception.AppException;
 import com.tien.aivirabackend.repository.PermissionRepository;
 import com.tien.aivirabackend.repository.UserPermissionRepository;
 import com.tien.aivirabackend.repository.UserRepository;
+import com.tien.aivirabackend.service.CurrentUserService;
 
 @ExtendWith(MockitoExtension.class)
 class UserPermissionServiceImplTest {
@@ -41,6 +42,9 @@ class UserPermissionServiceImplTest {
 
     @Mock
     UserPermissionRepository userPermissionRepository;
+
+    @Mock
+    CurrentUserService currentUserService;
 
     @InjectMocks
     UserPermissionServiceImpl userPermissionService;
@@ -54,6 +58,9 @@ class UserPermissionServiceImplTest {
                 Map.of("alg", "none"),
                 Map.of("user_id", "admin-1", "sub", "admin"));
         SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt, List.of()));
+        org.mockito.Mockito.lenient()
+                .when(currentUserService.findCurrentUserId())
+                .thenReturn(Optional.of("admin-1"));
     }
 
     @AfterEach

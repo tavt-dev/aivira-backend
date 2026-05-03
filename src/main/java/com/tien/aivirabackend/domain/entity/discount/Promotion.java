@@ -5,6 +5,9 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import com.tien.aivirabackend.constant.PromotionScope;
 import com.tien.aivirabackend.constant.PromotionType;
 import com.tien.aivirabackend.domain.entity.BaseEntity;
@@ -29,8 +32,8 @@ public class Promotion extends BaseEntity {
     @Column(nullable = false, unique = true, length = 150, name = "promotion_name")
     String promotionName;
 
-    @Lob
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
     String description;
 
     /* DISCOUNT RULE */

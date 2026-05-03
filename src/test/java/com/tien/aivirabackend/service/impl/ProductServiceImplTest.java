@@ -36,8 +36,11 @@ import com.tien.aivirabackend.repository.ProductMediaRepository;
 import com.tien.aivirabackend.repository.ProductRepository;
 import com.tien.aivirabackend.repository.ProductVariationRepository;
 import com.tien.aivirabackend.service.CloudinaryStorageService;
+import com.tien.aivirabackend.service.CurrentUserService;
 import com.tien.aivirabackend.service.FileValidatorService;
 import com.tien.aivirabackend.service.ShopOwnershipService;
+import com.tien.aivirabackend.service.product.ProductSpecifications;
+import com.tien.aivirabackend.service.product.ProductStatusPolicy;
 
 @ExtendWith(MockitoExtension.class)
 class ProductServiceImplTest {
@@ -65,6 +68,9 @@ class ProductServiceImplTest {
     @Mock
     CloudinaryStorageService cloudinaryStorageService;
 
+    @Mock
+    CurrentUserService currentUserService;
+
     CloudinaryProperties cloudinaryProperties;
 
     @InjectMocks
@@ -82,7 +88,10 @@ class ProductServiceImplTest {
                 productMapper,
                 fileValidatorService,
                 cloudinaryStorageService,
-                cloudinaryProperties);
+                cloudinaryProperties,
+                currentUserService,
+                new ProductSpecifications(),
+                new ProductStatusPolicy());
     }
 
     @Test

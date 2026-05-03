@@ -5,9 +5,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -15,6 +12,7 @@ import com.tien.aivirabackend.constant.PermissionCode;
 import com.tien.aivirabackend.repository.UserPermissionRepository;
 import com.tien.aivirabackend.repository.UserRepository;
 import com.tien.aivirabackend.service.AuthorizationService;
+import com.tien.aivirabackend.service.CurrentUserService;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthorizationServiceImpl implements AuthorizationService {
     UserRepository userRepository;
     UserPermissionRepository userPermissionRepository;
+    CurrentUserService currentUserService;
 
     @Override
     public boolean hasPermission(String permissionCode) {
@@ -63,16 +62,6 @@ public class AuthorizationServiceImpl implements AuthorizationService {
     }
 
     private String getCurrentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return null;
-        }
-
-        Object principal = authentication.getPrincipal();
-        if (!(principal instanceof Jwt jwt)) {
-            return null;
-        }
-
-        return jwt.getClaimAsString("user_id");
+        return currentUserService.findCurrentUserId().orElse(null);
     }
 }

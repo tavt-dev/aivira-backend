@@ -35,6 +35,7 @@ import com.tien.aivirabackend.exception.AppException;
 import com.tien.aivirabackend.repository.ShopRepository;
 import com.tien.aivirabackend.repository.UserRepository;
 import com.tien.aivirabackend.service.CloudinaryStorageService;
+import com.tien.aivirabackend.service.CurrentUserService;
 import com.tien.aivirabackend.service.FileValidatorService;
 
 @ExtendWith(MockitoExtension.class)
@@ -54,6 +55,9 @@ class ShopServiceImplTest {
     @Mock
     CloudinaryStorageService cloudinaryStorageService;
 
+    @Mock
+    CurrentUserService currentUserService;
+
     @InjectMocks
     ShopServiceImpl shopService;
 
@@ -66,6 +70,9 @@ class ShopServiceImplTest {
                 Map.of("alg", "none"),
                 Map.of("user_id", "user-1", "sub", "alice"));
         SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt, List.of()));
+        org.mockito.Mockito.lenient()
+                .when(currentUserService.getCurrentUserId())
+                .thenReturn("user-1");
     }
 
     @AfterEach

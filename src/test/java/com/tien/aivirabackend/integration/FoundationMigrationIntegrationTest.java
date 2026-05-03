@@ -66,5 +66,39 @@ class FoundationMigrationIntegrationTest extends AbstractIntegrationTest {
                 Integer.class);
 
         assertThat(productPhase4ColumnCount).isEqualTo(8);
+
+        Integer paymentAttemptTableCount = jdbcTemplate.queryForObject(
+                """
+				SELECT COUNT(*)
+				FROM information_schema.tables
+				WHERE table_schema = DATABASE()
+				AND table_name = 'payment_attempts'
+				""",
+                Integer.class);
+
+        Integer paymentAttemptColumnCount = jdbcTemplate.queryForObject(
+                """
+				SELECT COUNT(*)
+				FROM information_schema.columns
+				WHERE table_schema = DATABASE()
+				AND table_name = 'payment_attempts'
+				AND column_name IN ('payment_group_id', 'provider', 'method', 'attempt_no', 'provider_txn_ref', 'request_id', 'status', 'amount', 'raw_request', 'raw_response')
+				""",
+                Integer.class);
+
+        Integer adminPaymentReconcileCount = jdbcTemplate.queryForObject(
+                """
+				SELECT COUNT(*)
+				FROM role_permissions rp
+				JOIN roles r ON r.id = rp.role_id
+				JOIN permissions p ON p.id = rp.permission_id
+				WHERE r.code = 'ADMIN'
+				AND p.code = 'PAYMENT_RECONCILE'
+				""",
+                Integer.class);
+
+        assertThat(paymentAttemptTableCount).isEqualTo(1);
+        assertThat(paymentAttemptColumnCount).isEqualTo(10);
+        assertThat(adminPaymentReconcileCount).isEqualTo(1);
     }
 }
