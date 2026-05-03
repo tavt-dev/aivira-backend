@@ -2,8 +2,10 @@ package com.tien.aivirabackend.service.impl;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.*;
-import java.util.function.Function;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -14,8 +16,7 @@ import com.tien.aivirabackend.config.properties.PaymentProperties;
 import com.tien.aivirabackend.constant.OrderStatus;
 import com.tien.aivirabackend.constant.PaymentMethod;
 import com.tien.aivirabackend.constant.PaymentStatus;
-import com.tien.aivirabackend.constant.ProductStatus;
-import com.tien.aivirabackend.constant.ShopStatus;
+import com.tien.aivirabackend.domain.dto.RequestMetadata;
 import com.tien.aivirabackend.domain.dto.request.CheckoutRequest;
 import com.tien.aivirabackend.domain.dto.response.CheckoutResponse;
 import com.tien.aivirabackend.domain.entity.catalog.Product;
@@ -25,19 +26,25 @@ import com.tien.aivirabackend.domain.entity.transaction.CartItem;
 import com.tien.aivirabackend.domain.entity.transaction.Order;
 import com.tien.aivirabackend.domain.entity.transaction.OrderItem;
 import com.tien.aivirabackend.domain.entity.transaction.payment.Payment;
+import com.tien.aivirabackend.domain.entity.transaction.payment.PaymentAttempt;
 import com.tien.aivirabackend.domain.entity.transaction.payment.PaymentGroup;
 import com.tien.aivirabackend.domain.entity.user.Address;
 import com.tien.aivirabackend.domain.entity.user.User;
 import com.tien.aivirabackend.domain.mapper.CommerceMapper;
 import com.tien.aivirabackend.exception.AppException;
 import com.tien.aivirabackend.exception.errorCode.AddressErrorCode;
-import com.tien.aivirabackend.exception.errorCode.CartErrorCode;
 import com.tien.aivirabackend.exception.errorCode.CheckoutErrorCode;
-import com.tien.aivirabackend.repository.*;
+import com.tien.aivirabackend.repository.AddressRepository;
+import com.tien.aivirabackend.repository.CartItemRepository;
+import com.tien.aivirabackend.repository.OrderRepository;
+import com.tien.aivirabackend.repository.PaymentAttemptRepository;
+import com.tien.aivirabackend.repository.PaymentGroupRepository;
 import com.tien.aivirabackend.service.CheckoutService;
 import com.tien.aivirabackend.service.CurrentUserService;
+import com.tien.aivirabackend.service.commerce.InventoryService;
 import com.tien.aivirabackend.service.payment.PaymentProviderClient;
 import com.tien.aivirabackend.service.payment.PaymentProviderResult;
+import com.tien.aivirabackend.service.payment.PaymentProviderSupportService;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -51,17 +58,18 @@ public class CheckoutServiceImpl implements CheckoutService {
 
     CartItemRepository cartItemRepository;
     AddressRepository addressRepository;
-    ProductVariationRepository variationRepository;
     OrderRepository orderRepository;
     PaymentGroupRepository paymentGroupRepository;
+    PaymentAttemptRepository paymentAttemptRepository;
     PaymentProperties paymentProperties;
     CurrentUserService currentUserService;
     CommerceMapper commerceMapper;
-    List<PaymentProviderClient> paymentProviderClients;
+    PaymentProviderSupportService paymentProviderSupportService;
+    InventoryService inventoryService;
 
     @Override
     @Transactional
-    public CheckoutResponse checkout(CheckoutRequest request) {
+    public CheckoutResponse checkout(CheckoutRequest request, RequestMetadata requestMetadata) {
         User user = currentUserService.getCurrentUser();
         validatePaymentMethod(request.getPaymentMethod());
         Address address = addressRepository
@@ -79,17 +87,8 @@ public class CheckoutServiceImpl implements CheckoutService {
             throw new AppException(CheckoutErrorCode.CHECKOUT_CART_ITEM_MISMATCH);
         }
 
-        Map<Long, ProductVariation> lockedVariations = variationRepository
-                .findAllByIdInForUpdate(cartItems.stream()
-                        .map(item -> item.getProductVariation().getId())
-                        .distinct()
-                        .sorted()
-                        .toList())
-                .stream()
-                .collect(Collectors.toMap(ProductVariation::getId, Function.identity()));
-
-        cartItems.forEach(item -> validateCheckoutItem(
-                item, lockedVariations.get(item.getProductVariation().getId())));
+        Map<Long, ProductVariation> lockedVariations = inventoryService.lockVariationsForCartItems(cartItems);
+        inventoryService.validateCheckoutItems(cartItems, lockedVariations);
 
         PaymentGroup paymentGroup = PaymentGroup.builder()
                 .paymentCode(generatePaymentCode())
@@ -133,12 +132,14 @@ public class CheckoutServiceImpl implements CheckoutService {
             savedPaymentGroup.getPayments().add(payment);
         }
 
-        deductStock(cartItems, lockedVariations);
+        inventoryService.deductCartItems(cartItems, lockedVariations);
         List<Order> savedOrders = orderRepository.saveAll(orders);
-        PaymentProviderResult providerResult =
-                provider(request.getPaymentMethod()).createPayment(savedPaymentGroup);
-        applyProviderResult(savedPaymentGroup, providerResult);
+        PaymentAttempt attempt = paymentProviderSupportService.createAttempt(savedPaymentGroup);
+        PaymentProviderResult providerResult = paymentProviderSupportService.createPaymentWithMetrics(
+                provider(request.getPaymentMethod()), savedPaymentGroup, attempt, requestMetadata);
+        paymentProviderSupportService.applyProviderResult(savedPaymentGroup, attempt, providerResult);
         paymentGroupRepository.save(savedPaymentGroup);
+        paymentAttemptRepository.save(attempt);
 
         if (request.getPaymentMethod() == PaymentMethod.COD) {
             cartItemRepository.deleteAll(cartItems);
@@ -216,47 +217,9 @@ public class CheckoutServiceImpl implements CheckoutService {
         return order;
     }
 
-    private void validateCheckoutItem(CartItem item, ProductVariation variation) {
-        if (variation == null) {
-            throw new AppException(CheckoutErrorCode.CHECKOUT_CART_ITEM_MISMATCH);
-        }
-        Product product = variation.getProduct();
-        if (!Boolean.TRUE.equals(variation.getActive())
-                || !Boolean.TRUE.equals(product.getActive())
-                || product.getStatus() != ProductStatus.ACTIVE
-                || product.getShop() == null
-                || product.getShop().getStatus() != ShopStatus.APPROVED) {
-            throw new AppException(CartErrorCode.CART_PRODUCT_NOT_AVAILABLE);
-        }
-        if (variation.getStockQuantity() < item.getQuantity()) {
-            throw new AppException(CartErrorCode.CART_STOCK_NOT_ENOUGH);
-        }
-    }
-
-    private void deductStock(List<CartItem> cartItems, Map<Long, ProductVariation> lockedVariations) {
-        for (CartItem item : cartItems) {
-            ProductVariation variation =
-                    lockedVariations.get(item.getProductVariation().getId());
-            Product product = variation.getProduct();
-            variation.setStockQuantity(variation.getStockQuantity() - item.getQuantity());
-            product.setStockQuantity(Math.max(0, product.getStockQuantity() - item.getQuantity()));
-        }
-    }
-
-    private void applyProviderResult(PaymentGroup paymentGroup, PaymentProviderResult result) {
-        paymentGroup.setProviderTxnRef(result.providerTxnRef());
-        paymentGroup.setProviderTransactionId(result.providerTransactionId());
-        paymentGroup.setPaymentUrl(result.paymentUrl());
-        paymentGroup.setDeeplink(result.deeplink());
-        paymentGroup.setQrCodeUrl(result.qrCodeUrl());
-        paymentGroup.setRawResponse(result.rawResponse());
-    }
-
     private PaymentProviderClient provider(PaymentMethod method) {
-        return paymentProviderClients.stream()
-                .filter(client -> client.method() == method)
-                .findFirst()
-                .orElseThrow(() -> new AppException(CheckoutErrorCode.CHECKOUT_PAYMENT_METHOD_UNSUPPORTED));
+        return paymentProviderSupportService.provider(
+                method, () -> new AppException(CheckoutErrorCode.CHECKOUT_PAYMENT_METHOD_UNSUPPORTED));
     }
 
     private void validatePaymentMethod(PaymentMethod method) {
