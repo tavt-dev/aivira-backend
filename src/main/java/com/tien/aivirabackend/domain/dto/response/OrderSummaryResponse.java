@@ -2,7 +2,6 @@ package com.tien.aivirabackend.domain.dto.response;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.List;
 
 import com.tien.aivirabackend.constant.OrderStatus;
 import com.tien.aivirabackend.constant.PaymentMethod;
@@ -17,29 +16,19 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class OrderResponse {
+public class OrderSummaryResponse {
     Long id;
     String orderCode;
     Long shopId;
     String shopName;
-    BigDecimal subtotal;
-    BigDecimal shippingFee;
-    BigDecimal discountAmount;
     BigDecimal totalAmount;
-    String notes;
-    String cancelReason;
     OrderStatus orderStatus;
+    String cancelReason;
     String paymentGroupCode;
     PaymentMethod paymentMethod;
     PaymentStatus paymentStatus;
     Instant paidAt;
-    String shippingRecipientName;
-    String shippingPhoneNumber;
-    String shippingAddressLine;
-    String shippingWard;
-    String shippingDistrict;
-    String shippingCity;
-    List<OrderItemResponse> items;
+    Integer itemCount;
     Instant createdAt;
     Instant updatedAt;
 }

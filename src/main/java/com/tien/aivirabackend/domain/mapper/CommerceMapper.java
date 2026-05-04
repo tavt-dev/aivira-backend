@@ -96,6 +96,7 @@ public class CommerceMapper {
                 .map(this::toOrderItemResponse)
                 .toList();
         Shop shop = order.getShop();
+        Payment payment = primaryPayment(order);
         return OrderResponse.builder()
                 .id(order.getId())
                 .orderCode(order.getOrderCode())
@@ -106,7 +107,13 @@ public class CommerceMapper {
                 .discountAmount(order.getDiscountAmount())
                 .totalAmount(order.getTotalAmount())
                 .notes(order.getNotes())
+                .cancelReason(order.getCancelReason())
                 .orderStatus(order.getOrderStatus())
+                .paymentGroupCode(
+                        payment == null ? null : payment.getPaymentGroup().getPaymentCode())
+                .paymentMethod(payment == null ? null : payment.getMethod())
+                .paymentStatus(payment == null ? null : payment.getStatus())
+                .paidAt(payment == null ? null : payment.getPaidAt())
                 .shippingRecipientName(order.getShippingRecipientName())
                 .shippingPhoneNumber(order.getShippingPhoneNumber())
                 .shippingAddressLine(order.getShippingAddressLine())
@@ -114,6 +121,33 @@ public class CommerceMapper {
                 .shippingDistrict(order.getShippingDistrict())
                 .shippingCity(order.getShippingCity())
                 .items(items)
+                .createdAt(order.getCreatedAt())
+                .updatedAt(order.getUpdatedAt())
+                .build();
+    }
+
+    public OrderSummaryResponse toOrderSummaryResponse(Order order) {
+        Shop shop = order.getShop();
+        Payment payment = primaryPayment(order);
+        int itemCount = order.getItems().stream()
+                .map(OrderItem::getQuantity)
+                .filter(quantity -> quantity != null)
+                .mapToInt(Integer::intValue)
+                .sum();
+        return OrderSummaryResponse.builder()
+                .id(order.getId())
+                .orderCode(order.getOrderCode())
+                .shopId(shop == null ? null : shop.getId())
+                .shopName(shop == null ? null : shop.getShopName())
+                .totalAmount(order.getTotalAmount())
+                .orderStatus(order.getOrderStatus())
+                .cancelReason(order.getCancelReason())
+                .paymentGroupCode(
+                        payment == null ? null : payment.getPaymentGroup().getPaymentCode())
+                .paymentMethod(payment == null ? null : payment.getMethod())
+                .paymentStatus(payment == null ? null : payment.getStatus())
+                .paidAt(payment == null ? null : payment.getPaidAt())
+                .itemCount(itemCount)
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
                 .build();
@@ -176,6 +210,12 @@ public class CommerceMapper {
             return variation.getImageUrl();
         }
         return product.getThumbnailUrl();
+    }
+
+    private Payment primaryPayment(Order order) {
+        return order.getPayments().stream()
+                .min(Comparator.comparing(Payment::getId, Comparator.nullsLast(Comparator.naturalOrder())))
+                .orElse(null);
     }
 
     private BigDecimal nullToZero(BigDecimal value) {
