@@ -28,16 +28,16 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @EntityGraph(attributePaths = {"shop", "payments", "payments.paymentGroup"})
     Page<Order> findByUserIdAndOrderStatus(String userId, OrderStatus orderStatus, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"items", "payments", "shop"})
+    @EntityGraph(attributePaths = {"items", "shop"})
     List<Order> findByPaymentsPaymentGroupId(Long paymentGroupId);
 
-    @EntityGraph(attributePaths = {"items", "payments", "shop"})
+    @EntityGraph(attributePaths = {"items", "shop"})
     List<Order> findByIdIn(Collection<Long> ids);
 
-    @EntityGraph(attributePaths = {"items", "payments", "shop"})
+    @EntityGraph(attributePaths = {"items", "shop"})
     Optional<Order> findDetailedById(Long id);
 
-    @EntityGraph(attributePaths = {"items", "payments", "payments.paymentGroup", "shop"})
+    @EntityGraph(attributePaths = {"items", "shop"})
     Optional<Order> findDetailedByIdAndUserId(Long id, String userId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
