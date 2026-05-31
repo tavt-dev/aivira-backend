@@ -10,24 +10,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.tien.aivirabackend.constant.ProductStatus;
-import com.tien.aivirabackend.constant.ShopStatus;
 import com.tien.aivirabackend.domain.entity.catalog.Category;
 import com.tien.aivirabackend.domain.entity.catalog.Product;
 import com.tien.aivirabackend.domain.entity.catalog.ProductVariation;
-import com.tien.aivirabackend.domain.entity.marketplace.Shop;
-import com.tien.aivirabackend.domain.entity.user.User;
 import com.tien.aivirabackend.repository.CategoryRepository;
 import com.tien.aivirabackend.repository.ProductRepository;
-import com.tien.aivirabackend.repository.ShopRepository;
-import com.tien.aivirabackend.repository.UserRepository;
 
 class CatalogPublicIntegrationTest extends AbstractIntegrationTest {
-    @Autowired
-    UserRepository userRepository;
-
-    @Autowired
-    ShopRepository shopRepository;
-
     @Autowired
     CategoryRepository categoryRepository;
 
@@ -44,11 +33,8 @@ class CatalogPublicIntegrationTest extends AbstractIntegrationTest {
                 .active(true)
                 .visible(true)
                 .build());
-        Shop approvedShop = shopRepository.save(buildShop("seller-1", "aivira-fashion", ShopStatus.APPROVED));
-        Shop lockedShop = shopRepository.save(buildShop("seller-2", "locked-fashion", ShopStatus.LOCKED));
-        saveProduct("ACTIVE-1", "active-product", ProductStatus.ACTIVE, approvedShop, category);
-        saveProduct("DRAFT-1", "draft-product", ProductStatus.DRAFT, approvedShop, category);
-        saveProduct("LOCKED-1", "locked-shop-product", ProductStatus.ACTIVE, lockedShop, category);
+        saveProduct("ACTIVE-1", "active-product", ProductStatus.ACTIVE, category);
+        saveProduct("DRAFT-1", "draft-product", ProductStatus.DRAFT, category);
 
         mockMvc.perform(get("/categories"))
                 .andExpect(status().isOk())
@@ -66,34 +52,8 @@ class CatalogPublicIntegrationTest extends AbstractIntegrationTest {
         mockMvc.perform(get("/products/{slug}", "draft-product")).andExpect(status().isNotFound());
     }
 
-    @Test
-    void sellerCatalogEndpoints_shouldRequireAuthentication() throws Exception {
-        mockMvc.perform(get("/seller/products")).andExpect(status().isUnauthorized());
-    }
-
-    private Shop buildShop(String username, String slug, ShopStatus status) {
-        User owner = userRepository.save(User.builder()
-                .username(username)
-                .email(username + "@example.com")
-                .emailVerified(true)
-                .isActive(true)
-                .build());
-        return Shop.builder()
-                .owner(owner)
-                .shopName(slug)
-                .slug(slug)
-                .businessEmail(username + "@example.com")
-                .phoneNumber("0900000000")
-                .legalName("Aivira LLC")
-                .pickupAddressLine("123 Street")
-                .pickupCity("Ho Chi Minh")
-                .status(status)
-                .build();
-    }
-
-    private void saveProduct(String sku, String slug, ProductStatus status, Shop shop, Category category) {
+    private void saveProduct(String sku, String slug, ProductStatus status, Category category) {
         Product product = Product.builder()
-                .shop(shop)
                 .category(category)
                 .sku(sku)
                 .productName(slug)

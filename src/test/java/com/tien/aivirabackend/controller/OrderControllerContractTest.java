@@ -23,7 +23,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import com.tien.aivirabackend.constant.OrderStatus;
 import com.tien.aivirabackend.domain.dto.request.OrderCancelRequest;
 import com.tien.aivirabackend.exception.GlobalExceptionHandler;
-import com.tien.aivirabackend.service.OrderService;
+import com.tien.aivirabackend.service.commerce.OrderService;
 
 @ExtendWith(MockitoExtension.class)
 class OrderControllerContractTest {

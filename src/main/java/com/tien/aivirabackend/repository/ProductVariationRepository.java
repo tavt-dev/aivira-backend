@@ -24,7 +24,6 @@ public interface ProductVariationRepository
     Optional<ProductVariation> findByIdAndProductId(Long id, Long productId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query(
-            "select v from ProductVariation v join fetch v.product p join fetch p.shop where v.id in :ids order by v.id asc")
+    @Query("select v from ProductVariation v join fetch v.product p where v.id in :ids order by v.id asc")
     List<ProductVariation> findAllByIdInForUpdate(Collection<Long> ids);
 }

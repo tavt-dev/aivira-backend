@@ -18,8 +18,8 @@ import com.tien.aivirabackend.domain.dto.response.PaymentGroupResponse;
 import com.tien.aivirabackend.domain.dto.response.PaymentReconciliationResponse;
 import com.tien.aivirabackend.domain.dto.response.PaymentResponse;
 import com.tien.aivirabackend.domain.dto.response.VnpayIpnResponse;
-import com.tien.aivirabackend.service.PaymentService;
-import com.tien.aivirabackend.service.RequestMetadataService;
+import com.tien.aivirabackend.service.payment.PaymentService;
+import com.tien.aivirabackend.service.auth.RequestMetadataService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

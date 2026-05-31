@@ -13,7 +13,6 @@ public enum ProductErrorCode implements ErrorCode {
     PRODUCT_NOT_FOUND("E10100", "Product not found.", HttpStatus.NOT_FOUND),
     PRODUCT_SKU_ALREADY_EXISTS("E10101", "Product SKU already exists.", HttpStatus.CONFLICT),
     PRODUCT_SLUG_ALREADY_EXISTS("E10102", "Product slug already exists.", HttpStatus.CONFLICT),
-    PRODUCT_NOT_OWNER("E10103", "Current seller does not own this product.", HttpStatus.FORBIDDEN),
     PRODUCT_INVALID_STATUS_TRANSITION("E10104", "Invalid product status transition.", HttpStatus.BAD_REQUEST),
     PRODUCT_VARIATION_REQUIRED("E10105", "Product must have at least one active variation.", HttpStatus.BAD_REQUEST),
     PRODUCT_VARIATION_NOT_FOUND("E10106", "Product variation not found.", HttpStatus.NOT_FOUND),

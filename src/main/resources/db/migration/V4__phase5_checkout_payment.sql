@@ -15,7 +15,6 @@ ALTER TABLE orders
     DROP FOREIGN KEY fk_orders_address;
 
 ALTER TABLE orders
-    ADD COLUMN shop_id BIGINT NOT NULL AFTER user_id,
     ADD COLUMN shipping_recipient_name VARCHAR(255) NOT NULL AFTER address_id,
     ADD COLUMN shipping_phone_number VARCHAR(255) NOT NULL AFTER shipping_recipient_name,
     ADD COLUMN shipping_address_line VARCHAR(500) NOT NULL AFTER shipping_phone_number,
@@ -25,11 +24,9 @@ ALTER TABLE orders
     MODIFY COLUMN address_id BIGINT NULL;
 
 ALTER TABLE orders
-    ADD CONSTRAINT fk_orders_address FOREIGN KEY (address_id) REFERENCES addresses (address_id),
-    ADD CONSTRAINT fk_orders_shop FOREIGN KEY (shop_id) REFERENCES shops (id);
+    ADD CONSTRAINT fk_orders_address FOREIGN KEY (address_id) REFERENCES addresses (address_id);
 
 CREATE INDEX idx_orders_user_id ON orders (user_id);
-CREATE INDEX idx_orders_shop_id ON orders (shop_id);
 CREATE INDEX idx_orders_status ON orders (order_status);
 
 CREATE TABLE payment_groups (

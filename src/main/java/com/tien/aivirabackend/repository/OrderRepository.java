@@ -22,22 +22,22 @@ import com.tien.aivirabackend.domain.entity.transaction.Order;
 public interface OrderRepository extends JpaRepository<Order, Long> {
     boolean existsByOrderCode(String orderCode);
 
-    @EntityGraph(attributePaths = {"shop", "payments", "payments.paymentGroup"})
+    @EntityGraph(attributePaths = {"payments", "payments.paymentGroup"})
     Page<Order> findByUserId(String userId, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"shop", "payments", "payments.paymentGroup"})
+    @EntityGraph(attributePaths = {"payments", "payments.paymentGroup"})
     Page<Order> findByUserIdAndOrderStatus(String userId, OrderStatus orderStatus, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"items", "shop"})
+    @EntityGraph(attributePaths = {"items"})
     List<Order> findByPaymentsPaymentGroupId(Long paymentGroupId);
 
-    @EntityGraph(attributePaths = {"items", "shop"})
+    @EntityGraph(attributePaths = {"items"})
     List<Order> findByIdIn(Collection<Long> ids);
 
-    @EntityGraph(attributePaths = {"items", "shop"})
+    @EntityGraph(attributePaths = {"items"})
     Optional<Order> findDetailedById(Long id);
 
-    @EntityGraph(attributePaths = {"items", "shop"})
+    @EntityGraph(attributePaths = {"items"})
     Optional<Order> findDetailedByIdAndUserId(Long id, String userId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

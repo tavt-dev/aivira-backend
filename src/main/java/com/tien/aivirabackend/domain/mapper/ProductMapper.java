@@ -12,7 +12,6 @@ import com.tien.aivirabackend.domain.entity.catalog.Category;
 import com.tien.aivirabackend.domain.entity.catalog.Product;
 import com.tien.aivirabackend.domain.entity.catalog.ProductMedia;
 import com.tien.aivirabackend.domain.entity.catalog.ProductVariation;
-import com.tien.aivirabackend.domain.entity.marketplace.Shop;
 
 @Component
 public class ProductMapper {
@@ -21,7 +20,6 @@ public class ProductMapper {
             return null;
         }
 
-        Shop shop = product.getShop();
         Category category = product.getCategory();
         List<ProductVariationResponse> variations = product.getProductVariations().stream()
                 .sorted(Comparator.comparing(ProductVariation::getId, Comparator.nullsLast(Long::compareTo)))
@@ -34,9 +32,6 @@ public class ProductMapper {
 
         return ProductResponse.builder()
                 .id(product.getId())
-                .shopId(shop == null ? null : shop.getId())
-                .shopName(shop == null ? null : shop.getShopName())
-                .shopSlug(shop == null ? null : shop.getSlug())
                 .categoryId(category == null ? null : category.getId())
                 .categoryName(category == null ? null : category.getCategoryName())
                 .categorySlug(category == null ? null : category.getSlug())

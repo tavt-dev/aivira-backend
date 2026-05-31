@@ -20,8 +20,6 @@ import lombok.experimental.FieldDefaults;
 public class OrderResponse {
     Long id;
     String orderCode;
-    Long shopId;
-    String shopName;
     BigDecimal subtotal;
     BigDecimal shippingFee;
     BigDecimal discountAmount;

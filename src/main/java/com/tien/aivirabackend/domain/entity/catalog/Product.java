@@ -11,7 +11,6 @@ import org.hibernate.type.SqlTypes;
 
 import com.tien.aivirabackend.constant.ProductStatus;
 import com.tien.aivirabackend.domain.entity.BaseEntity;
-import com.tien.aivirabackend.domain.entity.marketplace.Shop;
 import com.tien.aivirabackend.domain.entity.review.Review;
 
 import lombok.*;
@@ -29,10 +28,6 @@ public class Product extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "shop_id", nullable = false)
-    Shop shop;
 
     /* BASIC INFO */
     @Column(nullable = false, unique = true, length = 50)

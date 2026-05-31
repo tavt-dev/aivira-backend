@@ -12,7 +12,7 @@ import com.tien.aivirabackend.domain.dto.PageResponse;
 import com.tien.aivirabackend.domain.dto.request.OrderCancelRequest;
 import com.tien.aivirabackend.domain.dto.response.OrderResponse;
 import com.tien.aivirabackend.domain.dto.response.OrderSummaryResponse;
-import com.tien.aivirabackend.service.OrderService;
+import com.tien.aivirabackend.service.commerce.OrderService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

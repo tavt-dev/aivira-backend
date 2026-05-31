@@ -33,8 +33,8 @@ import com.tien.aivirabackend.domain.dto.response.AuthenticationResponse;
 import com.tien.aivirabackend.domain.dto.response.UserResponse;
 import com.tien.aivirabackend.exception.AppException;
 import com.tien.aivirabackend.exception.errorCode.JwtErrorCode;
-import com.tien.aivirabackend.service.AuthenticationService;
-import com.tien.aivirabackend.service.RefreshTokenCookieService;
+import com.tien.aivirabackend.service.auth.AuthenticationService;
+import com.tien.aivirabackend.service.auth.RefreshTokenCookieService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

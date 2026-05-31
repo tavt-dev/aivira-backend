@@ -15,7 +15,6 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
                 "items",
                 "items.productVariation",
                 "items.productVariation.product",
-                "items.productVariation.product.shop",
                 "items.productVariation.product.category"
             })
     Optional<Cart> findByUserIdAndActiveTrue(String userId);

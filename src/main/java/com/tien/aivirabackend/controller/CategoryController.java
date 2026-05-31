@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import com.tien.aivirabackend.domain.dto.ApiResponse;
 import com.tien.aivirabackend.domain.dto.request.CategoryRequest;
 import com.tien.aivirabackend.domain.dto.response.CategoryResponse;
-import com.tien.aivirabackend.service.CategoryService;
+import com.tien.aivirabackend.service.catalog.CategoryService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
