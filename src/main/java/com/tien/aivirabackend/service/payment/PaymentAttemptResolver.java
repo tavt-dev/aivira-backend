@@ -8,6 +8,7 @@ import com.tien.aivirabackend.exception.AppException;
 import com.tien.aivirabackend.exception.errorCode.PaymentErrorCode;
 import com.tien.aivirabackend.repository.PaymentAttemptRepository;
 import com.tien.aivirabackend.repository.PaymentGroupRepository;
+import com.tien.aivirabackend.service.payment.provider.PaymentProviderCallbackResult;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

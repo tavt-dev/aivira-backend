@@ -5,14 +5,14 @@ import java.util.HexFormat;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-final class PaymentSignatureUtils {
+public final class PaymentSignatureUtils {
     private PaymentSignatureUtils() {}
 
-    static String hmacSha256(String data, String secret) {
+    public static String hmacSha256(String data, String secret) {
         return hmac(data, secret, "HmacSHA256");
     }
 
-    static String hmacSha512(String data, String secret) {
+    public static String hmacSha512(String data, String secret) {
         return hmac(data, secret, "HmacSHA512");
     }
 

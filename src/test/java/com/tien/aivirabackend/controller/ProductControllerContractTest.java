@@ -17,7 +17,8 @@ class ProductControllerContractTest {
     @Test
     void adminProductEndpoints_shouldRequireAdminProductPermissions() throws Exception {
         assertPreAuthorizeContains(
-                ProductController.class.getMethod("getAdminProducts", ProductStatus.class, Long.class, String.class, int.class, int.class),
+                ProductController.class.getMethod(
+                        "getAdminProducts", ProductStatus.class, Long.class, String.class, int.class, int.class),
                 "PRODUCT_MANAGE_ALL");
         assertPreAuthorizeContains(
                 ProductController.class.getMethod("createAdminProduct", ProductCreateRequest.class),
@@ -26,8 +27,7 @@ class ProductControllerContractTest {
                 ProductController.class.getMethod("updateAdminProduct", Long.class, ProductUpdateRequest.class),
                 "PRODUCT_MANAGE_ALL");
         assertPreAuthorizeContains(
-                ProductController.class.getMethod("deleteAdminProduct", Long.class),
-                "PRODUCT_MANAGE_ALL");
+                ProductController.class.getMethod("deleteAdminProduct", Long.class), "PRODUCT_MANAGE_ALL");
         assertPreAuthorizeContains(
                 ProductController.class.getMethod(
                         "updateProductMedia", Long.class, Long.class, ProductMediaUpdateRequest.class),

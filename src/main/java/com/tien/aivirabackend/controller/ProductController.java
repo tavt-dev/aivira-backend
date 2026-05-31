@@ -105,8 +105,8 @@ public class ProductController {
     @PreAuthorize("@authorizationService.hasPermission('PRODUCT_MANAGE_ALL')")
     public ResponseEntity<ApiResponse<ProductResponse>> updateAdminProduct(
             @PathVariable Long productId, @Valid @RequestBody ProductUpdateRequest request) {
-        return ResponseEntity.ok(
-                ApiResponse.success("Update product successful", productService.updateAdminProduct(productId, request)));
+        return ResponseEntity.ok(ApiResponse.success(
+                "Update product successful", productService.updateAdminProduct(productId, request)));
     }
 
     @DeleteMapping("/admin/products/{productId}")

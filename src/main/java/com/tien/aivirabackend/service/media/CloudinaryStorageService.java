@@ -11,7 +11,7 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.Transformation;
 import com.cloudinary.utils.ObjectUtils;
 import com.tien.aivirabackend.exception.AppException;
-import com.tien.aivirabackend.exception.errorCode.UserErrorCode;import com.tien.aivirabackend.service.media.CloudinaryUploadResult;
+import com.tien.aivirabackend.exception.errorCode.UserErrorCode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j(topic = "CLOUDINARY-STORAGE-SERVICE")
 public class CloudinaryStorageService {
     private final Cloudinary cloudinary;
+
     public CloudinaryUploadResult uploadImage(
             MultipartFile file, String folder, String publicIdPrefix, int width, int height) {
         String publicId = buildPublicId(publicIdPrefix);
