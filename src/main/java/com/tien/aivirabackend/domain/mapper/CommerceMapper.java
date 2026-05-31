@@ -7,11 +7,9 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import com.tien.aivirabackend.constant.ProductStatus;
-import com.tien.aivirabackend.constant.ShopStatus;
 import com.tien.aivirabackend.domain.dto.response.*;
 import com.tien.aivirabackend.domain.entity.catalog.Product;
 import com.tien.aivirabackend.domain.entity.catalog.ProductVariation;
-import com.tien.aivirabackend.domain.entity.marketplace.Shop;
 import com.tien.aivirabackend.domain.entity.transaction.Cart;
 import com.tien.aivirabackend.domain.entity.transaction.CartItem;
 import com.tien.aivirabackend.domain.entity.transaction.Order;
@@ -61,20 +59,15 @@ public class CommerceMapper {
     public CartItemResponse toCartItemResponse(CartItem item) {
         ProductVariation variation = item.getProductVariation();
         Product product = variation.getProduct();
-        Shop shop = product.getShop();
         BigDecimal finalPrice = product.getPrice().add(nullToZero(variation.getAdditionalPrice()));
         boolean available = Boolean.TRUE.equals(product.getActive())
                 && ProductStatus.ACTIVE == product.getStatus()
                 && Boolean.TRUE.equals(variation.getActive())
-                && shop != null
-                && ShopStatus.APPROVED == shop.getStatus()
                 && variation.getStockQuantity() >= item.getQuantity();
         return CartItemResponse.builder()
                 .id(item.getId())
                 .productId(product.getId())
                 .productVariationId(variation.getId())
-                .shopId(shop == null ? null : shop.getId())
-                .shopName(shop == null ? null : shop.getShopName())
                 .productName(product.getProductName())
                 .productSlug(product.getSlug())
                 .thumbnailUrl(resolveThumbnail(product, variation))
@@ -95,13 +88,10 @@ public class CommerceMapper {
                 .sorted(Comparator.comparing(OrderItem::getId))
                 .map(this::toOrderItemResponse)
                 .toList();
-        Shop shop = order.getShop();
         Payment payment = primaryPayment(order);
         return OrderResponse.builder()
                 .id(order.getId())
                 .orderCode(order.getOrderCode())
-                .shopId(shop == null ? null : shop.getId())
-                .shopName(shop == null ? null : shop.getShopName())
                 .subtotal(order.getSubtotal())
                 .shippingFee(order.getShippingFee())
                 .discountAmount(order.getDiscountAmount())
@@ -127,7 +117,6 @@ public class CommerceMapper {
     }
 
     public OrderSummaryResponse toOrderSummaryResponse(Order order) {
-        Shop shop = order.getShop();
         Payment payment = primaryPayment(order);
         int itemCount = order.getItems().stream()
                 .map(OrderItem::getQuantity)
@@ -137,8 +126,6 @@ public class CommerceMapper {
         return OrderSummaryResponse.builder()
                 .id(order.getId())
                 .orderCode(order.getOrderCode())
-                .shopId(shop == null ? null : shop.getId())
-                .shopName(shop == null ? null : shop.getShopName())
                 .totalAmount(order.getTotalAmount())
                 .orderStatus(order.getOrderStatus())
                 .cancelReason(order.getCancelReason())

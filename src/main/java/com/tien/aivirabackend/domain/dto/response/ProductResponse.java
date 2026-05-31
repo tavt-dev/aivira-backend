@@ -18,9 +18,6 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductResponse {
     Long id;
-    Long shopId;
-    String shopName;
-    String shopSlug;
     Long categoryId;
     String categoryName;
     String categorySlug;

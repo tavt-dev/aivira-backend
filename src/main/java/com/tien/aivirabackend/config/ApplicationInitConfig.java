@@ -17,7 +17,7 @@ import com.tien.aivirabackend.domain.entity.user.Role;
 import com.tien.aivirabackend.domain.entity.user.User;
 import com.tien.aivirabackend.repository.RoleRepository;
 import com.tien.aivirabackend.repository.UserRepository;
-import com.tien.aivirabackend.service.PermissionService;
+import com.tien.aivirabackend.service.rbac.PermissionService;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -58,8 +58,6 @@ public class ApplicationInitConfig {
 
             Role userRole = getOrCreateRole(roleRepository, PredefinedRole.USER, "USER ROLE");
             Role adminRole = getOrCreateRole(roleRepository, PredefinedRole.ADMIN, "ADMIN ROLE");
-
-            getOrCreateRole(roleRepository, PredefinedRole.SELLER, "SELLER ROLE");
 
             boolean adminExists = userRepository.findByUsername(adminUsername).isPresent()
                     || userRepository.findByEmail(adminEmail).isPresent();

@@ -9,7 +9,7 @@ import com.tien.aivirabackend.domain.dto.ApiResponse;
 import com.tien.aivirabackend.domain.dto.request.UpdatePasswordRequest;
 import com.tien.aivirabackend.domain.dto.request.UserUpdateRequest;
 import com.tien.aivirabackend.domain.dto.response.UserResponse;
-import com.tien.aivirabackend.service.UserService;
+import com.tien.aivirabackend.service.user.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

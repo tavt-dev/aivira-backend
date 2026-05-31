@@ -43,8 +43,8 @@ public class Review extends BaseEntity {
     @Column(name = "is_approved", nullable = false)
     boolean approved = false;
 
-    @Column(name = "shop_reply", columnDefinition = "TEXT")
-    String shopReply;
+    @Column(name = "admin_reply", columnDefinition = "TEXT")
+    String adminReply;
 
     /* RELATIONSHIP */
     @ManyToOne(fetch = FetchType.LAZY)

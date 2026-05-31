@@ -3,7 +3,6 @@ package com.tien.aivirabackend.constant;
 public enum PermissionGroup {
     USER,
     ADDRESS,
-    SHOP,
     CATEGORY,
     PRODUCT,
     INVENTORY,

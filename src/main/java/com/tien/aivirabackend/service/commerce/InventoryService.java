@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.tien.aivirabackend.constant.ProductStatus;
-import com.tien.aivirabackend.constant.ShopStatus;
 import com.tien.aivirabackend.domain.entity.catalog.Product;
 import com.tien.aivirabackend.domain.entity.catalog.ProductVariation;
 import com.tien.aivirabackend.domain.entity.transaction.CartItem;
@@ -105,9 +104,7 @@ public class InventoryService {
         Product product = variation.getProduct();
         if (!Boolean.TRUE.equals(variation.getActive())
                 || !Boolean.TRUE.equals(product.getActive())
-                || product.getStatus() != ProductStatus.ACTIVE
-                || product.getShop() == null
-                || product.getShop().getStatus() != ShopStatus.APPROVED) {
+                || product.getStatus() != ProductStatus.ACTIVE) {
             throw new AppException(CartErrorCode.CART_PRODUCT_NOT_AVAILABLE);
         }
         if (variation.getStockQuantity() < item.getQuantity()) {

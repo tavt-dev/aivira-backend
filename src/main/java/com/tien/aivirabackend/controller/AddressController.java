@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import com.tien.aivirabackend.domain.dto.ApiResponse;
 import com.tien.aivirabackend.domain.dto.request.AddressRequest;
 import com.tien.aivirabackend.domain.dto.response.AddressResponse;
-import com.tien.aivirabackend.service.AddressService;
+import com.tien.aivirabackend.service.commerce.AddressService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

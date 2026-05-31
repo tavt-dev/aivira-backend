@@ -18,7 +18,7 @@ class FoundationMigrationIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void flywayMigration_shouldCreateSchemaAndSeedRbacReferenceData() {
-        assertThat(roleRepository.count()).isEqualTo(3);
+        assertThat(roleRepository.count()).isEqualTo(2);
         assertThat(permissionRepository.count()).isEqualTo(PermissionCode.values().length);
 
         Integer adminPermissionCount = jdbcTemplate.queryForObject(
@@ -42,18 +42,15 @@ class FoundationMigrationIntegrationTest extends AbstractIntegrationTest {
         assertThat(adminPermissionCount).isEqualTo(PermissionCode.values().length);
         assertThat(userPermissionCount).isGreaterThan(0);
 
-        Integer userSellerApplyCount = jdbcTemplate.queryForObject(
+        Integer unexpectedRoleCount = jdbcTemplate.queryForObject(
                 """
 				SELECT COUNT(*)
-				FROM role_permissions rp
-				JOIN roles r ON r.id = rp.role_id
-				JOIN permissions p ON p.id = rp.permission_id
-				WHERE r.code = 'USER'
-				AND p.code = 'SELLER_APPLY'
+				FROM roles
+				WHERE code NOT IN ('USER', 'ADMIN')
 				""",
                 Integer.class);
 
-        assertThat(userSellerApplyCount).isEqualTo(1);
+        assertThat(unexpectedRoleCount).isZero();
 
         Integer productPhase4ColumnCount = jdbcTemplate.queryForObject(
                 """
@@ -61,11 +58,11 @@ class FoundationMigrationIntegrationTest extends AbstractIntegrationTest {
 				FROM information_schema.columns
 				WHERE table_schema = DATABASE()
 				AND table_name = 'products'
-				AND column_name IN ('shop_id', 'status', 'rejection_reason', 'submitted_at', 'approved_by', 'approved_at', 'rejected_by', 'rejected_at')
+				AND column_name IN ('status', 'rejection_reason', 'submitted_at', 'approved_by', 'approved_at', 'rejected_by', 'rejected_at')
 				""",
                 Integer.class);
 
-        assertThat(productPhase4ColumnCount).isEqualTo(8);
+        assertThat(productPhase4ColumnCount).isEqualTo(7);
 
         Integer paymentAttemptTableCount = jdbcTemplate.queryForObject(
                 """

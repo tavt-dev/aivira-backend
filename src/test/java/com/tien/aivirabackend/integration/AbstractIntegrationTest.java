@@ -17,8 +17,8 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import com.tien.aivirabackend.service.CloudinaryStorageService;
-import com.tien.aivirabackend.service.EmailService;
+import com.tien.aivirabackend.service.media.CloudinaryStorageService;
+import com.tien.aivirabackend.service.notification.EmailService;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -84,7 +84,6 @@ public abstract class AbstractIntegrationTest {
         jdbcTemplate.execute("TRUNCATE TABLE categories");
         jdbcTemplate.execute("TRUNCATE TABLE user_permissions");
         jdbcTemplate.execute("TRUNCATE TABLE user_roles");
-        jdbcTemplate.execute("TRUNCATE TABLE shops");
         jdbcTemplate.execute("TRUNCATE TABLE addresses");
         jdbcTemplate.execute("TRUNCATE TABLE user_otp");
         jdbcTemplate.execute("TRUNCATE TABLE refresh_tokens");

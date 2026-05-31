@@ -10,7 +10,7 @@ import com.tien.aivirabackend.domain.dto.ApiResponse;
 import com.tien.aivirabackend.domain.dto.request.CartItemRequest;
 import com.tien.aivirabackend.domain.dto.request.CartItemUpdateRequest;
 import com.tien.aivirabackend.domain.dto.response.CartResponse;
-import com.tien.aivirabackend.service.CartService;
+import com.tien.aivirabackend.service.commerce.CartService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

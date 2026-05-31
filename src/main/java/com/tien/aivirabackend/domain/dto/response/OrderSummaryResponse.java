@@ -19,8 +19,6 @@ import lombok.experimental.FieldDefaults;
 public class OrderSummaryResponse {
     Long id;
     String orderCode;
-    Long shopId;
-    String shopName;
     BigDecimal totalAmount;
     OrderStatus orderStatus;
     String cancelReason;

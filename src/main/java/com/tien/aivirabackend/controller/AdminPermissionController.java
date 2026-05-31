@@ -17,8 +17,8 @@ import com.tien.aivirabackend.domain.dto.response.PermissionResponse;
 import com.tien.aivirabackend.domain.dto.response.RolePermissionResponse;
 import com.tien.aivirabackend.domain.dto.response.UserEffectivePermissionsResponse;
 import com.tien.aivirabackend.domain.dto.response.UserPermissionResponse;
-import com.tien.aivirabackend.service.PermissionService;
-import com.tien.aivirabackend.service.UserPermissionService;
+import com.tien.aivirabackend.service.rbac.PermissionService;
+import com.tien.aivirabackend.service.user.UserPermissionService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

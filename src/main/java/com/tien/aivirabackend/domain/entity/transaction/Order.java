@@ -8,7 +8,6 @@ import jakarta.persistence.*;
 
 import com.tien.aivirabackend.constant.OrderStatus;
 import com.tien.aivirabackend.domain.entity.BaseEntity;
-import com.tien.aivirabackend.domain.entity.marketplace.Shop;
 import com.tien.aivirabackend.domain.entity.transaction.payment.Payment;
 import com.tien.aivirabackend.domain.entity.user.Address;
 import com.tien.aivirabackend.domain.entity.user.User;
@@ -63,10 +62,6 @@ public class Order extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     User user;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "shop_id", nullable = false)
-    Shop shop;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "address_id")
