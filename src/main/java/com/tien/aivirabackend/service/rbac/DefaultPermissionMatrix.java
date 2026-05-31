@@ -48,5 +48,4 @@ public final class DefaultPermissionMatrix {
                 PermissionCode.SUPPORT_TICKET_CREATE_SELF,
                 PermissionCode.SUPPORT_TICKET_READ_SELF);
     }
-
 }

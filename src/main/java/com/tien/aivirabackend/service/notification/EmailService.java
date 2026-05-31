@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import com.tien.aivirabackend.exception.AppException;
 import com.tien.aivirabackend.exception.errorCode.EmailErrorCode;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,6 +34,7 @@ public class EmailService {
 
     @Value("${app.mail.from-name}")
     private String fromName;
+
     @Async("emailTaskExecutor")
     public void sendRegistrationOtpByEmail(String to, String name, String otp) {
         String subject = "Xác thực tài khoản Aivira - Mã OTP của bạn";
@@ -42,6 +44,7 @@ public class EmailService {
         sendHtmlEmail(to, subject, htmlContent);
         log.info("Registration OTP email sent to: {}", to);
     }
+
     @Async("emailTaskExecutor")
     public void sendForgotPasswordOtpByEmail(String to, String name, String otp) {
         String subject = "Đặt lại mật khẩu Aivira - Mã OTP của bạn";

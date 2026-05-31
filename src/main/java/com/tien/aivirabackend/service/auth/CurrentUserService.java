@@ -13,6 +13,7 @@ import com.tien.aivirabackend.exception.AppException;
 import com.tien.aivirabackend.exception.errorCode.AuthErrorCode;
 import com.tien.aivirabackend.exception.errorCode.UserErrorCode;
 import com.tien.aivirabackend.repository.UserRepository;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -24,11 +25,13 @@ public class CurrentUserService {
     private static final String USER_ID_CLAIM = "user_id";
 
     UserRepository userRepository;
+
     public User getCurrentUser() {
         return userRepository
                 .findById(getCurrentUserId())
                 .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
     }
+
     public String getCurrentUserId() {
         String userId = getCurrentJwt().getClaimAsString(USER_ID_CLAIM);
         if (!StringUtils.hasText(userId)) {
@@ -36,6 +39,7 @@ public class CurrentUserService {
         }
         return userId;
     }
+
     public Jwt getCurrentJwt() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -50,6 +54,7 @@ public class CurrentUserService {
 
         return jwt;
     }
+
     public Optional<String> findCurrentUserId() {
         try {
             return Optional.of(getCurrentUserId());

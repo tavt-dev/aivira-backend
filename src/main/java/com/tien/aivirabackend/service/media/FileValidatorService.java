@@ -13,6 +13,7 @@ import com.tien.aivirabackend.config.properties.FileUploadProperties;
 import com.tien.aivirabackend.constant.MediaType;
 import com.tien.aivirabackend.exception.AppException;
 import com.tien.aivirabackend.exception.errorCode.FileValidationErrorCode;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,6 +28,7 @@ public class FileValidatorService {
             "application/pdf", new byte[] {0x25, 0x50, 0x44, 0x46});
 
     private final FileUploadProperties properties;
+
     public void validateFile(MultipartFile file, MediaType mediaType) {
         if (!properties.isEnabled()) {
             log.debug("Upload validation disabled");

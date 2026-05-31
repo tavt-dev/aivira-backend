@@ -38,9 +38,8 @@ import com.tien.aivirabackend.exception.AppException;
 import com.tien.aivirabackend.exception.errorCode.AuthErrorCode;
 import com.tien.aivirabackend.exception.errorCode.JwtErrorCode;
 import com.tien.aivirabackend.exception.errorCode.UserErrorCode;
-import com.tien.aivirabackend.repository.InvalidatedTokenRepository;
 import com.tien.aivirabackend.repository.RefreshTokenRepository;
-import com.tien.aivirabackend.repository.UserRepository;import com.tien.aivirabackend.service.auth.JwtClaimReader;
+import com.tien.aivirabackend.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.NonFinal;
@@ -78,16 +77,14 @@ public class JwtService {
 
     private final UserRepository userRepository;
 
-    private final InvalidatedTokenRepository invalidatedTokenRepository;
-
     private final RefreshTokenRepository refreshTokenRepository;
 
-    private final JwtClaimReader jwtClaimReader;
     public String createAccessToken(User user) {
         validateUser(user);
         log.debug("Creating access token for user: {}", user.getUsername());
         return createToken(user, TokenType.ACCESS, validDuration, null);
     }
+
     @Transactional
     public String createRefreshToken(User user, String deviceInfo, String ipAddress, String familyId) {
         validateUser(user);
@@ -97,7 +94,7 @@ public class JwtService {
 
         String token = createToken(user, TokenType.REFRESH, refreshableDuration, tokenFamilyId);
 
-        JWTClaimsSet claimsSet = jwtClaimReader.parseClaims(token, JwtErrorCode.TOKEN_MALFORMED, "store refresh token");
+        JWTClaimsSet claimsSet = parseClaims(token, JwtErrorCode.TOKEN_MALFORMED, "store refresh token");
         RefreshToken refreshToken =
                 buildRefreshTokenRecord(user, token, tokenFamilyId, deviceInfo, ipAddress, claimsSet);
         refreshTokenRepository.save(refreshToken);
@@ -105,15 +102,16 @@ public class JwtService {
 
         return token;
     }
+
     public SignedJWT verifyAccessToken(String token) {
         return verifyToken(token, TokenType.ACCESS);
     }
+
     @Transactional
     public SignedJWT verifyRefreshToken(String refreshToken) {
         SignedJWT signedJWT = verifyToken(refreshToken, TokenType.REFRESH);
 
-        JWTClaimsSet claimsSet =
-                jwtClaimReader.getClaimsSet(signedJWT, JwtErrorCode.TOKEN_INVALID, "verify refresh token");
+        JWTClaimsSet claimsSet = getClaimsSet(signedJWT, JwtErrorCode.TOKEN_INVALID, "verify refresh token");
         RefreshToken storedToken = findStoredRefreshToken(claimsSet.getJWTID());
         validateStoredRefreshToken(storedToken);
         storedToken.markUsed(Instant.now());
@@ -121,10 +119,12 @@ public class JwtService {
 
         return signedJWT;
     }
+
     @Transactional
     public void revokeRefreshToken(String refreshToken) {
         revokeRefreshToken(refreshToken, RevocationReason.TOKEN_REFRESH, null);
     }
+
     @Transactional
     public void revokeRefreshToken(String refreshToken, RevocationReason reason, String replacedBy) {
         try {
@@ -151,10 +151,12 @@ public class JwtService {
             throw new AppException(JwtErrorCode.TOKEN_INVALID);
         }
     }
+
     @Transactional
     public void revokeAllTokensOfUser(String userId) {
         revokeAllTokensOfUser(userId, RevocationReason.USER_LOGOUT_ALL);
     }
+
     @Transactional
     public void revokeAllTokensOfUser(String userId, RevocationReason reason) {
 
@@ -175,18 +177,19 @@ public class JwtService {
                 user.getUsername(),
                 user.getTokenVersion());
     }
+
     public String getTokenFamilyId(String refreshToken) {
         SignedJWT signedJWT = verifyToken(refreshToken, TokenType.REFRESH);
-        JWTClaimsSet claimsSet =
-                jwtClaimReader.getClaimsSet(signedJWT, JwtErrorCode.TOKEN_INVALID, "read refresh token family ID");
-        return jwtClaimReader.getStringClaim(claimsSet, FAMILY_ID_CLAIM, "read refresh token family ID");
+        JWTClaimsSet claimsSet = getClaimsSet(signedJWT, JwtErrorCode.TOKEN_INVALID, "read refresh token family ID");
+        return getStringClaim(claimsSet, FAMILY_ID_CLAIM, "read refresh token family ID");
     }
+
     public String getTokenJti(String token) {
         SignedJWT signedJWT = verifyToken(token, TokenType.REFRESH);
-        return jwtClaimReader
-                .getClaimsSet(signedJWT, JwtErrorCode.TOKEN_INVALID, "read refresh token JTI")
+        return getClaimsSet(signedJWT, JwtErrorCode.TOKEN_INVALID, "read refresh token JTI")
                 .getJWTID();
     }
+
     public void revokeSession(String userId, String sessionId) {
         RefreshToken token = refreshTokenRepository
                 .findById(sessionId)
@@ -204,6 +207,7 @@ public class JwtService {
             log.info("Session {} revoked successfully for user {}", sessionId, userId);
         }
     }
+
     @Transactional(readOnly = true)
     public List<ActiveSessionResponse> getActiveSessions(String userId, String currentSessionJti) {
         List<RefreshToken> tokens = refreshTokenRepository.findActiveTokensByUserId(userId, Instant.now());
@@ -371,6 +375,33 @@ public class JwtService {
 
         } catch (Exception e) {
             log.error("Unexpected error during JWT verification", e);
+            throw new AppException(JwtErrorCode.TOKEN_INVALID);
+        }
+    }
+
+    private JWTClaimsSet parseClaims(String token, JwtErrorCode errorCode, String operation) {
+        try {
+            return SignedJWT.parse(token).getJWTClaimsSet();
+        } catch (ParseException e) {
+            log.error("Failed to parse JWT claims for {}", operation, e);
+            throw new AppException(errorCode);
+        }
+    }
+
+    private JWTClaimsSet getClaimsSet(SignedJWT signedJWT, JwtErrorCode errorCode, String operation) {
+        try {
+            return signedJWT.getJWTClaimsSet();
+        } catch (ParseException e) {
+            log.error("Failed to parse JWT claims for {}", operation, e);
+            throw new AppException(errorCode);
+        }
+    }
+
+    private String getStringClaim(JWTClaimsSet claimsSet, String claimName, String operation) {
+        try {
+            return claimsSet.getStringClaim(claimName);
+        } catch (ParseException e) {
+            log.error("Failed to read JWT claim '{}' for {}", claimName, operation, e);
             throw new AppException(JwtErrorCode.TOKEN_INVALID);
         }
     }

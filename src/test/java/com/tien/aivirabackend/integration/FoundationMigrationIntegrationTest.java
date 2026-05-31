@@ -47,8 +47,7 @@ class FoundationMigrationIntegrationTest extends AbstractIntegrationTest {
 				SELECT COUNT(*)
 				FROM roles
 				WHERE code NOT IN ('USER', 'ADMIN')
-				""",
-                Integer.class);
+				""", Integer.class);
 
         assertThat(unexpectedRoleCount).isZero();
 

@@ -28,6 +28,12 @@ import com.tien.aivirabackend.domain.dto.RequestMetadata;
 import com.tien.aivirabackend.domain.entity.transaction.payment.PaymentAttempt;
 import com.tien.aivirabackend.domain.entity.transaction.payment.PaymentGroup;
 import com.tien.aivirabackend.exception.AppException;
+import com.tien.aivirabackend.service.payment.provider.MomoPaymentProviderClient;
+import com.tien.aivirabackend.service.payment.provider.PaymentProviderCallbackResult;
+import com.tien.aivirabackend.service.payment.provider.PaymentProviderQueryResult;
+import com.tien.aivirabackend.service.payment.provider.PaymentProviderRequest;
+import com.tien.aivirabackend.service.payment.provider.PaymentProviderResult;
+import com.tien.aivirabackend.service.payment.provider.VnpayPaymentProviderClient;
 
 class PaymentProviderClientTest {
     @Test

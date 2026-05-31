@@ -14,6 +14,7 @@ import com.tien.aivirabackend.domain.entity.user.UserOtp;
 import com.tien.aivirabackend.exception.AppException;
 import com.tien.aivirabackend.exception.errorCode.OtpErrorCode;
 import com.tien.aivirabackend.repository.UserOtpRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 public class UserOtpService {
 
     private final UserOtpRepository userOtpRepository;
+
     @Transactional
     public UserOtp createOtp(User user, OtpType type, int expiryMinutes) {
         String otpCode = generateSecureOtp();
@@ -40,6 +42,7 @@ public class UserOtpService {
         log.info("OTP created for user: {}, type: {}, expires: {}", user.getUsername(), type, saved.getExpiresTime());
         return saved;
     }
+
     @Transactional
     public void validateOtp(UserOtp userOtp, String providedOtp) {
         if (userOtp.getExpiresTime().isBefore(Instant.now())) {
@@ -58,6 +61,7 @@ public class UserOtpService {
 
         log.info("OTP validated successfully for user: {}", userOtp.getUser().getUsername());
     }
+
     @Transactional
     public void markOtpAsUsed(UserOtp userOtp) {
         userOtp.setUsed(true);
@@ -66,11 +70,13 @@ public class UserOtpService {
         }
         userOtpRepository.save(userOtp);
     }
+
     public UserOtp findLatestOtp(User user, OtpType type) {
         return userOtpRepository
                 .findTopByUserAndOtpTypeAndUsedFalseOrderByCreatedAtDesc(user, type)
                 .orElseThrow(() -> new AppException(OtpErrorCode.OTP_NOT_FOUND));
     }
+
     public void checkOtpFrequency(User user, OtpType type) {
         Optional<UserOtp> lastOtp =
                 userOtpRepository.findTopByUserAndOtpTypeAndUsedFalseOrderByCreatedAtDesc(user, type);
@@ -80,6 +86,7 @@ public class UserOtpService {
             throw new AppException(OtpErrorCode.OTP_REQUEST_TOO_FREQUENT);
         }
     }
+
     public void deactivateOldOtps(String userId, OtpType type) {
         userOtpRepository.deactivateOldOtp(userId, type);
     }
