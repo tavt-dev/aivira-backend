@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { forgotPassword, login, register, resendVerification, resetPassword, verifyUser } from "../api/authApi.js";
-import { saveAuth } from "../utils/storage.js";
+import { clearPendingVerify, getPendingVerify, saveAuth, savePendingVerify } from "../utils/storage.js";
 
 const initialForm = {
   username: "",
@@ -23,14 +23,14 @@ const modeMeta = {
   register: {
     title: "Create account",
     kicker: "Email verification",
-    copy: "Register first, then verify the OTP sent by the backend.",
+    copy: "Register first. If verification is required, Aivira will open the OTP form.",
     action: "Create account"
   },
   verify: {
     title: "Verify email",
-    kicker: "OTP required",
-    copy: "Enter the 6-digit registration OTP from your email.",
-    action: "Verify account"
+    kicker: "Controlled OTP",
+    copy: "Enter the OTP sent by Aivira. This form only opens after register or a backend verification response.",
+    action: "Verify OTP"
   },
   forgot: {
     title: "Reset access",
@@ -46,23 +46,25 @@ const modeMeta = {
   }
 };
 
-export default function AuthModal({ open, onClose }) {
-  const [mode, setMode] = useState("login");
+export default function AuthModal({ open, onClose, initialMode = "login" }) {
+  const [mode, setMode] = useState(initialMode);
   const [form, setForm] = useState(initialForm);
   const [message, setMessage] = useState(null);
   const [busy, setBusy] = useState(false);
+  const pendingVerify = mode === "verify" ? getPendingVerify() : null;
 
   const meta = modeMeta[mode];
-  const step = useMemo(() => (mode === "login" ? 1 : mode === "register" ? 1 : mode === "verify" ? 2 : mode === "forgot" ? 1 : 2), [mode]);
+  const step = mode === "verify" || mode === "reset" ? 2 : 1;
 
   useEffect(() => {
     if (!open) return undefined;
+    setMode(initialMode);
     const onKey = (event) => {
       if (event.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  }, [open, initialMode, onClose]);
 
   if (!open) return null;
 
@@ -85,6 +87,15 @@ export default function AuthModal({ open, onClose }) {
 
       if (mode === "login") {
         const auth = await login({ username: form.username.trim(), password: form.password });
+        if (shouldVerifyOtp(auth)) {
+          openVerifyFlow({
+            email: auth?.email || (form.username.includes("@") ? form.username.trim() : ""),
+            username: form.username.trim(),
+            source: "login"
+          });
+          return;
+        }
+
         const accessToken = auth?.accessToken || auth?.token || auth?.jwt || auth?.access_token;
         if (!accessToken) throw new Error("Backend did not return an access token.");
         saveAuth(auth, { username: form.username.trim() });
@@ -92,20 +103,18 @@ export default function AuthModal({ open, onClose }) {
       }
 
       if (mode === "register") {
-        await register({
+        const response = await register({
           username: form.username.trim(),
           password: form.password,
           email: form.email.trim(),
           firstName: form.firstName.trim(),
           lastName: form.lastName.trim()
         });
-        setMessage({ type: "success", text: "Account created. Check your email and enter the OTP to activate it." });
-        setMode("verify");
-      }
-
-      if (mode === "verify") {
-        await verifyUser({ email: form.email.trim(), otpCode: form.otpCode.trim() });
-        setMessage({ type: "success", text: "Email verified. You can login now." });
+        if (shouldVerifyOtp(response, true)) {
+          openVerifyFlow({ email: form.email.trim(), username: form.username.trim(), source: "register" });
+          return;
+        }
+        setMessage({ type: "success", text: "Account created. You can login now." });
         setMode("login");
       }
 
@@ -125,21 +134,70 @@ export default function AuthModal({ open, onClose }) {
         setMode("login");
         setForm((current) => ({ ...current, password: "", newPassword: "", otpCode: "" }));
       }
+
+      if (mode === "verify") {
+        const pending = getPendingVerify();
+        if (!pending) {
+          setMode("login");
+          throw new Error("Verification session expired. Please register or login again.");
+        }
+        const email = pending.email || form.email.trim();
+        if (!email) throw new Error("Email is required for this pending verification.");
+        await verifyUser({ email, otpCode: form.otpCode.trim() });
+        clearPendingVerify();
+        setMessage({ type: "success", text: "Email verified. You can login now." });
+        setForm((current) => ({ ...current, email, password: "", otpCode: "" }));
+        setMode("login");
+      }
     } catch (error) {
+      if (mode === "login" && isVerifyRequiredError(error)) {
+        openVerifyFlow({
+          email: form.username.includes("@") ? form.username.trim() : "",
+          username: form.username.trim(),
+          source: "login"
+        });
+        return;
+      }
       setMessage({ type: "error", text: error.message || "Action failed. Please check backend/API." });
     } finally {
       setBusy(false);
     }
   }
 
+  function openVerifyFlow(context) {
+    savePendingVerify(context);
+    setForm((current) => ({
+      ...current,
+      email: context?.email || current.email,
+      username: context?.username || current.username,
+      otpCode: ""
+    }));
+    setMessage({
+      type: "success",
+      text: context?.source === "register"
+        ? "Account created. Enter the OTP sent to your email."
+        : "This account needs email verification. Enter the OTP to continue."
+    });
+    setMode("verify");
+  }
+
   async function resendOtp() {
+    setBusy(true);
     setMessage(null);
     try {
-      if (!form.email.trim()) throw new Error("Enter your email before resending OTP.");
-      await resendVerification({ email: form.email.trim() });
-      setMessage({ type: "success", text: "Verification OTP resent." });
+      const pending = getPendingVerify();
+      if (!pending) {
+        setMode("login");
+        throw new Error("Verification session expired. Please register or login again.");
+      }
+      const email = pending.email || form.email.trim();
+      if (!email) throw new Error("Email is required for this pending verification.");
+      await resendVerification({ email });
+      setMessage({ type: "success", text: "Verification OTP resent. Check your email." });
     } catch (error) {
       setMessage({ type: "error", text: error.message || "Could not resend OTP." });
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -170,7 +228,7 @@ export default function AuthModal({ open, onClose }) {
             <p>{meta.copy}</p>
           </div>
 
-          {mode !== "login" && (
+          {(mode === "verify" || mode === "forgot" || mode === "reset") && (
             <div className="auth-steps" aria-label="Auth progress">
               <span className={step >= 1 ? "active" : ""}>1</span>
               <i />
@@ -198,15 +256,31 @@ export default function AuthModal({ open, onClose }) {
             )}
 
             {(mode === "verify" || mode === "forgot" || mode === "reset") && (
-              <Field label="Email" type="email" value={form.email} onChange={(value) => update("email", value)} autoComplete="email" />
+              <Field
+                label="Email"
+                type="email"
+                value={mode === "verify" && pendingVerify?.email ? pendingVerify.email : form.email}
+                onChange={(value) => update("email", value)}
+                autoComplete="email"
+                disabled={mode === "verify" && Boolean(pendingVerify?.email)}
+              />
             )}
 
-            {(mode === "verify" || mode === "reset") && (
-              <Field label="OTP code" value={form.otpCode} onChange={(value) => update("otpCode", value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" maxLength={6} />
+            {mode === "verify" && (
+              <Field
+                label="OTP code"
+                value={form.otpCode}
+                onChange={(value) => update("otpCode", value.replace(/\D/g, "").slice(0, 6))}
+                inputMode="numeric"
+                maxLength={6}
+              />
             )}
 
             {mode === "reset" && (
-              <Field label="New password" type="password" value={form.newPassword} onChange={(value) => update("newPassword", value)} autoComplete="new-password" minLength={6} />
+              <>
+                <Field label="OTP code" value={form.otpCode} onChange={(value) => update("otpCode", value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" maxLength={6} />
+                <Field label="New password" type="password" value={form.newPassword} onChange={(value) => update("newPassword", value)} autoComplete="new-password" minLength={6} />
+              </>
             )}
           </div>
 
@@ -217,10 +291,9 @@ export default function AuthModal({ open, onClose }) {
           </button>
 
           <div className="auth-switch">
-            {mode !== "verify" && <button type="button" onClick={() => switchMode("verify")}>Verify OTP</button>}
-            {mode === "verify" && <button type="button" onClick={resendOtp}>Resend OTP</button>}
-            {mode !== "forgot" && mode !== "reset" && <button type="button" onClick={() => switchMode("forgot")}>Forgot password</button>}
-            {(mode === "forgot" || mode === "reset" || mode === "verify") && <button type="button" onClick={() => switchMode("login")}>Back to login</button>}
+            {mode === "verify" && <button type="button" onClick={resendOtp} disabled={busy}>Resend OTP</button>}
+            {(mode === "login" || mode === "register") && <button type="button" onClick={() => switchMode("forgot")}>Forgot password</button>}
+            {(mode === "verify" || mode === "forgot" || mode === "reset") && <button type="button" onClick={() => switchMode("login")}>Back to login</button>}
           </div>
         </form>
       </div>
@@ -263,4 +336,31 @@ function validateForm(mode, form) {
   if (mode === "reset" && form.newPassword.length < 6) {
     throw new Error("New password must be at least 6 characters.");
   }
+}
+
+function shouldVerifyOtp(response, registerSuccess = false) {
+  const nextStep = response?.nextStep || response?.status || response?.authStep;
+  if (String(nextStep || "").toUpperCase() === "VERIFY_OTP") return true;
+  const message = String(response?.message || "").toLowerCase();
+  if (message.includes("verify") || message.includes("otp") || normalizeText(message).includes("xac minh")) return true;
+  return registerSuccess && !(response?.accessToken || response?.token || response?.jwt || response?.access_token);
+}
+
+function isVerifyRequiredError(error) {
+  const text = normalizeText(`${error?.message || ""} ${error?.errorCode || ""}`);
+  return error?.errorCode === "E2202"
+    || error?.errorCode === "E3106"
+    || text.includes("verify")
+    || text.includes("verified")
+    || text.includes("active")
+    || text.includes("otp")
+    || text.includes("xac minh")
+    || text.includes("kich hoat");
+}
+
+function normalizeText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
 }

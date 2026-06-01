@@ -1,6 +1,8 @@
 const TOKEN_KEY = "aivira_access_token";
 const REFRESH_KEY = "aivira_refresh_token";
 const USER_KEY = "aivira_user";
+const PENDING_VERIFY_KEY = "aivira_pending_verify";
+const PENDING_VERIFY_TTL_MS = 15 * 60 * 1000;
 
 export function getAccessToken() {
   return localStorage.getItem(TOKEN_KEY);
@@ -36,12 +38,44 @@ export function clearAuth() {
   dispatchAuth();
 }
 
+export function savePendingVerify(context) {
+  sessionStorage.setItem(PENDING_VERIFY_KEY, JSON.stringify({
+    email: context?.email || "",
+    username: context?.username || "",
+    source: context?.source || "auth",
+    createdAt: Date.now()
+  }));
+}
+
+export function getPendingVerify() {
+  const context = readSessionJson(PENDING_VERIFY_KEY, null);
+  if (!context?.createdAt || Date.now() - context.createdAt > PENDING_VERIFY_TTL_MS) {
+    clearPendingVerify();
+    return null;
+  }
+  return context;
+}
+
+export function clearPendingVerify() {
+  sessionStorage.removeItem(PENDING_VERIFY_KEY);
+}
+
 function dispatchAuth() {
   window.dispatchEvent(new Event("aivira-auth"));
 }
 
 function readJson(key, fallback) {
   const raw = localStorage.getItem(key);
+  if (!raw) return fallback;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return fallback;
+  }
+}
+
+function readSessionJson(key, fallback) {
+  const raw = sessionStorage.getItem(key);
   if (!raw) return fallback;
   try {
     return JSON.parse(raw);

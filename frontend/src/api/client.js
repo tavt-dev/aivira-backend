@@ -33,7 +33,11 @@ export async function request(path, options = {}) {
 
   if (!response.ok) {
     const message = payload?.message || payload?.error || `Request failed (${response.status})`;
-    throw new Error(message);
+    const error = new Error(message);
+    error.status = response.status;
+    error.errorCode = payload?.errorCode;
+    error.payload = payload;
+    throw error;
   }
 
   return payload?.data ?? payload;

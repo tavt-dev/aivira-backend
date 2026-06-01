@@ -21,6 +21,7 @@ import { getCurrentUser } from "./utils/storage.js";
 
 export default function App() {
   const [authOpen, setAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState("login");
   const [user, setUser] = useState(getCurrentUser());
   const location = useLocation();
 
@@ -41,21 +42,38 @@ export default function App() {
     };
   }, [location.pathname, location.search]);
 
+  useEffect(() => {
+    if (location.pathname === "/login" || location.search.includes("auth=login")) {
+      openAuth("login");
+    }
+    if (location.pathname === "/register" || location.search.includes("auth=register")) {
+      openAuth("register");
+    }
+  }, [location.pathname, location.search]);
+
+  function openAuth(mode = "login") {
+    setAuthMode(mode);
+    setAuthOpen(true);
+  }
+
   return (
     <>
       <MotionChrome />
       <IntroBook />
       <Routes>
-        <Route element={<Layout user={user} onAuth={() => setAuthOpen(true)} />}>
+        <Route element={<Layout user={user} onAuth={() => openAuth("login")} />}>
           <Route index element={<HomePage />} />
+          <Route path="/login" element={<Navigate to="/" replace />} />
+          <Route path="/register" element={<Navigate to="/" replace />} />
+          <Route path="/verify-otp" element={<Navigate to="/login" replace />} />
           <Route path="/category" element={<Navigate to="/category/all" replace />} />
           <Route path="/category/:slug" element={<CategoryPage />} />
           <Route path="/books/:slug" element={<LegacyProductRedirect />} />
-          <Route path="/product/:slug" element={<ProductPage onAuth={() => setAuthOpen(true)} />} />
-          <Route path="/cart" element={<CartPage onAuth={() => setAuthOpen(true)} />} />
-          <Route path="/checkout" element={<CheckoutPage onAuth={() => setAuthOpen(true)} />} />
-          <Route path="/orders" element={<OrdersPage onAuth={() => setAuthOpen(true)} />} />
-          <Route path="/account" element={<AccountPage onAuth={() => setAuthOpen(true)} />} />
+          <Route path="/product/:slug" element={<ProductPage onAuth={() => openAuth("login")} />} />
+          <Route path="/cart" element={<CartPage onAuth={() => openAuth("login")} />} />
+          <Route path="/checkout" element={<CheckoutPage onAuth={() => openAuth("login")} />} />
+          <Route path="/orders" element={<OrdersPage onAuth={() => openAuth("login")} />} />
+          <Route path="/account" element={<AccountPage onAuth={() => openAuth("login")} />} />
           <Route path="/payment/result" element={<Navigate to="/payment-result" replace />} />
           <Route path="/payment-result" element={<PaymentResultPage />} />
           <Route path="/admin" element={<AdminLayout />}>
@@ -69,7 +87,7 @@ export default function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
-      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
+      <AuthModal open={authOpen} initialMode={authMode} onClose={() => setAuthOpen(false)} />
     </>
   );
 }
