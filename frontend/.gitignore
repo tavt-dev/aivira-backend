@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.vite/
+
+# Local environment files. Keep real secrets/config out of git.
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+
+# Commit env templates only.
+!.env.example
