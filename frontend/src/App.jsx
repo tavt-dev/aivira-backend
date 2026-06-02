@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import AuthModal from "./components/AuthModal.jsx";
+import IntroBook, { hasSeenIntro } from "./components/IntroBook.jsx";
 import Layout from "./components/Layout.jsx";
+import RequireAdmin from "./components/RequireAdmin.jsx";
 import AccountPage from "./pages/AccountPage.jsx";
 import CartPage from "./pages/CartPage.jsx";
 import CategoryPage from "./pages/CategoryPage.jsx";
@@ -11,6 +13,7 @@ import OrdersPage from "./pages/OrdersPage.jsx";
 import PaymentResultPage from "./pages/PaymentResultPage.jsx";
 import ProductPage from "./pages/ProductPage.jsx";
 import AdminCategoriesPage from "./pages/admin/AdminCategoriesPage.jsx";
+import AdminForbiddenPage from "./pages/admin/AdminForbiddenPage.jsx";
 import AdminLayout from "./pages/admin/AdminLayout.jsx";
 import AdminOrdersPendingPage from "./pages/admin/AdminOrdersPendingPage.jsx";
 import AdminPaymentsPage from "./pages/admin/AdminPaymentsPage.jsx";
@@ -23,7 +26,15 @@ export default function App() {
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState("login");
   const [user, setUser] = useState(getCurrentUser());
+  const [introDone, setIntroDone] = useState(hasSeenIntro);
   const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
+  const searchParams = new URLSearchParams(location.search);
+  const isAuthRequest = location.pathname === "/login"
+    || location.pathname === "/register"
+    || searchParams.get("auth") === "login"
+    || searchParams.get("auth") === "register";
+  const authNextPath = sanitizeNextPath(searchParams.get("next"));
 
   useEffect(() => {
     const sync = () => setUser(getCurrentUser());
@@ -32,6 +43,12 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    document.body.classList.toggle("admin-route", isAdminRoute);
+    return () => document.body.classList.remove("admin-route");
+  }, [isAdminRoute]);
+
+  useEffect(() => {
+    if (!introDone || isAdminRoute) return undefined;
     let cleanup = () => {};
     const timer = window.setTimeout(() => {
       cleanup = initMotionEffects(document);
@@ -40,27 +57,49 @@ export default function App() {
       window.clearTimeout(timer);
       cleanup();
     };
-  }, [location.pathname, location.search]);
+  }, [introDone, isAdminRoute, location.pathname, location.search]);
 
   useEffect(() => {
-    if (location.pathname === "/login" || location.search.includes("auth=login")) {
+    if ((!introDone && !isAuthRequest) || isAdminRoute) return;
+    if (location.pathname === "/login" || searchParams.get("auth") === "login") {
       openAuth("login");
     }
-    if (location.pathname === "/register" || location.search.includes("auth=register")) {
+    if (location.pathname === "/register" || searchParams.get("auth") === "register") {
       openAuth("register");
     }
-  }, [location.pathname, location.search]);
+  }, [introDone, isAuthRequest, isAdminRoute, location.pathname, location.search]);
 
   function openAuth(mode = "login") {
     setAuthMode(mode);
     setAuthOpen(true);
   }
 
+  if (!introDone && !isAdminRoute && !isAuthRequest) {
+    return <IntroBook onFinish={() => setIntroDone(true)} />;
+  }
+
   return (
     <>
-      <MotionChrome />
-      <IntroBook />
+      {!isAdminRoute && <MotionChrome />}
       <Routes>
+        <Route path="/admin/login" element={<Navigate to="/?auth=login&next=/admin/products" replace />} />
+        <Route path="/admin/forbidden" element={<AdminForbiddenPage />} />
+        <Route
+          path="/admin"
+          element={
+            <RequireAdmin>
+              <AdminLayout />
+            </RequireAdmin>
+          }
+        >
+          <Route index element={<Navigate to="/admin/products" replace />} />
+          <Route path="products" element={<AdminProductsPage />} />
+          <Route path="categories" element={<AdminCategoriesPage />} />
+          <Route path="payments" element={<AdminPaymentsPage />} />
+          <Route path="permissions" element={<AdminPermissionsPage />} />
+          <Route path="orders-pending" element={<AdminOrdersPendingPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
         <Route element={<Layout user={user} onAuth={() => openAuth("login")} />}>
           <Route index element={<HomePage />} />
           <Route path="/login" element={<Navigate to="/" replace />} />
@@ -76,20 +115,25 @@ export default function App() {
           <Route path="/account" element={<AccountPage onAuth={() => openAuth("login")} />} />
           <Route path="/payment/result" element={<Navigate to="/payment-result" replace />} />
           <Route path="/payment-result" element={<PaymentResultPage />} />
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<Navigate to="/admin/products" replace />} />
-            <Route path="products" element={<AdminProductsPage />} />
-            <Route path="categories" element={<AdminCategoriesPage />} />
-            <Route path="payments" element={<AdminPaymentsPage />} />
-            <Route path="permissions" element={<AdminPermissionsPage />} />
-            <Route path="orders-pending" element={<AdminOrdersPendingPage />} />
-          </Route>
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
-      <AuthModal open={authOpen} initialMode={authMode} onClose={() => setAuthOpen(false)} />
+      {!isAdminRoute && (
+        <AuthModal
+          open={authOpen}
+          initialMode={authMode}
+          nextPath={authNextPath}
+          onClose={() => setAuthOpen(false)}
+        />
+      )}
     </>
   );
+}
+
+function sanitizeNextPath(value) {
+  if (!value || typeof value !== "string") return "";
+  if (!value.startsWith("/") || value.startsWith("//")) return "";
+  return value;
 }
 
 function MotionChrome() {
@@ -108,12 +152,10 @@ function MotionChrome() {
       const pct = scrollable > 0 ? (window.scrollY / scrollable) * 100 : 0;
       setProgress(pct);
       setShowTop(window.scrollY > 600);
-      const heroAtmosphere = document.querySelector(".h-atmo");
-      if (heroAtmosphere) heroAtmosphere.style.transform = `translateY(${window.scrollY * 0.06}px)`;
     };
 
     const updateCursorState = (event) => {
-      const interactive = event.target.closest?.("a, button, .book-card, .cat-c, input, textarea, select");
+      const interactive = event.target.closest?.("a, button, input, textarea, select");
       const text = event.target.closest?.("input, textarea, select");
       cursorRef.current?.classList.toggle("c-hover", Boolean(interactive));
       ringRef.current?.classList.toggle("c-hover", Boolean(interactive));
@@ -152,28 +194,12 @@ function MotionChrome() {
     };
   }, []);
 
-  useEffect(() => {
-    const click = (event) => {
-      const button = event.target.closest?.(".btn-fill, .btn-buy, .n-cta, .auth-submit");
-      if (!button) return;
-      const rect = button.getBoundingClientRect();
-      const ripple = document.createElement("span");
-      ripple.className = "btn-ripple";
-      ripple.style.left = `${event.clientX - rect.left}px`;
-      ripple.style.top = `${event.clientY - rect.top}px`;
-      button.appendChild(ripple);
-      window.setTimeout(() => ripple.remove(), 780);
-    };
-    document.addEventListener("click", click);
-    return () => document.removeEventListener("click", click);
-  }, []);
-
   return (
     <>
       <div id="sprog" style={{ width: `${progress}%` }} />
       <div id="cur" ref={cursorRef} />
       <div id="cur-ring" ref={ringRef} />
-      <button id="btt" className={showTop ? "show" : ""} type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>↑</button>
+      <button id="btt" className={showTop ? "show" : ""} type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>Top</button>
     </>
   );
 }
@@ -183,74 +209,14 @@ function LegacyProductRedirect() {
   return <Navigate to={`/product/${slug}`} replace />;
 }
 
-function IntroBook() {
-  const [visible, setVisible] = useState(() => sessionStorage.getItem("aivira_intro_seen") !== "true");
-  const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    if (!visible) return undefined;
-    const timer = setTimeout(() => play(), 1500);
-    return () => clearTimeout(timer);
-  }, [visible]);
-
-  function play() {
-    if (open) return;
-    setOpen(true);
-    sessionStorage.setItem("aivira_intro_seen", "true");
-    setTimeout(() => setVisible(false), 2700);
-  }
-
-  if (!visible) return null;
-
-  return (
-    <div className={`intro ${open ? "intro-leave" : ""}`} onClick={play}>
-      <StarField count={150} />
-      <div className="intro-nebula" />
-      <div className="intro-scene">
-        <div className="ic">
-          <div className="is" />
-          <div className="ic-pages-edge" />
-          <div className={`ic-inner-text ${open ? "show" : ""}`}>
-            <div className="ici-logo">AIVIRA</div>
-            <div className="ici-div" />
-            <div className="ici-quote">Unlock your<br />new chapters</div>
-          </div>
-          <div className={`ic-cover ${open ? "open" : ""}`}>
-            <div className="ic-border" />
-            <StarField count={55} small />
-            <div className="ic-mark">A</div>
-            <div className="ic-logo">AIVIRA</div>
-            <div className="ic-sep" />
-            <div className="ic-tagline">Unlock your new chapters</div>
-          </div>
-          <div className={`ic-cover-back ${open ? "open" : ""}`} />
-        </div>
-      </div>
-      {!open && <div className="click-enter">Click anywhere to enter</div>}
-    </div>
-  );
-}
-
-function StarField({ count = 80, small = false }) {
-  const stars = useMemo(() => Array.from({ length: count }, (_, index) => ({
-    id: index,
-    left: `${Math.random() * 100}%`,
-    top: `${Math.random() * 100}%`,
-    size: `${(small ? 0.5 : 0.7) + Math.random() * (small ? 1.2 : 2)}px`,
-    delay: `${Math.random() * 5}s`,
-    duration: `${2 + Math.random() * 4}s`,
-    opacity: 0.16 + Math.random() * 0.58
-  })), [count, small]);
-
-  return (
-    <div className="stars">
-      {stars.map((star) => (
-        <i key={star.id} style={{ left: star.left, top: star.top, width: star.size, height: star.size, animationDelay: star.delay, animationDuration: star.duration, opacity: star.opacity }} />
-      ))}
-    </div>
-  );
-}
 
 function NotFoundPage() {
-  return <div className="page-shell"><div className="empty"><h3>Page not found</h3></div></div>;
+  return (
+    <div className="mx-auto w-full max-w-4xl px-4 pb-20 pt-28 text-center md:px-8">
+      <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-8 py-16">
+        <h1 className="font-serif text-4xl font-bold text-slate-950">Page not found</h1>
+      </div>
+    </div>
+  );
 }

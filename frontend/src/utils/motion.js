@@ -1,22 +1,5 @@
-const REVEAL_SELECTOR = [
-  ".section-head",
-  ".book-card",
-  ".cat-c",
-  ".hs-slide",
-  ".hiw-card",
-  ".p-card",
-  ".p-reviews",
-  ".panel",
-  ".table-card",
-  ".summary-box",
-  ".form-panel",
-  ".top-bar",
-  ".ab-vis",
-  ".sec-desc",
-  ".ab-list"
-].join(",");
-
-const TILT_SELECTOR = ".book-card, .cat-c";
+const REVEAL_SELECTOR = "[data-reveal]";
+const TILT_SELECTOR = "[data-tilt]";
 
 export function initMotionEffects(root = document) {
   const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;

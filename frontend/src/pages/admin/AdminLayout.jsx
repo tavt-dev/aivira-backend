@@ -1,17 +1,85 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { logout as logoutRequest } from "../../api/authApi.js";
+import { clearAuth, getCurrentUser, getRefreshToken } from "../../utils/storage.js";
+
+const links = [
+  ["/admin/products", "Products"],
+  ["/admin/categories", "Categories"],
+  ["/admin/payments", "Payments"],
+  ["/admin/permissions", "Permissions"],
+  ["/admin/orders-pending", "Orders"]
+];
 
 export default function AdminLayout() {
+  const [user, setUser] = useState(getCurrentUser());
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const sync = () => setUser(getCurrentUser());
+    window.addEventListener("aivira-auth", sync);
+    return () => window.removeEventListener("aivira-auth", sync);
+  }, []);
+
+  async function logout() {
+    const refreshToken = getRefreshToken();
+    try {
+      if (refreshToken) await logoutRequest(refreshToken);
+    } catch {
+      // Local logout still succeeds when the backend is offline.
+    }
+    clearAuth();
+    navigate("/?auth=login&next=/admin/products", { replace: true });
+  }
+
   return (
-    <div className="admin-page">
-      <aside className="admin-side">
-        <h2>AIVIRA ADMIN</h2>
-        <NavLink to="/admin/products">Products</NavLink>
-        <NavLink to="/admin/categories">Categories</NavLink>
-        <NavLink to="/admin/payments">Payments</NavLink>
-        <NavLink to="/admin/permissions">Permissions</NavLink>
-        <NavLink to="/admin/orders-pending">Orders</NavLink>
+    <div className="min-h-screen bg-slate-100 lg:grid lg:grid-cols-[260px_1fr]">
+      <aside className="sticky top-0 z-30 flex min-h-0 flex-col gap-2 border-b border-white/10 bg-slate-950 p-5 text-white lg:min-h-screen lg:border-b-0">
+        <Link to="/admin/products" className="mb-4 flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 font-serif text-xl font-bold">A</span>
+          <span className="font-serif text-2xl font-bold tracking-wider">AIVIRA ADMIN</span>
+        </Link>
+
+        <nav className="flex gap-2 overflow-x-auto lg:grid lg:overflow-visible">
+          {links.map(([to, label]) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                [
+                  "whitespace-nowrap rounded-xl px-4 py-3 text-sm font-bold text-white/65 transition-colors hover:bg-white/10 hover:text-white",
+                  isActive ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25" : ""
+                ].join(" ")
+              }
+            >
+              {label}
+            </NavLink>
+          ))}
+        </nav>
+
+        <Link className="mt-auto hidden rounded-xl px-4 py-3 text-sm font-bold text-white/55 transition-colors hover:bg-white/10 hover:text-white lg:block" to="/">
+          Back to bookstore
+        </Link>
       </aside>
-      <section className="admin-main">
+
+      <section className="min-w-0 p-5 md:p-8">
+        <header className="mb-6 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:flex-row md:items-center md:justify-between">
+          <div>
+            <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-600">Dashboard</span>
+            <h1 className="mt-2 font-serif text-3xl font-bold text-slate-950">Admin workspace</h1>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600">
+              {user?.username || user?.email || "Admin"}
+            </span>
+            <Link className="rounded-full border border-slate-200 px-4 py-2 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50" to="/">
+              Bookstore
+            </Link>
+            <button className="rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-blue-600" type="button" onClick={logout}>
+              Logout
+            </button>
+          </div>
+        </header>
         <Outlet />
       </section>
     </div>

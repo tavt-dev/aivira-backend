@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+
 import { getPaymentGroup, retryPayment } from "../api/paymentApi.js";
 import { formatVND } from "../utils/formatters.js";
 import { normalizePaymentGroup } from "../utils/mappers.js";
@@ -7,7 +8,8 @@ import { getAccessToken } from "../utils/storage.js";
 
 export default function PaymentResultPage() {
   const [params] = useSearchParams();
-  const code = params.get("paymentGroupCode") || params.get("vnp_TxnRef") || params.get("orderId") || "";
+  const code =
+    params.get("paymentGroupCode") || params.get("vnp_TxnRef") || params.get("orderId") || "";
   const [result, setResult] = useState(null);
   const [message, setMessage] = useState("");
 
@@ -16,7 +18,12 @@ export default function PaymentResultPage() {
       setMessage(code ? "Login with a backend session to lookup payment group status." : "");
       return;
     }
-    getPaymentGroup(code).then((data) => setResult(normalizePaymentGroup(data))).catch(() => setMessage("Payment group lookup unavailable. Status is pending or backend is not reachable."));
+
+    getPaymentGroup(code)
+      .then((data) => setResult(normalizePaymentGroup(data)))
+      .catch(() =>
+        setMessage("Payment group lookup unavailable. Status is pending or backend is not reachable.")
+      );
   }, [code]);
 
   async function retry() {
@@ -33,22 +40,63 @@ export default function PaymentResultPage() {
     }
   }
 
+  const paymentUrl = result?.paymentUrl || result?.deeplink || result?.qrCodeUrl;
+
   return (
-    <div className="page-shell">
+    <div className="mx-auto w-full max-w-4xl px-4 pb-20 pt-28 md:px-8">
       <PageHeader title="Payment Result" eyebrow="Provider callback and payment status" />
-      <div className="panel">
-        <p>Reference: {code || "No payment code in URL"}</p>
-        <p>Status: {result?.status || "Pending / unavailable"}</p>
-        <p>Method: {result?.method || "-"}</p>
-        <p>Amount: {formatVND(result?.totalAmount || 0)}</p>
-        {(result?.paymentUrl || result?.deeplink || result?.qrCodeUrl) && <a className="btn-fill" href={result.paymentUrl || result.deeplink || result.qrCodeUrl}>Continue payment</a>}
-        {code && getAccessToken() && <button className="btn-fill" onClick={retry}>Retry payment</button>}
-        {message && <div className="notice">{message}</div>}
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+        <div className="grid gap-4 text-slate-600">
+          <Info label="Reference" value={code || "No payment code in URL"} />
+          <Info label="Status" value={result?.status || "Pending / unavailable"} />
+          <Info label="Method" value={result?.method || "-"} />
+          <Info label="Amount" value={formatVND(result?.totalAmount || 0)} />
+        </div>
+        <div className="mt-8 flex flex-wrap gap-3">
+          {paymentUrl && (
+            <a
+              className="rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-600"
+              href={paymentUrl}
+            >
+              Continue payment
+            </a>
+          )}
+          {code && getAccessToken() && (
+            <button
+              className="rounded-full border border-slate-200 px-6 py-3 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-50"
+              type="button"
+              onClick={retry}
+            >
+              Retry payment
+            </button>
+          )}
+        </div>
+        {message && (
+          <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-700">
+            {message}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 function PageHeader({ title, eyebrow }) {
-  return <div className="page-header"><div className="sec-chip">{eyebrow}</div><h1>{title}</h1></div>;
+  return (
+    <div className="mb-8 border-b border-slate-200 pb-6">
+      <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-600">
+        {eyebrow}
+      </span>
+      <h1 className="mt-3 font-serif text-4xl font-bold text-slate-950 md:text-5xl">{title}</h1>
+    </div>
+  );
+}
+
+function Info({ label, value }) {
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-2xl bg-slate-50 p-4">
+      <span className="font-semibold text-slate-500">{label}</span>
+      <strong className="text-right text-slate-950">{value}</strong>
+    </div>
+  );
 }
