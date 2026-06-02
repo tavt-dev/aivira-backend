@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 
 import { addCartItem } from "../api/cartApi.js";
@@ -8,6 +9,7 @@ import { normalizeBook } from "../utils/mappers.js";
 import { getAccessToken } from "../utils/storage.js";
 
 export default function ProductPage({ onAuth }) {
+  const { t } = useTranslation();
   const { slug } = useParams();
   const [book, setBook] = useState(null);
   const [message, setMessage] = useState("");
@@ -26,14 +28,14 @@ export default function ProductPage({ onAuth }) {
       .catch((error) => {
         if (alive) {
           setBook(null);
-          setMessage(error.message || "Product not found or backend unavailable.");
+          setMessage(error.message || t("product.notFound"));
         }
       });
 
     return () => {
       alive = false;
     };
-  }, [slug]);
+  }, [slug, t]);
 
   async function addToCart() {
     if (!getAccessToken()) {
@@ -43,16 +45,16 @@ export default function ProductPage({ onAuth }) {
 
     const variationId = book.productVariationId || book.variations?.[0]?.id;
     if (!variationId) {
-      alert("This product has no backend variation to add to cart.");
+      alert(t("product.noVariation"));
       return;
     }
 
     try {
       await addCartItem({ productVariationId: variationId, quantity });
-      alert("Added to cart.");
+      alert(t("product.added"));
       window.dispatchEvent(new Event("aivira-cart"));
     } catch (error) {
-      alert(error.message || "Add to cart failed.");
+      alert(error.message || t("product.addFailed"));
     }
   }
 
@@ -61,7 +63,7 @@ export default function ProductPage({ onAuth }) {
       <div className="mx-auto w-full max-w-5xl px-4 pb-20 pt-28 md:px-8">
         <div className="rounded-3xl border border-slate-200 bg-white px-8 py-16 text-center shadow-sm">
           <h1 className="font-serif text-3xl font-bold text-slate-950">
-            {message || "Loading book..."}
+            {message || t("product.loading")}
           </h1>
         </div>
       </div>
@@ -74,11 +76,11 @@ export default function ProductPage({ onAuth }) {
     <div className="mx-auto w-full max-w-7xl px-4 pb-20 pt-28 md:px-8">
       <div className="mb-8 flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-500">
         <Link className="hover:text-blue-600" to="/">
-          Home
+          {t("common.home")}
         </Link>
         <span>/</span>
         <Link className="hover:text-blue-600" to={`/category/${book.cat || "all"}`}>
-          {book.catLabel || "Books"}
+          {book.catLabel || t("common.books")}
         </Link>
         <span>/</span>
         <span className="text-slate-900">{book.title}</span>
@@ -98,21 +100,21 @@ export default function ProductPage({ onAuth }) {
 
         <section className="flex min-w-0 flex-col justify-center">
           <span className="mb-4 inline-flex w-fit rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-600">
-            {book.catLabel || "Books"}
+            {book.catLabel || t("common.books")}
           </span>
           <h1 className="font-serif text-4xl font-bold leading-tight text-slate-950 md:text-6xl">
             {book.title}
           </h1>
-          <p className="mt-3 text-lg font-medium text-slate-500">by {book.author}</p>
+          <p className="mt-3 text-lg font-medium text-slate-500">{t("product.byAuthor", { author: book.author })}</p>
 
           <div className="mt-6 flex flex-wrap gap-3 text-sm font-bold text-slate-600">
             <span className="rounded-full bg-slate-100 px-4 py-2">
-              {Number(book.rating || 0).toFixed(1)} rating
+              {t("product.rating", { rating: Number(book.rating || 0).toFixed(1) })}
             </span>
             <span className="rounded-full bg-slate-100 px-4 py-2">
-              {formatSold(book.sold)} sold
+              {t("product.sold", { sold: formatSold(book.sold) })}
             </span>
-            <span className="rounded-full bg-slate-100 px-4 py-2">Backend catalog</span>
+            <span className="rounded-full bg-slate-100 px-4 py-2">{t("product.backendCatalog")}</span>
           </div>
 
           <div className="mt-8 flex flex-wrap items-end gap-4">
@@ -126,18 +128,18 @@ export default function ProductPage({ onAuth }) {
             </span>
             {hasDiscount && (
               <span className="rounded-full bg-orange-50 px-3 py-1 text-sm font-bold text-orange-600">
-                {discount(book)}% off
+                {t("product.off", { discount: discount(book) })}
               </span>
             )}
           </div>
 
           <p className="mt-8 max-w-2xl text-base leading-7 text-slate-600">
-            {book.desc || "No description has been added for this book yet."}
+            {book.desc || t("product.noDescription")}
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <label className="flex items-center gap-3 text-sm font-bold text-slate-600">
-              Quantity
+              {t("product.quantity")}
               <input
                 type="number"
                 min="1"
@@ -154,13 +156,13 @@ export default function ProductPage({ onAuth }) {
               onClick={addToCart}
               className="rounded-full bg-slate-950 px-7 py-4 text-sm font-bold text-white transition-colors hover:bg-blue-600"
             >
-              Add To Cart
+              {t("product.addToCart")}
             </button>
             <Link
               to="/checkout"
               className="rounded-full border border-slate-200 px-7 py-4 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-50"
             >
-              Checkout
+              {t("product.checkout")}
             </Link>
           </div>
         </section>
@@ -172,11 +174,12 @@ export default function ProductPage({ onAuth }) {
 }
 
 function Reviews() {
+  const { t } = useTranslation();
   return (
     <section className="mt-10 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-      <h2 className="font-serif text-3xl font-bold text-slate-950">Customer Reviews</h2>
+      <h2 className="font-serif text-3xl font-bold text-slate-950">{t("product.reviews")}</h2>
       <div className="mt-4 rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm font-semibold text-blue-700">
-        Review API is not implemented in the backend yet.
+        {t("product.reviewsPending")}
       </div>
     </section>
   );

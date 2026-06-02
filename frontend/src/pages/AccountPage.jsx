@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { getSessions, logoutAll, revokeSession } from "../api/authApi.js";
 import {
@@ -22,6 +23,7 @@ const emptyAddress = {
 };
 
 export default function AccountPage({ onAuth }) {
+  const { t } = useTranslation();
   const [profile, setProfile] = useState(getCurrentUser());
   const [profileForm, setProfileForm] = useState({ firstName: "", lastName: "", gender: "" });
   const [passwordForm, setPasswordForm] = useState({
@@ -53,7 +55,7 @@ export default function AccountPage({ onAuth }) {
         gender: data?.gender || "",
       });
     } catch (error) {
-      setMessage(error.message || "Could not load backend profile.");
+      setMessage(error.message || t("account.profileLoadFailed"));
     }
   }
 
@@ -62,7 +64,7 @@ export default function AccountPage({ onAuth }) {
       const rows = await getAddresses();
       setAddresses(rows || []);
     } catch (error) {
-      setMessage(error.message || "Could not load backend addresses.");
+      setMessage(error.message || t("account.addressesLoadFailed"));
     }
   }
 
@@ -70,16 +72,16 @@ export default function AccountPage({ onAuth }) {
     event.preventDefault();
     setMessage("");
     if (!getAccessToken()) {
-      setMessage("Login required to update profile.");
+      setMessage(t("account.loginUpdateProfile"));
       return;
     }
     try {
       const updated = await updateProfile({ ...profileForm, gender: profileForm.gender || null });
       setProfile(updated);
       saveCurrentUser(updated);
-      setMessage("Profile updated.");
+      setMessage(t("account.profileUpdated"));
     } catch (error) {
-      setMessage(error.message || "Profile update failed.");
+      setMessage(error.message || t("account.profileUpdateFailed"));
     }
   }
 
@@ -91,9 +93,9 @@ export default function AccountPage({ onAuth }) {
       const updated = await updateAvatar(file);
       setProfile(updated);
       saveCurrentUser(updated);
-      setMessage("Avatar updated.");
+      setMessage(t("account.avatarUpdated"));
     } catch (error) {
-      setMessage(error.message || "Avatar update failed.");
+      setMessage(error.message || t("account.avatarFailed"));
     }
   }
 
@@ -101,15 +103,15 @@ export default function AccountPage({ onAuth }) {
     event.preventDefault();
     setMessage("");
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setMessage("Confirm password does not match.");
+      setMessage(t("account.confirmMismatch"));
       return;
     }
     try {
       await changePassword(passwordForm);
       setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
-      setMessage("Password changed. Other sessions may be revoked by backend.");
+      setMessage(t("account.passwordChanged"));
     } catch (error) {
-      setMessage(error.message || "Password change failed.");
+      setMessage(error.message || t("account.passwordFailed"));
     }
   }
 
@@ -117,7 +119,7 @@ export default function AccountPage({ onAuth }) {
     event.preventDefault();
     setMessage("");
     if (!getAccessToken()) {
-      setMessage("Login required to save addresses.");
+      setMessage(t("account.loginSaveAddress"));
       return;
     }
     try {
@@ -130,9 +132,9 @@ export default function AccountPage({ onAuth }) {
       setAddresses(next);
       setEditingAddressId(null);
       setAddressForm(emptyAddress);
-      setMessage("Address saved.");
+      setMessage(t("account.addressSaved"));
     } catch (error) {
-      setMessage(error.message || "Address save failed.");
+      setMessage(error.message || t("account.addressFailed"));
     }
   }
 
@@ -152,7 +154,7 @@ export default function AccountPage({ onAuth }) {
   async function makeDefault(address) {
     setMessage("");
     if (!getAccessToken()) {
-      setMessage("Login required to update addresses.");
+      setMessage(t("account.loginUpdateAddress"));
       return;
     }
     try {
@@ -163,24 +165,24 @@ export default function AccountPage({ onAuth }) {
           defaultAddress: item.id === updated.id || item.id === address.id,
         }))
       );
-      setMessage("Default address updated.");
+      setMessage(t("account.defaultUpdated"));
     } catch (error) {
-      setMessage(error.message || "Set default address failed.");
+      setMessage(error.message || t("account.defaultFailed"));
     }
   }
 
   async function removeAddress(address) {
     setMessage("");
     if (!getAccessToken()) {
-      setMessage("Login required to delete addresses.");
+      setMessage(t("account.loginDeleteAddress"));
       return;
     }
     try {
       await deleteAddress(address.id);
       setAddresses((current) => current.filter((item) => item.id !== address.id));
-      setMessage("Address deleted.");
+      setMessage(t("account.addressDeleted"));
     } catch (error) {
-      setMessage(error.message || "Delete address failed.");
+      setMessage(error.message || t("account.deleteFailed"));
     }
   }
 
@@ -191,9 +193,9 @@ export default function AccountPage({ onAuth }) {
       setSessions((current) =>
         current.filter((item) => item.sessionId !== sessionId && item.id !== sessionId)
       );
-      setMessage("Session revoked.");
+      setMessage(t("account.sessionRevoked"));
     } catch (error) {
-      setMessage(error.message || "Revoke session failed.");
+      setMessage(error.message || t("account.revokeFailed"));
     }
   }
 
@@ -202,33 +204,33 @@ export default function AccountPage({ onAuth }) {
     try {
       await logoutAll();
       setSessions([]);
-      setMessage("All sessions logged out.");
+      setMessage(t("account.loggedOutAll"));
     } catch (error) {
-      setMessage(error.message || "Logout all failed.");
+      setMessage(error.message || t("account.logoutAllFailed"));
     }
   }
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 pb-20 pt-28 md:px-8">
-      <PageHeader title="Account" eyebrow="Profile, sessions, and address book" />
+      <PageHeader title={t("account.title")} eyebrow={t("account.eyebrow")} />
       {message && <Notice>{message}</Notice>}
 
       {!profile ? (
         <EmptyState
-          title="Please login to manage your account"
+          title={t("account.loginRequired")}
           action={
             <button
               type="button"
               className="rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-600"
               onClick={onAuth}
             >
-              Login
+              {t("common.login")}
             </button>
           }
         />
       ) : (
         <div className="grid gap-8 lg:grid-cols-2">
-          <Panel title="Profile">
+          <Panel title={t("account.profile")}>
             <div className="flex items-center gap-4">
               {profile.avatarUrl ? (
                 <img
@@ -245,7 +247,7 @@ export default function AccountPage({ onAuth }) {
                 <p className="truncate font-bold text-slate-950">
                   {profile.username || profile.email}
                 </p>
-                <p className="truncate text-sm text-slate-500">{profile.email || "Aivira account"}</p>
+                <p className="truncate text-sm text-slate-500">{profile.email || t("account.aiviraAccount")}</p>
               </div>
             </div>
 
@@ -256,14 +258,14 @@ export default function AccountPage({ onAuth }) {
                   onChange={(event) =>
                     setProfileForm({ ...profileForm, firstName: event.target.value })
                   }
-                  placeholder="First name"
+                  placeholder={t("account.firstName")}
                 />
                 <Input
                   value={profileForm.lastName}
                   onChange={(event) =>
                     setProfileForm({ ...profileForm, lastName: event.target.value })
                   }
-                  placeholder="Last name"
+                  placeholder={t("account.lastName")}
                 />
               </div>
               <select
@@ -271,18 +273,18 @@ export default function AccountPage({ onAuth }) {
                 onChange={(event) => setProfileForm({ ...profileForm, gender: event.target.value })}
                 className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
               >
-                <option value="">Gender</option>
-                <option value="MALE">Male</option>
-                <option value="FEMALE">Female</option>
-                <option value="OTHER">Other</option>
+                <option value="">{t("account.gender")}</option>
+                <option value="MALE">{t("account.male")}</option>
+                <option value="FEMALE">{t("account.female")}</option>
+                <option value="OTHER">{t("account.other")}</option>
               </select>
-              <Button type="submit">Save profile</Button>
+              <Button type="submit">{t("account.saveProfile")}</Button>
             </form>
 
             {getAccessToken() && (
               <div className="mt-8 grid gap-6 border-t border-slate-100 pt-6">
                 <label className="grid gap-2 text-sm font-bold text-slate-600">
-                  Avatar
+                  {t("account.avatar")}
                   <input
                     type="file"
                     accept="image/*"
@@ -291,15 +293,15 @@ export default function AccountPage({ onAuth }) {
                   />
                 </label>
 
-                <form className="grid gap-4" onSubmit={savePassword}>
-                  <h3 className="font-serif text-2xl font-bold text-slate-950">Password</h3>
+                <form id="password" className="scroll-mt-28 grid gap-4" onSubmit={savePassword}>
+                  <h3 className="font-serif text-2xl font-bold text-slate-950">{t("account.password")}</h3>
                   <Input
                     type="password"
                     value={passwordForm.currentPassword}
                     onChange={(event) =>
                       setPasswordForm({ ...passwordForm, currentPassword: event.target.value })
                     }
-                    placeholder="Current password"
+                    placeholder={t("account.currentPassword")}
                     required
                   />
                   <Input
@@ -308,7 +310,7 @@ export default function AccountPage({ onAuth }) {
                     onChange={(event) =>
                       setPasswordForm({ ...passwordForm, newPassword: event.target.value })
                     }
-                    placeholder="New password"
+                    placeholder={t("account.newPassword")}
                     required
                   />
                   <Input
@@ -317,18 +319,18 @@ export default function AccountPage({ onAuth }) {
                     onChange={(event) =>
                       setPasswordForm({ ...passwordForm, confirmPassword: event.target.value })
                     }
-                    placeholder="Confirm password"
+                    placeholder={t("account.confirmPassword")}
                     required
                   />
                   <Button secondary type="submit">
-                    Change password
+                    {t("account.changePassword")}
                   </Button>
                 </form>
               </div>
             )}
           </Panel>
 
-          <Panel title="Addresses">
+          <Panel title={t("account.addresses")}>
             <div className="grid gap-3">
               {addresses.length ? (
                 addresses.map((address) => (
@@ -343,27 +345,27 @@ export default function AccountPage({ onAuth }) {
                           {address.city || ""}
                         </p>
                         <span className="mt-2 inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-600">
-                          {address.defaultAddress ? "Default" : "Saved"}
+                          {address.defaultAddress ? t("common.default") : t("common.saved")}
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        <SmallButton onClick={() => editAddress(address)}>Edit</SmallButton>
-                        <SmallButton onClick={() => makeDefault(address)}>Default</SmallButton>
+                        <SmallButton onClick={() => editAddress(address)}>{t("common.edit")}</SmallButton>
+                        <SmallButton onClick={() => makeDefault(address)}>{t("common.default")}</SmallButton>
                         <SmallButton danger onClick={() => removeAddress(address)}>
-                          Delete
+                          {t("common.delete")}
                         </SmallButton>
                       </div>
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-slate-500">No saved addresses.</p>
+                <p className="text-sm text-slate-500">{t("account.noAddresses")}</p>
               )}
             </div>
 
             <form className="mt-8 grid gap-4 border-t border-slate-100 pt-6" onSubmit={saveAddress}>
               <h3 className="font-serif text-2xl font-bold text-slate-950">
-                {editingAddressId ? "Edit address" : "Add address"}
+                {editingAddressId ? t("account.editAddress") : t("account.addAddress")}
               </h3>
               <div className="grid gap-4 md:grid-cols-2">
                 <Input
@@ -371,7 +373,7 @@ export default function AccountPage({ onAuth }) {
                   onChange={(event) =>
                     setAddressForm({ ...addressForm, recipientName: event.target.value })
                   }
-                  placeholder="Recipient name"
+                  placeholder={t("checkout.recipientName")}
                   required
                 />
                 <Input
@@ -379,7 +381,7 @@ export default function AccountPage({ onAuth }) {
                   onChange={(event) =>
                     setAddressForm({ ...addressForm, phoneNumber: event.target.value })
                   }
-                  placeholder="Phone number"
+                  placeholder={t("checkout.phoneNumber")}
                   required
                 />
               </div>
@@ -388,26 +390,26 @@ export default function AccountPage({ onAuth }) {
                 onChange={(event) =>
                   setAddressForm({ ...addressForm, addressLine: event.target.value })
                 }
-                placeholder="Address line"
+                placeholder={t("checkout.addressLine")}
                 required
               />
               <div className="grid gap-4 md:grid-cols-3">
                 <Input
                   value={addressForm.ward}
                   onChange={(event) => setAddressForm({ ...addressForm, ward: event.target.value })}
-                  placeholder="Ward"
+                  placeholder={t("checkout.ward")}
                 />
                 <Input
                   value={addressForm.district}
                   onChange={(event) =>
                     setAddressForm({ ...addressForm, district: event.target.value })
                   }
-                  placeholder="District"
+                  placeholder={t("checkout.district")}
                 />
                 <Input
                   value={addressForm.city}
                   onChange={(event) => setAddressForm({ ...addressForm, city: event.target.value })}
-                  placeholder="City"
+                  placeholder={t("checkout.city")}
                 />
               </div>
               <label className="flex items-center gap-2 text-sm font-semibold text-slate-600">
@@ -418,14 +420,14 @@ export default function AccountPage({ onAuth }) {
                     setAddressForm({ ...addressForm, defaultAddress: event.target.checked })
                   }
                 />
-                Default address
+                {t("account.defaultAddress")}
               </label>
-              <Button type="submit">{editingAddressId ? "Update address" : "Add address"}</Button>
+              <Button type="submit">{editingAddressId ? t("account.updateAddress") : t("account.addAddress")}</Button>
             </form>
 
             {getAccessToken() && (
               <div className="mt-8 grid gap-4 border-t border-slate-100 pt-6">
-                <h3 className="font-serif text-2xl font-bold text-slate-950">Sessions</h3>
+                <h3 className="font-serif text-2xl font-bold text-slate-950">{t("account.sessions")}</h3>
                 {sessions.length ? (
                   sessions.map((session) => (
                     <div
@@ -434,25 +436,25 @@ export default function AccountPage({ onAuth }) {
                     >
                       <span className="text-sm text-slate-600">
                         <strong className="block text-slate-950">
-                          {session.deviceInfo || "Device"}
+                          {session.deviceInfo || t("account.device")}
                         </strong>
                         {session.ipAddress || ""}
                       </span>
                       <div className="flex items-center gap-2">
                         <small className="rounded-full bg-slate-200 px-2 py-1 text-xs font-bold text-slate-600">
-                          {session.current ? "Current" : "Active"}
+                          {session.current ? t("common.current") : t("common.active")}
                         </small>
                         <SmallButton onClick={() => revoke(session.sessionId || session.id)}>
-                          Revoke
+                          {t("account.revoke")}
                         </SmallButton>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-slate-500">No session data loaded.</p>
+                  <p className="text-sm text-slate-500">{t("account.noSessions")}</p>
                 )}
                 <Button secondary type="button" onClick={logoutEverywhere}>
-                  Logout all sessions
+                  {t("account.logoutAll")}
                 </Button>
               </div>
             )}

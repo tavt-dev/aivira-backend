@@ -1,18 +1,25 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Compass, Menu, Search, ShoppingBag, User } from "lucide-react";
+import { ChevronDown, Compass, KeyRound, LogOut, Menu, Moon, Search, Settings, ShoppingBag, Sun, User, UserCircle } from "lucide-react";
 import { logout as logoutRequest } from "../api/authApi.js";
 import { getCart } from "../api/cartApi.js";
 import { getProducts } from "../api/catalogApi.js";
+import LanguageSwitcher from "./LanguageSwitcher.jsx";
 import { normalizeBook, pageRows } from "../utils/mappers.js";
 import { clearAuth, getAccessToken, getRefreshToken } from "../utils/storage.js";
+import { getTheme, toggleTheme } from "../utils/theme.js";
 
 export default function Navbar({ solid, user, onAuth }) {
+  const { t } = useTranslation();
   const [scrolled, setScrolled] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [cartCount, setCartCount] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [theme, setThemeState] = useState(getTheme);
+  const userMenuRef = useRef(null);
   const navigate = useNavigate();
   const isSolid = solid || scrolled;
 
@@ -24,6 +31,29 @@ export default function Navbar({ solid, user, onAuth }) {
     handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    function closeOnOutside(event) {
+      if (!userMenuRef.current?.contains(event.target)) setUserMenuOpen(false);
+    }
+
+    function closeOnEscape(event) {
+      if (event.key === "Escape") setUserMenuOpen(false);
+    }
+
+    document.addEventListener("mousedown", closeOnOutside);
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("mousedown", closeOnOutside);
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, []);
+
+  useEffect(() => {
+    const syncTheme = (event) => setThemeState(event.detail?.theme || getTheme());
+    window.addEventListener("aivira-theme", syncTheme);
+    return () => window.removeEventListener("aivira-theme", syncTheme);
   }, []);
 
   useEffect(() => {
@@ -85,6 +115,7 @@ export default function Navbar({ solid, user, onAuth }) {
     clearAuth();
     navigate("/");
     setMobileOpen(false);
+    setUserMenuOpen(false);
   }
 
   function submitSearch(event) {
@@ -95,6 +126,7 @@ export default function Navbar({ solid, user, onAuth }) {
     navigate(`/category/all?search=${encodeURIComponent(keyword)}`);
     setResults([]);
     setMobileOpen(false);
+    setUserMenuOpen(false);
   }
 
   function closePanels() {
@@ -104,6 +136,12 @@ export default function Navbar({ solid, user, onAuth }) {
 
   const navTextClass = isSolid ? "text-slate-600" : "text-white/85";
   const activeTextClass = isSolid ? "text-blue-600" : "text-white";
+  const displayName = user?.username || user?.email || t("nav.reader");
+  const isDark = theme === "dark";
+
+  function switchTheme() {
+    setThemeState(toggleTheme());
+  }
 
   return (
     <nav
@@ -144,7 +182,7 @@ export default function Navbar({ solid, user, onAuth }) {
               type="text"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search books by title or author..."
+              placeholder={t("nav.searchPlaceholder")}
               className={[
                 "w-full rounded-full border py-2.5 pl-11 pr-5 text-sm font-medium transition-all duration-300 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-blue-500/30",
                 isSolid
@@ -157,7 +195,7 @@ export default function Navbar({ solid, user, onAuth }) {
           {results.length > 0 && (
             <div className="absolute top-[calc(100%+12px)] z-50 w-full origin-top overflow-hidden rounded-2xl border border-slate-100/80 bg-white/95 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.18)] backdrop-blur-xl transition-all duration-300">
               <div className="border-b border-slate-100 bg-slate-50/70 px-4 py-3">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Top Results</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">{t("nav.topResults")}</span>
               </div>
               <div className="p-2">
                 {results.map((book) => (
@@ -191,7 +229,7 @@ export default function Navbar({ solid, user, onAuth }) {
                   onClick={submitSearch}
                   className="w-full rounded-lg py-2.5 text-center text-sm font-semibold text-blue-600 transition-colors hover:bg-blue-50"
                 >
-                  View all results for "{query}"
+                  {t("nav.viewAllResults", { query })}
                 </button>
               </div>
             </div>
@@ -201,16 +239,16 @@ export default function Navbar({ solid, user, onAuth }) {
         <div className={["hidden items-center gap-8 transition-colors duration-500 md:flex", navTextClass].join(" ")}>
           <div className="flex items-center gap-6 text-sm font-bold tracking-wide">
             <NavLink to="/" className={({ isActive }) => ["group relative flex items-center gap-2 transition-colors hover:text-blue-500", isActive ? activeTextClass : ""].join(" ")}>
-              <span>Home</span>
+              <span>{t("common.home")}</span>
               <span className="absolute -bottom-1.5 left-0 h-[2px] w-full origin-left scale-x-0 rounded-full bg-blue-500 transition-transform group-hover:scale-x-100" />
             </NavLink>
             <NavLink to="/category/all" className={({ isActive }) => ["group relative flex items-center gap-2 transition-colors hover:text-blue-500", isActive ? activeTextClass : ""].join(" ")}>
               <Compass className="h-4 w-4 opacity-70 transition-opacity group-hover:opacity-100" />
-              <span>Explore</span>
+              <span>{t("common.explore")}</span>
               <span className="absolute -bottom-1.5 left-0 h-[2px] w-full origin-left scale-x-0 rounded-full bg-blue-500 transition-transform group-hover:scale-x-100" />
             </NavLink>
             <NavLink to="/orders" className={({ isActive }) => ["group relative flex items-center gap-2 transition-colors hover:text-blue-500", isActive ? activeTextClass : ""].join(" ")}>
-              <span>Orders</span>
+              <span>{t("common.orders")}</span>
               <span className="absolute -bottom-1.5 left-0 h-[2px] w-full origin-left scale-x-0 rounded-full bg-blue-500 transition-transform group-hover:scale-x-100" />
             </NavLink>
           </div>
@@ -227,22 +265,57 @@ export default function Navbar({ solid, user, onAuth }) {
 
             <div className={["h-6 w-px opacity-30", isSolid ? "bg-slate-300" : "bg-white"].join(" ")} />
 
+            <LanguageSwitcher compact inverted={!isSolid} />
+
             {user ? (
-              <a
-                href="/"
-                onClick={logout}
-                className={[
-                  "flex items-center gap-2 rounded-full border p-1.5 pl-2 pr-4 transition-all duration-300 hover:shadow-md",
-                  isSolid ? "border-slate-200 bg-white text-slate-700 hover:border-slate-300" : "border-white/20 bg-white/10 text-white hover:bg-white/20"
-                ].join(" ")}
-              >
-                <div className={["flex h-6 w-6 items-center justify-center rounded-full", isSolid ? "bg-slate-100" : "bg-white/20"].join(" ")}>
-                  <User className="h-3.5 w-3.5" />
-                </div>
-                <span className="max-w-[150px] truncate text-sm font-bold">
-                  {user.username || user.email || "Reader"} / Logout
-                </span>
-              </a>
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setUserMenuOpen((value) => !value)}
+                  className={[
+                    "flex items-center gap-2 rounded-full border p-1.5 pl-2 pr-3 transition-all duration-300 hover:shadow-md",
+                    isSolid ? "border-slate-200 bg-white text-slate-700 hover:border-slate-300" : "border-white/20 bg-white/10 text-white hover:bg-white/20"
+                  ].join(" ")}
+                  aria-expanded={userMenuOpen}
+                >
+                  <div className={["flex h-7 w-7 items-center justify-center rounded-full", isSolid ? "bg-slate-100" : "bg-white/20"].join(" ")}>
+                    <User className="h-4 w-4" />
+                  </div>
+                  <span className="max-w-[140px] truncate text-sm font-bold">
+                    {t("nav.greeting", { name: displayName })}
+                  </span>
+                  <ChevronDown className={["h-4 w-4 transition-transform", userMenuOpen ? "rotate-180" : ""].join(" ")} />
+                </button>
+
+                {userMenuOpen && (
+                  <div className="absolute right-0 top-[calc(100%+12px)] z-50 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 text-slate-700 shadow-2xl shadow-slate-950/15">
+                    <div className="mb-1 rounded-xl bg-slate-50 px-3 py-3">
+                      <p className="truncate text-sm font-black text-slate-950">{displayName}</p>
+                      <p className="mt-0.5 truncate text-xs font-semibold text-slate-500">{user.email || t("account.aiviraAccount")}</p>
+                    </div>
+                    <UserMenuLink to="/account" icon={UserCircle} label={t("common.account")} onClick={closePanels} />
+                    <UserMenuLink to="/account" icon={Settings} label={t("common.settings")} onClick={closePanels} />
+                    <UserMenuLink to="/account#password" icon={KeyRound} label={t("common.changePassword")} onClick={closePanels} />
+                    <button
+                      type="button"
+                      onClick={switchTheme}
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-bold transition-colors hover:bg-slate-100"
+                    >
+                      {isDark ? <Sun className="h-4 w-4 text-amber-500" /> : <Moon className="h-4 w-4 text-slate-500" />}
+                      <span>{isDark ? t("common.lightMode") : t("common.darkMode")}</span>
+                    </button>
+                    <div className="my-1 h-px bg-slate-100" />
+                    <button
+                      type="button"
+                      onClick={logout}
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-bold text-red-600 transition-colors hover:bg-red-50"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>{t("common.logout")}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <button
                 type="button"
@@ -255,7 +328,7 @@ export default function Navbar({ solid, user, onAuth }) {
                 <div className={["flex h-6 w-6 items-center justify-center rounded-full", isSolid ? "bg-slate-100" : "bg-white/20"].join(" ")}>
                   <User className="h-3.5 w-3.5" />
                 </div>
-                <span className="text-sm font-bold">Login</span>
+                <span className="text-sm font-bold">{t("common.login")}</span>
               </button>
             )}
           </div>
@@ -274,7 +347,7 @@ export default function Navbar({ solid, user, onAuth }) {
             type="button"
             onClick={() => setMobileOpen((value) => !value)}
             className={["rounded-lg p-2 transition-colors", isSolid ? "text-slate-900 hover:bg-slate-100" : "bg-white/80 text-slate-900 hover:bg-white"].join(" ")}
-            aria-label="Toggle menu"
+            aria-label={t("nav.toggleMenu")}
           >
             <Menu className="h-6 w-6" />
           </button>
@@ -289,7 +362,7 @@ export default function Navbar({ solid, user, onAuth }) {
               type="text"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search books..."
+              placeholder={t("nav.searchMobilePlaceholder")}
               className="w-full rounded-full border border-slate-200 bg-slate-50 py-2.5 pl-11 pr-4 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/30"
             />
           </form>
@@ -309,13 +382,32 @@ export default function Navbar({ solid, user, onAuth }) {
           )}
 
           <div className="grid gap-2 text-sm font-bold text-slate-700">
-            <NavLink to="/" onClick={closePanels} className="rounded-xl px-3 py-2 hover:bg-slate-100">Home</NavLink>
-            <NavLink to="/category/all" onClick={closePanels} className="rounded-xl px-3 py-2 hover:bg-slate-100">Categories</NavLink>
-            <NavLink to="/orders" onClick={closePanels} className="rounded-xl px-3 py-2 hover:bg-slate-100">Orders</NavLink>
+            <NavLink to="/" onClick={closePanels} className="rounded-xl px-3 py-2 hover:bg-slate-100">{t("common.home")}</NavLink>
+            <NavLink to="/category/all" onClick={closePanels} className="rounded-xl px-3 py-2 hover:bg-slate-100">{t("common.categories")}</NavLink>
+            <NavLink to="/orders" onClick={closePanels} className="rounded-xl px-3 py-2 hover:bg-slate-100">{t("common.orders")}</NavLink>
+            <div className="px-3 py-2">
+              <LanguageSwitcher compact />
+            </div>
             {user ? (
-              <a href="/" onClick={logout} className="rounded-xl px-3 py-2 text-blue-600 hover:bg-blue-50">
-                Hi, {user.username || user.email || "Reader"} / Logout
-              </a>
+              <>
+                <div className="rounded-xl bg-slate-50 px-3 py-3">
+                  <p className="truncate text-sm font-black text-slate-950">{displayName}</p>
+                  <p className="mt-0.5 truncate text-xs text-slate-500">{user.email || t("account.aiviraAccount")}</p>
+                </div>
+                <NavLink to="/account" onClick={closePanels} className="rounded-xl px-3 py-2 hover:bg-slate-100">{t("common.account")}</NavLink>
+                <NavLink to="/account" onClick={closePanels} className="rounded-xl px-3 py-2 hover:bg-slate-100">{t("common.settings")}</NavLink>
+                <NavLink to="/account#password" onClick={closePanels} className="rounded-xl px-3 py-2 hover:bg-slate-100">{t("common.changePassword")}</NavLink>
+                <button
+                  type="button"
+                  onClick={switchTheme}
+                  className="rounded-xl px-3 py-2 text-left hover:bg-slate-100"
+                >
+                  {isDark ? t("common.lightMode") : t("common.darkMode")}
+                </button>
+                <button type="button" onClick={logout} className="rounded-xl px-3 py-2 text-left text-red-600 hover:bg-red-50">
+                  {t("common.logout")}
+                </button>
+              </>
             ) : (
               <button
                 type="button"
@@ -325,12 +417,25 @@ export default function Navbar({ solid, user, onAuth }) {
                 }}
                 className="rounded-xl px-3 py-2 text-left text-blue-600 hover:bg-blue-50"
               >
-                Login
+                {t("common.login")}
               </button>
             )}
           </div>
         </div>
       )}
     </nav>
+  );
+}
+
+function UserMenuLink({ to, icon: Icon, label, onClick }) {
+  return (
+    <Link
+      to={to}
+      onClick={onClick}
+      className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition-colors hover:bg-slate-100"
+    >
+      <Icon className="h-4 w-4 text-slate-500" />
+      <span>{label}</span>
+    </Link>
   );
 }

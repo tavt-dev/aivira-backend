@@ -1,13 +1,16 @@
+import { useTranslation } from "react-i18next";
+
 export default function AdminOrdersPendingPage() {
+  const { t } = useTranslation();
   return (
     <div className="grid gap-8">
-      <PageHeader title="Admin Orders" eyebrow="Backend pending" />
+      <PageHeader title={t("admin.ordersTitle")} eyebrow={t("admin.backendPending")} />
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <h3 className="font-serif text-3xl font-bold text-slate-950">
-          Backend pending: /admin/orders/** is not implemented yet.
+          {t("admin.ordersPendingTitle")}
         </h3>
         <p className="mt-3 max-w-2xl text-slate-500">
-          The frontend route is ready and can be wired when backend admin order lifecycle lands.
+          {t("admin.ordersPendingCopy")}
         </p>
       </section>
     </div>

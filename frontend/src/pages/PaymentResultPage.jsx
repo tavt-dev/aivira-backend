@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 
 import { getPaymentGroup, retryPayment } from "../api/paymentApi.js";
@@ -7,6 +8,7 @@ import { normalizePaymentGroup } from "../utils/mappers.js";
 import { getAccessToken } from "../utils/storage.js";
 
 export default function PaymentResultPage() {
+  const { t } = useTranslation();
   const [params] = useSearchParams();
   const code =
     params.get("paymentGroupCode") || params.get("vnp_TxnRef") || params.get("orderId") || "";
@@ -15,16 +17,16 @@ export default function PaymentResultPage() {
 
   useEffect(() => {
     if (!code || !getAccessToken()) {
-      setMessage(code ? "Login with a backend session to lookup payment group status." : "");
+      setMessage(code ? t("payment.loginLookup") : "");
       return;
     }
 
     getPaymentGroup(code)
       .then((data) => setResult(normalizePaymentGroup(data)))
       .catch(() =>
-        setMessage("Payment group lookup unavailable. Status is pending or backend is not reachable.")
+        setMessage(t("payment.lookupUnavailable"))
       );
-  }, [code]);
+  }, [code, t]);
 
   async function retry() {
     setMessage("");
@@ -34,9 +36,9 @@ export default function PaymentResultPage() {
       setResult(normalized);
       const url = normalized.paymentUrl || normalized.deeplink || normalized.qrCodeUrl;
       if (url) window.location.href = url;
-      else setMessage("Retry requested. Payment URL is pending from backend.");
+      else setMessage(t("payment.retryPending"));
     } catch (error) {
-      setMessage(error.message || "Payment retry failed.");
+      setMessage(error.message || t("payment.retryFailed"));
     }
   }
 
@@ -44,13 +46,13 @@ export default function PaymentResultPage() {
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 pb-20 pt-28 md:px-8">
-      <PageHeader title="Payment Result" eyebrow="Provider callback and payment status" />
+      <PageHeader title={t("payment.title")} eyebrow={t("payment.eyebrow")} />
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
         <div className="grid gap-4 text-slate-600">
-          <Info label="Reference" value={code || "No payment code in URL"} />
-          <Info label="Status" value={result?.status || "Pending / unavailable"} />
-          <Info label="Method" value={result?.method || "-"} />
-          <Info label="Amount" value={formatVND(result?.totalAmount || 0)} />
+          <Info label={t("common.reference")} value={code || t("payment.noCode")} />
+          <Info label={t("common.status")} value={result?.status || t("payment.pending")} />
+          <Info label={t("common.method")} value={result?.method || "-"} />
+          <Info label={t("common.amount")} value={formatVND(result?.totalAmount || 0)} />
         </div>
         <div className="mt-8 flex flex-wrap gap-3">
           {paymentUrl && (
@@ -58,7 +60,7 @@ export default function PaymentResultPage() {
               className="rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-600"
               href={paymentUrl}
             >
-              Continue payment
+              {t("payment.continue")}
             </a>
           )}
           {code && getAccessToken() && (
@@ -67,7 +69,7 @@ export default function PaymentResultPage() {
               type="button"
               onClick={retry}
             >
-              Retry payment
+              {t("payment.retry")}
             </button>
           )}
         </div>

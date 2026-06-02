@@ -1,47 +1,48 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 
 import { getCategories, getProducts } from "../api/catalogApi.js";
 import BookCard from "../components/BookCard.jsx";
 import { normalizeBook, normalizeCategory, pageRows } from "../utils/mappers.js";
 
-const categoryTitles = {
-  all: "All Books",
-  business: "Business & Finance",
-  "self-help": "Self-help & Growth",
-  literature: "Literature & Fiction",
-  skills: "Skills & Wellness",
-};
-
-const sortOptions = [
-  ["all", "All"],
-  ["popular", "Popular"],
-  ["new", "Latest"],
-  ["price", "Price"],
-];
-
 export default function CategoryPage() {
+  const { t } = useTranslation();
   const { slug = "all" } = useParams();
   const [searchParams] = useSearchParams();
   const search = searchParams.get("search") || "";
   const [sort, setSort] = useState("all");
   const [books, setBooks] = useState([]);
   const [categories, setCategories] = useState([
-    { id: "all", slug: "all", label: "All Books" },
+    { id: "all", slug: "all", label: t("catalog.titleAll") },
   ]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+
+  const categoryTitles = {
+    all: t("catalog.titleAll"),
+    business: t("catalog.business"),
+    "self-help": t("catalog.selfHelp"),
+    literature: t("catalog.literature"),
+    skills: t("catalog.skills"),
+  };
+  const sortOptions = [
+    ["all", t("common.all")],
+    ["popular", t("common.popular")],
+    ["new", t("common.latest")],
+    ["price", t("common.price")],
+  ];
 
   useEffect(() => {
     getCategories()
       .then((rows) => {
         const list = pageRows(rows).map(normalizeCategory).filter(Boolean);
         if (list.length) {
-          setCategories([{ id: "all", slug: "all", label: "All Books" }, ...list]);
+          setCategories([{ id: "all", slug: "all", label: t("catalog.titleAll") }, ...list]);
         }
       })
-      .catch((error) => setMessage(error.message || "Could not load backend categories."));
-  }, []);
+      .catch((error) => setMessage(error.message || t("catalog.categoriesFailed")));
+  }, [t]);
 
   useEffect(() => {
     let alive = true;
@@ -61,7 +62,7 @@ export default function CategoryPage() {
       .catch((error) => {
         if (alive) {
           setBooks([]);
-          setMessage(error.message || "Could not load backend products.");
+          setMessage(error.message || t("catalog.productsFailed"));
         }
       })
       .finally(() => alive && setLoading(false));
@@ -69,7 +70,7 @@ export default function CategoryPage() {
     return () => {
       alive = false;
     };
-  }, [slug, search]);
+  }, [slug, search, t]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -88,14 +89,14 @@ export default function CategoryPage() {
     return list;
   }, [books, slug, search, sort]);
 
-  const title = search ? `Search: "${search}"` : categoryTitles[slug] || "Books";
+  const title = search ? t("catalog.searchTitle", { search }) : categoryTitles[slug] || t("catalog.booksFallback");
 
   return (
     <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-8 px-4 pb-20 pt-28 md:px-8 lg:grid-cols-[240px_1fr]">
       <aside className="lg:sticky lg:top-28 lg:self-start">
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-400">
-            Categories
+            {t("common.categories")}
           </h2>
           <div className="grid gap-1">
             {categories.filter(Boolean).map((category) => (
@@ -120,13 +121,13 @@ export default function CategoryPage() {
         <div className="mb-8 flex flex-col gap-4 border-b border-slate-200 pb-6 md:flex-row md:items-end md:justify-between">
           <div>
             <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-600">
-              Catalog
+              {t("catalog.catalog")}
             </span>
             <h1 className="mt-3 font-serif text-4xl font-bold text-slate-950 md:text-5xl">
               {title}
             </h1>
             <p className="mt-2 text-sm text-slate-500">
-              {loading ? "Loading books..." : `${filtered.length} books found`}
+              {loading ? t("catalog.loadingBooks") : t("catalog.booksFound", { count: filtered.length })}
             </p>
           </div>
 
@@ -156,7 +157,7 @@ export default function CategoryPage() {
         )}
 
         {loading ? (
-          <EmptyState title="Loading catalog..." />
+          <EmptyState title={t("catalog.loadingCatalog")} />
         ) : filtered.length ? (
           <div className="grid grid-cols-2 gap-5 md:grid-cols-3 xl:grid-cols-4">
             {filtered.map((book) => (
@@ -164,7 +165,7 @@ export default function CategoryPage() {
             ))}
           </div>
         ) : (
-          <EmptyState title="No books found" />
+          <EmptyState title={t("catalog.noBooks")} />
         )}
       </main>
     </div>

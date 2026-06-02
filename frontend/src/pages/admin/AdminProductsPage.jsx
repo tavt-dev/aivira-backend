@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import {
   createAdminProduct,
@@ -19,6 +20,7 @@ import {
 } from "../../utils/mappers.js";
 
 export default function AdminProductsPage() {
+  const { t } = useTranslation();
   const [books, setBooks] = useState([]);
   const [categories, setCategories] = useState([]);
   const [source, setSource] = useState("api");
@@ -70,7 +72,7 @@ export default function AdminProductsPage() {
     } catch (error) {
       setBooks([]);
       setSource("error");
-      setMessage(error.message || "Backend pending: /admin/products unavailable.");
+      setMessage(error.message || t("admin.errors.products"));
     }
   }
 
@@ -79,7 +81,7 @@ export default function AdminProductsPage() {
     setMessage("");
     try {
       await createAdminProduct(buildProductPayload(form));
-      setMessage("Product saved through backend /admin/products.");
+      setMessage(t("admin.productSaved"));
       setForm({
         ...form,
         sku: "",
@@ -93,7 +95,7 @@ export default function AdminProductsPage() {
       });
       refreshAdminProducts();
     } catch (error) {
-      setMessage(error.message || "Backend pending: product save unavailable.");
+      setMessage(error.message || t("admin.errors.productSave"));
     }
   }
 
@@ -102,9 +104,9 @@ export default function AdminProductsPage() {
     try {
       await deleteAdminProduct(book.id);
       setBooks((current) => current.filter((item) => item.id !== book.id));
-      setMessage("Product deleted.");
+      setMessage(t("admin.productDeleted"));
     } catch (error) {
-      setMessage(error.message || "Backend pending: delete unavailable.");
+      setMessage(error.message || t("admin.errors.delete"));
     }
   }
 
@@ -117,7 +119,7 @@ export default function AdminProductsPage() {
         additionalPrice: Number(variationForm.additionalPrice || 0),
         stockQuantity: Number(variationForm.stockQuantity || 0),
       });
-      setMessage("Variation created.");
+      setMessage(t("admin.variationCreated"));
       setVariationForm({
         sku: "",
         color: "Default",
@@ -130,7 +132,7 @@ export default function AdminProductsPage() {
       });
       refreshAdminProducts();
     } catch (error) {
-      setMessage(error.message || "Create variation failed.");
+      setMessage(error.message || t("admin.errors.variationCreate"));
     }
   }
 
@@ -138,10 +140,10 @@ export default function AdminProductsPage() {
     setMessage("");
     try {
       await deleteProductVariation(selectedProduct.id, variationId);
-      setMessage("Variation deleted.");
+      setMessage(t("admin.variationDeleted"));
       refreshAdminProducts();
     } catch (error) {
-      setMessage(error.message || "Delete variation failed.");
+      setMessage(error.message || t("admin.errors.variationDelete"));
     }
   }
 
@@ -150,10 +152,10 @@ export default function AdminProductsPage() {
     setMessage("");
     try {
       await updateProductStock(selectedProduct.id, stockForm.variationId, stockForm.stockQuantity);
-      setMessage("Stock updated.");
+      setMessage(t("admin.stockUpdated"));
       refreshAdminProducts();
     } catch (error) {
-      setMessage(error.message || "Update stock failed.");
+      setMessage(error.message || t("admin.errors.stock"));
     }
   }
 
@@ -161,7 +163,7 @@ export default function AdminProductsPage() {
     event.preventDefault();
     setMessage("");
     if (!mediaForm.file) {
-      setMessage("Choose an image file first.");
+      setMessage(t("admin.chooseImage"));
       return;
     }
     try {
@@ -170,23 +172,23 @@ export default function AdminProductsPage() {
         sortOrder: mediaForm.sortOrder,
         primary: mediaForm.primary,
       });
-      setMessage("Media uploaded.");
+      setMessage(t("admin.mediaUploaded"));
       setMediaForm({ file: null, altText: "", sortOrder: 0, primary: true });
       refreshAdminProducts();
     } catch (error) {
-      setMessage(error.message || "Upload media failed.");
+      setMessage(error.message || t("admin.errors.media"));
     }
   }
 
   return (
     <div className="grid gap-8">
       <PageHeader
-        title="Admin Products"
-        eyebrow={source === "api" ? "Backend /admin/products ready" : "Backend unavailable"}
+        title={t("admin.productsTitle")}
+        eyebrow={source === "api" ? t("admin.productsReady") : t("admin.backendUnavailable")}
       />
       {message && <Notice>{message}</Notice>}
 
-      <Panel title="Latest books">
+      <Panel title={t("admin.latestBooks")}>
         <div className="overflow-hidden rounded-2xl border border-slate-200">
           {books.slice(0, 10).map((book) => (
             <div
@@ -197,48 +199,47 @@ export default function AdminProductsPage() {
               <span className="text-sm text-slate-500">{book.author}</span>
               <strong>{formatVND(book.price)}</strong>
               <span className="text-sm text-slate-500">{book.catLabel}</span>
-              <SmallButton onClick={() => setSelectedProduct(book)}>Manage</SmallButton>
+              <SmallButton onClick={() => setSelectedProduct(book)}>{t("admin.manage")}</SmallButton>
               <SmallButton danger onClick={() => remove(book)}>
-                Delete
+                {t("common.delete")}
               </SmallButton>
             </div>
           ))}
-          {!books.length && <div className="p-5 text-sm text-slate-500">No admin products loaded.</div>}
+          {!books.length && <div className="p-5 text-sm text-slate-500">{t("admin.noProducts")}</div>}
         </div>
       </Panel>
 
-      <Panel title="Create/Edit Book">
+      <Panel title={t("admin.createEditBook")}>
         <p className="mb-5 text-sm text-slate-500">
-          Maps to current backend Product DTO. Book-specific author/ISBN fields can be added after
-          backend supports them.
+          {t("admin.productNote")}
         </p>
         <form className="grid gap-4" onSubmit={submit}>
           <div className="grid gap-4 md:grid-cols-2">
-            <Input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} placeholder="SKU" required />
-            <Input value={form.productName} onChange={(e) => setForm({ ...form, productName: e.target.value })} placeholder="Book title" required />
+            <Input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} placeholder={t("admin.sku")} required />
+            <Input value={form.productName} onChange={(e) => setForm({ ...form, productName: e.target.value })} placeholder={t("admin.bookTitle")} required />
           </div>
-          <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="Slug" required />
-          <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Description" />
+          <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder={t("admin.slug")} required />
+          <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder={t("admin.description")} />
           <div className="grid gap-4 md:grid-cols-2">
             <Select value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })} required>
-              <option value="">Category</option>
+              <option value="">{t("admin.category")}</option>
               {categories.map((category) => (
                 <option key={category.id} value={category.id}>{category.label}</option>
               ))}
             </Select>
-            <Input value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} placeholder="Brand/author fallback" />
+            <Input value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} placeholder={t("admin.brandAuthor")} />
           </div>
           <div className="grid gap-4 md:grid-cols-3">
-            <Input value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="Price" type="number" min="0" required />
-            <Input value={form.originalPrice} onChange={(e) => setForm({ ...form, originalPrice: e.target.value })} placeholder="Original price" type="number" min="0" />
-            <Input value={form.stockQuantity} onChange={(e) => setForm({ ...form, stockQuantity: e.target.value })} placeholder="Stock" type="number" min="0" />
+            <Input value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder={t("admin.price")} type="number" min="0" required />
+            <Input value={form.originalPrice} onChange={(e) => setForm({ ...form, originalPrice: e.target.value })} placeholder={t("admin.originalPrice")} type="number" min="0" />
+            <Input value={form.stockQuantity} onChange={(e) => setForm({ ...form, stockQuantity: e.target.value })} placeholder={t("admin.stock")} type="number" min="0" />
           </div>
-          <Button type="submit">Save to backend</Button>
+          <Button type="submit">{t("admin.saveBackend")}</Button>
         </form>
       </Panel>
 
       {selectedProduct && (
-        <Panel title={`Manage ${selectedProduct.title}`}>
+        <Panel title={t("admin.manageProduct", { title: selectedProduct.title })}>
           <div className="overflow-hidden rounded-2xl border border-slate-200">
             {(selectedProduct.variations || []).map((variation) => (
               <div
@@ -247,49 +248,49 @@ export default function AdminProductsPage() {
               >
                 <span className="font-bold text-slate-950">{variation.sku}</span>
                 <span className="text-sm text-slate-500">{variation.color} / {variation.size}</span>
-                <strong>Stock {variation.stockQuantity}</strong>
-                <SmallButton onClick={() => setStockForm({ variationId: variation.id, stockQuantity: variation.stockQuantity || 0 })}>Stock</SmallButton>
-                <SmallButton danger onClick={() => removeVariation(variation.id)}>Delete</SmallButton>
+                <strong>{t("admin.stock")} {variation.stockQuantity}</strong>
+                <SmallButton onClick={() => setStockForm({ variationId: variation.id, stockQuantity: variation.stockQuantity || 0 })}>{t("admin.stock")}</SmallButton>
+                <SmallButton danger onClick={() => removeVariation(variation.id)}>{t("common.delete")}</SmallButton>
               </div>
             ))}
             {!selectedProduct.variations?.length && (
-              <div className="p-5 text-sm text-slate-500">No variations loaded.</div>
+              <div className="p-5 text-sm text-slate-500">{t("admin.noVariations")}</div>
             )}
           </div>
 
           <div className="mt-6 grid gap-6 xl:grid-cols-3">
             <form className="grid gap-4 rounded-2xl bg-slate-50 p-5" onSubmit={saveVariation}>
-              <h3 className="font-serif text-2xl font-bold text-slate-950">Add variation</h3>
-              <Input value={variationForm.sku} onChange={(e) => setVariationForm({ ...variationForm, sku: e.target.value })} placeholder="Variation SKU" required />
-              <Input value={variationForm.stockQuantity} onChange={(e) => setVariationForm({ ...variationForm, stockQuantity: e.target.value })} placeholder="Stock" type="number" min="0" required />
-              <Input value={variationForm.color} onChange={(e) => setVariationForm({ ...variationForm, color: e.target.value })} placeholder="Color" required />
-              <Input value={variationForm.size} onChange={(e) => setVariationForm({ ...variationForm, size: e.target.value })} placeholder="Size" required />
-              <Input value={variationForm.additionalPrice} onChange={(e) => setVariationForm({ ...variationForm, additionalPrice: e.target.value })} placeholder="Additional price" type="number" min="0" />
-              <Button secondary type="submit">Add variation</Button>
+              <h3 className="font-serif text-2xl font-bold text-slate-950">{t("admin.addVariation")}</h3>
+              <Input value={variationForm.sku} onChange={(e) => setVariationForm({ ...variationForm, sku: e.target.value })} placeholder={t("admin.variationSku")} required />
+              <Input value={variationForm.stockQuantity} onChange={(e) => setVariationForm({ ...variationForm, stockQuantity: e.target.value })} placeholder={t("admin.stock")} type="number" min="0" required />
+              <Input value={variationForm.color} onChange={(e) => setVariationForm({ ...variationForm, color: e.target.value })} placeholder={t("admin.color")} required />
+              <Input value={variationForm.size} onChange={(e) => setVariationForm({ ...variationForm, size: e.target.value })} placeholder={t("admin.size")} required />
+              <Input value={variationForm.additionalPrice} onChange={(e) => setVariationForm({ ...variationForm, additionalPrice: e.target.value })} placeholder={t("admin.additionalPrice")} type="number" min="0" />
+              <Button secondary type="submit">{t("admin.addVariation")}</Button>
             </form>
 
             <form className="grid gap-4 rounded-2xl bg-slate-50 p-5" onSubmit={saveStock}>
-              <h3 className="font-serif text-2xl font-bold text-slate-950">Update stock</h3>
+              <h3 className="font-serif text-2xl font-bold text-slate-950">{t("admin.updateStock")}</h3>
               <Select value={stockForm.variationId} onChange={(e) => setStockForm({ ...stockForm, variationId: e.target.value })} required>
-                <option value="">Variation</option>
+                <option value="">{t("admin.variation")}</option>
                 {(selectedProduct.variations || []).map((variation) => (
                   <option key={variation.id} value={variation.id}>{variation.sku}</option>
                 ))}
               </Select>
-              <Input value={stockForm.stockQuantity} onChange={(e) => setStockForm({ ...stockForm, stockQuantity: e.target.value })} placeholder="Stock quantity" type="number" min="0" required />
-              <Button secondary type="submit">Update stock</Button>
+              <Input value={stockForm.stockQuantity} onChange={(e) => setStockForm({ ...stockForm, stockQuantity: e.target.value })} placeholder={t("admin.stockQuantity")} type="number" min="0" required />
+              <Button secondary type="submit">{t("admin.updateStock")}</Button>
             </form>
 
             <form className="grid gap-4 rounded-2xl bg-slate-50 p-5" onSubmit={saveMedia}>
-              <h3 className="font-serif text-2xl font-bold text-slate-950">Upload media</h3>
+              <h3 className="font-serif text-2xl font-bold text-slate-950">{t("admin.uploadMedia")}</h3>
               <Input type="file" accept="image/*" onChange={(e) => setMediaForm({ ...mediaForm, file: e.target.files?.[0] || null })} />
-              <Input value={mediaForm.altText} onChange={(e) => setMediaForm({ ...mediaForm, altText: e.target.value })} placeholder="Alt text" />
-              <Input value={mediaForm.sortOrder} onChange={(e) => setMediaForm({ ...mediaForm, sortOrder: e.target.value })} placeholder="Sort order" type="number" min="0" />
+              <Input value={mediaForm.altText} onChange={(e) => setMediaForm({ ...mediaForm, altText: e.target.value })} placeholder={t("admin.altText")} />
+              <Input value={mediaForm.sortOrder} onChange={(e) => setMediaForm({ ...mediaForm, sortOrder: e.target.value })} placeholder={t("admin.sortOrder")} type="number" min="0" />
               <label className="flex items-center gap-2 text-sm font-semibold text-slate-600">
                 <input type="checkbox" checked={mediaForm.primary} onChange={(e) => setMediaForm({ ...mediaForm, primary: e.target.checked })} />
-                Primary
+                {t("admin.primary")}
               </label>
-              <Button secondary type="submit">Upload media</Button>
+              <Button secondary type="submit">{t("admin.uploadMedia")}</Button>
             </form>
           </div>
         </Panel>

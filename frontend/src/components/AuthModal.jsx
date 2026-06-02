@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { forgotPassword, login, register, resendVerification, resetPassword, verifyUser } from "../api/authApi.js";
 import { getProfile } from "../api/userApi.js";
@@ -18,42 +20,44 @@ const initialForm = {
 
 const modeMeta = {
   login: {
-    title: "Welcome back",
-    kicker: "Backend login",
-    copy: "Use your verified Aivira account. Demo login is disabled.",
-    action: "Login"
+    title: "auth.loginTitle",
+    kicker: "common.bookstore",
+    copy: "auth.loginCopy",
+    action: "auth.loginAction"
   },
   register: {
-    title: "Create account",
-    kicker: "Email verification",
-    copy: "Register first. If verification is required, Aivira will open the OTP form.",
-    action: "Create account"
+    title: "auth.registerTitle",
+    kicker: "common.bookstore",
+    copy: "auth.registerCopy",
+    action: "auth.registerAction"
   },
   verify: {
-    title: "Verify email",
-    kicker: "Controlled OTP",
-    copy: "Enter the OTP sent by Aivira. This form only opens after register or a backend verification response.",
-    action: "Verify OTP"
+    title: "auth.verifyTitle",
+    kicker: "auth.verifyKicker",
+    copy: "auth.verifyCopy",
+    action: "auth.verifyAction"
   },
   forgot: {
-    title: "Reset access",
-    kicker: "Forgot password",
-    copy: "Request a password reset OTP for a verified email.",
-    action: "Send OTP"
+    title: "auth.forgotTitle",
+    kicker: "auth.forgotKicker",
+    copy: "auth.forgotCopy",
+    action: "auth.forgotAction"
   },
   reset: {
-    title: "Set new password",
-    kicker: "Password OTP",
-    copy: "Use the reset OTP and choose a new password.",
-    action: "Reset password"
+    title: "auth.resetTitle",
+    kicker: "auth.resetKicker",
+    copy: "auth.resetCopy",
+    action: "auth.resetAction"
   }
 };
 
 export default function AuthModal({ open, onClose, initialMode = "login", nextPath = "" }) {
+  const { t } = useTranslation();
   const [mode, setMode] = useState(initialMode);
   const [form, setForm] = useState(initialForm);
   const [message, setMessage] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [visiblePasswords, setVisiblePasswords] = useState({});
   const navigate = useNavigate();
   const pendingVerify = mode === "verify" ? getPendingVerify() : null;
 
@@ -81,6 +85,10 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
     setMessage(null);
   }
 
+  function togglePassword(field) {
+    setVisiblePasswords((current) => ({ ...current, [field]: !current[field] }));
+  }
+
   async function handleLoginRedirect(accessToken) {
     let profile = null;
     try {
@@ -90,9 +98,17 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
       profile = null;
     }
 
+    const canAccessAdmin = hasAdminAccess(profile, accessToken);
+
     if (nextPath.startsWith("/admin")) {
       onClose();
-      navigate(hasAdminAccess(profile, accessToken) ? nextPath : "/admin/forbidden", { replace: true });
+      navigate(canAccessAdmin ? nextPath : "/admin/forbidden", { replace: true });
+      return;
+    }
+
+    if (canAccessAdmin) {
+      onClose();
+      navigate("/admin/products", { replace: true });
       return;
     }
 
@@ -105,7 +121,7 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
     setMessage(null);
 
     try {
-      validateForm(mode, form);
+      validateForm(mode, form, t);
 
       if (mode === "login") {
         const auth = await login({ username: form.username.trim(), password: form.password });
@@ -119,7 +135,7 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
         }
 
         const accessToken = auth?.accessToken || auth?.token || auth?.jwt || auth?.access_token;
-        if (!accessToken) throw new Error("Backend did not return an access token.");
+        if (!accessToken) throw new Error(t("auth.accessTokenMissing"));
         saveAuth(auth, { username: form.username.trim() });
         await handleLoginRedirect(accessToken);
         return;
@@ -137,13 +153,13 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
           openVerifyFlow({ email: form.email.trim(), username: form.username.trim(), source: "register" });
           return;
         }
-        setMessage({ type: "success", text: "Account created. You can login now." });
+        setMessage({ type: "success", text: t("auth.accountCreatedLogin") });
         setMode("login");
       }
 
       if (mode === "forgot") {
         await forgotPassword({ email: form.email.trim() });
-        setMessage({ type: "success", text: "Password reset OTP sent. Enter it with your new password." });
+        setMessage({ type: "success", text: t("auth.otpSent") });
         setMode("reset");
       }
 
@@ -153,7 +169,7 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
           otpCode: form.otpCode.trim(),
           newPassword: form.newPassword
         });
-        setMessage({ type: "success", text: "Password reset successful. Login with your new password." });
+        setMessage({ type: "success", text: t("auth.resetSuccess") });
         setMode("login");
         setForm((current) => ({ ...current, password: "", newPassword: "", otpCode: "" }));
       }
@@ -162,13 +178,13 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
         const pending = getPendingVerify();
         if (!pending) {
           setMode("login");
-          throw new Error("Verification session expired. Please register or login again.");
+          throw new Error(t("auth.verifyExpired"));
         }
         const email = pending.email || form.email.trim();
-        if (!email) throw new Error("Email is required for this pending verification.");
+        if (!email) throw new Error(t("auth.emailRequiredPending"));
         await verifyUser({ email, otpCode: form.otpCode.trim() });
         clearPendingVerify();
-        setMessage({ type: "success", text: "Email verified. You can login now." });
+        setMessage({ type: "success", text: t("auth.emailVerified") });
         setForm((current) => ({ ...current, email, password: "", otpCode: "" }));
         setMode("login");
       }
@@ -181,7 +197,7 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
         });
         return;
       }
-      setMessage({ type: "error", text: error.message || "Action failed. Please check backend/API." });
+      setMessage({ type: "error", text: error.message || t("auth.actionFailed") });
     } finally {
       setBusy(false);
     }
@@ -198,8 +214,8 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
     setMessage({
       type: "success",
       text: context?.source === "register"
-        ? "Account created. Enter the OTP sent to your email."
-        : "This account needs email verification. Enter the OTP to continue."
+        ? t("auth.registerOtp")
+        : t("auth.loginOtp")
     });
     setMode("verify");
   }
@@ -211,14 +227,14 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
       const pending = getPendingVerify();
       if (!pending) {
         setMode("login");
-        throw new Error("Verification session expired. Please register or login again.");
+        throw new Error(t("auth.verifyExpired"));
       }
       const email = pending.email || form.email.trim();
-      if (!email) throw new Error("Email is required for this pending verification.");
+      if (!email) throw new Error(t("auth.emailRequiredPending"));
       await resendVerification({ email });
-      setMessage({ type: "success", text: "Verification OTP resent. Check your email." });
+      setMessage({ type: "success", text: t("auth.otpResent") });
     } catch (error) {
-      setMessage({ type: "error", text: error.message || "Could not resend OTP." });
+      setMessage({ type: "error", text: error.message || t("auth.resendFailed") });
     } finally {
       setBusy(false);
     }
@@ -240,7 +256,7 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
           className="absolute right-[18px] top-[15px] z-20 h-[38px] w-[38px] rounded-full border-0 bg-white/10 text-xl text-white/75 transition hover:rotate-90 hover:bg-white/15 hover:text-white"
           type="button"
           onClick={onClose}
-          aria-label="Close auth modal"
+          aria-label={t("auth.close")}
         >
           x
         </button>
@@ -251,10 +267,10 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
             AIVIRA
           </div>
           <p className="relative mt-2 font-serif text-lg italic text-white/45">
-            Unlock your new chapters
+            {t("auth.sideSubtitle")}
           </p>
           <div className="relative mt-7 flex flex-wrap justify-center gap-2">
-            {["Real backend only", "JWT session", "OTP verification"].map((item) => (
+            {t("auth.tags", { returnObjects: true }).map((item) => (
               <span
                 key={item}
                 className="rounded-full border border-white/15 bg-white/10 px-3 py-2 text-[0.74rem] font-extrabold uppercase tracking-[0.08em] text-white/70"
@@ -266,7 +282,7 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
         </aside>
 
         <form className="grid max-h-[92vh] content-center gap-4 overflow-y-auto p-7 md:p-[42px]" onSubmit={submit}>
-          <div className="grid grid-cols-2 gap-1.5 rounded-full border border-white/10 bg-white/5 p-1.5" aria-label="Authentication modes">
+          <div className="grid grid-cols-2 gap-1.5 rounded-full border border-white/10 bg-white/5 p-1.5" aria-label={t("auth.modes")}>
             <button
               type="button"
               className={[
@@ -277,7 +293,7 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
               ].join(" ")}
               onClick={() => switchMode("login")}
             >
-              Login
+              {t("common.login")}
             </button>
             <button
               type="button"
@@ -289,22 +305,22 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
               ].join(" ")}
               onClick={() => switchMode("register")}
             >
-              Register
+              {t("common.register")}
             </button>
           </div>
 
           <div className="text-center">
             <div className="mx-auto inline-flex w-fit rounded-full bg-blue-500/10 px-2.5 py-1.5 text-[0.72rem] font-black uppercase tracking-[0.12em] text-blue-300">
-              {meta.kicker}
+              {t(meta.kicker)}
             </div>
             <h2
               id="auth-title"
               className="my-2 font-serif text-[clamp(2rem,4vw,2.8rem)] italic text-white"
             >
-              {meta.title}
+              {t(meta.title)}
             </h2>
             <p className="mx-auto max-w-[390px] text-sm leading-6 text-white/50">
-              {meta.copy}
+              {t(meta.copy)}
             </p>
           </div>
 
@@ -337,25 +353,47 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
           <div className="grid gap-3" key={mode}>
             {(mode === "login" || mode === "register") && (
               <>
-                <Field label="Username" value={form.username} onChange={(value) => update("username", value)} autoComplete="username" minLength={4} />
-                <Field label="Password" type="password" value={form.password} onChange={(value) => update("password", value)} autoComplete={mode === "login" ? "current-password" : "new-password"} minLength={6} />
+                <Field label={t("auth.username")} value={form.username} onChange={(value) => update("username", value)} autoComplete="username" minLength={4} />
+                <Field
+                  label={t("auth.password")}
+                  type={visiblePasswords.password ? "text" : "password"}
+                  value={form.password}
+                  onChange={(value) => update("password", value)}
+                  autoComplete={mode === "login" ? "current-password" : "new-password"}
+                  minLength={6}
+                  passwordToggle={{
+                    visible: Boolean(visiblePasswords.password),
+                    onToggle: () => togglePassword("password"),
+                  }}
+                />
               </>
             )}
 
             {mode === "register" && (
               <>
-                <Field label="Email" type="email" value={form.email} onChange={(value) => update("email", value)} autoComplete="email" />
+                <Field label={t("auth.email")} type="email" value={form.email} onChange={(value) => update("email", value)} autoComplete="email" />
                 <div className="grid gap-2.5 md:grid-cols-2">
-                  <Field label="First name" value={form.firstName} onChange={(value) => update("firstName", value)} autoComplete="given-name" required={false} />
-                  <Field label="Last name" value={form.lastName} onChange={(value) => update("lastName", value)} autoComplete="family-name" required={false} />
+                  <Field label={t("auth.firstName")} value={form.firstName} onChange={(value) => update("firstName", value)} autoComplete="given-name" required={false} />
+                  <Field label={t("auth.lastName")} value={form.lastName} onChange={(value) => update("lastName", value)} autoComplete="family-name" required={false} />
                 </div>
-                <Field label="Confirm password" type="password" value={form.confirmPassword} onChange={(value) => update("confirmPassword", value)} autoComplete="new-password" minLength={6} />
+                <Field
+                  label={t("auth.confirmPassword")}
+                  type={visiblePasswords.confirmPassword ? "text" : "password"}
+                  value={form.confirmPassword}
+                  onChange={(value) => update("confirmPassword", value)}
+                  autoComplete="new-password"
+                  minLength={6}
+                  passwordToggle={{
+                    visible: Boolean(visiblePasswords.confirmPassword),
+                    onToggle: () => togglePassword("confirmPassword"),
+                  }}
+                />
               </>
             )}
 
             {(mode === "verify" || mode === "forgot" || mode === "reset") && (
               <Field
-                label="Email"
+                label={t("auth.email")}
                 type="email"
                 value={mode === "verify" && pendingVerify?.email ? pendingVerify.email : form.email}
                 onChange={(value) => update("email", value)}
@@ -366,7 +404,7 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
 
             {mode === "verify" && (
               <Field
-                label="OTP code"
+                label={t("auth.otpCode")}
                 value={form.otpCode}
                 onChange={(value) => update("otpCode", value.replace(/\D/g, "").slice(0, 6))}
                 inputMode="numeric"
@@ -376,8 +414,19 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
 
             {mode === "reset" && (
               <>
-                <Field label="OTP code" value={form.otpCode} onChange={(value) => update("otpCode", value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" maxLength={6} />
-                <Field label="New password" type="password" value={form.newPassword} onChange={(value) => update("newPassword", value)} autoComplete="new-password" minLength={6} />
+                <Field label={t("auth.otpCode")} value={form.otpCode} onChange={(value) => update("otpCode", value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" maxLength={6} />
+                <Field
+                  label={t("auth.newPassword")}
+                  type={visiblePasswords.newPassword ? "text" : "password"}
+                  value={form.newPassword}
+                  onChange={(value) => update("newPassword", value)}
+                  autoComplete="new-password"
+                  minLength={6}
+                  passwordToggle={{
+                    visible: Boolean(visiblePasswords.newPassword),
+                    onToggle: () => togglePassword("newPassword"),
+                  }}
+                />
               </>
             )}
           </div>
@@ -400,13 +449,13 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
             disabled={busy}
             type="submit"
           >
-            <span>{busy ? "Working..." : meta.action}</span>
+            <span>{busy ? t("common.working") : t(meta.action)}</span>
           </button>
 
           <div className="flex flex-wrap justify-center gap-2.5">
-            {mode === "verify" && <button className="px-1.5 py-1 font-extrabold text-[#c8d9ff] hover:text-white disabled:cursor-wait disabled:opacity-55" type="button" onClick={resendOtp} disabled={busy}>Resend OTP</button>}
-            {(mode === "login" || mode === "register") && <button className="px-1.5 py-1 font-extrabold text-[#c8d9ff] hover:text-white" type="button" onClick={() => switchMode("forgot")}>Forgot password</button>}
-            {(mode === "verify" || mode === "forgot" || mode === "reset") && <button className="px-1.5 py-1 font-extrabold text-[#c8d9ff] hover:text-white" type="button" onClick={() => switchMode("login")}>Back to login</button>}
+            {mode === "verify" && <button className="px-1.5 py-1 font-extrabold text-[#c8d9ff] hover:text-white disabled:cursor-wait disabled:opacity-55" type="button" onClick={resendOtp} disabled={busy}>{t("auth.resendOtp")}</button>}
+            {(mode === "login" || mode === "register") && <button className="px-1.5 py-1 font-extrabold text-[#c8d9ff] hover:text-white" type="button" onClick={() => switchMode("forgot")}>{t("auth.forgotPassword")}</button>}
+            {(mode === "verify" || mode === "forgot" || mode === "reset") && <button className="px-1.5 py-1 font-extrabold text-[#c8d9ff] hover:text-white" type="button" onClick={() => switchMode("login")}>{t("auth.backToLogin")}</button>}
           </div>
         </form>
       </div>
@@ -414,43 +463,63 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
   );
 }
 
-function Field({ label, type = "text", value, onChange, required = true, ...props }) {
+function Field({ label, type = "text", value, onChange, required = true, passwordToggle, ...props }) {
+  const { t } = useTranslation();
   return (
     <label className="grid gap-2">
       <span className="text-[0.78rem] font-black uppercase tracking-[0.08em] text-white/65">
         {label}
       </span>
-      <input
-        type={type}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={label}
-        required={required}
-        className="w-full rounded-[10px] border border-white/10 bg-white/95 px-3.5 py-3 text-slate-950 outline-none transition focus:-translate-y-px focus:border-sky-300 focus:shadow-[0_0_0_4px_rgba(45,107,240,0.16)] disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-white/70"
-        {...props}
-      />
+      <span className="relative block">
+        <input
+          type={type}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={label}
+          required={required}
+          className={[
+            "w-full rounded-[10px] border border-white/10 bg-white/95 px-3.5 py-3 text-slate-950 outline-none transition focus:-translate-y-px focus:border-sky-300 focus:shadow-[0_0_0_4px_rgba(45,107,240,0.16)] disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-white/70",
+            passwordToggle ? "pr-[72px]" : "",
+          ].join(" ")}
+          {...props}
+        />
+        {passwordToggle && (
+          <button
+            type="button"
+            onClick={passwordToggle.onToggle}
+            className="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-950"
+            aria-label={passwordToggle.visible ? t("auth.hidePassword", { label }) : t("auth.showPassword", { label })}
+          >
+            {passwordToggle.visible ? (
+              <EyeOff className="h-4 w-4" strokeWidth={2.4} />
+            ) : (
+              <Eye className="h-4 w-4" strokeWidth={2.4} />
+            )}
+          </button>
+        )}
+      </span>
     </label>
   );
 }
 
-function validateForm(mode, form) {
+function validateForm(mode, form, t) {
   if ((mode === "login" || mode === "register") && form.username.trim().length < 4) {
-    throw new Error("Username must be at least 4 characters.");
+    throw new Error(t("auth.validation.username"));
   }
   if ((mode === "login" || mode === "register") && form.password.length < 6) {
-    throw new Error("Password must be at least 6 characters.");
+    throw new Error(t("auth.validation.password"));
   }
   if (mode === "register" && form.password !== form.confirmPassword) {
-    throw new Error("Password confirmation does not match.");
+    throw new Error(t("auth.validation.confirm"));
   }
   if ((mode === "register" || mode === "verify" || mode === "forgot" || mode === "reset") && !form.email.trim()) {
-    throw new Error("Email is required.");
+    throw new Error(t("auth.validation.email"));
   }
   if ((mode === "verify" || mode === "reset") && form.otpCode.trim().length < 6) {
-    throw new Error("OTP code must be 6 digits.");
+    throw new Error(t("auth.validation.otp"));
   }
   if (mode === "reset" && form.newPassword.length < 6) {
-    throw new Error("New password must be at least 6 characters.");
+    throw new Error(t("auth.validation.newPassword"));
   }
 }
 

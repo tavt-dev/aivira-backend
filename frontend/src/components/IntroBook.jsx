@@ -1,4 +1,5 @@
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { gsap } from "gsap";
 import "./IntroBook.css";
 
@@ -18,6 +19,7 @@ export function hasSeenIntro() {
 }
 
 export default function IntroBook({ onFinish }) {
+  const { t } = useTranslation();
   const overlayRef = useRef(null);
   const bookContainerRef = useRef(null);
   const bookRef = useRef(null);
@@ -346,7 +348,7 @@ export default function IntroBook({ onFinish }) {
       </div>
 
       <button className="aiv-intro-skip" type="button" onClick={skipIntro} disabled={playing}>
-        Bỏ qua
+        {t("intro.skip")}
       </button>
 
       <div className="aiv-intro-stage">
@@ -358,13 +360,12 @@ export default function IntroBook({ onFinish }) {
                 <div className="aiv-page-border"></div>
                 <div className="aiv-page-header">
                   <span className="aiv-page-num">01</span>
-                  <span className="aiv-page-chap">CHƯƠNG I: Top 1 Fifai</span>
+                  <span className="aiv-page-chap">{t("intro.chapter")}</span>
                 </div>
-                <h2 className="aiv-page-heading">Trí tuệ<br/>vô tận</h2>
+                <h2 className="aiv-page-heading">{t("intro.pageHeading1")}<br/>{t("intro.pageHeading2")}</h2>
                 <div className="aiv-page-divider"></div>
                 <p className="aiv-page-text">
-                   Hành trình vạn dặm bắt đầu từ một bước chân.
-                   Trong không gian tri thức vô tận, mỗi cuốn sách là một chân trời mới đang chờ được khám phá.
+                   {t("intro.pageText")}
                 </p>
                 <div className="aiv-page-graphic">
                   <div className="aiv-pg-circle"></div>
@@ -376,7 +377,7 @@ export default function IntroBook({ onFinish }) {
             <div className="aiv-book-front-wrapper" ref={frontWrapperRef}>
               <div className="aiv-book-inside-cover">
                  <div className="aiv-inside-border"></div>
-                 <span className="aiv-inside-cover-brand">Tiến Sky</span>
+                 <span className="aiv-inside-cover-brand">{t("intro.insideBrand")}</span>
                  <div className="aiv-inside-illustration">
                    <div className="aiv-ill-star">✦</div>
                  </div>
@@ -386,7 +387,7 @@ export default function IntroBook({ onFinish }) {
                 <span className="aiv-book-cover-shine" />
                 <span className="aiv-book-mark">A</span>
                 <span className="aiv-book-title">AIVIRA</span>
-                <span className="aiv-book-subtitle">BOOKSTORE</span>
+                <span className="aiv-book-subtitle">{t("common.bookstore")}</span>
               </div>
             </div>
             <div className="aiv-book-shadow" />
@@ -394,14 +395,14 @@ export default function IntroBook({ onFinish }) {
         </div>
 
         <div className="aiv-intro-copy" ref={copyRef}>
-          <p className="aiv-intro-kicker">AIVIRA BOOKSTORE</p>
+          <p className="aiv-intro-kicker">AIVIRA {t("common.bookstore")}</p>
           <h1>AIVIRA</h1>
-          <p>Chạm để mở ra thế giới tri thức</p>
+          <p>{t("intro.copy")}</p>
         </div>
 
         <div className="aiv-intro-actions" ref={controlsRef}>
           <button className="aiv-intro-open" type="button" onClick={openBook} disabled={playing}>
-            Mở sách
+            {t("intro.open")}
           </button>
         </div>
       </div>

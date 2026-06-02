@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { ArrowUp } from "lucide-react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import AuthModal from "./components/AuthModal.jsx";
 import IntroBook, { hasSeenIntro } from "./components/IntroBook.jsx";
@@ -137,6 +139,7 @@ function sanitizeNextPath(value) {
 }
 
 function MotionChrome() {
+  const { t } = useTranslation();
   const [progress, setProgress] = useState(0);
   const [showTop, setShowTop] = useState(false);
   const cursorRef = useRef(null);
@@ -199,7 +202,16 @@ function MotionChrome() {
       <div id="sprog" style={{ width: `${progress}%` }} />
       <div id="cur" ref={cursorRef} />
       <div id="cur-ring" ref={ringRef} />
-      <button id="btt" className={showTop ? "show" : ""} type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>Top</button>
+      <button
+        id="btt"
+        className={showTop ? "show" : ""}
+        type="button"
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        aria-label={t("common.top")}
+        title={t("common.top")}
+      >
+        <ArrowUp aria-hidden="true" />
+      </button>
     </>
   );
 }
@@ -212,10 +224,11 @@ function LegacyProductRedirect() {
 
 
 function NotFoundPage() {
+  const { t } = useTranslation();
   return (
     <div className="mx-auto w-full max-w-4xl px-4 pb-20 pt-28 text-center md:px-8">
       <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-8 py-16">
-        <h1 className="font-serif text-4xl font-bold text-slate-950">Page not found</h1>
+        <h1 className="font-serif text-4xl font-bold text-slate-950">{t("notFound.title")}</h1>
       </div>
     </div>
   );

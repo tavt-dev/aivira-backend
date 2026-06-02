@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { getCart } from "../api/cartApi.js";
 import { checkout, createAddress, getAddresses } from "../api/orderApi.js";
@@ -7,6 +8,7 @@ import { normalizeCartItem } from "../utils/mappers.js";
 import { getAccessToken } from "../utils/storage.js";
 
 export default function CheckoutPage({ onAuth }) {
+  const { t } = useTranslation();
   const [items, setItems] = useState([]);
   const [cartSource, setCartSource] = useState("api");
   const [addresses, setAddresses] = useState([]);
@@ -29,7 +31,7 @@ export default function CheckoutPage({ onAuth }) {
 
     getAddresses()
       .then((rows) => setAddresses(rows || []))
-      .catch((error) => setMessage(error.message || "Could not load addresses."));
+      .catch((error) => setMessage(error.message || t("checkout.addressesFailed")));
 
     getCart()
       .then((cart) => {
@@ -38,9 +40,9 @@ export default function CheckoutPage({ onAuth }) {
       })
       .catch((error) => {
         setCartSource("error");
-        setMessage(error.message || "Could not load backend cart.");
+        setMessage(error.message || t("checkout.cartFailed"));
       });
-  }, []);
+  }, [t]);
 
   async function submit(event) {
     event.preventDefault();
@@ -57,26 +59,26 @@ export default function CheckoutPage({ onAuth }) {
         addressId = created.id;
         setAddresses([created, ...addresses]);
       } catch (error) {
-        setMessage(error.message || "Create address failed.");
+        setMessage(error.message || t("checkout.createAddressFailed"));
         return;
       }
     }
 
     if (!addressId) {
-      setMessage("Please choose or create a shipping address.");
+      setMessage(t("checkout.chooseAddress"));
       return;
     }
 
     try {
       if (getAccessToken() && cartSource === "api") {
         if (items.length === 0) {
-          setMessage("Backend cart is empty.");
+          setMessage(t("checkout.cartEmpty"));
           return;
         }
 
         const cartItemIds = items.map((item) => Number(item.cartItemId)).filter(Boolean);
         if (cartItemIds.length === 0) {
-          setMessage("No backend cart item IDs available. Please refresh cart from backend.");
+          setMessage(t("checkout.noCartIds"));
           return;
         }
 
@@ -89,22 +91,22 @@ export default function CheckoutPage({ onAuth }) {
         const url = response?.paymentUrl || response?.deeplink || response?.qrCodeUrl;
         if (url) setPaymentUrl(url);
         setMessage(
-          `Checkout created: ${
+          t("checkout.created", { code:
             response?.paymentGroupCode ||
             response?.paymentGroup?.paymentGroupCode ||
-            "payment group pending"
-          }`
+            t("common.paymentPending")
+          })
         );
         if (form.paymentMethod === "COD") window.dispatchEvent(new Event("aivira-cart"));
       } else {
         setMessage(
           getAccessToken()
-            ? "Backend cart unavailable. Checkout requires backend cart."
-            : "Login required for backend checkout."
+            ? t("checkout.unavailable")
+            : t("checkout.loginRequired")
         );
       }
     } catch (error) {
-      setMessage(error.message || "Checkout failed. Backend pending or unavailable.");
+      setMessage(error.message || t("checkout.failed"));
     }
   }
 
@@ -112,23 +114,23 @@ export default function CheckoutPage({ onAuth }) {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 pb-20 pt-28 md:px-8">
-      <PageHeader title="Checkout" eyebrow="Address, payment, and order summary" />
+      <PageHeader title={t("checkout.title")} eyebrow={t("checkout.eyebrow")} />
 
       {!loggedIn && (
         <Notice>
-          Login required for checkout.{" "}
+          {t("checkout.loginRequired")}{" "}
           <button className="font-bold text-blue-700 underline" type="button" onClick={onAuth}>
-            Login
+            {t("common.login")}
           </button>
         </Notice>
       )}
       {loggedIn && cartSource === "error" && (
-        <Notice>Backend cart unavailable. Checkout is disabled until the API responds.</Notice>
+        <Notice>{t("checkout.disabled")}</Notice>
       )}
 
       <form className="grid gap-8 lg:grid-cols-[1fr_380px]" onSubmit={submit}>
         <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-          <h2 className="font-serif text-3xl font-bold text-slate-950">Shipping Address</h2>
+          <h2 className="font-serif text-3xl font-bold text-slate-950">{t("checkout.shipping")}</h2>
 
           {addresses.length > 0 && (
             <select
@@ -136,7 +138,7 @@ export default function CheckoutPage({ onAuth }) {
               onChange={(event) => setSelectedAddress(event.target.value)}
               className="mt-6 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
             >
-              <option value="">Create new address</option>
+              <option value="">{t("checkout.createNewAddress")}</option>
               {addresses.map((address) => (
                 <option key={address.id} value={address.id}>
                   {address.recipientName} - {address.addressLine}
@@ -147,41 +149,41 @@ export default function CheckoutPage({ onAuth }) {
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <Input
-              placeholder="Recipient name"
+              placeholder={t("checkout.recipientName")}
               value={form.recipientName}
               onChange={(event) => setForm({ ...form, recipientName: event.target.value })}
             />
             <Input
-              placeholder="Phone number"
+              placeholder={t("checkout.phoneNumber")}
               value={form.phoneNumber}
               onChange={(event) => setForm({ ...form, phoneNumber: event.target.value })}
             />
           </div>
           <Input
             className="mt-4"
-            placeholder="Address line"
+            placeholder={t("checkout.addressLine")}
             value={form.addressLine}
             onChange={(event) => setForm({ ...form, addressLine: event.target.value })}
           />
           <div className="mt-4 grid gap-4 md:grid-cols-3">
             <Input
-              placeholder="Ward"
+              placeholder={t("checkout.ward")}
               value={form.ward}
               onChange={(event) => setForm({ ...form, ward: event.target.value })}
             />
             <Input
-              placeholder="District"
+              placeholder={t("checkout.district")}
               value={form.district}
               onChange={(event) => setForm({ ...form, district: event.target.value })}
             />
             <Input
-              placeholder="City"
+              placeholder={t("checkout.city")}
               value={form.city}
               onChange={(event) => setForm({ ...form, city: event.target.value })}
             />
           </div>
 
-          <h2 className="mt-10 font-serif text-3xl font-bold text-slate-950">Payment</h2>
+          <h2 className="mt-10 font-serif text-3xl font-bold text-slate-950">{t("checkout.payment")}</h2>
           <select
             value={form.paymentMethod}
             onChange={(event) => setForm({ ...form, paymentMethod: event.target.value })}
@@ -192,7 +194,7 @@ export default function CheckoutPage({ onAuth }) {
             <option value="MOMO">MoMo</option>
           </select>
           <textarea
-            placeholder="Notes"
+            placeholder={t("checkout.notes")}
             value={form.notes}
             onChange={(event) => setForm({ ...form, notes: event.target.value })}
             className="mt-4 min-h-32 w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
@@ -200,7 +202,7 @@ export default function CheckoutPage({ onAuth }) {
         </section>
 
         <aside className="h-fit rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="font-serif text-3xl font-bold text-slate-950">Order Summary</h2>
+          <h2 className="font-serif text-3xl font-bold text-slate-950">{t("checkout.summary")}</h2>
           <div className="mt-6 grid gap-4">
             {items.length ? (
               items.map((item) => (
@@ -214,11 +216,11 @@ export default function CheckoutPage({ onAuth }) {
                 </div>
               ))
             ) : (
-              <p className="text-sm text-slate-500">No cart items loaded.</p>
+              <p className="text-sm text-slate-500">{t("checkout.noItems")}</p>
             )}
           </div>
           <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-5">
-            <span className="font-semibold text-slate-500">Total</span>
+            <span className="font-semibold text-slate-500">{t("common.total")}</span>
             <strong className="text-2xl text-slate-950">{formatVND(cartTotal(items))}</strong>
           </div>
           <button
@@ -226,7 +228,7 @@ export default function CheckoutPage({ onAuth }) {
             type="submit"
             disabled={!loggedIn || cartSource === "error"}
           >
-            Place order
+            {t("checkout.placeOrder")}
           </button>
           {message && <Notice className="mt-4">{message}</Notice>}
           {paymentUrl && (
@@ -234,7 +236,7 @@ export default function CheckoutPage({ onAuth }) {
               className="mt-3 inline-flex w-full justify-center rounded-full border border-slate-200 px-6 py-3 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-50"
               href={paymentUrl}
             >
-              Continue to payment
+              {t("checkout.continuePayment")}
             </a>
           )}
         </aside>

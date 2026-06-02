@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 import { clearCart, getCart, removeCartItem, updateCartItem } from "../api/cartApi.js";
@@ -7,6 +8,7 @@ import { normalizeCartItem } from "../utils/mappers.js";
 import { getAccessToken } from "../utils/storage.js";
 
 export default function CartPage({ onAuth }) {
+  const { t } = useTranslation();
   const [items, setItems] = useState([]);
   const [message, setMessage] = useState("");
 
@@ -17,8 +19,8 @@ export default function CartPage({ onAuth }) {
       .then((cart) => {
         setItems((cart?.items || []).map(normalizeCartItem));
       })
-      .catch((error) => setMessage(error.message || "Could not load backend cart."));
-  }, []);
+      .catch((error) => setMessage(error.message || t("cart.loadFailed")));
+  }, [t]);
 
   function updateQuantity(item, quantity) {
     const next = items.map((candidate) =>
@@ -31,53 +33,53 @@ export default function CartPage({ onAuth }) {
         setItems((cart?.items || []).map(normalizeCartItem));
         window.dispatchEvent(new Event("aivira-cart"));
       })
-      .catch((error) => setMessage(error.message || "Update cart failed."));
+      .catch((error) => setMessage(error.message || t("cart.updateFailed")));
   }
 
   function removeItem(item) {
     setItems((current) => current.filter((candidate) => candidate.cartItemId !== item.cartItemId));
     removeCartItem(item.cartItemId)
       .then(() => window.dispatchEvent(new Event("aivira-cart")))
-      .catch((error) => setMessage(error.message || "Remove item failed."));
+      .catch((error) => setMessage(error.message || t("cart.removeFailed")));
   }
 
   function clearAll() {
     setItems([]);
     clearCart()
       .then(() => window.dispatchEvent(new Event("aivira-cart")))
-      .catch((error) => setMessage(error.message || "Clear cart failed."));
+      .catch((error) => setMessage(error.message || t("cart.clearFailed")));
   }
 
   const loggedIn = Boolean(getAccessToken());
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 pb-20 pt-28 md:px-8">
-      <PageHeader title="Cart" eyebrow="Backend cart" />
+      <PageHeader title={t("cart.title")} eyebrow={t("cart.eyebrow")} />
 
       {message && <Notice>{message}</Notice>}
 
       {!loggedIn ? (
         <EmptyState
-          title="Please login to view your backend cart"
+          title={t("cart.loginRequired")}
           action={
             <button
               type="button"
               className="inline-flex rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-600"
               onClick={onAuth}
             >
-              Login
+              {t("common.login")}
             </button>
           }
         />
       ) : items.length === 0 ? (
         <EmptyState
-          title="Your cart is empty"
+          title={t("cart.empty")}
           action={
             <Link
               className="inline-flex rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-600"
               to="/category/all"
             >
-              Browse books
+              {t("cart.browse")}
             </Link>
           }
         />
@@ -117,30 +119,30 @@ export default function CartPage({ onAuth }) {
                   onClick={() => removeItem(item)}
                   className="rounded-full border border-red-100 px-4 py-2 text-sm font-bold text-red-600 transition-colors hover:bg-red-50"
                 >
-                  Remove
+                  {t("common.remove")}
                 </button>
               </div>
             ))}
           </div>
 
           <aside className="h-fit rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="font-serif text-3xl font-bold text-slate-950">Summary</h2>
+            <h2 className="font-serif text-3xl font-bold text-slate-950">{t("cart.summary")}</h2>
             <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-5">
-              <span className="font-semibold text-slate-500">Total</span>
+              <span className="font-semibold text-slate-500">{t("common.total")}</span>
               <strong className="text-2xl text-slate-950">{formatVND(cartTotal(items))}</strong>
             </div>
             <Link
               className="mt-6 inline-flex w-full justify-center rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-600"
               to="/checkout"
             >
-              Checkout
+              {t("cart.checkout")}
             </Link>
             <button
               className="mt-3 w-full rounded-full border border-slate-200 px-5 py-3 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-50"
               type="button"
               onClick={clearAll}
             >
-              Clear cart
+              {t("cart.clear")}
             </button>
           </aside>
         </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import {
   createAdminCategory,
@@ -21,6 +22,7 @@ const emptyForm = {
 };
 
 export default function AdminCategoriesPage() {
+  const { t } = useTranslation();
   const [categories, setCategories] = useState([]);
   const [message, setMessage] = useState("");
   const [form, setForm] = useState(emptyForm);
@@ -36,7 +38,7 @@ export default function AdminCategoriesPage() {
       setCategories(pageRows(rows).map(normalizeCategory).filter(Boolean));
     } catch (error) {
       setCategories([]);
-      setMessage(error.message || "Could not load backend categories.");
+      setMessage(error.message || t("admin.errors.categories"));
     }
   }
 
@@ -51,12 +53,12 @@ export default function AdminCategoriesPage() {
       };
       if (editingId) await updateAdminCategory(editingId, payload);
       else await createAdminCategory(payload);
-      setMessage(editingId ? "Category updated." : "Category saved through backend /admin/categories.");
+      setMessage(editingId ? t("admin.categoryUpdated") : t("admin.categorySaved"));
       setForm(emptyForm);
       setEditingId(null);
       refreshCategories();
     } catch (error) {
-      setMessage(error.message || "Backend pending: category save unavailable.");
+      setMessage(error.message || t("admin.errors.categorySave"));
     }
   }
 
@@ -65,9 +67,9 @@ export default function AdminCategoriesPage() {
     try {
       await deleteAdminCategory(category.id);
       setCategories((current) => current.filter((item) => item.id !== category.id));
-      setMessage("Category deleted.");
+      setMessage(t("admin.categoryDeleted"));
     } catch (error) {
-      setMessage(error.message || "Backend pending: category delete unavailable.");
+      setMessage(error.message || t("admin.errors.categoryDelete"));
     }
   }
 
@@ -88,40 +90,40 @@ export default function AdminCategoriesPage() {
 
   return (
     <div className="grid gap-8">
-      <PageHeader title="Admin Categories" eyebrow="Public list + /admin/categories mutations" />
+      <PageHeader title={t("admin.categoriesTitle")} eyebrow={t("admin.categoriesEyebrow")} />
       {message && <Notice>{message}</Notice>}
-      <Panel title="Categories">
+      <Panel title={t("admin.categories")}>
         <div className="overflow-hidden rounded-2xl border border-slate-200">
           {categories.map((category) => (
             <div className="grid gap-3 border-b border-slate-100 p-4 last:border-b-0 md:grid-cols-[1fr_180px_120px_auto_auto] md:items-center" key={category.id}>
               <span className="font-bold text-slate-950">{category.label}</span>
               <span className="text-sm text-slate-500">{category.slug}</span>
-              <strong className="text-sm">{category.visible === false ? "Hidden" : "Visible"}</strong>
-              <SmallButton onClick={() => edit(category)}>Edit</SmallButton>
-              <SmallButton danger onClick={() => remove(category)}>Delete</SmallButton>
+              <strong className="text-sm">{category.visible === false ? t("common.hidden") : t("common.visible")}</strong>
+              <SmallButton onClick={() => edit(category)}>{t("common.edit")}</SmallButton>
+              <SmallButton danger onClick={() => remove(category)}>{t("common.delete")}</SmallButton>
             </div>
           ))}
-          {!categories.length && <div className="p-5 text-sm text-slate-500">No categories loaded.</div>}
+          {!categories.length && <div className="p-5 text-sm text-slate-500">{t("admin.noCategories")}</div>}
         </div>
       </Panel>
-      <Panel title={editingId ? "Edit Category" : "Create Category"}>
+      <Panel title={editingId ? t("admin.editCategory") : t("admin.createCategory")}>
         <form className="grid gap-4" onSubmit={submit}>
           <div className="grid gap-4 md:grid-cols-2">
-            <Input value={form.categoryName} onChange={(e) => setForm({ ...form, categoryName: e.target.value })} placeholder="Category name" required />
-            <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="Slug" required />
+            <Input value={form.categoryName} onChange={(e) => setForm({ ...form, categoryName: e.target.value })} placeholder={t("admin.categoryName")} required />
+            <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder={t("admin.slug")} required />
           </div>
-          <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Description" />
+          <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder={t("admin.description")} />
           <div className="grid gap-4 md:grid-cols-3">
-            <Input value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} placeholder="Image URL" />
-            <Input value={form.imagePublicId} onChange={(e) => setForm({ ...form, imagePublicId: e.target.value })} placeholder="Image public ID" />
-            <Input value={form.displayOrder} onChange={(e) => setForm({ ...form, displayOrder: e.target.value })} placeholder="Display order" type="number" />
+            <Input value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} placeholder={t("admin.imageUrl")} />
+            <Input value={form.imagePublicId} onChange={(e) => setForm({ ...form, imagePublicId: e.target.value })} placeholder={t("admin.imagePublicId")} />
+            <Input value={form.displayOrder} onChange={(e) => setForm({ ...form, displayOrder: e.target.value })} placeholder={t("admin.displayOrder")} type="number" />
           </div>
-          <Input value={form.parentId} onChange={(e) => setForm({ ...form, parentId: e.target.value })} placeholder="Parent ID" type="number" />
+          <Input value={form.parentId} onChange={(e) => setForm({ ...form, parentId: e.target.value })} placeholder={t("admin.parentId")} type="number" />
           <div className="flex flex-wrap gap-4 text-sm font-semibold text-slate-600">
-            <label className="flex items-center gap-2"><input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} /> Active</label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={form.visible} onChange={(e) => setForm({ ...form, visible: e.target.checked })} /> Visible</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} /> {t("common.active")}</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={form.visible} onChange={(e) => setForm({ ...form, visible: e.target.checked })} /> {t("common.visible")}</label>
           </div>
-          <Button type="submit">{editingId ? "Update category" : "Save category"}</Button>
+          <Button type="submit">{editingId ? t("admin.updateCategory") : t("admin.saveCategory")}</Button>
         </form>
       </Panel>
     </div>

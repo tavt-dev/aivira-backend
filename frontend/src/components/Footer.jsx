@@ -1,6 +1,10 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export default function Footer() {
+  const { t } = useTranslation();
+  const year = new Date().getFullYear();
+
   return (
     <footer className="tw-footer bg-slate-950 text-slate-400 py-16 px-4 md:px-8 border-t border-slate-900 border-white/5">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
@@ -14,7 +18,7 @@ export default function Footer() {
              <span className="font-serif font-bold text-xl tracking-wide text-white">AIVIRA</span>
           </Link>
           <p className="text-sm leading-relaxed mb-6">
-            Aivira single-vendor online bookstore. Browse, checkout, pay, and track orders from one curated catalog.
+            {t("footer.desc")}
           </p>
           <div className="flex gap-4">
              {/* Social links placeholder */}
@@ -25,12 +29,12 @@ export default function Footer() {
         
         {/* LINKS */}
         <div>
-          <h4 className="text-white font-bold tracking-wider uppercase text-sm mb-6">Categories</h4>
+          <h4 className="text-white font-bold tracking-wider uppercase text-sm mb-6">{t("common.categories")}</h4>
           <ul className="space-y-3 text-sm">
-            <li><Link to="/category/business" className="hover:text-blue-400 transition-colors">Business & Finance</Link></li>
-            <li><Link to="/category/self-help" className="hover:text-blue-400 transition-colors">Self-help & Growth</Link></li>
-            <li><Link to="/category/literature" className="hover:text-blue-400 transition-colors">Literature & Fiction</Link></li>
-            <li><Link to="/category/skills" className="hover:text-blue-400 transition-colors">Skills & Wellness</Link></li>
+            <li><Link to="/category/business" className="hover:text-blue-400 transition-colors">{t("footer.business")}</Link></li>
+            <li><Link to="/category/self-help" className="hover:text-blue-400 transition-colors">{t("footer.selfHelp")}</Link></li>
+            <li><Link to="/category/literature" className="hover:text-blue-400 transition-colors">{t("footer.literature")}</Link></li>
+            <li><Link to="/category/skills" className="hover:text-blue-400 transition-colors">{t("footer.skills")}</Link></li>
           </ul>
         </div>
         
@@ -38,20 +42,20 @@ export default function Footer() {
         <div>
           <h4 className="text-white font-bold tracking-wider uppercase text-sm mb-6">Aivira</h4>
           <ul className="space-y-3 text-sm">
-            <li><Link to="/about" className="hover:text-blue-400 transition-colors">Our Story</Link></li>
-            <li><Link to="/account" className="hover:text-blue-400 transition-colors">Account</Link></li>
-            <li><Link to="/orders" className="hover:text-blue-400 transition-colors">Order Tracking</Link></li>
+            <li><Link to="/about" className="hover:text-blue-400 transition-colors">{t("footer.ourStory")}</Link></li>
+            <li><Link to="/account" className="hover:text-blue-400 transition-colors">{t("common.account")}</Link></li>
+            <li><Link to="/orders" className="hover:text-blue-400 transition-colors">{t("footer.orderTracking")}</Link></li>
             <li><Link to="/faq" className="hover:text-blue-400 transition-colors">FAQ</Link></li>
           </ul>
         </div>
         
         {/* CONTACT */}
         <div>
-          <h4 className="text-white font-bold tracking-wider uppercase text-sm mb-6">Contact</h4>
+          <h4 className="text-white font-bold tracking-wider uppercase text-sm mb-6">{t("footer.contact")}</h4>
           <ul className="space-y-3 text-sm">
             <li className="flex items-start gap-3">
               <svg className="w-5 h-5 text-slate-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-              <span>hello@aivira.vn</span>
+              <span>tavantien786@gmail.com</span>
             </li>
             <li className="flex items-start gap-3">
               <svg className="w-5 h-5 text-slate-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
@@ -63,10 +67,10 @@ export default function Footer() {
       </div>
       
       <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-slate-800 text-center text-xs flex flex-col md:flex-row items-center justify-between gap-4">
-         <p>&copy; {new Date().getFullYear()} Aivira Bookstore. All rights reserved.</p>
+         <p>{t("footer.rights", { year })}</p>
          <div className="flex gap-4">
-            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+            <a href="#" className="hover:text-white transition-colors">{t("footer.privacy")}</a>
+            <a href="#" className="hover:text-white transition-colors">{t("footer.terms")}</a>
          </div>
       </div>
     </footer>

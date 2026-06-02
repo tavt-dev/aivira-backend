@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import {
   getPermissions,
@@ -12,6 +13,7 @@ import {
 import { pageRows } from "../../utils/mappers.js";
 
 export default function AdminPermissionsPage() {
+  const { t } = useTranslation();
   const [permissions, setPermissions] = useState([]);
   const [roles, setRoles] = useState([]);
   const [selectedRole, setSelectedRole] = useState("");
@@ -24,7 +26,7 @@ export default function AdminPermissionsPage() {
   useEffect(() => {
     getPermissions()
       .then((rows) => setPermissions(pageRows(rows)))
-      .catch((error) => setMessage(error.message || "Permissions unavailable."));
+      .catch((error) => setMessage(error.message || t("admin.errors.permissions")));
     getRoles()
       .then((rows) => {
         const list = pageRows(rows);
@@ -50,9 +52,9 @@ export default function AdminPermissionsPage() {
         selectedRole,
         rolePermissions.map((permission) => permission.code || permission.permissionCode || permission)
       );
-      setMessage("Role permissions updated.");
+      setMessage(t("admin.roleSaved"));
     } catch (error) {
-      setMessage(error.message || "Update role permissions failed.");
+      setMessage(error.message || t("admin.errors.roleUpdate"));
     }
   }
 
@@ -62,7 +64,7 @@ export default function AdminPermissionsPage() {
     try {
       setUserPermissions(await getUserPermissions(userId));
     } catch (error) {
-      setMessage(error.message || "User permissions unavailable.");
+      setMessage(error.message || t("admin.errors.userPermissions"));
     }
   }
 
@@ -75,10 +77,10 @@ export default function AdminPermissionsPage() {
         reason: grantForm.reason || null,
         expiresAt: grantForm.expiresAt ? new Date(grantForm.expiresAt).toISOString() : null,
       });
-      setMessage("Permission granted.");
+      setMessage(t("admin.permissionGranted"));
       if (userId) setUserPermissions(await getUserPermissions(userId));
     } catch (error) {
-      setMessage(error.message || "Grant permission failed.");
+      setMessage(error.message || t("admin.errors.grant"));
     }
   }
 
@@ -86,10 +88,10 @@ export default function AdminPermissionsPage() {
     setMessage("");
     try {
       await revokeUserPermission(userId, permissionCode);
-      setMessage("Permission revoked.");
+      setMessage(t("admin.permissionRevoked"));
       setUserPermissions(await getUserPermissions(userId));
     } catch (error) {
-      setMessage(error.message || "Revoke permission failed.");
+      setMessage(error.message || t("admin.errors.revoke"));
     }
   }
 
@@ -105,10 +107,10 @@ export default function AdminPermissionsPage() {
 
   return (
     <div className="grid gap-8">
-      <PageHeader title="Admin Permissions" eyebrow="Backend RBAC endpoints" />
+      <PageHeader title={t("admin.permissionsTitle")} eyebrow={t("admin.permissionsEyebrow")} />
       {message && <Notice>{message}</Notice>}
       <div className="grid gap-8 xl:grid-cols-2">
-        <Panel title="Role permissions">
+        <Panel title={t("admin.rolePermissions")}>
           <form className="grid gap-5" onSubmit={saveRole}>
             <Select value={selectedRole} onChange={(event) => setSelectedRole(event.target.value)}>
               {roles.map((role) => (
@@ -131,19 +133,19 @@ export default function AdminPermissionsPage() {
                 );
               })}
             </div>
-            <Button type="submit">Save role</Button>
+            <Button type="submit">{t("common.save")}</Button>
           </form>
         </Panel>
 
-        <Panel title="User permissions">
+        <Panel title={t("admin.userPermissions")}>
           <form className="grid gap-4" onSubmit={loadUserPermissions}>
-            <Input value={userId} onChange={(event) => setUserId(event.target.value)} placeholder="User ID" required />
-            <Button type="submit">Load user</Button>
+            <Input value={userId} onChange={(event) => setUserId(event.target.value)} placeholder={t("admin.userId")} required />
+            <Button type="submit">{t("admin.loadUser")}</Button>
           </form>
 
           {userPermissions && (
             <div className="mt-6 grid gap-5 border-t border-slate-100 pt-6">
-              <h3 className="font-serif text-2xl font-bold text-slate-950">Effective permissions</h3>
+              <h3 className="font-serif text-2xl font-bold text-slate-950">{t("admin.effectivePermissions")}</h3>
               <div className="flex flex-wrap gap-2">
                 {(userPermissions.effectivePermissions || []).map((permission) => (
                   <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700" key={permission.code}>
@@ -152,13 +154,13 @@ export default function AdminPermissionsPage() {
                 ))}
               </div>
 
-              <h3 className="font-serif text-2xl font-bold text-slate-950">Direct permissions</h3>
+              <h3 className="font-serif text-2xl font-bold text-slate-950">{t("admin.directPermissions")}</h3>
               <div className="grid gap-3">
                 {(userPermissions.directPermissions || []).map((permission) => (
                   <div className="flex items-center justify-between gap-4 rounded-2xl bg-slate-50 p-4" key={permission.permissionCode || permission.code}>
                     <span className="font-semibold text-slate-800">{permission.permissionCode || permission.code}</span>
-                    <small className="text-slate-500">{permission.reason || "Direct"}</small>
-                    <SmallButton onClick={() => revoke(permission.permissionCode || permission.code)}>Revoke</SmallButton>
+                    <small className="text-slate-500">{permission.reason || t("admin.direct")}</small>
+                    <SmallButton onClick={() => revoke(permission.permissionCode || permission.code)}>{t("account.revoke")}</SmallButton>
                   </div>
                 ))}
               </div>
@@ -166,16 +168,16 @@ export default function AdminPermissionsPage() {
           )}
 
           <form className="mt-6 grid gap-4 border-t border-slate-100 pt-6" onSubmit={grant}>
-            <h3 className="font-serif text-2xl font-bold text-slate-950">Grant direct permission</h3>
+            <h3 className="font-serif text-2xl font-bold text-slate-950">{t("admin.grantDirect")}</h3>
             <Select value={grantForm.permissionCode} onChange={(event) => setGrantForm({ ...grantForm, permissionCode: event.target.value })} required>
-              <option value="">Permission</option>
+              <option value="">{t("admin.permission")}</option>
               {permissions.map((permission) => (
                 <option key={permission.code} value={permission.code}>{permission.code}</option>
               ))}
             </Select>
-            <Input value={grantForm.reason} onChange={(event) => setGrantForm({ ...grantForm, reason: event.target.value })} placeholder="Reason" />
+            <Input value={grantForm.reason} onChange={(event) => setGrantForm({ ...grantForm, reason: event.target.value })} placeholder={t("admin.reason")} />
             <Input type="datetime-local" value={grantForm.expiresAt} onChange={(event) => setGrantForm({ ...grantForm, expiresAt: event.target.value })} />
-            <Button secondary type="submit">Grant permission</Button>
+            <Button secondary type="submit">{t("admin.grantPermission")}</Button>
           </form>
         </Panel>
       </div>

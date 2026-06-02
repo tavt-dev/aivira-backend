@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 
@@ -101,6 +102,7 @@ const FALLBACK_BOOKS = [
 ];
 
 export default function HomePage() {
+  const { t } = useTranslation();
   const { books, message } = useCatalog();
   const featured = books.slice(0, 4);
   const orbitBooks = featured.concat(books.slice(4, 9));
@@ -111,7 +113,7 @@ export default function HomePage() {
 
     const timer = setInterval(() => {
       setActiveOrbit((current) => (current + 1) % orbitBooks.length);
-    }, 1600);
+    }, 2600);
 
     return () => clearInterval(timer);
   }, [orbitBooks.length]);
@@ -140,7 +142,7 @@ export default function HomePage() {
             >
               <span className="h-2 w-2 animate-pulse rounded-full bg-blue-400" />
               <span className="text-sm font-medium tracking-wide text-slate-300">
-                Aivira Single-Vendor Bookstore
+                {t("home.heroKicker")}
               </span>
             </motion.div>
 
@@ -150,14 +152,14 @@ export default function HomePage() {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="font-serif text-5xl font-bold leading-[1.1] tracking-tight md:text-7xl"
             >
-              EVERY BOOK <br />
-              A{" "}
+              {t("home.title1")} <br />
+              {t("home.title2")}{" "}
               <span className="bg-gradient-to-r from-blue-400 to-sky-200 bg-clip-text text-transparent">
-                WORLD
+                {t("home.titleWorld")}
               </span>
               <br />
               <em className="mt-2 block font-serif text-3xl font-light italic text-slate-400 md:text-5xl">
-                waiting to be explored.
+                {t("home.subtitle")}
               </em>
             </motion.h1>
 
@@ -167,8 +169,7 @@ export default function HomePage() {
               transition={{ duration: 0.8, delay: 0.3 }}
               className="max-w-lg text-lg font-light leading-relaxed text-slate-400 md:text-xl"
             >
-              Aivira curates books across business, growth, fiction, technology,
-              and education with a checkout flow connected to the bookstore backend.
+              {t("home.heroCopy")}
             </motion.p>
 
             <motion.div
@@ -181,13 +182,13 @@ export default function HomePage() {
                 to="/category/all"
                 className="rounded-full bg-white px-8 py-4 font-bold tracking-wide text-slate-900 shadow-[0_0_40px_rgba(255,255,255,0.2)] transition-all duration-300 hover:scale-105 hover:bg-slate-200"
               >
-                Explore Library
+                {t("home.exploreLibrary")}
               </Link>
               <Link
                 to="/cart"
                 className="rounded-full border border-white/20 bg-white/5 px-8 py-4 font-bold tracking-wide backdrop-blur transition-all duration-300 hover:bg-white/10"
               >
-                View Cart
+                {t("home.viewCart")}
               </Link>
             </motion.div>
 
@@ -200,19 +201,19 @@ export default function HomePage() {
               <div>
                 <strong className="block font-serif text-2xl">{books.length}+</strong>
                 <span className="mt-1 block text-sm uppercase tracking-widest text-slate-500">
-                  Titles
+                  {t("home.titles")}
                 </span>
               </div>
               <div>
                 <strong className="block font-serif text-2xl">COD</strong>
                 <span className="mt-1 block text-sm uppercase tracking-widest text-slate-500">
-                  Supported
+                  {t("home.supported")}
                 </span>
               </div>
               <div>
                 <strong className="block font-serif text-2xl">VNPay</strong>
                 <span className="mt-1 block text-sm uppercase tracking-widest text-slate-500">
-                  & MoMo
+                  {t("home.momo")}
                 </span>
               </div>
             </motion.div>
@@ -221,7 +222,6 @@ export default function HomePage() {
           <HeroBookOrbit
             books={orbitBooks}
             activeOrbit={activeOrbit}
-            onActivate={setActiveOrbit}
           />
         </div>
       </section>
@@ -232,7 +232,7 @@ export default function HomePage() {
 
       <section className="bg-white px-4 py-24 md:px-8">
         <div className="mx-auto max-w-7xl">
-          <SectionHead chip="Backend Catalog" title="This Week's Picks" link="/category/all" />
+          <SectionHead chip={t("home.backendCatalog")} title={t("home.weeklyPicks")} link="/category/all" />
           {message && <div className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-700">{message}</div>}
           <div className="mt-12 grid grid-cols-2 gap-6 md:grid-cols-4">
             {featured.map((book, index) => (
@@ -253,7 +253,7 @@ export default function HomePage() {
       <QuoteSection />
 
       <section className="mx-auto max-w-7xl px-4 py-24 md:px-8">
-        <SectionHead chip="Collection" title="All Books" link="/category/all" />
+        <SectionHead chip={t("home.collection")} title={t("home.allBooks")} link="/category/all" />
         <BookGrid books={books.slice(0, 12)} />
       </section>
 
@@ -267,6 +267,7 @@ export default function HomePage() {
 }
 
 function useCatalog(params = {}) {
+  const { t } = useTranslation();
   const [books, setBooks] = useState(FALLBACK_BOOKS);
   const [message, setMessage] = useState("");
 
@@ -284,25 +285,25 @@ function useCatalog(params = {}) {
       .catch((error) => {
         if (alive) {
           setBooks(FALLBACK_BOOKS);
-          setMessage(error.message || "Showing demo catalog while backend is unavailable.");
+          setMessage(error.message || t("home.demoMessage"));
         }
       });
 
     return () => {
       alive = false;
     };
-  }, [params.keyword, params.categorySlug]);
+  }, [params.keyword, params.categorySlug, t]);
 
   return { books, message };
 }
 
-function HeroBookOrbit({ books, activeOrbit, onActivate }) {
+function HeroBookOrbit({ books, activeOrbit }) {
   const positions = [
-    { x: -220, y: -42, rotate: -12, scale: 0.86, z: 10 },
-    { x: -88, y: -12, rotate: -5, scale: 0.96, z: 20 },
-    { x: 58, y: -28, rotate: 3, scale: 1.08, z: 30 },
-    { x: 200, y: 8, rotate: 8, scale: 0.98, z: 20 },
-    { x: 332, y: -38, rotate: 13, scale: 0.86, z: 10 },
+    { x: -260, y: 18, rotate: -11, scale: 0.82, z: 10, opacity: 0.7 },
+    { x: -132, y: -14, rotate: -5, scale: 0.94, z: 20, opacity: 0.9 },
+    { x: 0, y: -34, rotate: 0, scale: 1.12, z: 40, opacity: 1 },
+    { x: 138, y: -12, rotate: 5, scale: 0.95, z: 22, opacity: 0.9 },
+    { x: 268, y: 18, rotate: 11, scale: 0.82, z: 10, opacity: 0.72 },
   ];
 
   const visibleBooks = useMemo(() => {
@@ -327,53 +328,76 @@ function HeroBookOrbit({ books, activeOrbit, onActivate }) {
   }
 
   return (
-    <div className="relative hidden h-[600px] w-full lg:block">
-      <div className="absolute left-[54%] top-1/2 h-[460px] w-[460px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-600/15 blur-3xl" />
-      <div className="absolute bottom-10 left-1/2 h-16 w-[520px] -translate-x-1/2 rounded-full bg-black/40 blur-2xl" />
+    <div className="relative hidden h-[600px] w-full overflow-visible lg:block">
+      <div className="pointer-events-none absolute left-1/2 top-1/2 h-[520px] w-[620px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-600/15 blur-3xl" />
+      <div className="pointer-events-none absolute left-1/2 top-[54%] h-[320px] w-[560px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10 bg-white/[0.025] shadow-[inset_0_0_80px_rgba(37,99,235,0.08)]" />
+      <div className="pointer-events-none absolute bottom-20 left-1/2 h-14 w-[500px] -translate-x-1/2 rounded-full bg-black/40 blur-2xl" />
 
       {visibleBooks.map((book, index) => {
         const position = positions[index] || positions[positions.length - 1];
-        const originalIndex = books.findIndex((item) => item.id === book.id);
 
         return (
           <motion.div
-            key={`${book.id}-${activeOrbit}-${index}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            key={book.id}
+            initial={{
+              opacity: 0,
+              x: position.x,
+              y: position.y + 28,
+              rotate: position.rotate,
+              scale: position.scale * 0.92,
+            }}
+            animate={{
+              opacity: position.opacity,
+              x: position.x,
+              y: position.y,
+              rotate: position.rotate,
+              scale: position.scale,
+            }}
             transition={{
-              duration: 0.55,
-              delay: index * 0.08,
-              ease: "easeOut",
+              opacity: { duration: 0.5 },
+              x: { type: "spring", stiffness: 44, damping: 18, mass: 1.1 },
+              y: { type: "spring", stiffness: 44, damping: 18, mass: 1.1 },
+              rotate: { type: "spring", stiffness: 48, damping: 19, mass: 1 },
+              scale: { type: "spring", stiffness: 48, damping: 19, mass: 1 },
             }}
-            onMouseEnter={() => {
-              if (originalIndex >= 0) onActivate(originalIndex);
-            }}
-            className="absolute left-1/2 top-1/2 aspect-[2/3] w-[190px] cursor-pointer rounded-xl"
+            className="absolute left-1/2 top-1/2 aspect-[2/3] w-[190px] cursor-pointer rounded-xl will-change-transform"
             style={{
               zIndex: position.z,
-              transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px)) rotate(${position.rotate}deg) scale(${position.scale})`,
             }}
           >
-            <Link
-              to={`/product/${book.slug}`}
-              className="group absolute inset-0 block overflow-hidden rounded-xl border border-white/10 bg-slate-900 shadow-[0_30px_80px_rgba(0,0,0,0.55)] transition duration-500 hover:-translate-y-4 hover:scale-105"
+            <motion.div
+              animate={{ y: [0, -10, 0] }}
+              transition={{
+                duration: 4.8 + index * 0.25,
+                ease: "easeInOut",
+                repeat: Infinity,
+                repeatType: "mirror",
+              }}
+              className="absolute left-0 top-0 h-full w-full"
             >
-              <img
-                src={book.image || book.cover}
-                alt={book.title}
-                className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
-              />
+              <Link
+                to={`/product/${book.slug}`}
+                className="group block h-full w-full -translate-x-1/2 -translate-y-1/2 origin-center overflow-hidden rounded-[22px] border border-white/15 bg-slate-900 shadow-[0_34px_90px_rgba(0,0,0,0.58)] ring-1 ring-white/5 transition duration-500 hover:scale-[1.045]"
+              >
+                <img
+                  src={book.image || book.cover}
+                  alt={book.title}
+                  className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                />
 
-              <div className="absolute inset-0 bg-gradient-to-tr from-slate-950/55 via-transparent to-white/20 opacity-80" />
-              <div className="absolute bottom-0 left-0 right-0 p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                <p className="line-clamp-2 font-serif text-lg font-bold leading-tight text-white">
-                  {book.title}
-                </p>
-                <p className="mt-1 line-clamp-1 text-xs font-medium text-slate-300">
-                  {book.author}
-                </p>
-              </div>
-            </Link>
+                <div className="absolute inset-0 bg-gradient-to-tr from-slate-950/60 via-transparent to-white/25 opacity-80" />
+                <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/10 to-transparent opacity-70" />
+                <div className="absolute bottom-0 left-0 right-0 translate-y-3 bg-gradient-to-t from-slate-950/95 via-slate-950/70 to-transparent p-4 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                  <p className="line-clamp-2 font-serif text-lg font-bold leading-tight text-white">
+                    {book.title}
+                  </p>
+                  <p className="mt-1 line-clamp-1 text-xs font-medium text-slate-300">
+                    {book.author}
+                  </p>
+                </div>
+                <div className="pointer-events-none absolute inset-0 rounded-[22px] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),inset_18px_0_28px_rgba(2,6,23,0.28)]" />
+              </Link>
+            </motion.div>
           </motion.div>
         );
       })}
@@ -382,7 +406,8 @@ function HeroBookOrbit({ books, activeOrbit, onActivate }) {
 }
 
 function Ticker() {
-  const text = "Business and Finance - Self-help and Growth - Literature and Fiction - Skills and Wellness - Technology - Education - ";
+  const { t } = useTranslation();
+  const text = t("home.ticker");
 
   return (
     <div className="flex overflow-hidden whitespace-nowrap border-y border-white/5 bg-slate-900 py-4">
@@ -400,36 +425,37 @@ function Ticker() {
 }
 
 function CategoryShowcase() {
+  const { t } = useTranslation();
   const cards = [
     {
       id: "business",
-      title: "Business",
-      count: "120+ titles",
+      title: t("home.categories.business"),
+      count: t("home.categories.count120"),
       image: "https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=600&auto=format&fit=crop",
     },
     {
       id: "self-help",
-      title: "Self-help",
-      count: "180+ titles",
+      title: t("home.categories.selfHelp"),
+      count: t("home.categories.count180"),
       image: "https://images.unsplash.com/photo-1519682337058-a94d519337bc?q=80&w=600&auto=format&fit=crop",
     },
     {
       id: "literature",
-      title: "Literature",
-      count: "95+ titles",
+      title: t("home.categories.literature"),
+      count: t("home.categories.count95"),
       image: "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?q=80&w=600&auto=format&fit=crop",
     },
     {
       id: "skills",
-      title: "Wellness",
-      count: "110+ titles",
+      title: t("home.categories.wellness"),
+      count: t("home.categories.count110"),
       image: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=600&auto=format&fit=crop",
     },
   ];
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-24 md:px-8">
-      <SectionHead chip="Explore" title="Curated Collections" link="/category/all" />
+      <SectionHead chip={t("home.explore")} title={t("home.curatedCollections")} link="/category/all" />
       <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         {cards.map((category, index) => (
           <motion.div
@@ -470,6 +496,7 @@ function CategoryShowcase() {
 }
 
 function QuoteSection() {
+  const { t } = useTranslation();
   return (
     <section className="relative flex items-center justify-center overflow-hidden bg-blue-900 px-4 py-32 text-white">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_white_1px,_transparent_1px)] opacity-10 [background-size:24px_24px]" />
@@ -482,10 +509,10 @@ function QuoteSection() {
       >
         <div className="mb-8 inline-block h-10 overflow-hidden font-serif text-8xl leading-none text-blue-400/30">"</div>
         <p className="mb-8 font-serif text-3xl font-medium leading-tight md:text-5xl">
-          A book is not just read - it is <em className="italic text-blue-200">lived</em>. Aivira exists to help you find the ones that change everything.
+          {t("home.quote")}
         </p>
         <div className="text-sm font-bold uppercase tracking-[0.3em] text-blue-300">
-          - The Aivira Philosophy -
+          {t("home.philosophy")}
         </div>
       </motion.div>
     </section>
@@ -493,10 +520,11 @@ function QuoteSection() {
 }
 
 function BookGrid({ books }) {
+  const { t } = useTranslation();
   if (!books.length) {
     return (
       <div className="mt-12 rounded-3xl border border-slate-200 bg-white px-8 py-16 text-center">
-        <h3 className="font-serif text-2xl font-bold text-slate-900">No books found</h3>
+        <h3 className="font-serif text-2xl font-bold text-slate-900">{t("home.noBooks")}</h3>
       </div>
     );
   }
@@ -519,21 +547,22 @@ function BookGrid({ books }) {
 }
 
 function HowItWorks() {
+  const { t } = useTranslation();
   const steps = [
     {
       num: "01",
-      title: "Discover",
-      desc: "Browse curated collections across business, growth, literature, education, and skills.",
+      title: t("home.steps.discoverTitle"),
+      desc: t("home.steps.discoverDesc"),
     },
     {
       num: "02",
-      title: "Choose",
-      desc: "Read summaries, metadata, prices, stock state, and recommendations before checkout.",
+      title: t("home.steps.chooseTitle"),
+      desc: t("home.steps.chooseDesc"),
     },
     {
       num: "03",
-      title: "Buy & Track",
-      desc: "Add to cart, checkout with COD/VNPay/MoMo, then follow your order status.",
+      title: t("home.steps.trackTitle"),
+      desc: t("home.steps.trackDesc"),
     },
   ];
 
@@ -542,10 +571,10 @@ function HowItWorks() {
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto mb-16 max-w-2xl text-center">
           <div className="mb-4 inline-block rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-400">
-            The Process
+            {t("home.process")}
           </div>
-          <h2 className="mb-4 font-serif text-4xl font-bold md:text-5xl">How It Works</h2>
-          <p className="text-slate-400">Three simple steps to your next great read</p>
+          <h2 className="mb-4 font-serif text-4xl font-bold md:text-5xl">{t("home.howItWorks")}</h2>
+          <p className="text-slate-400">{t("home.processCopy")}</p>
         </div>
 
         <div className="relative grid grid-cols-1 gap-8 md:grid-cols-3">
@@ -574,6 +603,7 @@ function HowItWorks() {
 }
 
 function AboutSection({ booksCount }) {
+  const { t } = useTranslation();
   return (
     <section className="relative overflow-hidden border-t border-slate-800 bg-slate-900 px-4 py-24 text-white md:px-8">
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay" />
@@ -588,19 +618,15 @@ function AboutSection({ booksCount }) {
           className="relative z-10"
         >
           <div className="mb-6 inline-block rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white">
-            Why Us
+            {t("home.whyUs")}
           </div>
-          <h2 className="mb-6 font-serif text-4xl font-bold md:text-5xl">AIVIRA BOOKSTORE</h2>
+          <h2 className="mb-6 font-serif text-4xl font-bold md:text-5xl">{t("home.aboutTitle")}</h2>
           <p className="mb-8 text-lg font-light leading-relaxed text-slate-300">
-            Aivira is the sole bookstore operator. Customers browse, add books to cart, checkout, pay, and track orders in one place.
+            {t("home.aboutCopy")}
           </p>
 
           <ul className="mb-8 space-y-4">
-            {[
-              "Admin-managed catalog with book variants and stock.",
-              "Customer cart, checkout, COD, VNPay, and MoMo flows.",
-              "Frontend uses real backend APIs for auth, catalog, cart, checkout, orders, and admin.",
-            ].map((item) => (
+            {t("home.aboutBullets", { returnObjects: true }).map((item) => (
               <li key={item} className="flex items-center gap-3 font-medium text-slate-300">
                 <div className="flex h-6 w-6 items-center justify-center rounded-full border border-blue-500/30 bg-blue-500/20 text-blue-400">
                   <span className="text-xs font-bold leading-none">OK</span>
@@ -614,7 +640,7 @@ function AboutSection({ booksCount }) {
             to="/about"
             className="inline-block rounded-full bg-blue-600 px-8 py-4 font-bold tracking-wide text-white shadow-lg shadow-blue-500/25 transition-colors hover:bg-blue-500"
           >
-            Learn More
+            {t("home.learnMore")}
           </Link>
         </motion.div>
 
@@ -635,12 +661,12 @@ function AboutSection({ booksCount }) {
             <div className="absolute bottom-8 left-8 right-8 flex items-center justify-around rounded-2xl border border-white/20 bg-white/10 p-6 text-center shadow-xl backdrop-blur-md">
               <div>
                 <strong className="mb-1 block font-serif text-3xl text-white">12K+</strong>
-                <span className="text-xs font-bold uppercase tracking-widest text-slate-300">Readers</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-slate-300">{t("home.readers")}</span>
               </div>
               <div className="h-12 w-px bg-white/20" />
               <div>
                 <strong className="mb-1 block font-serif text-3xl text-white">{booksCount}+</strong>
-                <span className="text-xs font-bold uppercase tracking-widest text-slate-300">Titles</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-slate-300">{t("home.titles")}</span>
               </div>
             </div>
           </div>
@@ -651,22 +677,23 @@ function AboutSection({ booksCount }) {
 }
 
 function LatestNews() {
+  const { t } = useTranslation();
   const posts = [
     {
-      title: "Top 10 Books Worth Reading This Year",
-      category: "Business",
+      title: t("home.posts.one"),
+      category: t("home.categories.business"),
       date: "02 Jun, 2026",
       image: "https://images.unsplash.com/photo-1542361345-89e58247f2d5?q=80&w=600&auto=format&fit=crop",
     },
     {
-      title: "Time Management Lessons From High-Performing Leaders",
-      category: "Skills",
+      title: t("home.posts.two"),
+      category: t("home.categories.wellness"),
       date: "28 May, 2026",
       image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=600&auto=format&fit=crop",
     },
     {
-      title: "Why Fiction Helps Readers Build Empathy",
-      category: "Literature",
+      title: t("home.posts.three"),
+      category: t("home.categories.literature"),
       date: "20 May, 2026",
       image: "https://images.unsplash.com/photo-1474932430478-367d16b99031?q=80&w=600&auto=format&fit=crop",
     },
@@ -675,7 +702,7 @@ function LatestNews() {
   return (
     <section className="border-t border-slate-200 bg-slate-50 px-4 py-24 md:px-8">
       <div className="mx-auto max-w-7xl">
-        <SectionHead chip="Insights" title="News & Blog" link="/blog" />
+        <SectionHead chip={t("home.insights")} title={t("home.blog")} link="/blog" />
         <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
           {posts.map((post, index) => (
             <motion.article
@@ -712,6 +739,7 @@ function LatestNews() {
 }
 
 function SectionHead({ chip, title, link }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col justify-between gap-4 border-b border-slate-200 pb-6 md:flex-row md:items-end">
       <div>
@@ -726,7 +754,7 @@ function SectionHead({ chip, title, link }) {
           to={link}
           className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-500 transition-colors hover:text-blue-600"
         >
-          View All <span className="text-lg">-&gt;</span>
+          {t("home.viewAll")} <span className="text-lg">-&gt;</span>
         </Link>
       )}
     </div>

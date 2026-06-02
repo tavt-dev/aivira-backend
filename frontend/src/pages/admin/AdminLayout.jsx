@@ -1,17 +1,20 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { logout as logoutRequest } from "../../api/authApi.js";
+import LanguageSwitcher from "../../components/LanguageSwitcher.jsx";
 import { clearAuth, getCurrentUser, getRefreshToken } from "../../utils/storage.js";
 
 const links = [
-  ["/admin/products", "Products"],
-  ["/admin/categories", "Categories"],
-  ["/admin/payments", "Payments"],
-  ["/admin/permissions", "Permissions"],
-  ["/admin/orders-pending", "Orders"]
+  ["/admin/products", "admin.products"],
+  ["/admin/categories", "admin.categories"],
+  ["/admin/payments", "admin.payments"],
+  ["/admin/permissions", "admin.permissions"],
+  ["/admin/orders-pending", "admin.orders"]
 ];
 
 export default function AdminLayout() {
+  const { t } = useTranslation();
   const [user, setUser] = useState(getCurrentUser());
   const navigate = useNavigate();
 
@@ -37,7 +40,7 @@ export default function AdminLayout() {
       <aside className="sticky top-0 z-30 flex min-h-0 flex-col gap-2 border-b border-white/10 bg-slate-950 p-5 text-white lg:min-h-screen lg:border-b-0">
         <Link to="/admin/products" className="mb-4 flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 font-serif text-xl font-bold">A</span>
-          <span className="font-serif text-2xl font-bold tracking-wider">AIVIRA ADMIN</span>
+          <span className="font-serif text-2xl font-bold tracking-wider">{t("admin.brand")}</span>
         </Link>
 
         <nav className="flex gap-2 overflow-x-auto lg:grid lg:overflow-visible">
@@ -52,31 +55,32 @@ export default function AdminLayout() {
                 ].join(" ")
               }
             >
-              {label}
+              {t(label)}
             </NavLink>
           ))}
         </nav>
 
         <Link className="mt-auto hidden rounded-xl px-4 py-3 text-sm font-bold text-white/55 transition-colors hover:bg-white/10 hover:text-white lg:block" to="/">
-          Back to bookstore
+          {t("common.backToBookstore")}
         </Link>
       </aside>
 
       <section className="min-w-0 p-5 md:p-8">
         <header className="mb-6 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:flex-row md:items-center md:justify-between">
           <div>
-            <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-600">Dashboard</span>
-            <h1 className="mt-2 font-serif text-3xl font-bold text-slate-950">Admin workspace</h1>
+            <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-600">{t("admin.dashboard")}</span>
+            <h1 className="mt-2 font-serif text-3xl font-bold text-slate-950">{t("admin.workspace")}</h1>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600">
-              {user?.username || user?.email || "Admin"}
+              {user?.username || user?.email || t("admin.admin")}
             </span>
+            <LanguageSwitcher compact />
             <Link className="rounded-full border border-slate-200 px-4 py-2 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50" to="/">
-              Bookstore
+              {t("admin.bookstore")}
             </Link>
             <button className="rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-blue-600" type="button" onClick={logout}>
-              Logout
+              {t("admin.logout")}
             </button>
           </div>
         </header>

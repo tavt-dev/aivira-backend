@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { formatVND } from "../utils/formatters.js";
 
 export default function BookCard({ book }) {
+  const { t } = useTranslation();
   const hasOldPrice = Number(book.priceOld || 0) > Number(book.price || 0);
   const rating = Number(book.rating || 0);
 
@@ -25,7 +27,7 @@ export default function BookCard({ book }) {
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/30 via-transparent to-white/10 opacity-70" />
         <div className="absolute left-0 top-0 h-full w-2 bg-slate-950/70" />
         <div className="absolute inset-x-4 bottom-4 translate-y-3 rounded-full bg-white/95 px-4 py-2 text-center text-sm font-bold text-slate-900 opacity-0 shadow-lg transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-          View Details
+          {t("common.viewDetails")}
         </div>
       </div>
 

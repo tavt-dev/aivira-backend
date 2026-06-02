@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { cancelOrder, getOrder, getOrders } from "../api/orderApi.js";
 import { formatVND } from "../utils/formatters.js";
@@ -6,6 +7,7 @@ import { normalizeOrder, pageRows } from "../utils/mappers.js";
 import { getAccessToken } from "../utils/storage.js";
 
 export default function OrdersPage({ onAuth }) {
+  const { t } = useTranslation();
   const [orders, setOrders] = useState([]);
   const [selected, setSelected] = useState(null);
   const [message, setMessage] = useState("");
@@ -15,18 +17,18 @@ export default function OrdersPage({ onAuth }) {
 
     getOrders()
       .then((page) => setOrders(pageRows(page).map(normalizeOrder)))
-      .catch((error) => setMessage(error.message || "Could not load backend orders."));
-  }, []);
+      .catch((error) => setMessage(error.message || t("orders.loadFailed")));
+  }, [t]);
 
   async function cancel(order) {
     try {
-      const updated = await cancelOrder(order.id, "Cancelled from frontend");
+      const updated = await cancelOrder(order.id, t("orders.cancelReason"));
       setOrders((current) =>
         current.map((item) => (item.id === order.id ? normalizeOrder(updated) : item))
       );
-      setMessage("Order cancelled.");
+      setMessage(t("orders.cancelled"));
     } catch (error) {
-      setMessage(error.message || "Cancel order failed.");
+      setMessage(error.message || t("orders.cancelFailed"));
     }
   }
 
@@ -35,7 +37,7 @@ export default function OrdersPage({ onAuth }) {
     try {
       setSelected(await getOrder(order.id));
     } catch (error) {
-      setMessage(error.message || "Order detail unavailable.");
+      setMessage(error.message || t("orders.detailFailed"));
     }
   }
 
@@ -43,19 +45,19 @@ export default function OrdersPage({ onAuth }) {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 pb-20 pt-28 md:px-8">
-      <PageHeader title="Orders" eyebrow="Backend orders" />
+      <PageHeader title={t("orders.title")} eyebrow={t("orders.eyebrow")} />
       {message && <Notice>{message}</Notice>}
       {!loggedIn && (
         <Notice>
-          Login to view backend orders.{" "}
+          {t("orders.loginRequired")}{" "}
           <button type="button" className="font-bold text-blue-700 underline" onClick={onAuth}>
-            Login
+            {t("common.login")}
           </button>
         </Notice>
       )}
 
       {orders.length === 0 ? (
-        <EmptyState title="No orders yet" />
+        <EmptyState title={t("orders.empty")} />
       ) : (
         <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
           {orders.map((order) => (
@@ -73,14 +75,14 @@ export default function OrdersPage({ onAuth }) {
                 onClick={() => viewDetail(order)}
                 className="rounded-full border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
               >
-                Detail
+                {t("orders.detail")}
               </button>
               <button
                 type="button"
                 onClick={() => cancel(order)}
                 className="rounded-full border border-red-100 px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-50"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
             </div>
           ))}
@@ -101,12 +103,12 @@ export default function OrdersPage({ onAuth }) {
               {selected.orderCode || selected.id}
             </h2>
             <div className="mt-5 grid gap-2 text-sm text-slate-600">
-              <p>Status: {selected.orderStatus}</p>
+              <p>{t("orders.status")}: {selected.orderStatus}</p>
               <p>
-                Payment: {selected.paymentMethod || "-"} / {selected.paymentStatus || "-"}
+                {t("orders.payment")}: {selected.paymentMethod || "-"} / {selected.paymentStatus || "-"}
               </p>
               <p>
-                Shipping: {selected.shippingRecipientName || selected.recipientName || "-"} -{" "}
+                {t("orders.shipping")}: {selected.shippingRecipientName || selected.recipientName || "-"} -{" "}
                 {selected.shippingAddressLine || ""}
               </p>
             </div>

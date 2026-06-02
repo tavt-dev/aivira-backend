@@ -1,9 +1,20 @@
-export function formatVND(value) {
-  return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(Number(value || 0));
+import i18n from "../i18n.js";
+
+export function currentLocale(language = i18n.language) {
+  return String(language || "vi").startsWith("en") ? "en-US" : "vi-VN";
 }
 
-export function formatSold(value) {
-  return Number(value || 0) > 1000 ? `${(Number(value || 0) / 1000).toFixed(1)}k` : String(value || 0);
+export function formatVND(value, language) {
+  return new Intl.NumberFormat(currentLocale(language), {
+    style: "currency",
+    currency: "VND",
+  }).format(Number(value || 0));
+}
+
+export function formatSold(value, language) {
+  const numeric = Number(value || 0);
+  if (numeric > 1000) return `${new Intl.NumberFormat(currentLocale(language), { maximumFractionDigits: 1 }).format(numeric / 1000)}k`;
+  return new Intl.NumberFormat(currentLocale(language)).format(numeric);
 }
 
 export function discount(book) {
