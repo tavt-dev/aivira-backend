@@ -1,0 +1,266 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --f-display: "Bebas Neue", sans-serif;
+  --f-serif: "Cormorant Garamond", serif;
+  --f-body: "Outfit", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  overflow-x: hidden;
+  background: #f8fafc;
+  color: #0f172a;
+  font-family: var(--f-body);
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  background: #020617;
+  color: #e2e8f0;
+}
+
+html.dark .bg-white,
+html.dark .bg-white\/80,
+html.dark .bg-white\/85,
+html.dark .bg-white\/95,
+html.dark .bg-slate-50,
+html.dark .bg-slate-100 {
+  background-color: rgba(15, 23, 42, 0.94) !important;
+}
+
+html.dark .bg-slate-200 {
+  background-color: rgba(30, 41, 59, 0.92) !important;
+}
+
+html.dark .bg-blue-50 {
+  background-color: rgba(37, 99, 235, 0.16) !important;
+}
+
+html.dark .bg-amber-50 {
+  background-color: rgba(245, 158, 11, 0.14) !important;
+}
+
+html.dark .bg-red-50 {
+  background-color: rgba(239, 68, 68, 0.14) !important;
+}
+
+html.dark .text-slate-950,
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-slate-700 {
+  color: #f8fafc !important;
+}
+
+html.dark .text-slate-600,
+html.dark .text-slate-500,
+html.dark .text-slate-400 {
+  color: #cbd5e1 !important;
+}
+
+html.dark .border-slate-100,
+html.dark .border-slate-200,
+html.dark .border-slate-300 {
+  border-color: rgba(148, 163, 184, 0.22) !important;
+}
+
+html.dark input,
+html.dark select,
+html.dark textarea {
+  background-color: rgba(15, 23, 42, 0.92);
+  color: #f8fafc;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #94a3b8;
+}
+
+html.dark .shadow-sm,
+html.dark .shadow-xl,
+html.dark .shadow-2xl {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.38) !important;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+img,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+section:where([class]) {
+  padding: 0;
+}
+
+#sprog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  height: 2px;
+  width: 0;
+  background: linear-gradient(90deg, #2563eb, #38bdf8);
+  transform-origin: left;
+  pointer-events: none;
+}
+
+#cur,
+#cur-ring {
+  position: fixed;
+  left: -100px;
+  top: -100px;
+  display: none;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+#cur {
+  z-index: 99999;
+  width: 24px;
+  height: 24px;
+  color: #facc15;
+  font-size: 20px;
+  transition: transform 0.25s ease, opacity 0.2s ease;
+}
+
+#cur::after {
+  content: "*";
+}
+
+#cur-ring {
+  z-index: 99998;
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid rgba(250, 204, 21, 0.45);
+  border-radius: 999px;
+  transition: width 0.25s ease, height 0.25s ease, border-color 0.2s ease;
+}
+
+#cur.c-hover {
+  transform: translate(-50%, -50%) scale(1.18);
+}
+
+#cur-ring.c-hover {
+  width: 48px;
+  height: 48px;
+  border-color: rgba(250, 204, 21, 0.75);
+}
+
+#cur.c-text {
+  opacity: 0.45;
+  transform: translate(-50%, -50%) scale(0.55);
+}
+
+#btt {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 60;
+  display: flex;
+  height: 44px;
+  width: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  background: #020617;
+  color: #fff;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease, background 0.2s ease;
+}
+
+#btt svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2.6;
+}
+
+#btt.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#btt:hover {
+  background: #2563eb;
+  transform: translateY(-3px);
+}
+
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s ease var(--reveal-delay, 0ms), transform 0.6s ease var(--reveal-delay, 0ms);
+}
+
+.scroll-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.tilt-card {
+  transform-style: preserve-3d;
+}
+
+body.admin-route #sprog,
+body.admin-route #cur,
+body.admin-route #cur-ring,
+body.admin-route #btt {
+  display: none;
+}
+
+@media (pointer: fine) and (min-width: 900px) {
+  #cur,
+  #cur-ring {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  .scroll-reveal {
+    opacity: 1;
+    transform: none;
+  }
+}

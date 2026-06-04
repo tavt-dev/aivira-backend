@@ -1,0 +1,725 @@
+.aiv-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 50% 33%, rgba(65, 132, 255, 0.34), transparent 31%),
+    radial-gradient(circle at 18% 18%, rgba(134, 190, 255, 0.17), transparent 25%),
+    radial-gradient(circle at 82% 72%, rgba(24, 83, 227, 0.2), transparent 29%),
+    linear-gradient(145deg, #020916 0%, #071526 48%, #01060f 100%);
+  color: #fff;
+}
+
+.aiv-intro-bg {
+  position: absolute;
+  inset: -24%;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 28% 40%, rgba(24, 83, 227, 0.25), transparent 54%),
+    radial-gradient(ellipse at 74% 32%, rgba(111, 191, 255, 0.14), transparent 48%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.034) 0 1px, transparent 1px 92px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 92px);
+  filter: blur(0.4px);
+  opacity: 0.9;
+  animation: aivBgDrift 12s ease-in-out infinite alternate;
+}
+
+.aiv-intro-noise {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.1;
+  mix-blend-mode: screen;
+  background-image:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.08), transparent 30%),
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px);
+  background-size: 100% 100%, 18px 18px;
+}
+
+.aiv-intro-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at center, transparent 0 43%, rgba(0, 0, 0, 0.42) 76%, rgba(0, 0, 0, 0.76) 100%);
+}
+
+.aiv-intro-particles {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.aiv-intro-particle {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: calc(3px * var(--s));
+  height: calc(3px * var(--s));
+  border-radius: 999px;
+  background: rgba(218, 234, 255, 0.92);
+  box-shadow:
+    0 0 12px rgba(111, 191, 255, 0.92),
+    0 0 26px rgba(24, 83, 227, 0.54);
+  animation: aivParticlePulse var(--d) ease-in-out infinite alternate;
+}
+
+.aiv-intro-skip {
+  position: absolute;
+  top: 26px;
+  right: 30px;
+  z-index: 5;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(16px);
+  color: rgba(255, 255, 255, 0.74);
+  padding: 9px 14px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.aiv-intro-skip:hover {
+  transform: translateY(-2px);
+  color: #fff;
+  border-color: rgba(200, 217, 255, 0.4);
+  background: rgba(255, 255, 255, 0.13);
+}
+
+.aiv-intro-stage {
+  position: relative;
+  z-index: 3;
+  width: min(92vw, 760px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  text-align: center;
+  perspective: 2500px;
+}
+
+.aiv-intro-book-container {
+  width: clamp(240px, 35vw, 320px);
+  height: clamp(340px, 46vw, 450px);
+  perspective: 2500px;
+  transform-style: preserve-3d;
+  margin-bottom: 20px;
+}
+
+.aiv-intro-book {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  cursor: pointer;
+}
+
+.aiv-intro-book:hover .aiv-book-cover-shine {
+  animation-duration: 2s; /* Faster shine when hovering */
+}
+
+.aiv-book-shadow {
+  position: absolute;
+  left: 0%;
+  right: 0%;
+  bottom: -20px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  filter: blur(15px);
+  transform: translateZ(-50px);
+  pointer-events: none;
+  transition: all 0.4s ease;
+}
+
+.aiv-intro-book:hover .aiv-book-shadow {
+  background: rgba(111, 191, 255, 0.3);
+  filter: blur(20px);
+  transform: translateZ(-50px) scale(1.15);
+}
+
+/* 3D Book Components */
+.aiv-book-back {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(145deg, #010916 0%, #082151 50%, #020b18 100%);
+  border-radius: 4px 14px 14px 4px;
+  transform: translateZ(-30px);
+  box-shadow: 15px 15px 40px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05); /* subtle edge */
+}
+
+.aiv-book-pages-right {
+  position: absolute;
+  inset: 6px 8px 6px 3px;
+  background: linear-gradient(150deg, #ffffff, #e6f0ff);
+  border-radius: 0 10px 10px 0;
+  transform: translateZ(-15px);
+  box-shadow: 
+    inset 4px 0 10px rgba(0,0,0,0.1),
+    inset -1px 0 2px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  padding: 10% 8%;
+  color: rgba(7, 21, 38, 0.8);
+  transform-style: preserve-3d;
+}
+
+/* Page block 3D thickness */
+.aiv-book-pages-right::before {
+  content: "";
+  position: absolute;
+  right: -8px;
+  top: 5px;
+  bottom: 5px;
+  width: 8px;
+  background: repeating-linear-gradient(90deg, #fff 0px, #fff 1px, #eef3f9 1px, #eef3f9 2px);
+  border-radius: 0 4px 4px 0;
+  transform-origin: left;
+  transform: rotateY(90deg);
+}
+.aiv-book-pages-right::after {
+  content: "";
+  position: absolute;
+  left: 0px;
+  top: -6px;
+  right: 0px;
+  height: 6px;
+  background: repeating-linear-gradient(180deg, #fff 0px, #fff 1px, #eef3f9 1px, #eef3f9 2px);
+  transform-origin: bottom;
+  transform: rotateX(90deg);
+}
+
+
+/* New Page Content Styling */
+.aiv-right-page-content {
+  position: absolute;
+  inset: 16px;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 4px 8px 8px 4px;
+  transform: translateZ(1px); /* Avoid z-fighting */
+}
+
+.aiv-page-border {
+  position: absolute;
+  inset: 12px;
+  border: 1px solid rgba(7, 21, 38, 0.15);
+  pointer-events: none;
+}
+
+.aiv-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.aiv-page-num {
+  font-family: var(--f-display, Georgia, serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: rgba(7, 21, 38, 0.8);
+}
+
+.aiv-page-chap {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(7, 21, 38, 0.5);
+  text-transform: uppercase;
+}
+
+.aiv-page-heading {
+  font-family: var(--f-display, Georgia, serif);
+  font-size: clamp(2rem, 3.5vw, 2.5rem);
+  line-height: 1.1;
+  color: #041022;
+  margin: 0 0 16px 0;
+  text-transform: uppercase;
+}
+
+.aiv-page-divider {
+  width: 40px;
+  height: 2px;
+  background: #041022;
+  margin-bottom: 20px;
+}
+
+.aiv-page-text {
+  font-family: var(--f-serif, Georgia, serif);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: rgba(7, 21, 38, 0.7);
+  margin: 0;
+}
+
+.aiv-page-graphic {
+  margin-top: auto;
+  align-self: flex-end;
+  position: relative;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+}
+
+.aiv-pg-circle {
+  position: absolute;
+  inset: 0;
+  border: 1px dashed rgba(7, 21, 38, 0.4);
+  border-radius: 50%;
+  animation: aivSpinSlow 15s linear infinite;
+}
+
+.aiv-pg-circle-inner {
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(7, 21, 38, 0.6);
+  border-radius: 50%;
+  position: relative;
+}
+
+.aiv-pg-circle-inner::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 4px;
+  background: #041022;
+  border-radius: 50%;
+}
+
+@keyframes aivSpinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.aiv-book-front-wrapper {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  transform: translateZ(0px); 
+}
+
+.aiv-book-front {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 4px 14px 14px 4px;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.12), transparent 34%),
+    radial-gradient(circle at 62% 22%, rgba(111, 191, 255, 0.22), transparent 32%),
+    linear-gradient(145deg, #020b18 0%, #0a214d 50%, #020c1a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-left: 1px solid rgba(0, 0, 0, 0.6);
+  box-shadow: 
+    inset 4px 0 12px rgba(0, 0, 0, 0.5),
+    inset -2px 0 20px rgba(111, 191, 255, 0.12),
+    inset 0 0 44px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.aiv-book-cover-line {
+  position: absolute;
+  inset: 15px;
+  border: 1px solid rgba(200, 217, 255, 0.2);
+  border-radius: inherit;
+  pointer-events: none;
+}
+.aiv-book-cover-line::before,
+.aiv-book-cover-line::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(200, 217, 255, 0.38), transparent);
+}
+.aiv-book-cover-line::before { top: 18px; }
+.aiv-book-cover-line::after { bottom: 18px; }
+
+.aiv-book-cover-shine {
+  position: absolute;
+  inset: -30%;
+  background: linear-gradient(105deg, transparent 0 38%, rgba(255, 255, 255, 0.15) 45%, transparent 54% 100%);
+  transform: translateX(-34%) rotate(8deg);
+  animation: aivCoverShine 4.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.aiv-book-mark {
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(200, 217, 255, 0.28);
+  background: rgba(255, 255, 255, 0.045);
+  color: #fff;
+  font-family: var(--f-display, Georgia, serif);
+  font-size: 3rem;
+  text-shadow: 0 0 30px rgba(111, 191, 255, 0.86);
+  box-shadow: 0 0 32px rgba(24, 83, 227, 0.32);
+  margin-bottom: 20px;
+}
+
+.aiv-book-title {
+  color: #fff;
+  font-family: var(--f-display, Georgia, serif);
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  letter-spacing: 0.16em;
+  text-shadow: 0 0 36px rgba(111, 191, 255, 0.78);
+  margin-bottom: 8px;
+}
+
+.aiv-book-subtitle {
+  color: rgba(200, 217, 255, 0.62);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.28em;
+}
+
+.aiv-book-inside-cover {
+  position: absolute;
+  inset: -1px; 
+  backface-visibility: hidden;
+  transform: rotateY(180deg);
+  border-radius: 14px 4px 4px 14px;
+  background: linear-gradient(150deg, #fbfdff, #d5e5ff);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset -10px 0 20px rgba(0,0,0,0.1); 
+}
+
+.aiv-inside-border {
+  position: absolute;
+  inset: 24px;
+  border: 1px solid rgba(24, 83, 227, 0.15);
+  border-radius: 8px 2px 2px 8px;
+  pointer-events: none;
+}
+
+.aiv-inside-border::before,
+.aiv-inside-border::after {
+  content: "";
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  height: 1px;
+  background: rgba(24, 83, 227, 0.1);
+}
+
+.aiv-inside-border::before { top: -6px; }
+.aiv-inside-border::after { bottom: -6px; }
+
+.aiv-inside-cover-brand {
+  color: rgba(24, 83, 227, 0.7);
+  font-family: var(--f-display, Georgia, serif);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin-bottom: 20px;
+}
+
+.aiv-inside-illustration {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 1px dashed rgba(24, 83, 227, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 20px rgba(24, 83, 227, 0.05);
+}
+
+.aiv-ill-star {
+  font-size: 2rem;
+  color: rgba(24, 83, 227, 0.4);
+}
+
+.aiv-intro-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  will-change: transform, opacity;
+}
+
+.aiv-intro-kicker {
+  margin: 0;
+  color: rgba(200, 217, 255, 0.8);
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.24em;
+}
+
+.aiv-intro-copy h1 {
+  margin: 0;
+  color: #fff;
+  font-family: var(--f-display, Georgia, serif);
+  font-size: clamp(3.5rem, 10vw, 7rem);
+  line-height: 0.9;
+  letter-spacing: 0.12em;
+  text-shadow:
+    0 20px 80px rgba(45, 107, 240, 0.5),
+    0 0 40px rgba(111, 191, 255, 0.3);
+}
+
+.aiv-intro-copy p:last-child {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-family: var(--f-serif, Georgia, serif);
+  font-size: clamp(1.2rem, 3vw, 1.6rem);
+  font-style: italic;
+  letter-spacing: 0.04em;
+}
+
+.aiv-intro-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.aiv-intro-open {
+  position: relative;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #1853e3, #2d6bf0 52%, #6fbfff);
+  color: #fff;
+  padding: 16px 40px;
+  font-weight: 900;
+  font-size: 1rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  box-shadow:
+    0 15px 40px rgba(24, 83, 227, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: transform 0.25s ease, filter 0.25s ease, box-shadow 0.25s ease;
+}
+
+.aiv-intro-open::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transform: translateX(-120%);
+  transition: transform 0.6s ease;
+}
+
+.aiv-intro-open:hover {
+  transform: translateY(-3px) scale(1.04);
+  filter: brightness(1.15);
+  box-shadow:
+    0 20px 50px rgba(24, 83, 227, 0.7),
+    0 0 25px rgba(111, 191, 255, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.aiv-intro-open:hover::before {
+  transform: translateX(120%);
+}
+
+.aiv-intro-open:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+@keyframes aivBgDrift {
+  from { transform: translate3d(-1%, -1%, 0) scale(1.0); }
+  to { transform: translate3d(1%, 1%, 0) scale(1.04); }
+}
+
+@keyframes aivParticlePulse {
+  from { transform: translate3d(0, 0, 0) scale(0.8); filter: blur(0); }
+  to { transform: translate3d(0, -15px, 0) scale(1.3); filter: blur(0.5px); }
+}
+
+@keyframes aivCoverShine {
+  0%, 38% { transform: translateX(-60%) rotate(8deg); opacity: 0; }
+  50% { opacity: 1; }
+  72%, 100% { transform: translateX(60%) rotate(8deg); opacity: 0; }
+}
+
+/* Shooting Stars Effect */
+.aiv-shooting-stars {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.aiv-shooting-star {
+  position: absolute;
+  top: var(--top);
+  left: var(--left);
+  width: 150px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8));
+  border-radius: 999px;
+  opacity: 0;
+  transform: rotate(145deg) translateX(0);
+  animation: aivShootingStar var(--dur) linear infinite;
+  animation-delay: var(--del);
+}
+
+.aiv-shooting-star::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 15px 5px rgba(218, 234, 255, 0.9);
+}
+
+@keyframes aivShootingStar {
+  0% {
+    transform: rotate(145deg) translateX(-20vw);
+    opacity: 0;
+  }
+  2% {
+    opacity: 1;
+  }
+  15% {
+    transform: rotate(145deg) translateX(150vw);
+    opacity: 0;
+  }
+  100% {
+    transform: rotate(145deg) translateX(150vw);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 680px) {
+  .aiv-intro { padding: 20px 14px; }
+  .aiv-intro-stage { gap: 20px; }
+  
+  .aiv-intro-book-container {
+    width: clamp(200px, 60vw, 260px);
+    height: clamp(280px, 80vw, 360px);
+  }
+
+  .aiv-right-page-content {
+    padding: 12px 10px;
+    inset: 8px;
+  }
+
+  .aiv-page-border {
+    inset: 6px;
+  }
+
+  .aiv-page-header {
+    margin-bottom: 8px;
+  }
+
+  .aiv-page-num {
+    font-size: 0.8rem;
+  }
+
+  .aiv-page-chap {
+    font-size: 0.5rem;
+  }
+
+  .aiv-page-heading {
+    font-size: 1.2rem;
+    margin: 0 0 8px 0;
+  }
+
+  .aiv-page-divider {
+    width: 25px;
+    margin-bottom: 10px;
+  }
+
+  .aiv-page-text {
+    font-size: 0.65rem;
+    line-height: 1.4;
+  }
+
+  .aiv-page-graphic {
+    width: 36px;
+    height: 36px;
+  }
+
+  .aiv-pg-circle-inner {
+    width: 18px;
+    height: 18px;
+  }
+
+  .aiv-inside-cover-brand {
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+  }
+
+  .aiv-inside-illustration {
+    width: 50px;
+    height: 50px;
+  }
+
+  .aiv-ill-star {
+    font-size: 1.1rem;
+  }
+
+  .aiv-inside-border {
+    inset: 10px;
+  }
+
+  .aiv-book-mark {
+    width: 50px;
+    height: 50px;
+    font-size: 2.2rem;
+    margin-bottom: 14px;
+  }
+
+  .aiv-book-title {
+    font-size: 1.6rem;
+  }
+
+  .aiv-book-subtitle {
+    font-size: 0.55rem;
+  }
+
+  .aiv-intro-copy h1 {
+    font-size: 3.2rem;
+  }
+
+  .aiv-intro-copy p:last-child {
+    font-size: 0.95rem;
+  }
+
+  .aiv-intro-open {
+    padding: 14px 32px;
+    font-size: 0.9rem;
+  }
+}
