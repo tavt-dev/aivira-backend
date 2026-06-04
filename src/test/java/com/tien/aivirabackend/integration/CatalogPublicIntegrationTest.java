@@ -52,13 +52,107 @@ class CatalogPublicIntegrationTest extends AbstractIntegrationTest {
         mockMvc.perform(get("/products/{slug}", "draft-product")).andExpect(status().isNotFound());
     }
 
+    @Test
+    void productSchema_shouldIncludeBookCatalogFields() {
+        Integer columnCount = jdbcTemplate.queryForObject(
+                """
+				SELECT COUNT(*)
+				FROM information_schema.columns
+				WHERE table_schema = DATABASE()
+				AND table_name = 'products'
+				AND column_name IN (
+				    'book_author',
+				    'isbn',
+				    'publisher',
+				    'publication_year',
+				    'book_language',
+				    'page_count',
+				    'book_format',
+				    'dimensions'
+				)
+				""",
+                Integer.class);
+
+        org.assertj.core.api.Assertions.assertThat(columnCount).isEqualTo(8);
+    }
+
+    @Test
+    void publicProductSearch_shouldFilterByBookMetadataAndSortByName() throws Exception {
+        Category category = categoryRepository.save(Category.builder()
+                .categoryName("Books")
+                .slug("books")
+                .description("Books")
+                .displayOrder(0)
+                .active(true)
+                .visible(true)
+                .build());
+        saveProduct(
+                "BOOK-1",
+                "beta-book",
+                "Beta Book",
+                ProductStatus.ACTIVE,
+                category,
+                "Nguyen Nhat Anh",
+                "Tre Publishing",
+                "978-604-001");
+        saveProduct(
+                "BOOK-2",
+                "alpha-book",
+                "Alpha Book",
+                ProductStatus.ACTIVE,
+                category,
+                "Ursula Le Guin",
+                "Aivira Press",
+                "978-604-002");
+
+        mockMvc.perform(get("/products").param("author", "nguyen"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.data[0].slug").value("beta-book"));
+
+        mockMvc.perform(get("/products").param("publisher", "aivira"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.data[0].slug").value("alpha-book"));
+
+        mockMvc.perform(get("/products").param("isbn", "002"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.data[0].slug").value("alpha-book"));
+
+        mockMvc.perform(get("/products").param("keyword", "guin"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.data[0].slug").value("alpha-book"));
+
+        mockMvc.perform(get("/products").param("sort", "name_asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.data[0].slug").value("alpha-book"))
+                .andExpect(jsonPath("$.data.data[1].slug").value("beta-book"));
+    }
+
     private void saveProduct(String sku, String slug, ProductStatus status, Category category) {
+        saveProduct(sku, slug, slug, status, category, "Unknown", null, null);
+    }
+
+    private void saveProduct(
+            String sku,
+            String slug,
+            String productName,
+            ProductStatus status,
+            Category category,
+            String bookAuthor,
+            String publisher,
+            String isbn) {
         Product product = Product.builder()
                 .category(category)
                 .sku(sku)
-                .productName(slug)
+                .productName(productName)
                 .slug(slug)
                 .description("Product description")
+                .bookAuthor(bookAuthor)
+                .publisher(publisher)
+                .isbn(isbn)
                 .price(BigDecimal.valueOf(100))
                 .stockQuantity(5)
                 .soldCount(0)

@@ -19,6 +19,10 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     boolean existsBySlugAndIdNot(String slug, Long id);
 
+    boolean existsByIsbn(String isbn);
+
+    boolean existsByIsbnAndIdNot(String isbn, Long id);
+
     @EntityGraph(attributePaths = {"category", "productVariations", "productMedia"})
     Optional<Product> findDetailedById(Long id);
 

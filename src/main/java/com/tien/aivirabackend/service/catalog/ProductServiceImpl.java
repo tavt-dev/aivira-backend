@@ -2,6 +2,7 @@ package com.tien.aivirabackend.service.catalog;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.Year;
 import java.util.Locale;
 
 import org.springframework.data.domain.Sort;
@@ -11,6 +12,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.tien.aivirabackend.config.properties.CloudinaryProperties;
+import com.tien.aivirabackend.constant.BookFormat;
 import com.tien.aivirabackend.constant.MediaType;
 import com.tien.aivirabackend.constant.ProductStatus;
 import com.tien.aivirabackend.domain.dto.PageResponse;
@@ -70,6 +72,9 @@ public class ProductServiceImpl implements ProductService {
             String keyword,
             String categorySlug,
             String brand,
+            String author,
+            String publisher,
+            String isbn,
             BigDecimal minPrice,
             BigDecimal maxPrice,
             Boolean available,
@@ -79,7 +84,7 @@ public class ProductServiceImpl implements ProductService {
         var productPage = productRepository
                 .findAll(
                         productSpecifications.publicProducts(
-                                keyword, categorySlug, brand, minPrice, maxPrice, available),
+                                keyword, categorySlug, brand, author, publisher, isbn, minPrice, maxPrice, available),
                         PageRequestUtils.of(page, size, resolvePublicSort(sort)))
                 .map(productMapper::toResponse);
         return PageResponse.from(productPage);
@@ -120,6 +125,11 @@ public class ProductServiceImpl implements ProductService {
         validateProductSku(request.getSku(), null);
         String slug = resolveProductSlug(request.getSlug(), request.getProductName());
         validateProductSlug(slug, null);
+        validateBookAuthor(request.getBookAuthor());
+        String isbn = trimToNull(request.getIsbn());
+        validateIsbn(isbn, null);
+        validatePublicationYear(request.getPublicationYear());
+        validatePageCount(request.getPageCount());
 
         Product product = Product.builder()
                 .category(category)
@@ -129,6 +139,14 @@ public class ProductServiceImpl implements ProductService {
                 .description(request.getDescription().trim())
                 .brand(trimToNull(request.getBrand()))
                 .material(trimToNull(request.getMaterial()))
+                .bookAuthor(request.getBookAuthor().trim())
+                .isbn(isbn)
+                .publisher(trimToNull(request.getPublisher()))
+                .publicationYear(request.getPublicationYear())
+                .bookLanguage(trimToNull(request.getBookLanguage()))
+                .pageCount(request.getPageCount())
+                .bookFormat(resolveBookFormat(request.getBookFormat()))
+                .dimensions(trimToNull(request.getDimensions()))
                 .price(request.getPrice())
                 .originalPrice(request.getOriginalPrice())
                 .discountPercentage(request.getDiscountPercentage())
@@ -178,6 +196,35 @@ public class ProductServiceImpl implements ProductService {
         }
         if (request.getMaterial() != null) {
             product.setMaterial(trimToNull(request.getMaterial()));
+        }
+        if (request.getBookAuthor() != null) {
+            validateBookAuthor(request.getBookAuthor());
+            product.setBookAuthor(request.getBookAuthor().trim());
+        }
+        if (request.getIsbn() != null) {
+            String isbn = trimToNull(request.getIsbn());
+            validateIsbn(isbn, productId);
+            product.setIsbn(isbn);
+        }
+        if (request.getPublisher() != null) {
+            product.setPublisher(trimToNull(request.getPublisher()));
+        }
+        if (request.getPublicationYear() != null) {
+            validatePublicationYear(request.getPublicationYear());
+            product.setPublicationYear(request.getPublicationYear());
+        }
+        if (request.getBookLanguage() != null) {
+            product.setBookLanguage(trimToNull(request.getBookLanguage()));
+        }
+        if (request.getPageCount() != null) {
+            validatePageCount(request.getPageCount());
+            product.setPageCount(request.getPageCount());
+        }
+        if (request.getBookFormat() != null) {
+            product.setBookFormat(request.getBookFormat());
+        }
+        if (request.getDimensions() != null) {
+            product.setDimensions(trimToNull(request.getDimensions()));
         }
         if (request.getCategoryId() != null) {
             product.setCategory(findVisibleCategory(request.getCategoryId()));
@@ -409,6 +456,44 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
+    private void validateBookAuthor(String bookAuthor) {
+        if (!StringUtils.hasText(bookAuthor)) {
+            throw new AppException(ProductErrorCode.PRODUCT_AUTHOR_REQUIRED);
+        }
+    }
+
+    private void validateIsbn(String isbn, Long productId) {
+        if (!StringUtils.hasText(isbn)) {
+            return;
+        }
+        boolean exists = productId == null
+                ? productRepository.existsByIsbn(isbn)
+                : productRepository.existsByIsbnAndIdNot(isbn, productId);
+        if (exists) {
+            throw new AppException(ProductErrorCode.PRODUCT_ISBN_ALREADY_EXISTS);
+        }
+    }
+
+    private void validatePublicationYear(Integer publicationYear) {
+        if (publicationYear == null) {
+            return;
+        }
+        int maxYear = Year.now().getValue() + 1;
+        if (publicationYear < 1000 || publicationYear > maxYear) {
+            throw new AppException(ProductErrorCode.PRODUCT_INVALID_PUBLICATION_YEAR);
+        }
+    }
+
+    private void validatePageCount(Integer pageCount) {
+        if (pageCount != null && pageCount <= 0) {
+            throw new AppException(ProductErrorCode.PRODUCT_INVALID_PAGE_COUNT);
+        }
+    }
+
+    private BookFormat resolveBookFormat(BookFormat bookFormat) {
+        return bookFormat == null ? BookFormat.PAPERBACK : bookFormat;
+    }
+
     private String resolveProductSlug(String requestedSlug, String productName) {
         return SlugUtils.slugify(StringUtils.hasText(requestedSlug) ? requestedSlug : productName, "product");
     }
@@ -445,6 +530,7 @@ public class ProductServiceImpl implements ProductService {
             case "price_asc" -> Sort.by(Sort.Direction.ASC, "price");
             case "price_desc" -> Sort.by(Sort.Direction.DESC, "price");
             case "best_selling" -> Sort.by(Sort.Direction.DESC, "soldCount");
+            case "name_asc" -> Sort.by(Sort.Direction.ASC, "productName");
             case "newest" -> Sort.by(Sort.Direction.DESC, "createdAt");
             default -> Sort.by(Sort.Direction.DESC, "createdAt");
         };

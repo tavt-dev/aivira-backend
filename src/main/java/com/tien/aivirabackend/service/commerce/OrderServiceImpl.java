@@ -3,7 +3,9 @@ package com.tien.aivirabackend.service.commerce;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -30,10 +32,12 @@ import com.tien.aivirabackend.util.PageRequestUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j(topic = "ORDER-SERVICE")
 public class OrderServiceImpl implements OrderService {
     OrderRepository orderRepository;
     PaymentGroupRepository paymentGroupRepository;
@@ -41,6 +45,7 @@ public class OrderServiceImpl implements OrderService {
     CurrentUserService currentUserService;
     CommerceMapper commerceMapper;
     InventoryService inventoryService;
+    OrderSpecifications orderSpecifications;
 
     @Override
     @Transactional(readOnly = true)
@@ -93,6 +98,60 @@ public class OrderServiceImpl implements OrderService {
         return commerceMapper.toOrderResponse(orderRepository.save(order));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<OrderSummaryResponse> getAdminOrders(
+            OrderStatus status, String keyword, Instant fromDate, Instant toDate, int page, int size) {
+        var pageable = PageRequestUtils.newestFirst(page, size);
+        Specification<Order> specification = orderSpecifications.adminOrders(status, keyword, fromDate, toDate);
+        var orderPage = orderRepository.findAll(specification, pageable).map(commerceMapper::toOrderSummaryResponse);
+        return PageResponse.from(orderPage);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public OrderResponse getAdminOrder(Long orderId) {
+        Order order = orderRepository
+                .findDetailedById(orderId)
+                .orElseThrow(() -> new AppException(OrderErrorCode.ORDER_NOT_FOUND));
+        return commerceMapper.toOrderResponse(order);
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse confirmOrder(Long orderId) {
+        return transitionAny(orderId, Set.of(OrderStatus.PENDING_CONFIRMATION, OrderStatus.PAID), OrderStatus.CONFIRMED);
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse markPacking(Long orderId) {
+        return transition(orderId, OrderStatus.CONFIRMED, OrderStatus.PACKING);
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse markShipping(Long orderId) {
+        return transition(orderId, OrderStatus.PACKING, OrderStatus.SHIPPING);
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse markCompleted(Long orderId) {
+        return transition(orderId, OrderStatus.SHIPPING, OrderStatus.COMPLETED);
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse cancelAdminOrder(Long orderId, OrderCancelRequest request) {
+        Order order = findOrderForAdminUpdate(orderId);
+        validateAdminCancelable(order);
+        OrderStatus previousStatus = order.getOrderStatus();
+        restoreStockAndCancel(order, trimToNull(request == null ? null : request.getReason()));
+        logAdminLifecycleChange(order, previousStatus, OrderStatus.CANCELLED);
+        return commerceMapper.toOrderResponse(orderRepository.save(order));
+    }
+
     private void validateCancelable(Order order, PaymentGroup paymentGroup) {
         if (order.getOrderStatus() == OrderStatus.PAID) {
             throw new AppException(OrderErrorCode.ORDER_CANCEL_REQUIRES_REFUND);
@@ -107,6 +166,62 @@ public class OrderServiceImpl implements OrderService {
             return;
         }
         throw new AppException(OrderErrorCode.ORDER_CANCEL_NOT_ALLOWED);
+    }
+
+    private OrderResponse transition(Long orderId, OrderStatus expected, OrderStatus target) {
+        return transitionAny(orderId, Set.of(expected), target);
+    }
+
+    private OrderResponse transitionAny(Long orderId, Set<OrderStatus> allowedSources, OrderStatus target) {
+        Order order = findOrderForAdminUpdate(orderId);
+        OrderStatus previousStatus = order.getOrderStatus();
+        if (!allowedSources.contains(previousStatus)) {
+            throw new AppException(OrderErrorCode.ORDER_INVALID_STATUS_TRANSITION);
+        }
+        order.setOrderStatus(target);
+        logAdminLifecycleChange(order, previousStatus, target);
+        return commerceMapper.toOrderResponse(orderRepository.save(order));
+    }
+
+    private Order findOrderForAdminUpdate(Long orderId) {
+        return orderRepository
+                .findByIdForUpdate(orderId)
+                .orElseThrow(() -> new AppException(OrderErrorCode.ORDER_NOT_FOUND));
+    }
+
+    private void validateAdminCancelable(Order order) {
+        if (order.getOrderStatus() == OrderStatus.PAID) {
+            throw new AppException(OrderErrorCode.ORDER_CANCEL_REQUIRES_REFUND);
+        }
+        if (Set.of(OrderStatus.PENDING_CONFIRMATION, OrderStatus.CONFIRMED, OrderStatus.PACKING)
+                .contains(order.getOrderStatus())) {
+            return;
+        }
+        throw new AppException(OrderErrorCode.ORDER_CANCEL_NOT_ALLOWED);
+    }
+
+    private void restoreStockAndCancel(Order order, String reason) {
+        order.setOrderStatus(OrderStatus.CANCELLED);
+        order.setCancelReason(reason);
+        inventoryService.restoreStockForOrders(List.of(order));
+        order.getPayments().stream()
+                .filter(payment -> payment.getStatus() == PaymentStatus.PENDING)
+                .forEach(payment -> payment.setStatus(PaymentStatus.CANCELLED));
+    }
+
+    private void logAdminLifecycleChange(Order order, OrderStatus previousStatus, OrderStatus targetStatus) {
+        log.info(
+                "Admin order lifecycle change: orderId={} orderCode={} previousStatus={} targetStatus={} adminUserId={}",
+                order.getId(),
+                order.getOrderCode(),
+                previousStatus,
+                targetStatus,
+                resolveCurrentUserIdForLog());
+    }
+
+    private String resolveCurrentUserIdForLog() {
+        var userId = currentUserService.findCurrentUserId();
+        return userId == null ? null : userId.orElse(null);
     }
 
     private PaymentGroup resolvePaymentGroup(Order order) {
