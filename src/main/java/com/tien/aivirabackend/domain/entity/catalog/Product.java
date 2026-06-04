@@ -9,6 +9,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import com.tien.aivirabackend.constant.BookFormat;
 import com.tien.aivirabackend.constant.ProductStatus;
 import com.tien.aivirabackend.domain.entity.BaseEntity;
 import com.tien.aivirabackend.domain.entity.review.Review;
@@ -48,6 +49,33 @@ public class Product extends BaseEntity {
 
     @Column(length = 100)
     String material;
+
+    @Column(name = "book_author", nullable = false, length = 255)
+    @Builder.Default
+    String bookAuthor = "Unknown";
+
+    @Column(length = 20, unique = true)
+    String isbn;
+
+    @Column(length = 255)
+    String publisher;
+
+    @Column(name = "publication_year")
+    Integer publicationYear;
+
+    @Column(name = "book_language", length = 80)
+    String bookLanguage;
+
+    @Column(name = "page_count")
+    Integer pageCount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "book_format", nullable = false, length = 50)
+    @Builder.Default
+    BookFormat bookFormat = BookFormat.PAPERBACK;
+
+    @Column(length = 120)
+    String dimensions;
 
     @Column(name = "thumbnail_url")
     String thumbnailUrl;

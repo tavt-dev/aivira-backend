@@ -13,10 +13,13 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 
 import com.tien.aivirabackend.constant.OrderStatus;
 import com.tien.aivirabackend.constant.PaymentMethod;
@@ -69,7 +72,8 @@ class OrderServiceImplTest {
                 paymentAttemptRepository,
                 currentUserService,
                 new CommerceMapper(),
-                new InventoryService(variationRepository));
+                new InventoryService(variationRepository),
+                new OrderSpecifications());
     }
 
     @Test
@@ -127,6 +131,50 @@ class OrderServiceImplTest {
         when(orderRepository.findDetailedByIdAndUserId(99L, "user-1")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> orderService.getMyOrder(99L))
+                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
+                        .isEqualTo(OrderErrorCode.ORDER_NOT_FOUND));
+    }
+
+    @Test
+    void getAdminOrders_shouldQueryNewestFirstWithFiltersAndMapSummaries() {
+        Order order = order(paymentGroup(PaymentMethod.COD, PaymentStatus.PENDING), OrderStatus.PENDING_CONFIRMATION);
+        when(orderRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(order)));
+
+        PageResponse<OrderSummaryResponse> response = orderService.getAdminOrders(
+                OrderStatus.PENDING_CONFIRMATION,
+                "ORD123",
+                Instant.parse("2026-01-01T00:00:00Z"),
+                Instant.parse("2026-12-31T23:59:59Z"),
+                1,
+                20);
+
+        assertThat(response.getData()).hasSize(1);
+        assertThat(response.getData().getFirst().getOrderCode()).isEqualTo("ORD123");
+        verify(orderRepository)
+                .findAll(
+                        any(Specification.class),
+                        ArgumentMatchers.<Pageable>argThat(pageable -> pageable.getPageNumber() == 0
+                                && pageable.getPageSize() == 20
+                                && pageable.getSort().getOrderFor("createdAt") != null));
+    }
+
+    @Test
+    void getAdminOrder_whenOrderExists_shouldReturnDetail() {
+        Order order = order(paymentGroup(PaymentMethod.COD, PaymentStatus.PENDING), OrderStatus.PENDING_CONFIRMATION);
+        when(orderRepository.findDetailedById(21L)).thenReturn(Optional.of(order));
+
+        var response = orderService.getAdminOrder(21L);
+
+        assertThat(response.getId()).isEqualTo(21L);
+        assertThat(response.getPaymentGroupCode()).isEqualTo("PAY123");
+    }
+
+    @Test
+    void getAdminOrder_whenMissing_shouldThrowNotFound() {
+        when(orderRepository.findDetailedById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> orderService.getAdminOrder(99L))
                 .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
                         .isEqualTo(OrderErrorCode.ORDER_NOT_FOUND));
     }
@@ -237,6 +285,115 @@ class OrderServiceImplTest {
         }
     }
 
+    @Test
+    void confirmOrder_whenPendingConfirmation_shouldMoveToConfirmed() {
+        Order order = order(paymentGroup(PaymentMethod.COD, PaymentStatus.PENDING), OrderStatus.PENDING_CONFIRMATION);
+        when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(order)).thenReturn(order);
+
+        var response = orderService.confirmOrder(21L);
+
+        assertThat(response.getOrderStatus()).isEqualTo(OrderStatus.CONFIRMED);
+        assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CONFIRMED);
+    }
+
+    @Test
+    void confirmOrder_whenPaid_shouldMoveToConfirmed() {
+        Order order = order(paymentGroup(PaymentMethod.VNPAY, PaymentStatus.SUCCESS), OrderStatus.PAID);
+        when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(order)).thenReturn(order);
+
+        var response = orderService.confirmOrder(21L);
+
+        assertThat(response.getOrderStatus()).isEqualTo(OrderStatus.CONFIRMED);
+    }
+
+    @Test
+    void fulfillmentTransitions_shouldMoveThroughExpectedFlow() {
+        assertTransition(OrderStatus.CONFIRMED, OrderStatus.PACKING, () -> orderService.markPacking(21L));
+        assertTransition(OrderStatus.PACKING, OrderStatus.SHIPPING, () -> orderService.markShipping(21L));
+        assertTransition(OrderStatus.SHIPPING, OrderStatus.COMPLETED, () -> orderService.markCompleted(21L));
+    }
+
+    @Test
+    void markCompleted_whenPacking_shouldThrowInvalidTransition() {
+        Order order = order(paymentGroup(PaymentMethod.COD, PaymentStatus.PENDING), OrderStatus.PACKING);
+        when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderService.markCompleted(21L))
+                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
+                        .isEqualTo(OrderErrorCode.ORDER_INVALID_STATUS_TRANSITION));
+
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    void cancelAdminOrder_whenPendingConfirmation_shouldRestoreStockCancelPendingPaymentAndSetReason() {
+        Order order = order(paymentGroup(PaymentMethod.COD, PaymentStatus.PENDING), OrderStatus.PENDING_CONFIRMATION);
+        ProductVariation variation = variation(5);
+        when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
+        when(variationRepository.findAllByIdInForUpdate(anyCollection())).thenReturn(List.of(variation));
+        when(orderRepository.save(order)).thenReturn(order);
+
+        var response = orderService.cancelAdminOrder(
+                21L, OrderCancelRequest.builder().reason("  out of stock  ").build());
+
+        assertThat(response.getOrderStatus()).isEqualTo(OrderStatus.CANCELLED);
+        assertThat(response.getCancelReason()).isEqualTo("out of stock");
+        assertThat(order.getPayments().getFirst().getStatus()).isEqualTo(PaymentStatus.CANCELLED);
+        assertThat(variation.getStockQuantity()).isEqualTo(7);
+        verify(paymentGroupRepository, never()).save(any());
+        verify(paymentAttemptRepository, never()).save(any());
+    }
+
+    @Test
+    void cancelAdminOrder_whenConfirmedOrPacking_shouldRestoreStock() {
+        for (OrderStatus status : List.of(OrderStatus.CONFIRMED, OrderStatus.PACKING)) {
+            reset(orderRepository, variationRepository, paymentGroupRepository, paymentAttemptRepository);
+            Order order = order(paymentGroup(PaymentMethod.COD, PaymentStatus.PENDING), status);
+            ProductVariation variation = variation(1);
+            when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
+            when(variationRepository.findAllByIdInForUpdate(anyCollection())).thenReturn(List.of(variation));
+            when(orderRepository.save(order)).thenReturn(order);
+
+            orderService.cancelAdminOrder(21L, OrderCancelRequest.builder().build());
+
+            assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELLED);
+            assertThat(variation.getStockQuantity()).isEqualTo(3);
+        }
+    }
+
+    @Test
+    void cancelAdminOrder_whenPaid_shouldRequireRefund() {
+        Order order = order(paymentGroup(PaymentMethod.VNPAY, PaymentStatus.SUCCESS), OrderStatus.PAID);
+        when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderService.cancelAdminOrder(
+                        21L, OrderCancelRequest.builder().build()))
+                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
+                        .isEqualTo(OrderErrorCode.ORDER_CANCEL_REQUIRES_REFUND));
+
+        verify(variationRepository, never()).findAllByIdInForUpdate(anyCollection());
+    }
+
+    @Test
+    void cancelAdminOrder_whenShippingOrCompleted_shouldReject() {
+        for (OrderStatus status : List.of(OrderStatus.SHIPPING, OrderStatus.COMPLETED)) {
+            reset(orderRepository, variationRepository);
+            Order order = order(paymentGroup(PaymentMethod.COD, PaymentStatus.PENDING), status);
+            when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
+
+            assertThatThrownBy(() -> orderService.cancelAdminOrder(
+                            21L, OrderCancelRequest.builder().build()))
+                    .as("status %s", status)
+                    .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
+                            .isEqualTo(OrderErrorCode.ORDER_CANCEL_NOT_ALLOWED));
+
+            verify(variationRepository, never()).findAllByIdInForUpdate(anyCollection());
+            assertThat(order.getOrderStatus()).isEqualTo(status);
+        }
+    }
+
     private PaymentGroup paymentGroup(PaymentMethod method, PaymentStatus status) {
         PaymentGroup group = PaymentGroup.builder()
                 .paymentCode("PAY123")
@@ -311,5 +468,16 @@ class OrderServiceImplTest {
 
     private User user() {
         return User.builder().id("user-1").username("buyer").build();
+    }
+
+    private void assertTransition(OrderStatus source, OrderStatus target, java.util.function.Supplier<?> action) {
+        reset(orderRepository);
+        Order order = order(paymentGroup(PaymentMethod.COD, PaymentStatus.PENDING), source);
+        when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(order)).thenReturn(order);
+
+        action.get();
+
+        assertThat(order.getOrderStatus()).isEqualTo(target);
     }
 }

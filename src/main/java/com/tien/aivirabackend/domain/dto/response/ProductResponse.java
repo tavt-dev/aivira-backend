@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.tien.aivirabackend.constant.BookFormat;
 import com.tien.aivirabackend.constant.ProductStatus;
 
 import lombok.*;
@@ -27,6 +28,14 @@ public class ProductResponse {
     String description;
     String brand;
     String material;
+    String bookAuthor;
+    String isbn;
+    String publisher;
+    Integer publicationYear;
+    String bookLanguage;
+    Integer pageCount;
+    BookFormat bookFormat;
+    String dimensions;
     String thumbnailUrl;
     String thumbnailPublicId;
     BigDecimal price;

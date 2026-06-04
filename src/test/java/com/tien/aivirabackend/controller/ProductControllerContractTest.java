@@ -3,6 +3,7 @@ package com.tien.aivirabackend.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,6 +15,26 @@ import com.tien.aivirabackend.domain.dto.request.ProductUpdateRequest;
 import com.tien.aivirabackend.domain.dto.request.StockUpdateRequest;
 
 class ProductControllerContractTest {
+    @Test
+    void publicProductSearch_shouldExposeBookFilters() throws Exception {
+        Method method = ProductController.class.getMethod(
+                "getPublicProducts",
+                String.class,
+                String.class,
+                String.class,
+                String.class,
+                String.class,
+                String.class,
+                BigDecimal.class,
+                BigDecimal.class,
+                Boolean.class,
+                String.class,
+                int.class,
+                int.class);
+
+        assertThat(method).isNotNull();
+    }
+
     @Test
     void adminProductEndpoints_shouldRequireAdminProductPermissions() throws Exception {
         assertPreAuthorizeContains(

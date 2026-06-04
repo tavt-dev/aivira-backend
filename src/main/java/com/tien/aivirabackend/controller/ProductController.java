@@ -42,6 +42,9 @@ public class ProductController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String categorySlug,
             @RequestParam(required = false) String brand,
+            @RequestParam(required = false) String author,
+            @RequestParam(required = false) String publisher,
+            @RequestParam(required = false) String isbn,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) Boolean available,
@@ -51,7 +54,7 @@ public class ProductController {
         return ResponseEntity.ok(ApiResponse.success(
                 "Get products successful",
                 productService.getPublicProducts(
-                        keyword, categorySlug, brand, minPrice, maxPrice, available, sort, page, size)));
+                        keyword, categorySlug, brand, author, publisher, isbn, minPrice, maxPrice, available, sort, page, size)));
     }
 
     @GetMapping("/products/{slug}")

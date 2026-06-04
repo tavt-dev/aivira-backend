@@ -22,6 +22,9 @@ public class ProductSpecifications {
             String keyword,
             String categorySlug,
             String brand,
+            String author,
+            String publisher,
+            String isbn,
             BigDecimal minPrice,
             BigDecimal maxPrice,
             Boolean available) {
@@ -33,6 +36,7 @@ public class ProductSpecifications {
             predicate = cb.and(predicate, cb.isTrue(root.get("active")));
             predicate = cb.and(predicate, cb.isTrue(category.get("active")), cb.isTrue(category.get("visible")));
             predicate = addCommonFilters(predicate, root, category, cb, keyword, categorySlug, brand);
+            predicate = addBookFilters(predicate, root, cb, author, publisher, isbn);
             if (minPrice != null) {
                 predicate = cb.and(predicate, cb.greaterThanOrEqualTo(root.get("price"), minPrice));
             }
@@ -96,6 +100,25 @@ public class ProductSpecifications {
         return predicate;
     }
 
+    private Predicate addBookFilters(
+            Predicate predicate,
+            Root<Product> root,
+            jakarta.persistence.criteria.CriteriaBuilder cb,
+            String author,
+            String publisher,
+            String isbn) {
+        if (StringUtils.hasText(author)) {
+            predicate = cb.and(predicate, containsIgnoreCase(root, cb, "bookAuthor", author));
+        }
+        if (StringUtils.hasText(publisher)) {
+            predicate = cb.and(predicate, containsIgnoreCase(root, cb, "publisher", publisher));
+        }
+        if (StringUtils.hasText(isbn)) {
+            predicate = cb.and(predicate, containsIgnoreCase(root, cb, "isbn", isbn));
+        }
+        return predicate;
+    }
+
     private Predicate keywordPredicate(
             Root<Product> root, jakarta.persistence.criteria.CriteriaBuilder cb, String keyword) {
         String likeKeyword = "%" + keyword.trim().toLowerCase(Locale.ROOT) + "%";
@@ -103,6 +126,17 @@ public class ProductSpecifications {
                 cb.like(cb.lower(root.get("productName")), likeKeyword),
                 cb.like(cb.lower(root.get("sku")), likeKeyword),
                 cb.like(cb.lower(root.get("description")), likeKeyword),
-                cb.like(cb.lower(root.get("brand")), likeKeyword));
+                cb.like(cb.lower(root.get("brand")), likeKeyword),
+                cb.like(cb.lower(root.get("bookAuthor")), likeKeyword),
+                cb.like(cb.lower(root.get("publisher")), likeKeyword),
+                cb.like(cb.lower(root.get("isbn")), likeKeyword));
+    }
+
+    private Predicate containsIgnoreCase(
+            Root<Product> root,
+            jakarta.persistence.criteria.CriteriaBuilder cb,
+            String field,
+            String value) {
+        return cb.like(cb.lower(root.get(field)), "%" + value.trim().toLowerCase(Locale.ROOT) + "%");
     }
 }
