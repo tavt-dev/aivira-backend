@@ -1,0 +1,251 @@
+package com.tien.aivirabackend.integration;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.math.BigDecimal;
+import java.util.Map;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.web.servlet.MvcResult;
+
+import com.tien.aivirabackend.constant.OrderStatus;
+import com.tien.aivirabackend.constant.PaymentMethod;
+import com.tien.aivirabackend.constant.PaymentStatus;
+import com.tien.aivirabackend.constant.PredefinedRole;
+import com.tien.aivirabackend.constant.ProductStatus;
+import com.tien.aivirabackend.constant.SignInProvider;
+import com.tien.aivirabackend.domain.entity.catalog.Category;
+import com.tien.aivirabackend.domain.entity.catalog.Product;
+import com.tien.aivirabackend.domain.entity.catalog.ProductVariation;
+import com.tien.aivirabackend.domain.entity.transaction.Order;
+import com.tien.aivirabackend.domain.entity.transaction.OrderItem;
+import com.tien.aivirabackend.domain.entity.transaction.payment.Payment;
+import com.tien.aivirabackend.domain.entity.transaction.payment.PaymentGroup;
+import com.tien.aivirabackend.domain.entity.user.User;
+import com.tien.aivirabackend.repository.CategoryRepository;
+import com.tien.aivirabackend.repository.OrderRepository;
+import com.tien.aivirabackend.repository.PaymentGroupRepository;
+import com.tien.aivirabackend.repository.ProductRepository;
+import com.tien.aivirabackend.repository.ProductVariationRepository;
+import com.tien.aivirabackend.repository.RoleRepository;
+import com.tien.aivirabackend.repository.UserRepository;
+
+import tools.jackson.databind.JsonNode;
+
+class AdminOrderIntegrationTest extends AbstractIntegrationTest {
+    private static final String PASSWORD = "Password123!";
+
+    @Autowired
+    UserRepository userRepository;
+
+    @Autowired
+    RoleRepository roleRepository;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
+    @Autowired
+    CategoryRepository categoryRepository;
+
+    @Autowired
+    ProductRepository productRepository;
+
+    @Autowired
+    ProductVariationRepository productVariationRepository;
+
+    @Autowired
+    PaymentGroupRepository paymentGroupRepository;
+
+    @Autowired
+    OrderRepository orderRepository;
+
+    @Test
+    void adminOrders_shouldListAndFilterByStatusAndKeyword() throws Exception {
+        String token = adminToken();
+        Order order = saveOrder(OrderStatus.PENDING_CONFIRMATION, PaymentStatus.PENDING, 3);
+
+        mockMvc.perform(get("/admin/orders")
+                        .header("Authorization", "Bearer " + token)
+                        .param("status", "PENDING_CONFIRMATION"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.data[0].orderCode").value(order.getOrderCode()));
+
+        mockMvc.perform(get("/admin/orders")
+                        .header("Authorization", "Bearer " + token)
+                        .param("keyword", "0900000000"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.data[0].orderCode").value(order.getOrderCode()));
+    }
+
+    @Test
+    void adminCodLifecycle_shouldMovePendingConfirmationToCompleted() throws Exception {
+        String token = adminToken();
+        Order order = saveOrder(OrderStatus.PENDING_CONFIRMATION, PaymentStatus.PENDING, 3);
+
+        mockMvc.perform(put("/admin/orders/{orderId}/confirm", order.getId())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.orderStatus").value("CONFIRMED"));
+        mockMvc.perform(put("/admin/orders/{orderId}/packing", order.getId())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.orderStatus").value("PACKING"));
+        mockMvc.perform(put("/admin/orders/{orderId}/shipping", order.getId())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.orderStatus").value("SHIPPING"));
+        mockMvc.perform(put("/admin/orders/{orderId}/completed", order.getId())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.orderStatus").value("COMPLETED"));
+
+        assertThat(orderRepository.findById(order.getId()).orElseThrow().getOrderStatus())
+                .isEqualTo(OrderStatus.COMPLETED);
+    }
+
+    @Test
+    void adminCancelBeforeShipping_shouldRestoreStock() throws Exception {
+        String token = adminToken();
+        Order order = saveOrder(OrderStatus.CONFIRMED, PaymentStatus.PENDING, 3);
+        Long variationId = order.getItems().getFirst().getProductVariationId();
+
+        mockMvc.perform(put("/admin/orders/{orderId}/cancel", order.getId())
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(APPLICATION_JSON)
+                        .content(json(Map.of("reason", "out of stock"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.orderStatus").value("CANCELLED"))
+                .andExpect(jsonPath("$.data.cancelReason").value("out of stock"));
+
+        assertThat(productVariationRepository.findById(variationId).orElseThrow().getStockQuantity())
+                .isEqualTo(5);
+    }
+
+    private String adminToken() throws Exception {
+        var role = roleRepository.findByCode(PredefinedRole.ADMIN).orElseThrow();
+        User admin = User.builder()
+                .username("admin")
+                .email("admin@example.com")
+                .password(passwordEncoder.encode(PASSWORD))
+                .provider(SignInProvider.LOCAL)
+                .emailVerified(true)
+                .isActive(true)
+                .isLocked(false)
+                .isDeleted(false)
+                .build();
+        admin.getRoles().add(role);
+        userRepository.save(admin);
+
+        MvcResult login = mockMvc.perform(post("/auth/token")
+                        .contentType(APPLICATION_JSON)
+                        .content(json(Map.of("username", "admin", "password", PASSWORD))))
+                .andExpect(status().isOk())
+                .andReturn();
+        return read(login, "/data/token").asText();
+    }
+
+    private Order saveOrder(OrderStatus orderStatus, PaymentStatus paymentStatus, int variationStock) {
+        User customer = userRepository.save(User.builder()
+                .username("buyer")
+                .email("buyer@example.com")
+                .password(passwordEncoder.encode(PASSWORD))
+                .provider(SignInProvider.LOCAL)
+                .emailVerified(true)
+                .isActive(true)
+                .build());
+        Category category = categoryRepository.save(Category.builder()
+                .categoryName("Books")
+                .slug("books")
+                .description("Books")
+                .displayOrder(0)
+                .active(true)
+                .visible(true)
+                .build());
+        Product product = Product.builder()
+                .category(category)
+                .sku("BOOK-001")
+                .productName("Aivira Book")
+                .slug("aivira-book")
+                .description("Book")
+                .bookAuthor("Aivira")
+                .price(BigDecimal.valueOf(100))
+                .stockQuantity(variationStock)
+                .soldCount(0)
+                .active(true)
+                .featured(false)
+                .status(ProductStatus.ACTIVE)
+                .build();
+        ProductVariation variation = ProductVariation.builder()
+                .product(product)
+                .sku("BOOK-001-PB")
+                .color("Default")
+                .size("Paperback")
+                .additionalPrice(BigDecimal.ZERO)
+                .stockQuantity(variationStock)
+                .active(true)
+                .build();
+        product.getProductVariations().add(variation);
+        Product savedProduct = productRepository.save(product);
+        ProductVariation savedVariation = savedProduct.getProductVariations().iterator().next();
+
+        PaymentGroup group = paymentGroupRepository.save(PaymentGroup.builder()
+                .paymentCode("PAY-" + orderStatus.name())
+                .user(customer)
+                .method(PaymentMethod.COD)
+                .status(paymentStatus)
+                .amount(new BigDecimal("200.00"))
+                .build());
+        Order order = Order.builder()
+                .orderCode("ORD-" + orderStatus.name())
+                .user(customer)
+                .subtotal(new BigDecimal("200.00"))
+                .shippingFee(BigDecimal.ZERO)
+                .discountAmount(BigDecimal.ZERO)
+                .totalAmount(new BigDecimal("200.00"))
+                .orderStatus(orderStatus)
+                .shippingRecipientName("Buyer")
+                .shippingPhoneNumber("0900000000")
+                .shippingAddressLine("123 Street")
+                .build();
+        order.getItems()
+                .add(OrderItem.builder()
+                        .order(order)
+                        .productId(savedProduct.getId())
+                        .productVariationId(savedVariation.getId())
+                        .productName(savedProduct.getProductName())
+                        .sku(savedVariation.getSku())
+                        .basePrice(new BigDecimal("100.00"))
+                        .additionalPrice(BigDecimal.ZERO)
+                        .discountAmount(BigDecimal.ZERO)
+                        .finalPrice(new BigDecimal("100.00"))
+                        .quantity(2)
+                        .build());
+        order.getPayments()
+                .add(Payment.builder()
+                        .order(order)
+                        .paymentGroup(group)
+                        .method(PaymentMethod.COD)
+                        .status(paymentStatus)
+                        .amount(new BigDecimal("200.00"))
+                        .build());
+        return orderRepository.save(order);
+    }
+
+    private String json(Object value) throws Exception {
+        return objectMapper.writeValueAsString(value);
+    }
+
+    private JsonNode read(MvcResult result, String pointer) throws Exception {
+        return objectMapper.readTree(result.getResponse().getContentAsString()).at(pointer);
+    }
+}
