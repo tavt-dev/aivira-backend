@@ -43,9 +43,9 @@ Still missing for a complete backend:
 - [x] Checkout preview and coupon application logic.
 - [x] Coupon and promotion admin APIs.
 - [x] Manual refund metadata and admin refund action.
-- [ ] Review APIs and moderation.
-- [ ] Storefront home API and admin dashboard APIs.
-- [ ] Demo bookstore seed data.
+- [x] Review APIs and moderation.
+- [x] Storefront home API and admin dashboard APIs.
+- [x] Demo bookstore seed data.
 - [ ] API docs and README alignment for the final backend.
 - [ ] Production-practical polish around logs, env docs, deployment notes, and test coverage.
 
@@ -501,18 +501,18 @@ Current status:
 
 - [x] Admin seed support exists behind `app.seed.enabled`.
 - [x] `SEED_ENABLED` and `SEED_ADMIN_*` are documented in config.
-- [ ] Demo bookstore catalog seed is missing.
+- [x] Demo bookstore catalog seed exists.
 
 Implement:
 
-- [ ] Add `SEED_DEMO_CATALOG_ENABLED`.
-- [ ] Seed root and child categories.
-- [ ] Seed 20-50 books after Phase 1 fields exist.
-- [ ] Seed default variations and stock.
-- [ ] Seed cover image URLs.
-- [ ] Seed featured books.
-- [ ] Keep demo seed disabled by default.
-- [ ] Document seed behavior in README.
+- [x] Add `SEED_DEMO_CATALOG_ENABLED`.
+- [x] Seed root and child categories.
+- [x] Seed 20-50 books after Phase 1 fields exist.
+- [x] Seed default variations and stock.
+- [x] Seed cover image URLs.
+- [x] Seed featured books.
+- [x] Keep demo seed disabled by default.
+- [x] Document seed behavior in README.
 
 ## Phase 9: API Documentation And Error Contract
 
@@ -577,7 +577,7 @@ Implement:
 6. [x] Phase 5: Manual refund flow.
 7. [x] Phase 6: Review and moderation.
 8. [x] Phase 7: Storefront and dashboard APIs.
-9. [ ] Phase 8: Demo seed data.
+9. [x] Phase 8: Demo seed data.
 10. [ ] Phase 9: API docs and README cleanup.
 11. [ ] Phase 10: Production hardening and CI polish.
 
@@ -585,11 +585,11 @@ Implement:
 
 Backend is complete for the full commerce version when:
 
-- [ ] Public users can browse, search, filter, and view book details.
-- [ ] Customers can register, verify email, log in, manage profile and addresses.
+- [x] Public users can browse, search, filter, and view book details.
+- [x] Customers can register, verify email, log in, manage profile and addresses.
 - [x] Customers can add books to cart, preview checkout, apply coupon, checkout, pay, and track orders.
 - [x] COD, VNPay, and MoMo flows work with retry, expiry, callback/IPN, and reconciliation.
-- [ ] Admin can manage books, categories, media, variations, stock, orders, coupons, promotions, reviews, users, permissions, payments, refunds, and dashboard.
+- [x] Admin can manage books, categories, media, variations, stock, orders, coupons, promotions, reviews, users, permissions, payments, refunds, and dashboard.
 - [x] Paid-order refund is handled manually with clear admin metadata.
 - [x] No seller/shop/merchant workflow exists.
 - [x] Schema changes use Flyway migrations.

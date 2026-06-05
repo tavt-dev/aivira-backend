@@ -20,7 +20,8 @@ Spring Boot backend for the Aivira single-vendor online bookstore. Aivira/Admin 
 - Hybrid RBAC with roles, permissions, and direct user permissions.
 - Public catalog: categories, product search, product detail.
 - Admin catalog: create/update/soft-delete products, manage media, variations, and stock.
-- Cart, checkout, one-order checkout creation, payment groups, payment callbacks, retry, and reconciliation.
+- Cart, checkout preview, coupon/promotion discounts, one-order checkout creation, payment groups, payment callbacks, retry, and reconciliation.
+- Admin orders, users, manual refunds, reviews, storefront home, and dashboard APIs.
 
 ## Active Roles
 
@@ -37,8 +38,10 @@ Public:
 
 - `GET /products`
 - `GET /products/{slug}`
+- `GET /products/{slug}/reviews`
 - `GET /categories`
 - `GET /categories/tree`
+- `GET /storefront/home`
 
 Customer:
 
@@ -49,10 +52,17 @@ Customer:
 - `/checkout`
 - `/orders/**`
 - `/payments/**`
+- `/reviews/**`
 
 Admin:
 
 - `/admin/products/**`
+- `/admin/orders/**`
+- `/admin/users/**`
+- `/admin/coupons/**`
+- `/admin/promotions/**`
+- `/admin/reviews/**`
+- `/admin/dashboard/**`
 - `/admin/permissions/**`
 - `/admin/roles/**`
 - `/admin/payments/**`
@@ -63,6 +73,22 @@ Admin:
 - `V3__catalog_phase4.sql`: catalog relationship fields.
 - `V4__phase5_checkout_payment.sql`: checkout/payment hardening tables and fields.
 - `V5__payment_provider_hardening.sql`: provider attempt/reconciliation support.
+- `V6__book_catalog_fields.sql`: bookstore metadata fields on products.
+- `V7__coupon_usage_status.sql`: coupon usage lifecycle for online payment safety.
+- `V8__manual_refunds.sql`: manual refund metadata table.
+- `V9__review_order_item_visibility.sql`: review order item ownership, visibility, and moderation metadata.
+
+## Seed Data
+
+Seed behavior is controlled by environment variables and is disabled by default:
+
+- `SEED_ENABLED=false`: master switch. When false, no seed runner is created.
+- `SEED_ADMIN_USERNAME`, `SEED_ADMIN_PASSWORD`, `SEED_ADMIN_EMAIL`: optional default admin credentials.
+- `SEED_DEMO_CATALOG_ENABLED=false`: optional demo bookstore catalog seed.
+
+When `SEED_ENABLED=true`, the app seeds default permissions and tries to create the configured admin account. When `SEED_DEMO_CATALOG_ENABLED=true`, it also creates an idempotent demo bookstore catalog with categories, 30 books, default variations, stock quantities, cover image URLs, featured books, and sample bestselling counts.
+
+Do not enable demo catalog seed in production. Re-running the seed does not duplicate categories, books, variations, or media, and existing books with matching SKU or slug are preserved.
 
 ## Run
 
