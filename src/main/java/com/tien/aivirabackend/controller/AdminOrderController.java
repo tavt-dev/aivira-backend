@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import com.tien.aivirabackend.constant.OrderStatus;
 import com.tien.aivirabackend.domain.dto.ApiResponse;
 import com.tien.aivirabackend.domain.dto.PageResponse;
+import com.tien.aivirabackend.domain.dto.request.ManualRefundRequest;
 import com.tien.aivirabackend.domain.dto.request.OrderCancelRequest;
 import com.tien.aivirabackend.domain.dto.response.OrderResponse;
 import com.tien.aivirabackend.domain.dto.response.OrderSummaryResponse;
@@ -93,5 +94,14 @@ public class AdminOrderController {
             @PathVariable Long orderId, @Valid @RequestBody OrderCancelRequest request) {
         return ResponseEntity.ok(ApiResponse.success(
                 "Cancel admin order successful", orderService.cancelAdminOrder(orderId, request)));
+    }
+
+    @PutMapping("/{orderId}/mark-refunded")
+    @Operation(summary = "Mark order as manually refunded")
+    @PreAuthorize("@authorizationService.hasAnyPermission('ORDER_MANAGE_ALL', 'REFUND_MANAGE_ALL')")
+    public ResponseEntity<ApiResponse<OrderResponse>> markRefunded(
+            @PathVariable Long orderId, @Valid @RequestBody ManualRefundRequest request) {
+        return ResponseEntity.ok(
+                ApiResponse.success("Mark order refunded successful", orderService.markRefunded(orderId, request)));
     }
 }

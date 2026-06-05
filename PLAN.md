@@ -42,7 +42,7 @@ Still missing for a complete backend:
 - [x] Admin user list/detail/lock/unlock/role assignment.
 - [x] Checkout preview and coupon application logic.
 - [x] Coupon and promotion admin APIs.
-- [ ] Manual refund metadata and admin refund action.
+- [x] Manual refund metadata and admin refund action.
 - [ ] Review APIs and moderation.
 - [ ] Storefront home API and admin dashboard APIs.
 - [ ] Demo bookstore seed data.
@@ -410,17 +410,19 @@ Current status:
 - [x] `PaymentStatus.REFUNDED` exists.
 - [x] `OrderStatus.REFUNDED` exists.
 - [x] Paid customer cancellation is blocked with `ORDER_CANCEL_REQUIRES_REFUND`.
-- [ ] Refund metadata is missing.
-- [ ] Admin refund endpoint is missing.
+- [x] Refund metadata exists in dedicated `refunds` table.
+- [x] Admin refund endpoint exists.
 
 Implement:
 
-- [ ] Add migration for refund metadata on `orders` or a dedicated `refunds` table.
-- [ ] Add required request DTO with refund amount, reason, and note.
-- [ ] Add `PUT /admin/orders/{orderId}/mark-refunded`.
-- [ ] Mark related payment records as `REFUNDED`.
-- [ ] Mark order as `REFUNDED`.
-- [ ] Log the admin user and reason.
+- [x] Add migration `V8__manual_refunds.sql`.
+- [x] Add required request DTO with refund amount, reason, and note.
+- [x] Add `PUT /admin/orders/{orderId}/mark-refunded`.
+- [x] Mark related payment records as `REFUNDED`.
+- [x] Mark related payment group as `REFUNDED`.
+- [x] Mark order as `REFUNDED`.
+- [x] Restore stock for allowed pre-shipping paid refund states.
+- [x] Log the admin user, order, refund code, and amount.
 
 Removed from this phase:
 
@@ -536,7 +538,7 @@ Implement missing error codes as features are built:
 - [x] Paid order requires refund.
 - [x] Coupon invalid/expired/used.
 - [ ] Review not allowed.
-- [ ] Refund not allowed.
+- [x] Refund not allowed.
 
 ## Phase 10: Production-Practical Hardening
 
@@ -572,7 +574,7 @@ Implement:
 3. [x] Phase 3: Admin user and permission management.
 4. [x] Phase 4: Checkout preview and coupon foundation.
 5. [x] Phase 4: Coupon/promotion admin APIs.
-6. [ ] Phase 5: Manual refund flow.
+6. [x] Phase 5: Manual refund flow.
 7. [ ] Phase 6: Review and moderation.
 8. [ ] Phase 7: Storefront and dashboard APIs.
 9. [ ] Phase 8: Demo seed data.
@@ -588,7 +590,7 @@ Backend is complete for the full commerce version when:
 - [x] Customers can add books to cart, preview checkout, apply coupon, checkout, pay, and track orders.
 - [x] COD, VNPay, and MoMo flows work with retry, expiry, callback/IPN, and reconciliation.
 - [ ] Admin can manage books, categories, media, variations, stock, orders, coupons, promotions, reviews, users, permissions, payments, refunds, and dashboard.
-- [ ] Paid-order refund is handled manually with clear admin metadata.
+- [x] Paid-order refund is handled manually with clear admin metadata.
 - [x] No seller/shop/merchant workflow exists.
 - [x] Schema changes use Flyway migrations.
 - [x] API responses use DTOs, not JPA entities.

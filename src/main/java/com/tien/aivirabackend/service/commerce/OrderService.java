@@ -4,6 +4,7 @@ import java.time.Instant;
 
 import com.tien.aivirabackend.constant.OrderStatus;
 import com.tien.aivirabackend.domain.dto.PageResponse;
+import com.tien.aivirabackend.domain.dto.request.ManualRefundRequest;
 import com.tien.aivirabackend.domain.dto.request.OrderCancelRequest;
 import com.tien.aivirabackend.domain.dto.response.OrderResponse;
 import com.tien.aivirabackend.domain.dto.response.OrderSummaryResponse;
@@ -29,4 +30,6 @@ public interface OrderService {
     OrderResponse markCompleted(Long orderId);
 
     OrderResponse cancelAdminOrder(Long orderId, OrderCancelRequest request);
+
+    OrderResponse markRefunded(Long orderId, ManualRefundRequest request);
 }

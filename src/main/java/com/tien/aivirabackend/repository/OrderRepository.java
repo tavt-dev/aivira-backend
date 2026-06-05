@@ -35,10 +35,10 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     @EntityGraph(attributePaths = {"items"})
     List<Order> findByIdIn(Collection<Long> ids);
 
-    @EntityGraph(attributePaths = {"items", "payments", "payments.paymentGroup"})
+    @EntityGraph(attributePaths = {"items", "payments", "payments.paymentGroup", "refund"})
     Optional<Order> findDetailedById(Long id);
 
-    @EntityGraph(attributePaths = {"items", "payments", "payments.paymentGroup"})
+    @EntityGraph(attributePaths = {"items", "payments", "payments.paymentGroup", "refund"})
     Optional<Order> findDetailedByIdAndUserId(Long id, String userId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
