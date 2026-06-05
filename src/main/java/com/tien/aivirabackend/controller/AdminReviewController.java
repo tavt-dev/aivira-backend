@@ -30,7 +30,7 @@ public class AdminReviewController {
     ReviewService reviewService;
 
     @GetMapping
-    @Operation(summary = "List reviews for admin")
+    @Operation(summary = "List reviews for admin", description = "Lists reviews with moderation filters and keyword search.")
     @PreAuthorize("@authorizationService.hasAnyPermission('REVIEW_MANAGE_ALL', 'REVIEW_READ_ALL')")
     public ResponseEntity<ApiResponse<PageResponse<ReviewResponse>>> getAdminReviews(
             @RequestParam(required = false) Boolean approved,
@@ -47,7 +47,7 @@ public class AdminReviewController {
     }
 
     @PutMapping("/{reviewId}/moderate")
-    @Operation(summary = "Moderate review")
+    @Operation(summary = "Moderate review", description = "Sets review approval and visibility metadata.")
     @PreAuthorize("@authorizationService.hasAnyPermission('REVIEW_MANAGE_ALL', 'REVIEW_MODERATE')")
     public ResponseEntity<ApiResponse<ReviewResponse>> moderateReview(
             @PathVariable Long reviewId, @Valid @RequestBody ReviewModerateRequest request) {
@@ -56,7 +56,7 @@ public class AdminReviewController {
     }
 
     @PutMapping("/{reviewId}/reply")
-    @Operation(summary = "Reply to review")
+    @Operation(summary = "Reply to review", description = "Sets or clears the admin reply shown on approved public reviews.")
     @PreAuthorize("@authorizationService.hasAnyPermission('REVIEW_MANAGE_ALL', 'REVIEW_MODERATE')")
     public ResponseEntity<ApiResponse<ReviewResponse>> replyToReview(
             @PathVariable Long reviewId, @Valid @RequestBody ReviewReplyRequest request) {

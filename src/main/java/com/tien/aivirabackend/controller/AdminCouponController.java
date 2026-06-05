@@ -47,14 +47,16 @@ public class AdminCouponController {
     }
 
     @PostMapping
-    @Operation(summary = "Create coupon")
+    @Operation(
+            summary = "Create coupon",
+            description = "Creates an order-level coupon. Coupon codes are normalized to uppercase and applied after promotions.")
     @PreAuthorize("@authorizationService.hasAnyPermission('COUPON_MANAGE_ALL', 'COUPON_CREATE_ALL')")
     public ResponseEntity<ApiResponse<CouponResponse>> createCoupon(@Valid @RequestBody CouponCreateRequest request) {
         return ResponseEntity.ok(ApiResponse.success("Create coupon successful", couponService.createCoupon(request)));
     }
 
     @PutMapping("/{couponId}")
-    @Operation(summary = "Update coupon")
+    @Operation(summary = "Update coupon", description = "Updates coupon rules while preserving usage history.")
     @PreAuthorize("@authorizationService.hasAnyPermission('COUPON_MANAGE_ALL', 'COUPON_UPDATE_ALL')")
     public ResponseEntity<ApiResponse<CouponResponse>> updateCoupon(
             @PathVariable Long couponId, @Valid @RequestBody CouponUpdateRequest request) {
@@ -63,7 +65,7 @@ public class AdminCouponController {
     }
 
     @DeleteMapping("/{couponId}")
-    @Operation(summary = "Deactivate coupon")
+    @Operation(summary = "Deactivate coupon", description = "Soft-deactivates a coupon instead of deleting historical usage.")
     @PreAuthorize("@authorizationService.hasAnyPermission('COUPON_MANAGE_ALL', 'COUPON_DELETE_ALL')")
     public ResponseEntity<ApiResponse<Void>> deleteCoupon(@PathVariable Long couponId) {
         couponService.deleteCoupon(couponId);

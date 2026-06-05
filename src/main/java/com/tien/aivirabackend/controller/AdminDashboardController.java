@@ -35,7 +35,7 @@ public class AdminDashboardController {
     DashboardService dashboardService;
 
     @GetMapping("/summary")
-    @Operation(summary = "Get admin dashboard summary")
+    @Operation(summary = "Get admin dashboard summary", description = "Returns revenue, order, payment, user, pending, and low-stock summary metrics.")
     @PreAuthorize("@authorizationService.hasAnyPermission('DASHBOARD_READ_ADMIN', 'REPORT_READ_ALL')")
     public ResponseEntity<ApiResponse<DashboardSummaryResponse>> getSummary(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant fromDate,
@@ -45,7 +45,7 @@ public class AdminDashboardController {
     }
 
     @GetMapping("/sales")
-    @Operation(summary = "Get admin dashboard sales")
+    @Operation(summary = "Get admin dashboard sales", description = "Returns daily revenue and order-count points for a date range.")
     @PreAuthorize("@authorizationService.hasAnyPermission('DASHBOARD_READ_ADMIN', 'REPORT_READ_ALL')")
     public ResponseEntity<ApiResponse<DashboardSalesResponse>> getSales(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant fromDate,
@@ -55,7 +55,7 @@ public class AdminDashboardController {
     }
 
     @GetMapping("/orders")
-    @Operation(summary = "Get admin dashboard orders")
+    @Operation(summary = "Get admin dashboard orders", description = "Returns order counts grouped by order status.")
     @PreAuthorize("@authorizationService.hasAnyPermission('DASHBOARD_READ_ADMIN', 'REPORT_READ_ALL')")
     public ResponseEntity<ApiResponse<DashboardOrdersResponse>> getOrders(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant fromDate,
@@ -65,7 +65,7 @@ public class AdminDashboardController {
     }
 
     @GetMapping("/top-books")
-    @Operation(summary = "Get admin dashboard top books")
+    @Operation(summary = "Get admin dashboard top books", description = "Returns top-selling books from order item aggregates with soldCount fallback.")
     @PreAuthorize("@authorizationService.hasAnyPermission('DASHBOARD_READ_ADMIN', 'REPORT_READ_ALL')")
     public ResponseEntity<ApiResponse<DashboardTopBooksResponse>> getTopBooks(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant fromDate,
@@ -76,7 +76,7 @@ public class AdminDashboardController {
     }
 
     @GetMapping("/low-stock")
-    @Operation(summary = "Get admin dashboard low stock books")
+    @Operation(summary = "Get admin dashboard low stock books", description = "Returns active books whose stock is less than or equal to the threshold.")
     @PreAuthorize("@authorizationService.hasAnyPermission('DASHBOARD_READ_ADMIN', 'REPORT_READ_ALL')")
     public ResponseEntity<ApiResponse<DashboardLowStockResponse>> getLowStock(
             @RequestParam(required = false) Integer threshold,

@@ -37,19 +37,34 @@ public class ProductController {
 
     @GetMapping("/products")
     @Tag(name = "Public Catalog")
-    @Operation(summary = "Search public products")
+    @Operation(
+            summary = "Search public books",
+            description =
+                    "Lists active bookstore products. Supports keyword, category, author, publisher, ISBN, price, availability, sorting, and pagination filters.")
     public ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> getPublicProducts(
+            @Parameter(description = "Keyword matched against title, SKU, description, brand, author, publisher, and ISBN", example = "clean code")
             @RequestParam(required = false) String keyword,
+            @Parameter(description = "Book category slug", example = "programming")
             @RequestParam(required = false) String categorySlug,
+            @Parameter(description = "Legacy brand filter kept for API compatibility", example = "Aivira")
             @RequestParam(required = false) String brand,
+            @Parameter(description = "Case-insensitive author filter", example = "Robert C. Martin")
             @RequestParam(required = false) String author,
+            @Parameter(description = "Case-insensitive publisher filter", example = "Prentice Hall")
             @RequestParam(required = false) String publisher,
+            @Parameter(description = "ISBN contains filter", example = "9780132350884")
             @RequestParam(required = false) String isbn,
+            @Parameter(description = "Minimum book price", example = "100000")
             @RequestParam(required = false) BigDecimal minPrice,
+            @Parameter(description = "Maximum book price", example = "500000")
             @RequestParam(required = false) BigDecimal maxPrice,
+            @Parameter(description = "When true, only books with available stock are returned", example = "true")
             @RequestParam(required = false) Boolean available,
+            @Parameter(description = "Sort value: newest, price_asc, price_desc, best_selling, name_asc", example = "name_asc")
             @RequestParam(required = false) String sort,
+            @Parameter(description = "1-based page number", example = "1")
             @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "Page size", example = "20")
             @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(ApiResponse.success(
                 "Get products successful",
@@ -59,7 +74,7 @@ public class ProductController {
 
     @GetMapping("/products/{slug}")
     @Tag(name = "Public Catalog")
-    @Operation(summary = "Get public product detail")
+    @Operation(summary = "Get public book detail", description = "Returns one active public book by slug.")
     public ResponseEntity<ApiResponse<ProductResponse>> getPublicProduct(@PathVariable String slug) {
         return ResponseEntity.ok(ApiResponse.success("Get product successful", productService.getPublicProduct(slug)));
     }
@@ -67,7 +82,9 @@ public class ProductController {
     @GetMapping("/admin/products")
     @Tag(name = "Admin Products")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "List products for admin")
+    @Operation(
+            summary = "List products for admin",
+            description = "Lists all books for catalog administration, including inactive and draft records when matched by filters.")
     @PreAuthorize("@authorizationService.hasAnyPermission('PRODUCT_MANAGE_ALL', 'PRODUCT_READ')")
     public ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> getAdminProducts(
             @RequestParam(required = false) ProductStatus status,
@@ -93,7 +110,7 @@ public class ProductController {
     @PostMapping("/admin/products")
     @Tag(name = "Admin Products")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "Create admin product")
+    @Operation(summary = "Create admin book", description = "Creates a bookstore product with required book metadata and at least one variation.")
     @PreAuthorize("@authorizationService.hasPermission('PRODUCT_MANAGE_ALL')")
     public ResponseEntity<ApiResponse<ProductResponse>> createAdminProduct(
             @Valid @RequestBody ProductCreateRequest request) {
@@ -104,7 +121,7 @@ public class ProductController {
     @PutMapping("/admin/products/{productId}")
     @Tag(name = "Admin Products")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "Update admin product")
+    @Operation(summary = "Update admin book", description = "Updates catalog, pricing, inventory flag, and bookstore metadata for a product.")
     @PreAuthorize("@authorizationService.hasPermission('PRODUCT_MANAGE_ALL')")
     public ResponseEntity<ApiResponse<ProductResponse>> updateAdminProduct(
             @PathVariable Long productId, @Valid @RequestBody ProductUpdateRequest request) {

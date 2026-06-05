@@ -35,7 +35,9 @@ public class AdminOrderController {
     OrderService orderService;
 
     @GetMapping
-    @Operation(summary = "List orders for admin")
+    @Operation(
+            summary = "List orders for admin",
+            description = "Lists all bookstore orders with status, keyword, date range, and pagination filters.")
     @PreAuthorize("@authorizationService.hasAnyPermission('ORDER_MANAGE_ALL', 'ORDER_READ_ALL')")
     public ResponseEntity<ApiResponse<PageResponse<OrderSummaryResponse>>> getAdminOrders(
             @RequestParam(required = false) OrderStatus status,
@@ -58,21 +60,21 @@ public class AdminOrderController {
     }
 
     @PutMapping("/{orderId}/confirm")
-    @Operation(summary = "Confirm order")
+    @Operation(summary = "Confirm order", description = "Allowed from PENDING_CONFIRMATION or PAID to CONFIRMED.")
     @PreAuthorize("@authorizationService.hasAnyPermission('ORDER_MANAGE_ALL', 'ORDER_UPDATE_STATUS_ALL')")
     public ResponseEntity<ApiResponse<OrderResponse>> confirmOrder(@PathVariable Long orderId) {
         return ResponseEntity.ok(ApiResponse.success("Confirm order successful", orderService.confirmOrder(orderId)));
     }
 
     @PutMapping("/{orderId}/packing")
-    @Operation(summary = "Mark order as packing")
+    @Operation(summary = "Mark order as packing", description = "Allowed from CONFIRMED to PACKING.")
     @PreAuthorize("@authorizationService.hasAnyPermission('ORDER_MANAGE_ALL', 'ORDER_UPDATE_STATUS_ALL')")
     public ResponseEntity<ApiResponse<OrderResponse>> markPacking(@PathVariable Long orderId) {
         return ResponseEntity.ok(ApiResponse.success("Mark order packing successful", orderService.markPacking(orderId)));
     }
 
     @PutMapping("/{orderId}/shipping")
-    @Operation(summary = "Mark order as shipping")
+    @Operation(summary = "Mark order as shipping", description = "Allowed from PACKING to SHIPPING.")
     @PreAuthorize("@authorizationService.hasAnyPermission('ORDER_MANAGE_ALL', 'ORDER_UPDATE_STATUS_ALL')")
     public ResponseEntity<ApiResponse<OrderResponse>> markShipping(@PathVariable Long orderId) {
         return ResponseEntity.ok(
@@ -80,7 +82,7 @@ public class AdminOrderController {
     }
 
     @PutMapping("/{orderId}/completed")
-    @Operation(summary = "Mark order as completed")
+    @Operation(summary = "Mark order as completed", description = "Allowed from SHIPPING to COMPLETED.")
     @PreAuthorize("@authorizationService.hasAnyPermission('ORDER_MANAGE_ALL', 'ORDER_UPDATE_STATUS_ALL')")
     public ResponseEntity<ApiResponse<OrderResponse>> markCompleted(@PathVariable Long orderId) {
         return ResponseEntity.ok(
@@ -88,7 +90,9 @@ public class AdminOrderController {
     }
 
     @PutMapping("/{orderId}/cancel")
-    @Operation(summary = "Cancel order as admin")
+    @Operation(
+            summary = "Cancel order as admin",
+            description = "Cancels safe pre-shipping orders and restores stock. Paid cancellation is handled by manual refund flow.")
     @PreAuthorize("@authorizationService.hasAnyPermission('ORDER_MANAGE_ALL', 'ORDER_CANCEL_ALL')")
     public ResponseEntity<ApiResponse<OrderResponse>> cancelAdminOrder(
             @PathVariable Long orderId, @Valid @RequestBody OrderCancelRequest request) {
@@ -97,7 +101,9 @@ public class AdminOrderController {
     }
 
     @PutMapping("/{orderId}/mark-refunded")
-    @Operation(summary = "Mark order as manually refunded")
+    @Operation(
+            summary = "Mark order as manually refunded",
+            description = "Records a full manual refund for a paid pre-shipping order without calling VNPay or MoMo refund APIs.")
     @PreAuthorize("@authorizationService.hasAnyPermission('ORDER_MANAGE_ALL', 'REFUND_MANAGE_ALL')")
     public ResponseEntity<ApiResponse<OrderResponse>> markRefunded(
             @PathVariable Long orderId, @Valid @RequestBody ManualRefundRequest request) {

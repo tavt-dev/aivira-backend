@@ -35,14 +35,20 @@ public class CheckoutController {
     RequestMetadataService requestMetadataService;
 
     @PostMapping("/preview")
-    @Operation(summary = "Preview checkout totals")
+    @Operation(
+            summary = "Preview checkout totals",
+            description =
+                    "Validates selected cart items, address, stock, promotions, and optional coupon without creating an order, locking stock, or consuming coupon usage.")
     @PreAuthorize("@authorizationService.hasPermission('CHECKOUT_CREATE_SELF')")
     public ResponseEntity<ApiResponse<CheckoutPreviewResponse>> preview(@Valid @RequestBody CheckoutRequest request) {
         return ResponseEntity.ok(ApiResponse.success("Checkout preview successful", checkoutService.preview(request)));
     }
 
     @PostMapping
-    @Operation(summary = "Checkout selected cart items")
+    @Operation(
+            summary = "Checkout selected cart items",
+            description =
+                    "Creates one order for selected cart items. Promotions apply before coupons. COD finalizes coupon usage immediately; online payment reserves coupon usage until callback success.")
     @PreAuthorize("@authorizationService.hasPermission('CHECKOUT_CREATE_SELF')")
     public ResponseEntity<ApiResponse<CheckoutResponse>> checkout(
             @Valid @RequestBody CheckoutRequest request, HttpServletRequest servletRequest) {
