@@ -35,6 +35,7 @@ import com.tien.aivirabackend.repository.OrderRepository;
 import com.tien.aivirabackend.repository.PaymentGroupRepository;
 import com.tien.aivirabackend.repository.ProductRepository;
 import com.tien.aivirabackend.repository.ProductVariationRepository;
+import com.tien.aivirabackend.repository.RefundRepository;
 import com.tien.aivirabackend.repository.RoleRepository;
 import com.tien.aivirabackend.repository.UserRepository;
 
@@ -66,6 +67,9 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     OrderRepository orderRepository;
+
+    @Autowired
+    RefundRepository refundRepository;
 
     @Test
     void adminOrders_shouldListAndFilterByStatusAndKeyword() throws Exception {
@@ -131,6 +135,47 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
                 .isEqualTo(5);
     }
 
+    @Test
+    void adminManualRefund_shouldMarkPaidOrderRefundedAndRestoreStock() throws Exception {
+        String token = adminToken();
+        Order order = saveOrder(OrderStatus.PAID, PaymentStatus.SUCCESS, 3, PaymentMethod.VNPAY);
+        Long variationId = order.getItems().getFirst().getProductVariationId();
+
+        mockMvc.perform(put("/admin/orders/{orderId}/mark-refunded", order.getId())
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(APPLICATION_JSON)
+                        .content(json(Map.of(
+                                "amount", "200.00",
+                                "reason", "customer refund",
+                                "note", "manual bank transfer completed"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.orderStatus").value("REFUNDED"))
+                .andExpect(jsonPath("$.data.paymentStatus").value("REFUNDED"))
+                .andExpect(jsonPath("$.data.refund.amount").value(200.00))
+                .andExpect(jsonPath("$.data.refund.refundCode").exists());
+
+        Order refundedOrder = orderRepository.findDetailedById(order.getId()).orElseThrow();
+        assertThat(refundedOrder.getOrderStatus()).isEqualTo(OrderStatus.REFUNDED);
+        assertThat(refundedOrder.getPayments().getFirst().getStatus()).isEqualTo(PaymentStatus.REFUNDED);
+        assertThat(paymentGroupRepository.findById(
+                                refundedOrder.getPayments().getFirst().getPaymentGroup().getId())
+                        .orElseThrow()
+                        .getStatus())
+                .isEqualTo(PaymentStatus.REFUNDED);
+        assertThat(productVariationRepository.findById(variationId).orElseThrow().getStockQuantity())
+                .isEqualTo(5);
+        assertThat(refundRepository.existsByOrder_Id(order.getId())).isTrue();
+
+        mockMvc.perform(put("/admin/orders/{orderId}/mark-refunded", order.getId())
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(APPLICATION_JSON)
+                        .content(json(Map.of(
+                                "amount", "200.00",
+                                "reason", "duplicate",
+                                "note", "duplicate manual refund"))))
+                .andExpect(status().isBadRequest());
+    }
+
     private String adminToken() throws Exception {
         var role = roleRepository.findByCode(PredefinedRole.ADMIN).orElseThrow();
         User admin = User.builder()
@@ -155,6 +200,11 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
     }
 
     private Order saveOrder(OrderStatus orderStatus, PaymentStatus paymentStatus, int variationStock) {
+        return saveOrder(orderStatus, paymentStatus, variationStock, PaymentMethod.COD);
+    }
+
+    private Order saveOrder(
+            OrderStatus orderStatus, PaymentStatus paymentStatus, int variationStock, PaymentMethod paymentMethod) {
         User customer = userRepository.save(User.builder()
                 .username("buyer")
                 .email("buyer@example.com")
@@ -201,7 +251,7 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
         PaymentGroup group = paymentGroupRepository.save(PaymentGroup.builder()
                 .paymentCode("PAY-" + orderStatus.name())
                 .user(customer)
-                .method(PaymentMethod.COD)
+                .method(paymentMethod)
                 .status(paymentStatus)
                 .amount(new BigDecimal("200.00"))
                 .build());
@@ -234,7 +284,7 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
                 .add(Payment.builder()
                         .order(order)
                         .paymentGroup(group)
-                        .method(PaymentMethod.COD)
+                        .method(paymentMethod)
                         .status(paymentStatus)
                         .amount(new BigDecimal("200.00"))
                         .build());

@@ -13,6 +13,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -26,12 +27,14 @@ import com.tien.aivirabackend.constant.PaymentMethod;
 import com.tien.aivirabackend.constant.PaymentProvider;
 import com.tien.aivirabackend.constant.PaymentStatus;
 import com.tien.aivirabackend.domain.dto.PageResponse;
+import com.tien.aivirabackend.domain.dto.request.ManualRefundRequest;
 import com.tien.aivirabackend.domain.dto.request.OrderCancelRequest;
 import com.tien.aivirabackend.domain.dto.response.OrderSummaryResponse;
 import com.tien.aivirabackend.domain.entity.catalog.Product;
 import com.tien.aivirabackend.domain.entity.catalog.ProductVariation;
 import com.tien.aivirabackend.domain.entity.transaction.Order;
 import com.tien.aivirabackend.domain.entity.transaction.OrderItem;
+import com.tien.aivirabackend.domain.entity.transaction.Refund;
 import com.tien.aivirabackend.domain.entity.transaction.payment.Payment;
 import com.tien.aivirabackend.domain.entity.transaction.payment.PaymentAttempt;
 import com.tien.aivirabackend.domain.entity.transaction.payment.PaymentGroup;
@@ -43,6 +46,7 @@ import com.tien.aivirabackend.repository.OrderRepository;
 import com.tien.aivirabackend.repository.PaymentAttemptRepository;
 import com.tien.aivirabackend.repository.PaymentGroupRepository;
 import com.tien.aivirabackend.repository.ProductVariationRepository;
+import com.tien.aivirabackend.repository.RefundRepository;
 import com.tien.aivirabackend.service.auth.CurrentUserService;
 import com.tien.aivirabackend.service.discount.DiscountService;
 
@@ -50,6 +54,9 @@ import com.tien.aivirabackend.service.discount.DiscountService;
 class OrderServiceImplTest {
     @Mock
     OrderRepository orderRepository;
+
+    @Mock
+    RefundRepository refundRepository;
 
     @Mock
     PaymentGroupRepository paymentGroupRepository;
@@ -72,6 +79,7 @@ class OrderServiceImplTest {
     void setUp() {
         orderService = new OrderServiceImpl(
                 orderRepository,
+                refundRepository,
                 paymentGroupRepository,
                 paymentAttemptRepository,
                 currentUserService,
@@ -399,6 +407,131 @@ class OrderServiceImplTest {
         }
     }
 
+    @Test
+    void markRefunded_whenPaidOrder_shouldCreateRefundRestoreStockAndMarkStatuses() {
+        PaymentGroup group = paymentGroup(PaymentMethod.VNPAY, PaymentStatus.SUCCESS);
+        Order order = order(group, OrderStatus.PAID);
+        ProductVariation variation = variation(5);
+        when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
+        when(currentUserService.findCurrentUserId()).thenReturn(Optional.of("admin-1"));
+        when(variationRepository.findAllByIdInForUpdate(anyCollection())).thenReturn(List.of(variation));
+        when(refundRepository.save(any(Refund.class))).thenAnswer(invocation -> {
+            Refund refund = invocation.getArgument(0);
+            refund.setId(91L);
+            return refund;
+        });
+        when(orderRepository.save(order)).thenReturn(order);
+
+        var response = orderService.markRefunded(21L, refundRequest("100.00"));
+
+        assertThat(response.getOrderStatus()).isEqualTo(OrderStatus.REFUNDED);
+        assertThat(response.getPaymentStatus()).isEqualTo(PaymentStatus.REFUNDED);
+        assertThat(response.getRefund()).isNotNull();
+        assertThat(response.getRefund().getRefundedBy()).isEqualTo("admin-1");
+        assertThat(response.getRefund().getAmount()).isEqualByComparingTo("100.00");
+        assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.REFUNDED);
+        assertThat(order.getPayments().getFirst().getStatus()).isEqualTo(PaymentStatus.REFUNDED);
+        assertThat(group.getStatus()).isEqualTo(PaymentStatus.REFUNDED);
+        assertThat(variation.getStockQuantity()).isEqualTo(7);
+
+        ArgumentCaptor<Refund> refundCaptor = ArgumentCaptor.forClass(Refund.class);
+        verify(refundRepository).save(refundCaptor.capture());
+        assertThat(refundCaptor.getValue().getRefundCode()).startsWith("REF");
+        assertThat(refundCaptor.getValue().getReason()).isEqualTo("Customer refund");
+        assertThat(refundCaptor.getValue().getNote()).isEqualTo("Manual bank transfer completed");
+        assertThat(refundCaptor.getValue().getStatus().name()).isEqualTo("COMPLETED");
+        assertThat(refundCaptor.getValue().getRefundedAt()).isNotNull();
+    }
+
+    @Test
+    void markRefunded_whenConfirmedOrPackingPaidOrder_shouldRestoreStock() {
+        for (OrderStatus status : List.of(OrderStatus.CONFIRMED, OrderStatus.PACKING)) {
+            reset(orderRepository, refundRepository, variationRepository, currentUserService);
+            PaymentGroup group = paymentGroup(PaymentMethod.VNPAY, PaymentStatus.SUCCESS);
+            Order order = order(group, status);
+            ProductVariation variation = variation(1);
+            when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
+            when(currentUserService.findCurrentUserId()).thenReturn(Optional.of("admin-1"));
+            when(variationRepository.findAllByIdInForUpdate(anyCollection())).thenReturn(List.of(variation));
+            when(refundRepository.save(any(Refund.class))).thenAnswer(invocation -> invocation.getArgument(0));
+            when(orderRepository.save(order)).thenReturn(order);
+
+            orderService.markRefunded(21L, refundRequest("100.00"));
+
+            assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.REFUNDED);
+            assertThat(group.getStatus()).isEqualTo(PaymentStatus.REFUNDED);
+            assertThat(variation.getStockQuantity()).isEqualTo(3);
+        }
+    }
+
+    @Test
+    void markRefunded_whenUnpaidOrder_shouldReject() {
+        Order order = order(paymentGroup(PaymentMethod.COD, PaymentStatus.PENDING), OrderStatus.PENDING_CONFIRMATION);
+        when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderService.markRefunded(21L, refundRequest("100.00")))
+                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
+                        .isEqualTo(OrderErrorCode.ORDER_REFUND_NOT_ALLOWED));
+
+        verify(refundRepository, never()).save(any());
+        verify(variationRepository, never()).findAllByIdInForUpdate(anyCollection());
+    }
+
+    @Test
+    void markRefunded_whenShippingOrCompleted_shouldReject() {
+        for (OrderStatus status : List.of(OrderStatus.SHIPPING, OrderStatus.COMPLETED)) {
+            reset(orderRepository, refundRepository, variationRepository);
+            Order order = order(paymentGroup(PaymentMethod.VNPAY, PaymentStatus.SUCCESS), status);
+            when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
+
+            assertThatThrownBy(() -> orderService.markRefunded(21L, refundRequest("100.00")))
+                    .as("status %s", status)
+                    .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
+                            .isEqualTo(OrderErrorCode.ORDER_REFUND_NOT_ALLOWED));
+
+            verify(refundRepository, never()).save(any());
+            verify(variationRepository, never()).findAllByIdInForUpdate(anyCollection());
+        }
+    }
+
+    @Test
+    void markRefunded_whenAlreadyRefunded_shouldReject() {
+        Order order = order(paymentGroup(PaymentMethod.VNPAY, PaymentStatus.REFUNDED), OrderStatus.REFUNDED);
+        when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderService.markRefunded(21L, refundRequest("100.00")))
+                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
+                        .isEqualTo(OrderErrorCode.ORDER_REFUND_ALREADY_PROCESSED));
+
+        verify(refundRepository, never()).save(any());
+    }
+
+    @Test
+    void markRefunded_whenRefundRecordAlreadyExists_shouldReject() {
+        Order order = order(paymentGroup(PaymentMethod.VNPAY, PaymentStatus.SUCCESS), OrderStatus.PAID);
+        when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
+        when(refundRepository.existsByOrder_Id(21L)).thenReturn(true);
+
+        assertThatThrownBy(() -> orderService.markRefunded(21L, refundRequest("100.00")))
+                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
+                        .isEqualTo(OrderErrorCode.ORDER_REFUND_ALREADY_PROCESSED));
+
+        verify(refundRepository, never()).save(any());
+    }
+
+    @Test
+    void markRefunded_whenAmountMismatch_shouldReject() {
+        Order order = order(paymentGroup(PaymentMethod.VNPAY, PaymentStatus.SUCCESS), OrderStatus.PAID);
+        when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderService.markRefunded(21L, refundRequest("99.99")))
+                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
+                        .isEqualTo(OrderErrorCode.ORDER_REFUND_AMOUNT_INVALID));
+
+        verify(refundRepository, never()).save(any());
+        verify(variationRepository, never()).findAllByIdInForUpdate(anyCollection());
+    }
+
     private PaymentGroup paymentGroup(PaymentMethod method, PaymentStatus status) {
         PaymentGroup group = PaymentGroup.builder()
                 .paymentCode("PAY123")
@@ -473,6 +606,14 @@ class OrderServiceImplTest {
 
     private User user() {
         return User.builder().id("user-1").username("buyer").build();
+    }
+
+    private ManualRefundRequest refundRequest(String amount) {
+        return ManualRefundRequest.builder()
+                .amount(new BigDecimal(amount))
+                .reason("  Customer refund  ")
+                .note("  Manual bank transfer completed  ")
+                .build();
     }
 
     private void assertTransition(OrderStatus source, OrderStatus target, java.util.function.Supplier<?> action) {

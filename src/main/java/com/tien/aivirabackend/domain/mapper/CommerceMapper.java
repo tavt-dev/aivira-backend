@@ -14,6 +14,7 @@ import com.tien.aivirabackend.domain.entity.transaction.Cart;
 import com.tien.aivirabackend.domain.entity.transaction.CartItem;
 import com.tien.aivirabackend.domain.entity.transaction.Order;
 import com.tien.aivirabackend.domain.entity.transaction.OrderItem;
+import com.tien.aivirabackend.domain.entity.transaction.Refund;
 import com.tien.aivirabackend.domain.entity.transaction.payment.Payment;
 import com.tien.aivirabackend.domain.entity.transaction.payment.PaymentGroup;
 import com.tien.aivirabackend.domain.entity.user.Address;
@@ -104,6 +105,7 @@ public class CommerceMapper {
                 .paymentMethod(payment == null ? null : payment.getMethod())
                 .paymentStatus(payment == null ? null : payment.getStatus())
                 .paidAt(payment == null ? null : payment.getPaidAt())
+                .refund(toRefundResponse(order.getRefund()))
                 .shippingRecipientName(order.getShippingRecipientName())
                 .shippingPhoneNumber(order.getShippingPhoneNumber())
                 .shippingAddressLine(order.getShippingAddressLine())
@@ -113,6 +115,27 @@ public class CommerceMapper {
                 .items(items)
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
+                .build();
+    }
+
+    public RefundResponse toRefundResponse(Refund refund) {
+        if (refund == null) {
+            return null;
+        }
+        Order order = refund.getOrder();
+        return RefundResponse.builder()
+                .id(refund.getId())
+                .refundCode(refund.getRefundCode())
+                .orderId(order == null ? null : order.getId())
+                .orderCode(order == null ? null : order.getOrderCode())
+                .amount(refund.getAmount())
+                .reason(refund.getReason())
+                .note(refund.getNote())
+                .status(refund.getStatus())
+                .refundedBy(refund.getRefundedBy())
+                .refundedAt(refund.getRefundedAt())
+                .createdAt(refund.getCreatedAt())
+                .updatedAt(refund.getUpdatedAt())
                 .build();
     }
 

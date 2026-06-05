@@ -1,9 +1,11 @@
 package com.tien.aivirabackend.service.commerce;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -12,11 +14,14 @@ import org.springframework.util.StringUtils;
 
 import com.tien.aivirabackend.constant.OrderStatus;
 import com.tien.aivirabackend.constant.PaymentStatus;
+import com.tien.aivirabackend.constant.RefundStatus;
 import com.tien.aivirabackend.domain.dto.PageResponse;
+import com.tien.aivirabackend.domain.dto.request.ManualRefundRequest;
 import com.tien.aivirabackend.domain.dto.request.OrderCancelRequest;
 import com.tien.aivirabackend.domain.dto.response.OrderResponse;
 import com.tien.aivirabackend.domain.dto.response.OrderSummaryResponse;
 import com.tien.aivirabackend.domain.entity.transaction.Order;
+import com.tien.aivirabackend.domain.entity.transaction.Refund;
 import com.tien.aivirabackend.domain.entity.transaction.payment.Payment;
 import com.tien.aivirabackend.domain.entity.transaction.payment.PaymentAttempt;
 import com.tien.aivirabackend.domain.entity.transaction.payment.PaymentGroup;
@@ -26,6 +31,7 @@ import com.tien.aivirabackend.exception.errorCode.OrderErrorCode;
 import com.tien.aivirabackend.repository.OrderRepository;
 import com.tien.aivirabackend.repository.PaymentAttemptRepository;
 import com.tien.aivirabackend.repository.PaymentGroupRepository;
+import com.tien.aivirabackend.repository.RefundRepository;
 import com.tien.aivirabackend.service.auth.CurrentUserService;
 import com.tien.aivirabackend.service.discount.DiscountService;
 import com.tien.aivirabackend.util.PageRequestUtils;
@@ -41,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j(topic = "ORDER-SERVICE")
 public class OrderServiceImpl implements OrderService {
     OrderRepository orderRepository;
+    RefundRepository refundRepository;
     PaymentGroupRepository paymentGroupRepository;
     PaymentAttemptRepository paymentAttemptRepository;
     CurrentUserService currentUserService;
@@ -155,6 +162,51 @@ public class OrderServiceImpl implements OrderService {
         return commerceMapper.toOrderResponse(orderRepository.save(order));
     }
 
+    @Override
+    @Transactional
+    public OrderResponse markRefunded(Long orderId, ManualRefundRequest request) {
+        Order order = findOrderForAdminUpdate(orderId);
+        validateRefundable(order);
+        validateRefundAmount(order, request == null ? null : request.getAmount());
+
+        Instant now = Instant.now();
+        String adminUserId = resolveCurrentUserIdForLog();
+        if (!StringUtils.hasText(adminUserId)) {
+            adminUserId = "UNKNOWN";
+        }
+        Refund refund = Refund.builder()
+                .refundCode(generateRefundCode())
+                .order(order)
+                .amount(request.getAmount())
+                .reason(trimRequired(request.getReason()))
+                .note(trimRequired(request.getNote()))
+                .status(RefundStatus.COMPLETED)
+                .refundedBy(adminUserId)
+                .refundedAt(now)
+                .build();
+
+        order.setOrderStatus(OrderStatus.REFUNDED);
+        successfulPayments(order).forEach(payment -> {
+            payment.setStatus(PaymentStatus.REFUNDED);
+            if (payment.getPaymentGroup() != null) {
+                payment.getPaymentGroup().setStatus(PaymentStatus.REFUNDED);
+            }
+        });
+        inventoryService.restoreStockForOrders(List.of(order));
+        Refund savedRefund = refundRepository.save(refund);
+        order.setRefund(savedRefund);
+        Order savedOrder = orderRepository.save(order);
+
+        log.info(
+                "admin_refund_marked orderId={} orderCode={} refundCode={} amount={} adminUserId={}",
+                savedOrder.getId(),
+                savedOrder.getOrderCode(),
+                savedRefund.getRefundCode(),
+                savedRefund.getAmount(),
+                adminUserId);
+        return commerceMapper.toOrderResponse(savedOrder);
+    }
+
     private void validateCancelable(Order order, PaymentGroup paymentGroup) {
         if (order.getOrderStatus() == OrderStatus.PAID) {
             throw new AppException(OrderErrorCode.ORDER_CANCEL_REQUIRES_REFUND);
@@ -203,6 +255,41 @@ public class OrderServiceImpl implements OrderService {
         throw new AppException(OrderErrorCode.ORDER_CANCEL_NOT_ALLOWED);
     }
 
+    private void validateRefundable(Order order) {
+        if (order.getOrderStatus() == OrderStatus.REFUNDED
+                || order.getRefund() != null
+                || refundRepository.existsByOrder_Id(order.getId())) {
+            throw new AppException(OrderErrorCode.ORDER_REFUND_ALREADY_PROCESSED);
+        }
+        if (!Set.of(OrderStatus.PAID, OrderStatus.CONFIRMED, OrderStatus.PACKING)
+                .contains(order.getOrderStatus())) {
+            throw new AppException(OrderErrorCode.ORDER_REFUND_NOT_ALLOWED);
+        }
+        if (successfulPayments(order).isEmpty()) {
+            throw new AppException(OrderErrorCode.ORDER_REFUND_NOT_ALLOWED);
+        }
+    }
+
+    private void validateRefundAmount(Order order, BigDecimal requestedAmount) {
+        if (requestedAmount == null || requestedAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new AppException(OrderErrorCode.ORDER_REFUND_AMOUNT_INVALID);
+        }
+        BigDecimal successfulPaymentAmount = successfulPayments(order).stream()
+                .map(Payment::getAmount)
+                .filter(amount -> amount != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (requestedAmount.compareTo(successfulPaymentAmount) != 0
+                || requestedAmount.compareTo(order.getTotalAmount()) != 0) {
+            throw new AppException(OrderErrorCode.ORDER_REFUND_AMOUNT_INVALID);
+        }
+    }
+
+    private List<Payment> successfulPayments(Order order) {
+        return order.getPayments().stream()
+                .filter(payment -> payment.getStatus() == PaymentStatus.SUCCESS)
+                .toList();
+    }
+
     private void restoreStockAndCancel(Order order, String reason) {
         order.setOrderStatus(OrderStatus.CANCELLED);
         order.setCancelReason(reason);
@@ -249,7 +336,23 @@ public class OrderServiceImpl implements OrderService {
         paymentAttemptRepository.save(attempt);
     }
 
+    private String generateRefundCode() {
+        String code;
+        do {
+            code = "REF" + System.currentTimeMillis()
+                    + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+        } while (refundRepository.existsByRefundCode(code));
+        return code;
+    }
+
     private String trimToNull(String value) {
         return StringUtils.hasText(value) ? value.trim() : null;
+    }
+
+    private String trimRequired(String value) {
+        if (!StringUtils.hasText(value)) {
+            throw new AppException(OrderErrorCode.ORDER_REFUND_NOT_ALLOWED);
+        }
+        return value.trim();
     }
 }

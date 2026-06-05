@@ -31,6 +31,7 @@ public class OrderResponse {
     PaymentMethod paymentMethod;
     PaymentStatus paymentStatus;
     Instant paidAt;
+    RefundResponse refund;
     String shippingRecipientName;
     String shippingPhoneNumber;
     String shippingAddressLine;

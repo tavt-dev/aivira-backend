@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.tien.aivirabackend.constant.OrderStatus;
+import com.tien.aivirabackend.domain.dto.request.ManualRefundRequest;
 import com.tien.aivirabackend.domain.dto.request.OrderCancelRequest;
 import com.tien.aivirabackend.exception.GlobalExceptionHandler;
 import com.tien.aivirabackend.service.commerce.OrderService;
@@ -77,6 +78,14 @@ class AdminOrderControllerContractTest {
     }
 
     @Test
+    void markRefunded_shouldRequireManageOrRefundManagePermission() throws Exception {
+        assertPreAuthorize(
+                AdminOrderController.class.getMethod("markRefunded", Long.class, ManualRefundRequest.class),
+                "ORDER_MANAGE_ALL",
+                "REFUND_MANAGE_ALL");
+    }
+
+    @Test
     void endpoints_shouldDelegateToOrderService() throws Exception {
         mockMvc.perform(get("/admin/orders")
                         .param("status", "CONFIRMED")
@@ -95,6 +104,16 @@ class AdminOrderControllerContractTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"reason\":\"customer requested\"}"))
                 .andExpect(status().isOk());
+        mockMvc.perform(put("/admin/orders/21/mark-refunded")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "amount":100.00,
+                                  "reason":"customer refund",
+                                  "note":"manual bank transfer completed"
+                                }
+                                """))
+                .andExpect(status().isOk());
 
         verify(orderService)
                 .getAdminOrders(
@@ -110,6 +129,21 @@ class AdminOrderControllerContractTest {
         verify(orderService).markShipping(21L);
         verify(orderService).markCompleted(21L);
         verify(orderService).cancelAdminOrder(eq(21L), any(OrderCancelRequest.class));
+        verify(orderService).markRefunded(eq(21L), any(ManualRefundRequest.class));
+    }
+
+    @Test
+    void markRefunded_whenRequestInvalid_shouldReturnValidationError() throws Exception {
+        mockMvc.perform(put("/admin/orders/21/mark-refunded")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "amount":0,
+                                  "reason":"",
+                                  "note":""
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
     }
 
     private void assertPreAuthorize(Method method, String... permissions) {
