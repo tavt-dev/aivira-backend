@@ -27,6 +27,9 @@ public class CheckoutRequest {
     @NotNull
     PaymentMethod paymentMethod;
 
+    @Size(max = 50)
+    String couponCode;
+
     @Size(max = 500)
     String notes;
 }

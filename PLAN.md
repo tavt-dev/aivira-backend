@@ -38,10 +38,10 @@ Already done:
 Still missing for a complete backend:
 
 - [x] Book-specific catalog fields and search.
-- [ ] Admin order lifecycle.
-- [ ] Admin user list/detail/lock/unlock/role assignment.
-- [ ] Checkout preview and coupon application logic.
-- [ ] Coupon and promotion admin APIs.
+- [x] Admin order lifecycle.
+- [x] Admin user list/detail/lock/unlock/role assignment.
+- [x] Checkout preview and coupon application logic.
+- [x] Coupon and promotion admin APIs.
 - [ ] Manual refund metadata and admin refund action.
 - [ ] Review APIs and moderation.
 - [ ] Storefront home API and admin dashboard APIs.
@@ -373,32 +373,35 @@ Current status:
 - [x] `Coupon`, `CouponUsage`, and `Promotion` entities exist.
 - [x] `Order.couponCode` exists.
 - [x] `OrderItem.discountAmount` and `OrderItem.promotionName` exist.
-- [ ] Coupon repositories/services/controllers are missing.
-- [ ] Promotion repositories/services/controllers are missing.
-- [ ] Checkout preview is missing.
-- [ ] Checkout coupon application is missing.
+- [x] Coupon repositories/services/controllers exist.
+- [x] Promotion repositories/services/controllers exist.
+- [x] Checkout preview exists.
+- [x] Checkout coupon application exists.
+- [x] Coupon usage lifecycle supports `RESERVED`, `FINALIZED`, and `RELEASED`.
 
 Implement:
 
-- [ ] `POST /checkout/preview`
-- [ ] Let `POST /checkout` accept optional `couponCode`.
-- [ ] `GET /admin/coupons`
-- [ ] `POST /admin/coupons`
-- [ ] `GET /admin/coupons/{couponId}`
-- [ ] `PUT /admin/coupons/{couponId}`
-- [ ] `DELETE /admin/coupons/{couponId}`
-- [ ] `GET /admin/promotions`
-- [ ] `POST /admin/promotions`
-- [ ] `GET /admin/promotions/{promotionId}`
-- [ ] `PUT /admin/promotions/{promotionId}`
-- [ ] `DELETE /admin/promotions/{promotionId}`
+- [x] `POST /checkout/preview`
+- [x] Let `POST /checkout` accept optional `couponCode`.
+- [x] `GET /admin/coupons`
+- [x] `POST /admin/coupons`
+- [x] `GET /admin/coupons/{couponId}`
+- [x] `PUT /admin/coupons/{couponId}`
+- [x] `DELETE /admin/coupons/{couponId}`
+- [x] `GET /admin/promotions`
+- [x] `POST /admin/promotions`
+- [x] `GET /admin/promotions/{promotionId}`
+- [x] `PUT /admin/promotions/{promotionId}`
+- [x] `DELETE /admin/promotions/{promotionId}`
 
 Rules:
 
-- [ ] Promotion applies before coupon.
-- [ ] Total amount cannot go below zero.
-- [ ] Coupon usage is finalized only after successful checkout/payment.
-- [ ] Failed, expired, or cancelled online payments do not permanently consume coupon usage.
+- [x] Promotion applies before coupon.
+- [x] Total amount cannot go below zero.
+- [x] COD checkout finalizes coupon usage immediately.
+- [x] Online checkout reserves coupon usage first.
+- [x] Online payment success finalizes coupon usage exactly once.
+- [x] Failed, expired, retried, or cancelled online payments do not permanently consume coupon usage.
 
 ## Phase 5: Manual Refund Flow
 
@@ -531,7 +534,7 @@ Implement missing error codes as features are built:
 - [ ] Invalid page count.
 - [ ] Invalid order transition.
 - [x] Paid order requires refund.
-- [ ] Coupon invalid/expired/used.
+- [x] Coupon invalid/expired/used.
 - [ ] Review not allowed.
 - [ ] Refund not allowed.
 
@@ -567,8 +570,8 @@ Implement:
 1. [x] Phase 1: Book catalog fields and search.
 2. [x] Phase 2: Admin order lifecycle.
 3. [x] Phase 3: Admin user and permission management.
-4. [ ] Phase 4: Checkout preview and coupon foundation.
-5. [ ] Phase 4: Coupon/promotion admin APIs.
+4. [x] Phase 4: Checkout preview and coupon foundation.
+5. [x] Phase 4: Coupon/promotion admin APIs.
 6. [ ] Phase 5: Manual refund flow.
 7. [ ] Phase 6: Review and moderation.
 8. [ ] Phase 7: Storefront and dashboard APIs.
@@ -582,14 +585,14 @@ Backend is complete for the full commerce version when:
 
 - [ ] Public users can browse, search, filter, and view book details.
 - [ ] Customers can register, verify email, log in, manage profile and addresses.
-- [ ] Customers can add books to cart, preview checkout, apply coupon, checkout, pay, and track orders.
-- [ ] COD, VNPay, and MoMo flows work with retry, expiry, callback/IPN, and reconciliation.
+- [x] Customers can add books to cart, preview checkout, apply coupon, checkout, pay, and track orders.
+- [x] COD, VNPay, and MoMo flows work with retry, expiry, callback/IPN, and reconciliation.
 - [ ] Admin can manage books, categories, media, variations, stock, orders, coupons, promotions, reviews, users, permissions, payments, refunds, and dashboard.
 - [ ] Paid-order refund is handled manually with clear admin metadata.
 - [x] No seller/shop/merchant workflow exists.
 - [x] Schema changes use Flyway migrations.
 - [x] API responses use DTOs, not JPA entities.
-- [ ] `.\mvnw.cmd test` passes after the remaining phases are implemented.
+- [x] `.\mvnw.cmd test` passes for the current implemented backend.
 - [ ] README, PLAN, and OpenAPI docs match the implemented backend behavior.
 
 ## Explicit Defaults

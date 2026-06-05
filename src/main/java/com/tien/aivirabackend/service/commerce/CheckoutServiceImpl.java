@@ -17,6 +17,7 @@ import com.tien.aivirabackend.constant.PaymentMethod;
 import com.tien.aivirabackend.constant.PaymentStatus;
 import com.tien.aivirabackend.domain.dto.RequestMetadata;
 import com.tien.aivirabackend.domain.dto.request.CheckoutRequest;
+import com.tien.aivirabackend.domain.dto.response.CheckoutPreviewResponse;
 import com.tien.aivirabackend.domain.dto.response.CheckoutResponse;
 import com.tien.aivirabackend.domain.entity.catalog.Product;
 import com.tien.aivirabackend.domain.entity.catalog.ProductVariation;
@@ -38,6 +39,9 @@ import com.tien.aivirabackend.repository.OrderRepository;
 import com.tien.aivirabackend.repository.PaymentAttemptRepository;
 import com.tien.aivirabackend.repository.PaymentGroupRepository;
 import com.tien.aivirabackend.service.auth.CurrentUserService;
+import com.tien.aivirabackend.service.discount.DiscountCalculation;
+import com.tien.aivirabackend.service.discount.DiscountItem;
+import com.tien.aivirabackend.service.discount.DiscountService;
 import com.tien.aivirabackend.service.payment.PaymentProviderSupportService;
 import com.tien.aivirabackend.service.payment.provider.PaymentProviderClient;
 import com.tien.aivirabackend.service.payment.provider.PaymentProviderResult;
@@ -62,29 +66,27 @@ public class CheckoutServiceImpl implements CheckoutService {
     CommerceMapper commerceMapper;
     PaymentProviderSupportService paymentProviderSupportService;
     InventoryService inventoryService;
+    DiscountService discountService;
+
+    @Override
+    @Transactional(readOnly = true)
+    public CheckoutPreviewResponse preview(CheckoutRequest request) {
+        User user = currentUserService.getCurrentUser();
+        validatePaymentMethod(request.getPaymentMethod());
+        CheckoutContext context = loadCheckoutContext(user, request, false);
+        DiscountCalculation calculation =
+                discountService.calculate(user, context.cartItems(), context.variations(), request.getCouponCode());
+        return discountService.toPreviewResponse(calculation);
+    }
 
     @Override
     @Transactional
     public CheckoutResponse checkout(CheckoutRequest request, RequestMetadata requestMetadata) {
         User user = currentUserService.getCurrentUser();
         validatePaymentMethod(request.getPaymentMethod());
-        Address address = addressRepository
-                .findByIdAndUserIdAndActiveTrue(request.getAddressId(), user.getId())
-                .orElseThrow(() -> new AppException(AddressErrorCode.ADDRESS_NOT_FOUND));
-
-        List<Long> selectedIds =
-                request.getCartItemIds().stream().distinct().sorted().toList();
-        if (selectedIds.isEmpty()) {
-            throw new AppException(CheckoutErrorCode.CHECKOUT_EMPTY_ITEMS);
-        }
-        List<CartItem> cartItems =
-                cartItemRepository.findByIdInAndCartUserIdAndCartActiveTrue(selectedIds, user.getId());
-        if (cartItems.size() != selectedIds.size()) {
-            throw new AppException(CheckoutErrorCode.CHECKOUT_CART_ITEM_MISMATCH);
-        }
-
-        Map<Long, ProductVariation> lockedVariations = inventoryService.lockVariationsForCartItems(cartItems);
-        inventoryService.validateCheckoutItems(cartItems, lockedVariations);
+        CheckoutContext context = loadCheckoutContext(user, request, true);
+        DiscountCalculation calculation =
+                discountService.calculate(user, context.cartItems(), context.variations(), request.getCouponCode());
 
         PaymentGroup paymentGroup = PaymentGroup.builder()
                 .paymentCode(generatePaymentCode())
@@ -96,7 +98,7 @@ public class CheckoutServiceImpl implements CheckoutService {
                 .build();
 
         List<Order> orders = new ArrayList<>();
-        Order checkoutOrder = buildOrder(user, address, request, cartItems, lockedVariations);
+        Order checkoutOrder = buildOrder(user, context.address(), request, calculation);
         orders.add(checkoutOrder);
         paymentGroup.setAmount(checkoutOrder.getTotalAmount());
 
@@ -117,8 +119,10 @@ public class CheckoutServiceImpl implements CheckoutService {
             savedPaymentGroup.getPayments().add(payment);
         }
 
-        inventoryService.deductCartItems(cartItems, lockedVariations);
+        inventoryService.deductCartItems(context.cartItems(), context.variations());
         List<Order> savedOrders = orderRepository.saveAll(orders);
+        discountService.reserveOrFinalizeCoupon(
+                user, savedOrders.getFirst(), calculation, request.getPaymentMethod() == PaymentMethod.COD);
         PaymentAttempt attempt = paymentProviderSupportService.createAttempt(savedPaymentGroup);
         PaymentProviderResult providerResult = paymentProviderSupportService.createPaymentWithMetrics(
                 provider(request.getPaymentMethod()), savedPaymentGroup, attempt, requestMetadata);
@@ -127,7 +131,7 @@ public class CheckoutServiceImpl implements CheckoutService {
         paymentAttemptRepository.save(attempt);
 
         if (request.getPaymentMethod() == PaymentMethod.COD) {
-            cartItemRepository.deleteAll(cartItems);
+            cartItemRepository.deleteAll(context.cartItems());
         }
 
         return CheckoutResponse.builder()
@@ -149,8 +153,7 @@ public class CheckoutServiceImpl implements CheckoutService {
             User user,
             Address address,
             CheckoutRequest request,
-            List<CartItem> cartItems,
-            Map<Long, ProductVariation> lockedVariations) {
+            DiscountCalculation calculation) {
         Order order = Order.builder()
                 .orderCode(generateOrderCode())
                 .user(user)
@@ -162,17 +165,15 @@ public class CheckoutServiceImpl implements CheckoutService {
                 .shippingDistrict(address.getDistrict())
                 .shippingCity(address.getCity())
                 .shippingFee(ZERO)
-                .discountAmount(ZERO)
+                .discountAmount(calculation.discountAmount())
+                .couponCode(calculation.couponCode())
                 .notes(trimToNull(request.getNotes()))
                 .build();
-        BigDecimal subtotal = ZERO;
-        for (CartItem cartItem : cartItems) {
-            ProductVariation variation =
-                    lockedVariations.get(cartItem.getProductVariation().getId());
+        for (DiscountItem discountItem : calculation.items()) {
+            CartItem cartItem = discountItem.cartItem();
+            ProductVariation variation = discountItem.variation();
             Product product = variation.getProduct();
             BigDecimal additionalPrice = nullToZero(variation.getAdditionalPrice());
-            BigDecimal finalPrice = product.getPrice().add(additionalPrice);
-            subtotal = subtotal.add(finalPrice.multiply(BigDecimal.valueOf(cartItem.getQuantity())));
             OrderItem orderItem = OrderItem.builder()
                     .order(order)
                     .productId(product.getId())
@@ -187,15 +188,38 @@ public class CheckoutServiceImpl implements CheckoutService {
                                     : product.getThumbnailUrl())
                     .basePrice(product.getPrice())
                     .additionalPrice(additionalPrice)
-                    .discountAmount(ZERO)
-                    .finalPrice(finalPrice)
+                    .discountAmount(discountItem.promotionDiscountAmount())
+                    .finalPrice(discountItem.unitPrice())
+                    .promotionName(discountItem.promotionName())
                     .quantity(cartItem.getQuantity())
                     .build();
             order.getItems().add(orderItem);
         }
-        order.setSubtotal(subtotal);
-        order.setTotalAmount(subtotal);
+        order.setSubtotal(calculation.subtotal());
+        order.setTotalAmount(calculation.totalAmount());
         return order;
+    }
+
+    private CheckoutContext loadCheckoutContext(User user, CheckoutRequest request, boolean lockInventory) {
+        Address address = addressRepository
+                .findByIdAndUserIdAndActiveTrue(request.getAddressId(), user.getId())
+                .orElseThrow(() -> new AppException(AddressErrorCode.ADDRESS_NOT_FOUND));
+        List<Long> selectedIds =
+                request.getCartItemIds().stream().distinct().sorted().toList();
+        if (selectedIds.isEmpty()) {
+            throw new AppException(CheckoutErrorCode.CHECKOUT_EMPTY_ITEMS);
+        }
+        List<CartItem> cartItems =
+                cartItemRepository.findByIdInAndCartUserIdAndCartActiveTrue(selectedIds, user.getId());
+        if (cartItems.size() != selectedIds.size()) {
+            throw new AppException(CheckoutErrorCode.CHECKOUT_CART_ITEM_MISMATCH);
+        }
+        Map<Long, ProductVariation> variations = lockInventory
+                ? inventoryService.lockVariationsForCartItems(cartItems)
+                : cartItems.stream().collect(java.util.stream.Collectors.toMap(
+                        item -> item.getProductVariation().getId(), CartItem::getProductVariation));
+        inventoryService.validateCheckoutItems(cartItems, variations);
+        return new CheckoutContext(address, cartItems, variations);
     }
 
     private PaymentProviderClient provider(PaymentMethod method) {
@@ -235,4 +259,7 @@ public class CheckoutServiceImpl implements CheckoutService {
     private String trimToNull(String value) {
         return StringUtils.hasText(value) ? value.trim() : null;
     }
+
+    private record CheckoutContext(
+            Address address, List<CartItem> cartItems, Map<Long, ProductVariation> variations) {}
 }

@@ -39,6 +39,7 @@ import com.tien.aivirabackend.exception.AppException;
 import com.tien.aivirabackend.repository.*;
 import com.tien.aivirabackend.service.auth.CurrentUserService;
 import com.tien.aivirabackend.service.commerce.InventoryService;
+import com.tien.aivirabackend.service.discount.DiscountService;
 import com.tien.aivirabackend.service.payment.provider.PaymentProviderCallbackResult;
 import com.tien.aivirabackend.service.payment.provider.PaymentProviderClient;
 import com.tien.aivirabackend.service.payment.provider.PaymentProviderQueryResult;
@@ -77,6 +78,9 @@ class PaymentServiceImplTest {
     @Mock
     PaymentProviderClient providerClient;
 
+    @Mock
+    DiscountService discountService;
+
     PaymentServiceImpl paymentService;
     SimpleMeterRegistry meterRegistry;
 
@@ -101,7 +105,8 @@ class PaymentServiceImplTest {
                 new ObjectMapper(),
                 meterRegistry,
                 new InventoryService(variationRepository),
-                new PaymentAttemptResolver(paymentAttemptRepository, paymentGroupRepository));
+                new PaymentAttemptResolver(paymentAttemptRepository, paymentGroupRepository),
+                discountService);
         lenient().when(providerClient.method()).thenReturn(PaymentMethod.VNPAY);
     }
 
