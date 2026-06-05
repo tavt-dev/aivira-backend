@@ -37,6 +37,7 @@ import com.tien.aivirabackend.repository.PaymentGroupRepository;
 import com.tien.aivirabackend.repository.PaymentRepository;
 import com.tien.aivirabackend.service.auth.CurrentUserService;
 import com.tien.aivirabackend.service.commerce.InventoryService;
+import com.tien.aivirabackend.service.discount.DiscountService;
 import com.tien.aivirabackend.service.payment.provider.PaymentProviderCallbackResult;
 import com.tien.aivirabackend.service.payment.provider.PaymentProviderClient;
 import com.tien.aivirabackend.service.payment.provider.PaymentProviderQueryResult;
@@ -69,6 +70,7 @@ public class PaymentServiceImpl implements PaymentService {
     MeterRegistry meterRegistry;
     InventoryService inventoryService;
     PaymentAttemptResolver paymentAttemptResolver;
+    DiscountService discountService;
 
     @Override
     @Transactional(readOnly = true)
@@ -104,6 +106,7 @@ public class PaymentServiceImpl implements PaymentService {
             throw new AppException(PaymentErrorCode.PAYMENT_INVALID_STATUS);
         }
         List<Order> orders = orderRepository.findByPaymentsPaymentGroupId(group.getId());
+        discountService.reserveReleasedCouponUsagesForRetry(orders);
         inventoryService.deductStockForOrders(orders);
         PaymentAttempt attempt = paymentProviderSupportService.createAttempt(group);
         group.setStatus(PaymentStatus.PENDING);
@@ -336,6 +339,7 @@ public class PaymentServiceImpl implements PaymentService {
                 payment.setPaidAt(now);
             });
         });
+        discountService.finalizeReservedCouponUsagesForOrders(orders);
         clearCartItemsForOrders(group.getUser().getId(), orders);
         orderRepository.saveAll(orders);
         paymentGroupRepository.save(group);
@@ -348,6 +352,7 @@ public class PaymentServiceImpl implements PaymentService {
         group.setStatus(paymentStatus);
         List<Order> orders = orderRepository.findByPaymentsPaymentGroupId(group.getId());
         inventoryService.restoreStockForOrders(orders);
+        discountService.releaseReservedCouponUsagesForOrders(orders);
         orders.forEach(order -> {
             order.setOrderStatus(orderStatus);
             order.getPayments().forEach(payment -> payment.setStatus(paymentStatus));

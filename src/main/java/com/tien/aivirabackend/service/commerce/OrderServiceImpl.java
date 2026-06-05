@@ -27,6 +27,7 @@ import com.tien.aivirabackend.repository.OrderRepository;
 import com.tien.aivirabackend.repository.PaymentAttemptRepository;
 import com.tien.aivirabackend.repository.PaymentGroupRepository;
 import com.tien.aivirabackend.service.auth.CurrentUserService;
+import com.tien.aivirabackend.service.discount.DiscountService;
 import com.tien.aivirabackend.util.PageRequestUtils;
 
 import lombok.AccessLevel;
@@ -46,6 +47,7 @@ public class OrderServiceImpl implements OrderService {
     CommerceMapper commerceMapper;
     InventoryService inventoryService;
     OrderSpecifications orderSpecifications;
+    DiscountService discountService;
 
     @Override
     @Transactional(readOnly = true)
@@ -83,6 +85,7 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderStatus(OrderStatus.CANCELLED);
         order.setCancelReason(trimToNull(request == null ? null : request.getReason()));
         inventoryService.restoreStockForOrders(List.of(order));
+        discountService.releaseReservedCouponUsagesForOrders(List.of(order));
         order.getPayments().stream()
                 .filter(payment -> payment.getStatus() == PaymentStatus.PENDING)
                 .forEach(payment -> payment.setStatus(PaymentStatus.CANCELLED));
@@ -204,6 +207,7 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderStatus(OrderStatus.CANCELLED);
         order.setCancelReason(reason);
         inventoryService.restoreStockForOrders(List.of(order));
+        discountService.releaseReservedCouponUsagesForOrders(List.of(order));
         order.getPayments().stream()
                 .filter(payment -> payment.getStatus() == PaymentStatus.PENDING)
                 .forEach(payment -> payment.setStatus(PaymentStatus.CANCELLED));

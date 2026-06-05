@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.tien.aivirabackend.domain.dto.ApiResponse;
 import com.tien.aivirabackend.domain.dto.request.CheckoutRequest;
+import com.tien.aivirabackend.domain.dto.response.CheckoutPreviewResponse;
 import com.tien.aivirabackend.domain.dto.response.CheckoutResponse;
 import com.tien.aivirabackend.service.auth.RequestMetadataService;
 import com.tien.aivirabackend.service.commerce.CheckoutService;
@@ -32,6 +33,13 @@ import lombok.experimental.FieldDefaults;
 public class CheckoutController {
     CheckoutService checkoutService;
     RequestMetadataService requestMetadataService;
+
+    @PostMapping("/preview")
+    @Operation(summary = "Preview checkout totals")
+    @PreAuthorize("@authorizationService.hasPermission('CHECKOUT_CREATE_SELF')")
+    public ResponseEntity<ApiResponse<CheckoutPreviewResponse>> preview(@Valid @RequestBody CheckoutRequest request) {
+        return ResponseEntity.ok(ApiResponse.success("Checkout preview successful", checkoutService.preview(request)));
+    }
 
     @PostMapping
     @Operation(summary = "Checkout selected cart items")
