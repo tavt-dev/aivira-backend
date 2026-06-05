@@ -18,6 +18,7 @@ import com.tien.aivirabackend.domain.entity.user.User;
 import com.tien.aivirabackend.repository.RoleRepository;
 import com.tien.aivirabackend.repository.UserRepository;
 import com.tien.aivirabackend.service.rbac.PermissionService;
+import com.tien.aivirabackend.service.seed.DemoCatalogSeedService;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -40,54 +41,70 @@ public class ApplicationInitConfig {
     @Value("${app.seed.admin.email}")
     String adminEmail;
 
+    @Value("${app.seed.demo-catalog-enabled:false}")
+    boolean demoCatalogEnabled;
+
     @Bean
     @ConditionalOnProperty(prefix = "app.seed", name = "enabled", havingValue = "true")
     ApplicationRunner applicationRunner(
-            UserRepository userRepository, RoleRepository roleRepository, PermissionService permissionService) {
+            UserRepository userRepository,
+            RoleRepository roleRepository,
+            PermissionService permissionService,
+            DemoCatalogSeedService demoCatalogSeedService) {
         return args -> {
             log.info("[INIT] Seeding default data...");
 
             permissionService.seedDefaultPermissions();
+            seedAdmin(userRepository, roleRepository);
 
-            if (!StringUtils.hasText(adminUsername)
-                    || !StringUtils.hasText(adminPassword)
-                    || !StringUtils.hasText(adminEmail)) {
-                log.warn("[INIT] Skip admin seeding: missing app.seed.admin.* config");
-                return;
+            if (demoCatalogEnabled) {
+                demoCatalogSeedService.seedDemoCatalog();
+            } else {
+                log.info("[INIT] Demo catalog seed disabled.");
             }
 
-            Role userRole = getOrCreateRole(roleRepository, PredefinedRole.USER, "USER ROLE");
-            Role adminRole = getOrCreateRole(roleRepository, PredefinedRole.ADMIN, "ADMIN ROLE");
-
-            boolean adminExists = userRepository.findByUsername(adminUsername).isPresent()
-                    || userRepository.findByEmail(adminEmail).isPresent();
-
-            if (adminExists) {
-                log.info("[INIT] Admin already exists. Skip.");
-                return;
-            }
-
-            Set<Role> roles = new HashSet<>();
-            roles.add(userRole);
-            roles.add(adminRole);
-
-            User admin = User.builder()
-                    .username(adminUsername)
-                    .password(passwordEncoder.encode(adminPassword))
-                    .email(adminEmail)
-                    .emailVerified(true)
-                    .isActive(true)
-                    .roles(roles)
-                    .provider(SignInProvider.LOCAL)
-                    .isLocked(false)
-                    .isDeleted(false)
-                    .build();
-
-            userRepository.save(admin);
-
-            log.warn("[INIT] Admin '{}' created. Please change the password immediately.", adminUsername);
             log.info("[INIT] Seeding completed.");
         };
+    }
+
+    private void seedAdmin(UserRepository userRepository, RoleRepository roleRepository) {
+        if (!StringUtils.hasText(adminUsername)
+                || !StringUtils.hasText(adminPassword)
+                || !StringUtils.hasText(adminEmail)) {
+            log.warn("[INIT] Skip admin seeding: missing app.seed.admin.* config");
+            return;
+        }
+
+        Role userRole = getOrCreateRole(roleRepository, PredefinedRole.USER, "USER ROLE");
+        Role adminRole = getOrCreateRole(roleRepository, PredefinedRole.ADMIN, "ADMIN ROLE");
+
+        boolean adminExists = userRepository.findByUsername(adminUsername).isPresent()
+                || userRepository.findByEmail(adminEmail).isPresent();
+
+        if (adminExists) {
+            log.info("[INIT] Admin already exists. Skip.");
+            return;
+        }
+
+        Set<Role> roles = new HashSet<>();
+        roles.add(userRole);
+        roles.add(adminRole);
+
+        User admin = User.builder()
+                .username(adminUsername)
+                .password(passwordEncoder.encode(adminPassword))
+                .email(adminEmail)
+                .emailVerified(true)
+                .isActive(true)
+                .roles(roles)
+                .provider(SignInProvider.LOCAL)
+                .isLocked(false)
+                .isDeleted(false)
+                .build();
+
+        userRepository.save(admin);
+
+        log.warn("[INIT] Admin '{}' created. Please change the password immediately.", adminUsername);
     }
 
     private Role getOrCreateRole(RoleRepository roleRepository, PredefinedRole code, String description) {
