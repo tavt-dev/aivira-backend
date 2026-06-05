@@ -107,7 +107,7 @@ Do not enable demo catalog seed in production. Re-running the seed does not dupl
 
 Practical local/dev configuration is environment-driven:
 
-- Database: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`.
+- Database: `DB_URL`, `USERNAME_DB`, `PASSWORD_DB`.
 - JWT: `JWT_SIGNER_KEY`, access/refresh expiry settings.
 - Mail/OTP: SMTP host, port, username, password, sender, and OTP expiry settings.
 - Cloudinary: cloud name, API key, API secret, upload folder/preset settings.
