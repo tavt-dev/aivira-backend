@@ -2,6 +2,7 @@ package com.tien.aivirabackend.domain.entity.review;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.time.Instant;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
@@ -11,6 +12,7 @@ import com.tien.aivirabackend.domain.entity.BaseEntity;
 import com.tien.aivirabackend.domain.entity.catalog.Product;
 import com.tien.aivirabackend.domain.entity.catalog.ProductVariation;
 import com.tien.aivirabackend.domain.entity.transaction.Order;
+import com.tien.aivirabackend.domain.entity.transaction.OrderItem;
 import com.tien.aivirabackend.domain.entity.user.User;
 
 import lombok.*;
@@ -43,8 +45,27 @@ public class Review extends BaseEntity {
     @Column(name = "is_approved", nullable = false)
     boolean approved = false;
 
+    @Builder.Default
+    @Column(name = "is_visible", nullable = false)
+    boolean visible = true;
+
+    @Column(name = "deleted_at")
+    Instant deletedAt;
+
     @Column(name = "admin_reply", columnDefinition = "TEXT")
     String adminReply;
+
+    @Column(name = "moderated_by")
+    String moderatedBy;
+
+    @Column(name = "moderated_at")
+    Instant moderatedAt;
+
+    @Column(name = "replied_by")
+    String repliedBy;
+
+    @Column(name = "replied_at")
+    Instant repliedAt;
 
     /* RELATIONSHIP */
     @ManyToOne(fetch = FetchType.LAZY)
@@ -62,6 +83,10 @@ public class Review extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
     Order order;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_item_id", unique = true)
+    OrderItem orderItem;
 
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

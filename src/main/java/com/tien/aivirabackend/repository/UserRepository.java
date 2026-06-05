@@ -2,6 +2,7 @@ package com.tien.aivirabackend.repository;
 
 import java.util.Optional;
 import java.util.Set;
+import java.time.Instant;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -52,4 +53,6 @@ public interface UserRepository extends JpaRepository<User, String>, JpaSpecific
 
     @Query("select distinct p.code from User u join u.roles r join r.permissions p where u.id = :userId")
     Set<PermissionCode> findRolePermissionCodesByUserId(@Param("userId") String userId);
+
+    long countByIsDeletedFalseAndCreatedAtBetween(Instant fromDate, Instant toDate);
 }
