@@ -437,28 +437,28 @@ Current status:
 - [x] `review_images` table exists.
 - [x] `Review` and `ReviewImage` entities exist.
 - [x] Product and User relationships to reviews exist.
-- [ ] Review repositories/controllers/services are missing.
-- [ ] Public review list is missing.
-- [ ] Customer review create/update/delete is missing.
-- [ ] Admin review moderation/reply is missing.
+- [x] Review repositories/controllers/services exist.
+- [x] Public review list exists.
+- [x] Customer review create/update/delete exists.
+- [x] Admin review moderation/reply exists.
 
 Implement:
 
-- [ ] `GET /products/{slug}/reviews`
-- [ ] `POST /orders/{orderId}/items/{orderItemId}/review`
-- [ ] `PUT /reviews/{reviewId}`
-- [ ] `DELETE /reviews/{reviewId}`
-- [ ] `GET /admin/reviews`
-- [ ] `PUT /admin/reviews/{reviewId}/moderate`
-- [ ] `PUT /admin/reviews/{reviewId}/reply`
+- [x] `GET /products/{slug}/reviews`
+- [x] `POST /orders/{orderId}/items/{orderItemId}/review`
+- [x] `PUT /reviews/{reviewId}`
+- [x] `DELETE /reviews/{reviewId}`
+- [x] `GET /admin/reviews`
+- [x] `PUT /admin/reviews/{reviewId}/moderate`
+- [x] `PUT /admin/reviews/{reviewId}/reply`
 
 Rules:
 
-- [ ] User can review only purchased books.
-- [ ] Order must be `COMPLETED`.
-- [ ] One review per order item.
-- [ ] Public only sees approved/visible reviews.
-- [ ] Admin reply uses `admin_reply`, not shop reply.
+- [x] User can review only purchased books.
+- [x] Order must be `COMPLETED`.
+- [x] One review per order item.
+- [x] Public only sees approved/visible reviews.
+- [x] Admin reply uses `admin_reply`, not shop reply.
 
 ## Phase 7: Storefront And Dashboard APIs
 
@@ -468,28 +468,28 @@ Current status:
 - [x] Product has `soldCount`.
 - [x] Product has `stockQuantity`.
 - [x] Order and payment statuses exist.
-- [ ] Storefront home endpoint is missing.
-- [ ] Admin dashboard endpoints are missing.
+- [x] Storefront home endpoint exists.
+- [x] Admin dashboard endpoints exist.
 
 Implement:
 
-- [ ] `GET /storefront/home`
-- [ ] `GET /admin/dashboard/summary`
-- [ ] `GET /admin/dashboard/sales`
-- [ ] `GET /admin/dashboard/orders`
-- [ ] `GET /admin/dashboard/top-books`
-- [ ] `GET /admin/dashboard/low-stock`
+- [x] `GET /storefront/home`
+- [x] `GET /admin/dashboard/summary`
+- [x] `GET /admin/dashboard/sales`
+- [x] `GET /admin/dashboard/orders`
+- [x] `GET /admin/dashboard/top-books`
+- [x] `GET /admin/dashboard/low-stock`
 
 Dashboard metrics:
 
-- [ ] Revenue by date range.
-- [ ] Order count by status.
-- [ ] Payment success/failure split.
-- [ ] Top selling books.
-- [ ] Low stock books.
-- [ ] New users.
-- [ ] Pending orders.
-- [ ] Pending payments.
+- [x] Revenue by date range.
+- [x] Order count by status.
+- [x] Payment success/failure split.
+- [x] Top selling books.
+- [x] Low stock books.
+- [x] New users.
+- [x] Pending orders.
+- [x] Pending payments.
 
 Removed from this phase:
 
@@ -537,7 +537,7 @@ Implement missing error codes as features are built:
 - [ ] Invalid order transition.
 - [x] Paid order requires refund.
 - [x] Coupon invalid/expired/used.
-- [ ] Review not allowed.
+- [x] Review not allowed.
 - [x] Refund not allowed.
 
 ## Phase 10: Production-Practical Hardening
@@ -575,8 +575,8 @@ Implement:
 4. [x] Phase 4: Checkout preview and coupon foundation.
 5. [x] Phase 4: Coupon/promotion admin APIs.
 6. [x] Phase 5: Manual refund flow.
-7. [ ] Phase 6: Review and moderation.
-8. [ ] Phase 7: Storefront and dashboard APIs.
+7. [x] Phase 6: Review and moderation.
+8. [x] Phase 7: Storefront and dashboard APIs.
 9. [ ] Phase 8: Demo seed data.
 10. [ ] Phase 9: API docs and README cleanup.
 11. [ ] Phase 10: Production hardening and CI polish.
