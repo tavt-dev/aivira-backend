@@ -1,16 +1,15 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 import { getSessions, logoutAll, revokeSession } from "../api/authApi.js";
+import { changePassword, createAddress, deleteAddress, getAddresses, getProfile, setDefaultAddress, updateAddress, updateAvatar, updateProfile } from "../api/userApi.js";
 import {
-  createAddress,
-  deleteAddress,
-  getAddresses,
-  setDefaultAddress,
-  updateAddress,
-} from "../api/orderApi.js";
-import { changePassword, getProfile, updateAvatar, updateProfile } from "../api/userApi.js";
-import { getAccessToken, getCurrentUser, saveCurrentUser } from "../utils/storage.js";
+  clearAuth,
+  getAccessToken,
+  getCurrentUser,
+  saveCurrentUser
+} from "../utils/storage.js";
 
 const emptyAddress = {
   recipientName: "",
@@ -24,6 +23,7 @@ const emptyAddress = {
 
 export default function AccountPage({ onAuth }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(getCurrentUser());
   const [profileForm, setProfileForm] = useState({ firstName: "", lastName: "", gender: "" });
   const [passwordForm, setPasswordForm] = useState({
@@ -188,8 +188,16 @@ export default function AccountPage({ onAuth }) {
 
   async function revoke(sessionId) {
     setMessage("");
+    const target = sessions.find((item) => (item.sessionId || item.id) === sessionId);
     try {
       await revokeSession(sessionId);
+      if (target?.current) {
+        clearAuth();
+        setSessions([]);
+        onAuth?.();
+        navigate("/?auth=login&next=/account", { replace: true });
+        return;
+      }
       setSessions((current) =>
         current.filter((item) => item.sessionId !== sessionId && item.id !== sessionId)
       );
@@ -203,7 +211,10 @@ export default function AccountPage({ onAuth }) {
     setMessage("");
     try {
       await logoutAll();
+      clearAuth();
       setSessions([]);
+      onAuth?.();
+      navigate("/?auth=login&next=/account", { replace: true });
       setMessage(t("account.loggedOutAll"));
     } catch (error) {
       setMessage(error.message || t("account.logoutAllFailed"));

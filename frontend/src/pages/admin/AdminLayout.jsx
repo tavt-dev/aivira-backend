@@ -30,9 +30,10 @@ export default function AdminLayout() {
       if (refreshToken) await logoutRequest(refreshToken);
     } catch {
       // Local logout still succeeds when the backend is offline.
+    } finally {
+      clearAuth();
+      navigate("/?auth=login&next=/admin/products", { replace: true });
     }
-    clearAuth();
-    navigate("/?auth=login&next=/admin/products", { replace: true });
   }
 
   return (

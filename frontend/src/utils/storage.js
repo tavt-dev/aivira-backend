@@ -8,6 +8,10 @@ export function getAccessToken() {
   return localStorage.getItem(TOKEN_KEY);
 }
 
+export function hasAccessToken() {
+  return Boolean(getAccessToken());
+}
+
 export function getRefreshToken() {
   return localStorage.getItem(REFRESH_KEY);
 }
@@ -15,6 +19,28 @@ export function getRefreshToken() {
 export function getCurrentUser() {
   if (!getAccessToken()) return null;
   return readJson(USER_KEY, null);
+}
+
+export function getAuthSnapshot() {
+  return {
+    accessToken: getAccessToken(),
+    refreshToken: getRefreshToken(),
+    user: getCurrentUser()
+  };
+}
+
+export function saveAccessToken(token) {
+  if (token) {
+    localStorage.setItem(TOKEN_KEY, token);
+    dispatchAuth();
+  }
+}
+
+export function saveRefreshToken(refreshToken) {
+  if (refreshToken) {
+    localStorage.setItem(REFRESH_KEY, refreshToken);
+    dispatchAuth();
+  }
 }
 
 export function saveAuth(auth, fallbackUser) {
@@ -36,6 +62,10 @@ export function clearAuth() {
   localStorage.removeItem(REFRESH_KEY);
   localStorage.removeItem(USER_KEY);
   dispatchAuth();
+}
+
+export function notifyAuthExpired() {
+  window.dispatchEvent(new Event("aivira-auth-expired"));
 }
 
 export function savePendingVerify(context) {

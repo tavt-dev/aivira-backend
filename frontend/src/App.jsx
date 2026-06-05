@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ArrowUp } from "lucide-react";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import AuthModal from "./components/AuthModal.jsx";
 import IntroBook, { hasSeenIntro } from "./components/IntroBook.jsx";
 import Layout from "./components/Layout.jsx";
+import RequireAuth from "./components/RequireAuth.jsx";
 import RequireAdmin from "./components/RequireAdmin.jsx";
 import AccountPage from "./pages/AccountPage.jsx";
 import CartPage from "./pages/CartPage.jsx";
@@ -30,6 +31,7 @@ export default function App() {
   const [user, setUser] = useState(getCurrentUser());
   const [introDone, setIntroDone] = useState(hasSeenIntro);
   const location = useLocation();
+  const navigate = useNavigate();
   const isAdminRoute = location.pathname.startsWith("/admin");
   const searchParams = new URLSearchParams(location.search);
   const isAuthRequest = location.pathname === "/login"
@@ -43,6 +45,22 @@ export default function App() {
     window.addEventListener("aivira-auth", sync);
     return () => window.removeEventListener("aivira-auth", sync);
   }, []);
+
+  useEffect(() => {
+    const handleExpired = () => {
+      setUser(null);
+      setAuthMode("login");
+      const next = `${location.pathname}${location.search}${location.hash}`;
+      if (location.pathname.startsWith("/admin")) {
+        navigate(`/?auth=login&next=${encodeURIComponent(next)}`, { replace: true });
+        return;
+      }
+      setAuthOpen(true);
+    };
+
+    window.addEventListener("aivira-auth-expired", handleExpired);
+    return () => window.removeEventListener("aivira-auth-expired", handleExpired);
+  }, [location.hash, location.pathname, location.search, navigate]);
 
   useEffect(() => {
     document.body.classList.toggle("admin-route", isAdminRoute);
@@ -111,10 +129,10 @@ export default function App() {
           <Route path="/category/:slug" element={<CategoryPage />} />
           <Route path="/books/:slug" element={<LegacyProductRedirect />} />
           <Route path="/product/:slug" element={<ProductPage onAuth={() => openAuth("login")} />} />
-          <Route path="/cart" element={<CartPage onAuth={() => openAuth("login")} />} />
-          <Route path="/checkout" element={<CheckoutPage onAuth={() => openAuth("login")} />} />
-          <Route path="/orders" element={<OrdersPage onAuth={() => openAuth("login")} />} />
-          <Route path="/account" element={<AccountPage onAuth={() => openAuth("login")} />} />
+          <Route path="/cart" element={<RequireAuth><CartPage onAuth={() => openAuth("login")} /></RequireAuth>} />
+          <Route path="/checkout" element={<RequireAuth><CheckoutPage onAuth={() => openAuth("login")} /></RequireAuth>} />
+          <Route path="/orders" element={<RequireAuth><OrdersPage onAuth={() => openAuth("login")} /></RequireAuth>} />
+          <Route path="/account" element={<RequireAuth><AccountPage onAuth={() => openAuth("login")} /></RequireAuth>} />
           <Route path="/payment/result" element={<Navigate to="/payment-result" replace />} />
           <Route path="/payment-result" element={<PaymentResultPage />} />
           <Route path="*" element={<NotFoundPage />} />
