@@ -22,7 +22,9 @@ public class StorefrontController {
     StorefrontService storefrontService;
 
     @GetMapping("/storefront/home")
-    @Operation(summary = "Get storefront home data")
+    @Operation(
+            summary = "Get storefront home data",
+            description = "Returns featured books, new arrivals, bestselling books, and category highlights for the bookstore homepage.")
     public ResponseEntity<ApiResponse<StorefrontHomeResponse>> getHome() {
         return ResponseEntity.ok(ApiResponse.success("Get storefront home successful", storefrontService.getHome()));
     }

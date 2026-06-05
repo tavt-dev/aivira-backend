@@ -48,7 +48,9 @@ public class AdminPromotionController {
     }
 
     @PostMapping
-    @Operation(summary = "Create promotion")
+    @Operation(
+            summary = "Create promotion",
+            description = "Creates a product-scope or category-scope promotion. Promotions apply before order coupons.")
     @PreAuthorize("@authorizationService.hasAnyPermission('PROMOTION_MANAGE_ALL', 'PROMOTION_CREATE_ALL')")
     public ResponseEntity<ApiResponse<PromotionResponse>> createPromotion(
             @Valid @RequestBody PromotionCreateRequest request) {
@@ -57,7 +59,7 @@ public class AdminPromotionController {
     }
 
     @PutMapping("/{promotionId}")
-    @Operation(summary = "Update promotion")
+    @Operation(summary = "Update promotion", description = "Updates an active or inactive promotion rule.")
     @PreAuthorize("@authorizationService.hasAnyPermission('PROMOTION_MANAGE_ALL', 'PROMOTION_UPDATE_ALL')")
     public ResponseEntity<ApiResponse<PromotionResponse>> updatePromotion(
             @PathVariable Long promotionId, @Valid @RequestBody PromotionUpdateRequest request) {
@@ -66,7 +68,7 @@ public class AdminPromotionController {
     }
 
     @DeleteMapping("/{promotionId}")
-    @Operation(summary = "Deactivate promotion")
+    @Operation(summary = "Deactivate promotion", description = "Soft-deactivates a promotion instead of deleting historical order snapshots.")
     @PreAuthorize("@authorizationService.hasAnyPermission('PROMOTION_MANAGE_ALL', 'PROMOTION_DELETE_ALL')")
     public ResponseEntity<ApiResponse<Void>> deletePromotion(@PathVariable Long promotionId) {
         promotionService.deletePromotion(promotionId);

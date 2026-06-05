@@ -57,6 +57,7 @@ Customer:
 Admin:
 
 - `/admin/products/**`
+- `/admin/categories/**`
 - `/admin/orders/**`
 - `/admin/users/**`
 - `/admin/coupons/**`
@@ -66,6 +67,18 @@ Admin:
 - `/admin/permissions/**`
 - `/admin/roles/**`
 - `/admin/payments/**`
+
+## API Behavior Notes
+
+- The backend resource name remains `Product`, but products are books in the business domain and UI language.
+- `/products` is the stable public catalog route for browsing, searching, filtering, and viewing book details.
+- Public product search supports book metadata filters such as `author`, `publisher`, `isbn`, and `name_asc` sorting.
+- `POST /checkout/preview` is non-mutating: it validates cart/address/inventory/discounts but does not create orders, payments, stock locks, or coupon usage.
+- Promotions apply before coupons. Product/category promotions are item-level; coupons are order-level after promotion discounts.
+- COD checkout finalizes coupon usage immediately. Online checkout reserves coupon usage and finalizes or releases it from payment success/failure/expiry.
+- Manual refund records admin metadata and marks order/payment refunded without calling VNPay or MoMo refund APIs.
+- Reviews require a completed purchased order item. Public review lists show only approved, visible, non-deleted reviews.
+- Demo catalog seed is disabled by default and must not be enabled in production.
 
 ## Migrations
 
@@ -89,6 +102,44 @@ Seed behavior is controlled by environment variables and is disabled by default:
 When `SEED_ENABLED=true`, the app seeds default permissions and tries to create the configured admin account. When `SEED_DEMO_CATALOG_ENABLED=true`, it also creates an idempotent demo bookstore catalog with categories, 30 books, default variations, stock quantities, cover image URLs, featured books, and sample bestselling counts.
 
 Do not enable demo catalog seed in production. Re-running the seed does not duplicate categories, books, variations, or media, and existing books with matching SKU or slug are preserved.
+
+## Environment Variables
+
+Practical local/dev configuration is environment-driven:
+
+- Database: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`.
+- JWT: `JWT_SIGNER_KEY`, access/refresh expiry settings.
+- Mail/OTP: SMTP host, port, username, password, sender, and OTP expiry settings.
+- Cloudinary: cloud name, API key, API secret, upload folder/preset settings.
+- Payment providers: VNPay and MoMo enable flags, merchant ids/codes, secret keys, callback/IPN/return URLs, and expiry settings.
+- Seed: `SEED_ENABLED`, `SEED_ADMIN_USERNAME`, `SEED_ADMIN_PASSWORD`, `SEED_ADMIN_EMAIL`, `SEED_DEMO_CATALOG_ENABLED`.
+- Browser integration: CORS allowed origins and refresh-cookie secure/same-site/domain settings.
+
+Production should provide secrets through the deployment environment, not committed config files. `JWT_SIGNER_KEY` and provider secrets must be treated as required outside test/local-only setups.
+
+## Error Contract
+
+Expected business errors are returned through the same API envelope shape:
+
+```json
+{
+  "success": false,
+  "errorCode": "PRODUCT-409-003",
+  "message": "Product ISBN already exists",
+  "data": null,
+  "timestamp": 1766558400000
+}
+```
+
+Important domain error groups:
+
+- Catalog: duplicate SKU/slug/ISBN, invalid publication year, invalid page count, missing author, missing category, invalid variation, and media validation failures.
+- Checkout/payment/coupon: invalid cart or checkout state, invalid/expired/over-limit coupon, coupon minimum order not met, provider disabled, invalid callback/signature, payment retry not allowed, and reconciliation failures.
+- Orders/refunds: order not found, invalid status transition, cancellation not allowed, paid cancellation requiring refund, refund not allowed, refund already processed, and invalid refund amount.
+- Reviews: review not found, review not allowed, duplicate order-item review, order not completed, deleted review, and invalid review image metadata.
+- Auth/RBAC: authentication failure, access denied, locked/deleted account, invalid/expired JWT, OTP errors, role errors, and permission errors.
+
+Success responses use `ApiResponse<T>`. Paginated list responses use `ApiResponse<PageResponse<T>>`.
 
 ## Run
 

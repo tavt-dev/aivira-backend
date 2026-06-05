@@ -46,7 +46,7 @@ Still missing for a complete backend:
 - [x] Review APIs and moderation.
 - [x] Storefront home API and admin dashboard APIs.
 - [x] Demo bookstore seed data.
-- [ ] API docs and README alignment for the final backend.
+- [x] API docs and README alignment for the final backend.
 - [ ] Production-practical polish around logs, env docs, deployment notes, and test coverage.
 
 ## Phase 1: Book Catalog Completion
@@ -522,19 +522,19 @@ Current status:
 - [x] Controllers have basic OpenAPI annotations.
 - [x] `ApiResponse` and `PageResponse` are used.
 - [x] Domain error-code enums exist.
-- [ ] New book field docs are missing.
-- [ ] Admin order transition docs are missing.
-- [ ] Coupon/promotion docs are missing.
-- [ ] Manual refund docs are missing.
-- [ ] Review/dashboard docs are missing.
-- [ ] Some planned error codes are missing.
+- [x] New book field docs are documented in OpenAPI/README.
+- [x] Admin order transition docs are documented in OpenAPI.
+- [x] Coupon/promotion docs are documented in OpenAPI/README.
+- [x] Manual refund docs are documented in OpenAPI/README.
+- [x] Review/dashboard docs are documented in OpenAPI/README.
+- [x] Planned Phase 9 error codes exist and are documented.
 
 Implement missing error codes as features are built:
 
-- [ ] ISBN already exists.
-- [ ] Invalid publication year.
-- [ ] Invalid page count.
-- [ ] Invalid order transition.
+- [x] ISBN already exists.
+- [x] Invalid publication year.
+- [x] Invalid page count.
+- [x] Invalid order transition.
 - [x] Paid order requires refund.
 - [x] Coupon invalid/expired/used.
 - [x] Review not allowed.
@@ -578,7 +578,7 @@ Implement:
 7. [x] Phase 6: Review and moderation.
 8. [x] Phase 7: Storefront and dashboard APIs.
 9. [x] Phase 8: Demo seed data.
-10. [ ] Phase 9: API docs and README cleanup.
+10. [x] Phase 9: API docs and README cleanup.
 11. [ ] Phase 10: Production hardening and CI polish.
 
 ## Completion Criteria
@@ -595,7 +595,7 @@ Backend is complete for the full commerce version when:
 - [x] Schema changes use Flyway migrations.
 - [x] API responses use DTOs, not JPA entities.
 - [x] `.\mvnw.cmd test` passes for the current implemented backend.
-- [ ] README, PLAN, and OpenAPI docs match the implemented backend behavior.
+- [x] README, PLAN, and OpenAPI docs match the implemented backend behavior.
 
 ## Explicit Defaults
 
