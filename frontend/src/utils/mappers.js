@@ -26,6 +26,22 @@ export function normalizeCategory(row) {
   };
 }
 
+export function normalizeCategoryHighlight(row, fallback = {}) {
+  if (!row) return null;
+  return {
+    id: row.categoryId ?? row.id ?? fallback.id ?? row.slug,
+    categoryId: row.categoryId ?? row.id ?? fallback.categoryId,
+    slug: row.slug || fallback.slug || String(row.categoryId ?? row.id ?? fallback.id ?? ""),
+    label: row.categoryName || row.name || row.label || fallback.label || row.slug,
+    categoryName: row.categoryName || row.name || row.label || fallback.categoryName || row.slug,
+    description: row.description || fallback.description || "",
+    imageUrl: row.imageUrl || fallback.imageUrl,
+    imagePublicId: row.imagePublicId || fallback.imagePublicId,
+    displayOrder: row.displayOrder ?? fallback.displayOrder,
+    bookCount: Number(row.bookCount ?? fallback.bookCount ?? 0)
+  };
+}
+
 export function normalizeBook(row, fallback = {}) {
   const variation = row?.variations?.find((item) => item.active) || row?.variations?.[0] || {};
   const image = row?.thumbnailUrl || row?.image || row?.cover || row?.media?.find((item) => item.primary)?.mediaUrl || fallback.cover || fallback.image || FALLBACK_IMAGE;
@@ -43,6 +59,7 @@ export function normalizeBook(row, fallback = {}) {
     cover: image,
     desc: row?.description || fallback.desc || "",
     sold: Number(row?.soldCount ?? fallback.sold ?? 0),
+    stockQuantity: Number(row?.stockQuantity ?? fallback.stockQuantity ?? 0),
     rating: Number(row?.averageRating ?? fallback.rating ?? 4.7),
     productVariationId: variation.id || row?.productVariationId,
     variations: row?.variations || []

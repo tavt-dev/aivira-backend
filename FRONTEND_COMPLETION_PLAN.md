@@ -216,38 +216,46 @@ Acceptance:
 
 ## Phase FE-3: Public Storefront Home
 
+Status: completed in current workspace. `npm run build` passes.
+
 Goal: homepage uses backend `GET /storefront/home` and becomes real bookstore storefront.
 
 Sections:
 
-- Featured books.
-- New arrivals.
-- Bestselling books.
-- Category highlights.
-- Optional editorial/static sections only after live data sections.
+- [x] Featured books.
+- [x] New arrivals.
+- [x] Bestselling books.
+- [x] Category highlights.
+- [x] Optional editorial/static sections only after live data sections.
 
 Tasks:
 
-- Wire `HomePage` to `storefrontApi.getStorefrontHome()`.
-- Use skeleton/loading states.
-- Empty states:
-  - No featured books.
-  - No bestselling books.
-  - No categories.
-- Book card should display:
-  - cover/thumbnail
-  - title
-  - author
-  - price/original price
-  - stock state
-  - quick add or detail link
-- Category highlights should link to `/category/:slug`.
-- Preserve current visual polish/animation but do not let animation block usability.
+- [x] Wire `HomePage` to `storefrontApi.getStorefrontHome()`.
+- [x] Use abort signal for storefront request cleanup.
+- [x] Normalize `featuredBooks`, `newArrivals`, `bestsellingBooks`, and `categoryHighlights`.
+- [x] Use skeleton/loading states.
+- [x] Empty states:
+  - [x] No featured books.
+  - [x] No new arrivals.
+  - [x] No bestselling books.
+  - [x] No categories.
+- [x] Book card should display:
+  - [x] cover/thumbnail
+  - [x] title
+  - [x] author
+  - [x] price/original price
+  - [x] stock state
+  - [x] detail link
+- [x] Category highlights should link to `/category/:slug`.
+- [x] Preserve current visual polish/animation but do not let animation block usability.
+- [x] Add mobile hero book stack because desktop orbit is hidden on mobile.
+- [x] Add i18n keys for storefront loading/error/empty/live sections.
 
 Acceptance:
 
-- Fresh seeded backend can render useful homepage immediately.
-- No hardcoded book list is required for normal homepage content.
+- [x] Fresh seeded backend can render useful homepage immediately.
+- [x] No hardcoded book list is required for normal homepage content.
+- [x] `npm run build` passes.
 
 ## Phase FE-4: Catalog Search, Filter, And Listing
 
