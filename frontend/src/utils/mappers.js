@@ -130,18 +130,28 @@ export function normalizePaymentGroup(row) {
 
 export function normalizeCartItem(item) {
   const image = item.thumbnailUrl || item.image || item.cover || FALLBACK_IMAGE;
+  const quantity = Number(item.quantity || 1);
+  const price = Number(item.finalPrice || item.price || item.basePrice || 0);
   return {
     id: item.id || item.cartItemId || item.productId,
     cartItemId: item.cartItemId || item.id,
     productId: item.productId || item.id,
     slug: item.productSlug || item.slug || String(item.productId || item.id),
     title: item.productName || item.title || "Aivira Book",
-    author: item.author || item.brand || "Aivira",
-    price: Number(item.finalPrice || item.price || item.basePrice || 0),
+    author: item.author || item.bookAuthor || item.brand || "Aivira",
+    sku: item.sku,
+    color: item.color,
+    size: item.size,
+    price,
+    basePrice: Number(item.basePrice || price || 0),
+    additionalPrice: Number(item.additionalPrice || 0),
     image,
     cover: image,
-    quantity: Number(item.quantity || 1),
-    productVariationId: item.productVariationId
+    quantity,
+    lineSubtotal: price * quantity,
+    productVariationId: item.productVariationId,
+    stockQuantity: item.stockQuantity == null ? null : Number(item.stockQuantity),
+    available: item.available !== false
   };
 }
 

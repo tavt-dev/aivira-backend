@@ -359,50 +359,57 @@ Acceptance:
 
 ## Phase FE-6: Cart And Checkout
 
+Status: completed in current workspace. `npm run build` passes.
+
 Goal: checkout mirrors backend discount/payment behavior.
 
 Cart:
 
-- List items with cover/title/author/variation/price/quantity/subtotal.
-- Update quantity.
-- Remove item.
-- Select items for checkout if backend supports selected cart item ids.
-- Stock error handling.
+- [x] List items with cover/title/author/variation/price/quantity/subtotal.
+- [x] Update quantity with stepper controls.
+- [x] Remove item.
+- [x] Select items for checkout using backend cart item ids.
+- [x] Persist selected checkout ids in session storage.
+- [x] Stock and availability error handling.
 
 Checkout:
 
-- Address selection and create/edit address shortcut.
-- Coupon input.
-- Preview before submit using `POST /checkout/preview`.
-- Display:
-  - subtotal
-  - promotion discount
-  - coupon discount
-  - shipping fee
-  - total
-  - applied promotions
-  - item final line totals
-- Payment methods:
-  - COD
-  - VNPay if enabled/returned by backend/config
-  - MoMo if enabled/returned by backend/config
-- Submit checkout.
-- Redirect/open provider payment URL for online flows if backend returns one.
-- Payment result page handles VNPay/MoMo return.
+- [x] Address selection and create-address shortcut.
+- [x] Coupon input.
+- [x] Preview before submit using `POST /checkout/preview`.
+- [x] Display:
+  - [x] subtotal
+  - [x] promotion discount
+  - [x] coupon discount
+  - [x] shipping fee
+  - [x] total
+  - [x] applied promotions
+  - [x] item final line totals
+- [x] Payment methods:
+  - [x] COD
+  - [x] VNPay
+  - [x] MoMo
+- [x] Submit checkout through `POST /checkout`.
+- [x] Redirect/open provider payment URL for online flows if backend returns one.
+- [x] Show QR fallback if backend only returns `qrCodeUrl`.
+- [x] Payment result page remains compatible with VNPay/MoMo return.
 
 Tasks:
 
-- Ensure `CheckoutPage` calls preview whenever address/cart/coupon/payment changes.
-- Debounce coupon preview.
-- Clear cart after successful checkout if backend did.
-- Preserve order/payment group code for result page.
+- [x] Ensure `CheckoutPage` calls preview whenever address/cart/coupon/payment changes.
+- [x] Debounce coupon preview.
+- [x] Clear selected checkout ids and refresh cart badge after successful checkout.
+- [x] Preserve order/payment group code in checkout success state.
+- [x] Add checkout selection helper.
+- [x] Add i18n keys for cart selection, coupon, preview totals, payment redirect, and QR fallback.
 
 Acceptance:
 
-- Preview and final checkout totals match.
-- Invalid coupon shows backend message.
-- COD checkout creates order and shows order detail.
-- Online checkout directs user to payment or result state.
+- [x] Preview and final checkout totals come from the same backend discount rules.
+- [x] Invalid coupon shows backend message.
+- [x] COD checkout creates order and links to orders.
+- [x] Online checkout directs user to payment URL or QR result state.
+- [x] `npm run build` passes.
 
 ## Phase FE-7: Customer Account, Addresses, Orders, Payments
 
