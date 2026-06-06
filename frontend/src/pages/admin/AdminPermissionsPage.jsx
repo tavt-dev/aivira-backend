@@ -11,11 +11,13 @@ import {
   revokeUserPermission,
   updateRolePermissions,
 } from "../../api/adminApi.js";
+import { useConfirm } from "../../components/ui/index.jsx";
 import { formatDateTime } from "../../utils/formatters.js";
 import { pageRows } from "../../utils/mappers.js";
 
 export default function AdminPermissionsPage() {
   const { t, i18n } = useTranslation();
+  const confirm = useConfirm();
   const [searchParams] = useSearchParams();
   const [permissions, setPermissions] = useState([]);
   const [roles, setRoles] = useState([]);
@@ -114,7 +116,15 @@ export default function AdminPermissionsPage() {
 
   async function revoke(permission) {
     const code = directPermissionCode(permission);
-    if (!code || !window.confirm(t("admin.confirmRevokePermission", { code }))) return;
+    if (!code) return;
+    const confirmed = await confirm({
+      title: t("admin.revokePermission"),
+      message: t("admin.confirmRevokePermission", { code }),
+      confirmLabel: t("admin.revokePermission"),
+      cancelLabel: t("common.cancel"),
+      danger: true,
+    });
+    if (!confirmed) return;
     setMessage("");
     try {
       await revokeUserPermission(userId, code);

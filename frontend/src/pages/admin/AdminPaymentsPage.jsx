@@ -3,6 +3,19 @@ import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { getAdminPaymentGroup, reconcilePaymentGroup } from "../../api/adminPaymentsApi.js";
+import {
+  Button,
+  InfoCard,
+  Input,
+  MetaRow as Meta,
+  Notice,
+  PageHeader,
+  Panel,
+  StatusPill,
+  Table,
+  useConfirm,
+  useToast,
+} from "../../components/ui/index.jsx";
 import { formatDateTime, formatVND } from "../../utils/formatters.js";
 import { normalizeOrder, normalizePaymentGroup } from "../../utils/mappers.js";
 
@@ -10,6 +23,8 @@ const TERMINAL_STATUSES = new Set(["SUCCESS", "CANCELLED", "EXPIRED", "REFUNDED"
 
 export default function AdminPaymentsPage() {
   const { t, i18n } = useTranslation();
+  const confirm = useConfirm();
+  const toast = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const [code, setCode] = useState(searchParams.get("code") || "");
   const [message, setMessage] = useState("");
@@ -56,8 +71,15 @@ export default function AdminPaymentsPage() {
       setMessage(t("admin.paymentCodeRequired"));
       return;
     }
-    if (group?.status && TERMINAL_STATUSES.has(group.status) && !window.confirm(t("admin.confirmTerminalReconcile", { status: group.status }))) {
-      return;
+    if (group?.status && TERMINAL_STATUSES.has(group.status)) {
+      const confirmed = await confirm({
+        title: t("admin.reconcile"),
+        message: t("admin.confirmTerminalReconcile", { status: group.status }),
+        confirmLabel: t("admin.reconcile"),
+        cancelLabel: t("common.cancel"),
+        danger: false,
+      });
+      if (!confirmed) return;
     }
     setReconciling(true);
     setMessage("");
@@ -70,6 +92,10 @@ export default function AdminPaymentsPage() {
           after: result.localStatusAfter || t("common.unknown"),
         })
       );
+      toast({ message: t("admin.reconciled", {
+        before: result.localStatusBefore || t("common.unknown"),
+        after: result.localStatusAfter || t("common.unknown"),
+      }), variant: "success" });
       await lookup(normalizedCode, { silent: true });
       setReconcileResult(result);
     } catch (error) {
@@ -93,13 +119,13 @@ export default function AdminPaymentsPage() {
               if (event.key === "Enter") lookup();
             }}
           />
-          <Button disabled={loading || reconciling || !code.trim()} secondary type="button" onClick={() => lookup()}>
+          <Button disabled={loading || reconciling || !code.trim()} loading={loading} type="button" variant="secondary" onClick={() => lookup()}>
             {loading ? t("common.loading") : t("admin.lookup")}
           </Button>
-          <Button disabled={loading || reconciling || !code.trim()} type="button" onClick={reconcile}>
+          <Button disabled={loading || reconciling || !code.trim()} loading={reconciling} type="button" onClick={reconcile}>
             {reconciling ? t("common.working") : t("admin.reconcile")}
           </Button>
-          <Button disabled={loading || reconciling || !group} secondary type="button" onClick={() => lookup(code)}>
+          <Button disabled={loading || reconciling || !group} type="button" variant="secondary" onClick={() => lookup(code)}>
             {t("admin.refresh")}
           </Button>
         </div>
@@ -129,7 +155,7 @@ function PaymentGroupSummary({ group, language, t }) {
         <InfoCard title={t("admin.groupStatusTitle")}>
           <Meta label={t("admin.paymentGroupCode")} value={group.paymentCode || group.paymentGroupCode || "-"} />
           <Meta label={t("common.method")} value={group.method || "-"} />
-          <Meta label={t("common.status")} value={<PaymentBadge status={group.status} />} />
+          <Meta label={t("common.status")} value={<StatusPill status={group.status} type="payment" />} />
           <Meta label={t("common.amount")} value={formatVND(group.amount, language)} />
         </InfoCard>
         <InfoCard title={t("admin.providerData")}>
@@ -153,8 +179,7 @@ function PaymentsTable({ group, language, t }) {
   const payments = group.payments || [];
   return (
     <Panel title={t("admin.paymentRows")}>
-      <div className="overflow-x-auto rounded-xl border border-slate-200">
-        <table className="min-w-[900px] w-full border-collapse text-left text-sm">
+      <Table empty={!payments.length ? t("admin.noPaymentRows") : ""} minWidth="900px">
           <thead className="bg-slate-50 text-xs uppercase text-slate-500">
             <tr>
               <th className="px-4 py-3">ID</th>
@@ -177,16 +202,14 @@ function PaymentsTable({ group, language, t }) {
                   <p className="text-xs text-slate-500">#{payment.orderId || "-"}</p>
                 </td>
                 <td className="px-4 py-3">{payment.method || "-"}</td>
-                <td className="px-4 py-3"><PaymentBadge status={payment.status} /></td>
+                <td className="px-4 py-3"><StatusPill status={payment.status} type="payment" /></td>
                 <td className="px-4 py-3 font-semibold">{formatVND(payment.amount, language)}</td>
                 <td className="px-4 py-3 text-slate-600">{payment.transactionId || "-"}</td>
                 <td className="px-4 py-3 text-slate-500">{formatDateTime(payment.paidAt, language)}</td>
               </tr>
             ))}
           </tbody>
-        </table>
-        {!payments.length && <div className="p-5 text-sm text-slate-500">{t("admin.noPaymentRows")}</div>}
-      </div>
+      </Table>
     </Panel>
   );
 }
@@ -195,8 +218,7 @@ function RelatedOrders({ group, language, t }) {
   const orders = (group.orders || []).map(normalizeOrder);
   return (
     <Panel title={t("admin.relatedOrders")}>
-      <div className="overflow-x-auto rounded-xl border border-slate-200">
-        <table className="min-w-[900px] w-full border-collapse text-left text-sm">
+      <Table empty={!orders.length ? t("admin.noRelatedOrders") : ""} minWidth="900px">
           <thead className="bg-slate-50 text-xs uppercase text-slate-500">
             <tr>
               <th className="px-4 py-3">{t("admin.orderCode")}</th>
@@ -212,7 +234,7 @@ function RelatedOrders({ group, language, t }) {
               <tr className="border-t border-slate-100" key={order.id || order.orderCode}>
                 <td className="px-4 py-3 font-bold text-slate-950">{order.orderCode || "-"}</td>
                 <td className="px-4 py-3">{order.orderStatus || "-"}</td>
-                <td className="px-4 py-3"><PaymentBadge status={order.paymentStatus} /></td>
+                <td className="px-4 py-3"><StatusPill status={order.paymentStatus} type="payment" /></td>
                 <td className="px-4 py-3 font-semibold">{formatVND(order.totalAmount, language)}</td>
                 <td className="px-4 py-3 text-slate-500">{formatDateTime(order.createdAt, language)}</td>
                 <td className="px-4 py-3">
@@ -223,9 +245,7 @@ function RelatedOrders({ group, language, t }) {
               </tr>
             ))}
           </tbody>
-        </table>
-        {!orders.length && <div className="p-5 text-sm text-slate-500">{t("admin.noRelatedOrders")}</div>}
-      </div>
+      </Table>
     </Panel>
   );
 }
@@ -252,58 +272,6 @@ function ReconcileResult({ language, result, t }) {
       </div>
     </Panel>
   );
-}
-
-function PageHeader({ title, eyebrow }) {
-  return (
-    <div className="border-b border-slate-200 pb-6">
-      <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-600">{eyebrow}</span>
-      <h2 className="mt-3 font-serif text-4xl font-bold text-slate-950">{title}</h2>
-    </div>
-  );
-}
-
-function Panel({ title, children }) {
-  return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
-      <h3 className="mb-5 text-xl font-bold text-slate-950">{title}</h3>
-      {children}
-    </section>
-  );
-}
-
-function InfoCard({ children, title }) {
-  return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5">
-      <h4 className="mb-4 text-lg font-bold text-slate-950">{title}</h4>
-      <div className="grid gap-2">{children}</div>
-    </section>
-  );
-}
-
-function Meta({ label, value }) {
-  return (
-    <div className="flex flex-wrap items-start justify-between gap-3 text-sm">
-      <span className="text-slate-500">{label}</span>
-      <span className="max-w-[70%] text-right font-semibold text-slate-700">{value}</span>
-    </div>
-  );
-}
-
-function PaymentBadge({ status }) {
-  return <span className="inline-flex rounded-full bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700">{status || "-"}</span>;
-}
-
-function Input(props) {
-  return <input {...props} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-slate-50" />;
-}
-
-function Button({ secondary = false, ...props }) {
-  return <button {...props} className={["rounded-full px-5 py-3 text-sm font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50", secondary ? "border border-slate-200 text-slate-700 hover:bg-slate-50" : "bg-slate-950 text-white hover:bg-blue-600"].join(" ")} />;
-}
-
-function Notice({ children }) {
-  return <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-700">{children}</div>;
 }
 
 function yesNo(value, t) {

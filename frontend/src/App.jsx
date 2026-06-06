@@ -7,6 +7,7 @@ import IntroBook, { hasSeenIntro } from "./components/IntroBook.jsx";
 import Layout from "./components/Layout.jsx";
 import RequireAuth from "./components/RequireAuth.jsx";
 import RequireAdmin from "./components/RequireAdmin.jsx";
+import { ConfirmDialogProvider, ToastProvider } from "./components/ui/index.jsx";
 import AccountPage from "./pages/AccountPage.jsx";
 import CartPage from "./pages/CartPage.jsx";
 import CategoryPage from "./pages/CategoryPage.jsx";
@@ -103,7 +104,8 @@ export default function App() {
   }
 
   return (
-    <>
+    <ToastProvider>
+      <ConfirmDialogProvider>
       {!isAdminRoute && <MotionChrome />}
       <Routes>
         <Route path="/admin/login" element={<Navigate to="/?auth=login&next=/admin/dashboard" replace />} />
@@ -157,7 +159,8 @@ export default function App() {
           onClose={() => setAuthOpen(false)}
         />
       )}
-    </>
+      </ConfirmDialogProvider>
+    </ToastProvider>
   );
 }
 

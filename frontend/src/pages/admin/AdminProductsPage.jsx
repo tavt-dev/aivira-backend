@@ -15,6 +15,7 @@ import {
   updateProductVariation,
   uploadProductMedia,
 } from "../../api/adminApi.js";
+import { useConfirm } from "../../components/ui/index.jsx";
 import { getCategories } from "../../api/catalogApi.js";
 import { formatDateTime, formatVND } from "../../utils/formatters.js";
 import {
@@ -93,6 +94,7 @@ const emptyMediaEditForm = {
 
 export default function AdminProductsPage() {
   const { t, i18n } = useTranslation();
+  const confirm = useConfirm();
   const [filters, setFilters] = useState(emptyFilters);
   const [appliedFilters, setAppliedFilters] = useState(emptyFilters);
   const [books, setBooks] = useState([]);
@@ -254,7 +256,14 @@ export default function AdminProductsPage() {
   }
 
   async function remove(book) {
-    if (!window.confirm(t("admin.confirmDeleteProduct", { title: book.title }))) return;
+    const confirmed = await confirm({
+      title: t("common.delete"),
+      message: t("admin.confirmDeleteProduct", { title: book.title }),
+      confirmLabel: t("common.delete"),
+      cancelLabel: t("common.cancel"),
+      danger: true,
+    });
+    if (!confirmed) return;
     setMessage("");
     try {
       await deleteAdminProduct(book.id);
@@ -315,7 +324,15 @@ export default function AdminProductsPage() {
   }
 
   async function removeVariation(variationId) {
-    if (!selectedProduct?.id || !window.confirm(t("admin.confirmDeleteVariation"))) return;
+    if (!selectedProduct?.id) return;
+    const confirmed = await confirm({
+      title: t("common.delete"),
+      message: t("admin.confirmDeleteVariation"),
+      confirmLabel: t("common.delete"),
+      cancelLabel: t("common.cancel"),
+      danger: true,
+    });
+    if (!confirmed) return;
     setMessage("");
     try {
       await deleteProductVariation(selectedProduct.id, variationId);
@@ -396,7 +413,15 @@ export default function AdminProductsPage() {
   }
 
   async function removeMedia(mediaId) {
-    if (!selectedProduct?.id || !window.confirm(t("admin.confirmDeleteMedia"))) return;
+    if (!selectedProduct?.id) return;
+    const confirmed = await confirm({
+      title: t("common.delete"),
+      message: t("admin.confirmDeleteMedia"),
+      confirmLabel: t("common.delete"),
+      cancelLabel: t("common.cancel"),
+      danger: true,
+    });
+    if (!confirmed) return;
     setMessage("");
     try {
       await deleteProductMedia(selectedProduct.id, mediaId);

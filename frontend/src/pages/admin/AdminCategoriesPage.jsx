@@ -6,6 +6,7 @@ import {
   deleteAdminCategory,
   updateAdminCategory,
 } from "../../api/adminApi.js";
+import { useConfirm } from "../../components/ui/index.jsx";
 import { getCategories, getCategoryTree } from "../../api/catalogApi.js";
 import { normalizeCategory, pageRows } from "../../utils/mappers.js";
 
@@ -23,6 +24,7 @@ const emptyForm = {
 
 export default function AdminCategoriesPage() {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [categories, setCategories] = useState([]);
   const [tree, setTree] = useState([]);
   const [message, setMessage] = useState("");
@@ -78,7 +80,14 @@ export default function AdminCategoriesPage() {
   }
 
   async function remove(category) {
-    if (!window.confirm(t("admin.confirmDeleteCategory", { name: category.label }))) return;
+    const confirmed = await confirm({
+      title: t("common.delete"),
+      message: t("admin.confirmDeleteCategory", { name: category.label }),
+      confirmLabel: t("common.delete"),
+      cancelLabel: t("common.cancel"),
+      danger: true,
+    });
+    if (!confirmed) return;
     setMessage("");
     try {
       await deleteAdminCategory(category.id);

@@ -14,6 +14,7 @@ import {
   getPromotions,
   updatePromotion,
 } from "../../api/adminPromotionsApi.js";
+import { useConfirm } from "../../components/ui/index.jsx";
 import { getAdminProducts } from "../../api/adminProductsApi.js";
 import { getCategories } from "../../api/catalogApi.js";
 import { formatDateTime, formatVND } from "../../utils/formatters.js";
@@ -51,6 +52,7 @@ const emptyPromotionForm = {
 
 export default function AdminDiscountsPage() {
   const { t, i18n } = useTranslation();
+  const confirm = useConfirm();
   const [tab, setTab] = useState("coupons");
   const [coupons, setCoupons] = useState([]);
   const [promotions, setPromotions] = useState([]);
@@ -178,7 +180,14 @@ export default function AdminDiscountsPage() {
   }
 
   async function deactivateCoupon(coupon) {
-    if (!window.confirm(t("admin.confirmDeactivateCoupon", { code: coupon.code }))) return;
+    const confirmed = await confirm({
+      title: t("admin.deactivate"),
+      message: t("admin.confirmDeactivateCoupon", { code: coupon.code }),
+      confirmLabel: t("admin.deactivate"),
+      cancelLabel: t("common.cancel"),
+      danger: true,
+    });
+    if (!confirmed) return;
     setMessage("");
     try {
       await deleteCoupon(coupon.id);
@@ -190,7 +199,14 @@ export default function AdminDiscountsPage() {
   }
 
   async function deactivatePromotion(promotion) {
-    if (!window.confirm(t("admin.confirmDeactivatePromotion", { name: promotion.promotionName }))) return;
+    const confirmed = await confirm({
+      title: t("admin.deactivate"),
+      message: t("admin.confirmDeactivatePromotion", { name: promotion.promotionName }),
+      confirmLabel: t("admin.deactivate"),
+      cancelLabel: t("common.cancel"),
+      danger: true,
+    });
+    if (!confirmed) return;
     setMessage("");
     try {
       await deletePromotion(promotion.id);

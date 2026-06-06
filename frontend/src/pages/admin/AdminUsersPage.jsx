@@ -9,6 +9,7 @@ import {
   unlockUser,
   updateUserRoles,
 } from "../../api/adminUsersApi.js";
+import { useConfirm } from "../../components/ui/index.jsx";
 import { formatDateTime } from "../../utils/formatters.js";
 import { pageRows } from "../../utils/mappers.js";
 import { getCurrentUser } from "../../utils/storage.js";
@@ -28,6 +29,7 @@ const emptyFilters = {
 
 export default function AdminUsersPage() {
   const { t, i18n } = useTranslation();
+  const confirm = useConfirm();
   const [filters, setFilters] = useState(emptyFilters);
   const [appliedFilters, setAppliedFilters] = useState(emptyFilters);
   const [users, setUsers] = useState([]);
@@ -108,8 +110,16 @@ export default function AdminUsersPage() {
 
   async function runLockAction(user, action) {
     const isLock = action === "lock";
-    if (isLock && !window.confirm(t("admin.confirmLockUser", { user: user.username || user.email || user.id }))) return;
-    if (!isLock && !window.confirm(t("admin.confirmUnlockUser", { user: user.username || user.email || user.id }))) return;
+    const confirmed = await confirm({
+      title: isLock ? t("admin.lockUser") : t("admin.unlockUser"),
+      message: isLock
+        ? t("admin.confirmLockUser", { user: user.username || user.email || user.id })
+        : t("admin.confirmUnlockUser", { user: user.username || user.email || user.id }),
+      confirmLabel: isLock ? t("admin.lockUser") : t("admin.unlockUser"),
+      cancelLabel: t("common.cancel"),
+      danger: isLock,
+    });
+    if (!confirmed) return;
 
     setBusy(`${action}-${user.id}`);
     setMessage("");

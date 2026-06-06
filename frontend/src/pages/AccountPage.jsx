@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 import { getSessions, logoutAll, revokeSession } from "../api/authApi.js";
+import { useConfirm } from "../components/ui/index.jsx";
 import {
   changePassword,
   createAddress,
@@ -37,6 +38,7 @@ const emptyPassword = {
 
 export default function AccountPage({ onAuth }) {
   const { t, i18n } = useTranslation();
+  const confirm = useConfirm();
   const navigate = useNavigate();
   const [profile, setProfile] = useState(getCurrentUser());
   const [profileForm, setProfileForm] = useState({ firstName: "", lastName: "", gender: "" });
@@ -235,7 +237,14 @@ export default function AccountPage({ onAuth }) {
       setMessage(t("account.loginDeleteAddress"));
       return;
     }
-    if (!window.confirm(t("account.confirmDeleteAddress"))) return;
+    const confirmed = await confirm({
+      title: t("common.delete"),
+      message: t("account.confirmDeleteAddress"),
+      confirmLabel: t("common.delete"),
+      cancelLabel: t("common.cancel"),
+      danger: true,
+    });
+    if (!confirmed) return;
 
     setBusy(`delete-${address.id}`);
     try {

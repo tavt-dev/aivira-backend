@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router-dom";
 
 import { getAdminReviews, moderateReview, replyReview } from "../../api/adminReviewsApi.js";
 import RatingStars from "../../components/reviews/RatingStars.jsx";
+import { useConfirm, useToast } from "../../components/ui/index.jsx";
 import { formatDateTime } from "../../utils/formatters.js";
 import { normalizeReview, pageRows } from "../../utils/mappers.js";
 
@@ -23,6 +24,8 @@ const emptyFilters = {
 
 export default function AdminReviewsPage() {
   const { t, i18n } = useTranslation();
+  const confirm = useConfirm();
+  const toast = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const appliedFilters = useMemo(() => filtersFromSearch(searchParams), [searchParams]);
   const [filters, setFilters] = useState(appliedFilters);
@@ -122,6 +125,7 @@ export default function AdminReviewsPage() {
       const updated = normalizeReview(await moderateReview(review.id, { approved, visible }));
       applyUpdatedReview(updated);
       setMessage(t(successKey));
+      toast({ message: t(successKey), variant: "success" });
       await refreshReviews(appliedFilters);
     } catch (error) {
       setMessage(error.message || t("admin.reviewModerationFailed"));
@@ -145,6 +149,7 @@ export default function AdminReviewsPage() {
       const updated = normalizeReview(await replyReview(selected.id, { adminReply: replyDraft.trim() }));
       applyUpdatedReview(updated);
       setMessage(replyDraft.trim() ? t("admin.reviewReplySaved") : t("admin.reviewReplyCleared"));
+      toast({ message: replyDraft.trim() ? t("admin.reviewReplySaved") : t("admin.reviewReplyCleared"), variant: "success" });
       await refreshReviews(appliedFilters);
     } catch (error) {
       setMessage(error.message || t("admin.reviewReplyFailed"));
@@ -155,7 +160,16 @@ export default function AdminReviewsPage() {
 
   async function clearReply() {
     if (!selected || selected.deletedAt) return;
-    if (selected.adminReply && !window.confirm(t("admin.confirmClearReviewReply"))) return;
+    if (selected.adminReply) {
+      const confirmed = await confirm({
+        title: t("admin.clearReply"),
+        message: t("admin.confirmClearReviewReply"),
+        confirmLabel: t("admin.clearReply"),
+        cancelLabel: t("common.cancel"),
+        danger: true,
+      });
+      if (!confirmed) return;
+    }
     setReplyDraft("");
     setBusy(`reply-${selected.id}`);
     setMessage("");
@@ -163,6 +177,7 @@ export default function AdminReviewsPage() {
       const updated = normalizeReview(await replyReview(selected.id, { adminReply: "" }));
       applyUpdatedReview(updated);
       setMessage(t("admin.reviewReplyCleared"));
+      toast({ message: t("admin.reviewReplyCleared"), variant: "success" });
       await refreshReviews(appliedFilters);
     } catch (error) {
       setMessage(error.message || t("admin.reviewReplyFailed"));

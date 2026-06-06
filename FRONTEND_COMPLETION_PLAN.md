@@ -1131,47 +1131,65 @@ Acceptance:
 
 Goal: make the app feel finished, not stitched together.
 
-Build shared UI components:
+Shared UI components:
 
-- Button.
-- IconButton.
-- Input.
-- Select.
-- Textarea.
-- Checkbox/toggle.
-- Date/time input.
-- Modal/dialog.
-- Drawer.
-- Table.
-- Pagination.
-- Tabs.
-- Toast/notification.
-- Empty state.
-- Error state.
-- Skeleton.
-- Badge/status pill.
-- Confirm dialog.
+- [x] Create `frontend/src/components/ui/`.
+- [x] Add `Button`.
+- [x] Add `IconButton` with required `aria-label`.
+- [x] Add `Input`.
+- [x] Add `Select`.
+- [x] Add `Textarea`.
+- [x] Add `Checkbox`.
+- [x] Add `Toggle`.
+- [x] Add `DateTimeInput`.
+- [x] Add `Modal`.
+- [x] Add `Drawer`.
+- [x] Add `Table`.
+- [x] Add `Pagination`.
+- [x] Add `Tabs`.
+- [x] Add toast provider and `useToast`.
+- [x] Add `EmptyState`.
+- [x] Add `ErrorState`.
+- [x] Add `Skeleton`.
+- [x] Add `Badge`.
+- [x] Add `StatusPill`.
+- [x] Add confirm dialog provider and `useConfirm`.
+
+Adoption:
+
+- [x] Wire `ToastProvider` and `ConfirmDialogProvider` in `App`.
+- [x] Migrate admin payments page to shared UI primitives.
+- [x] Replace all `window.confirm` usage in frontend pages/components with shared `ConfirmDialog`.
+- [x] Use shared toast for admin payment reconcile and admin review moderation/reply.
+- [ ] Migrate all remaining admin helper components to shared primitives.
+- [ ] Migrate customer critical pages to shared primitives.
+- [ ] Replace remaining duplicate local `Button/Input/Panel/Pagination` helpers.
 
 Accessibility:
 
-- Keyboard focus visible.
-- Modals trap focus.
-- Buttons have labels/tooltips.
-- Form errors connected to fields.
-- Color contrast acceptable.
-- Images have alt text.
+- [x] Modal/dialog has `role="dialog"` and `aria-modal`.
+- [x] Modal/drawer close on `Escape`.
+- [x] Modal/drawer include basic focus trap and return focus.
+- [x] Form controls support label, hint, error, required, and `aria-describedby`.
+- [x] Icon-only button requires `aria-label`.
+- [x] Confirm flow no longer uses browser confirm dialogs.
+- [ ] Full keyboard audit across customer/admin screens.
+- [ ] Full image alt audit.
 
 Responsive:
 
-- Mobile catalog filters as drawer.
-- Cart/checkout readable on mobile.
-- Admin tables use horizontal scroll or responsive columns.
-- No text overlap in buttons/cards.
+- [x] Shared `Table` uses horizontal scroll with stable min width.
+- [x] Shared buttons/loading states keep layout stable.
+- [ ] Mobile catalog filter drawer migration.
+- [ ] Full mobile smoke for cart/checkout/account/orders/admin screens.
 
 Acceptance:
 
-- Common UI is consistent across customer/admin.
-- Main flows work on mobile and desktop.
+- [x] Common UI primitives exist for customer/admin adoption.
+- [x] Main confirm flows use accessible confirm dialog.
+- [x] Admin payments uses shared UI system.
+- [ ] Common UI is consistently adopted across all main screens.
+- [ ] Main flows manually verified on mobile and desktop.
 
 ## Phase FE-16: Internationalization And Copy
 
