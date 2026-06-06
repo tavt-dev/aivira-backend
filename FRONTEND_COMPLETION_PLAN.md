@@ -816,9 +816,12 @@ Goal: admin can manage discounts without backend/Postman.
 
 Coupons:
 
-- List/detail.
-- Create/update/deactivate.
-- Fields:
+- [x] `/admin/discounts` route with Coupons tab.
+- [x] `/admin/coupons` redirects to `/admin/discounts`.
+- [x] List with backend `page`/`size`.
+- [x] Create/update/deactivate.
+- [x] Copy coupon code and link to checkout for testing.
+- [x] Fields:
   - code
   - type PERCENT/FIXED
   - value
@@ -832,9 +835,13 @@ Coupons:
 
 Promotions:
 
-- List/detail.
-- Create/update/deactivate.
-- Fields:
+- [x] Promotions tab in `/admin/discounts`.
+- [x] `/admin/promotions` redirects to `/admin/discounts`.
+- [x] List with backend `page`/`size`.
+- [x] Create/update/deactivate.
+- [x] Product target picker using admin products.
+- [x] Category target picker using categories.
+- [x] Fields:
   - promotionName
   - description
   - promotionType
@@ -847,14 +854,17 @@ Promotions:
 
 Validation:
 
-- Date range.
-- Percent/fixed positive values.
-- Required target.
-- Backend duplicate name/code errors.
+- [x] Date range.
+- [x] Percent/fixed positive values.
+- [x] Percent value max 100.
+- [x] Non-negative amount/limit fields.
+- [x] Required target.
+- [x] Backend duplicate name/code errors displayed through `error.message`.
 
 Acceptance:
 
-- Admin can create coupon/promotion and immediately test it in checkout preview.
+- [x] Admin can manage coupon/promotion without Postman.
+- [ ] Manual smoke remains to create coupon/promotion and test discount in checkout preview against live backend/cart.
 
 ## Phase FE-13: Admin Review Moderation
 
