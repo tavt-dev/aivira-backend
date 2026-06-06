@@ -12,6 +12,7 @@ const links = [
   ["/admin/orders", "admin.orders"],
   ["/admin/discounts", "admin.discounts"],
   ["/admin/payments", "admin.payments"],
+  ["/admin/reviews", "admin.reviews"],
   ["/admin/users", "admin.users"],
   ["/admin/permissions", "admin.permissions"]
 ];

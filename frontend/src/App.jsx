@@ -24,6 +24,7 @@ import AdminOrdersPage from "./pages/admin/AdminOrdersPage.jsx";
 import AdminPaymentsPage from "./pages/admin/AdminPaymentsPage.jsx";
 import AdminPermissionsPage from "./pages/admin/AdminPermissionsPage.jsx";
 import AdminProductsPage from "./pages/admin/AdminProductsPage.jsx";
+import AdminReviewsPage from "./pages/admin/AdminReviewsPage.jsx";
 import AdminUsersPage from "./pages/admin/AdminUsersPage.jsx";
 import { initMotionEffects } from "./utils/motion.js";
 import { getCurrentUser } from "./utils/storage.js";
@@ -125,6 +126,7 @@ export default function App() {
           <Route path="coupons" element={<Navigate to="/admin/discounts" replace />} />
           <Route path="promotions" element={<Navigate to="/admin/discounts" replace />} />
           <Route path="payments" element={<AdminPaymentsPage />} />
+          <Route path="reviews" element={<AdminReviewsPage />} />
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="permissions" element={<AdminPermissionsPage />} />
           <Route path="*" element={<NotFoundPage />} />

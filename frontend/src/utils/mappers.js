@@ -99,13 +99,25 @@ export function normalizeReview(row) {
     id: row?.id,
     rating: Number(row?.rating || 0),
     comment: row?.comment || "",
+    approved: Boolean(row?.approved),
+    visible: row?.visible !== false,
     username: row?.username || "Aivira Reader",
     adminReply: row?.adminReply || "",
     images: row?.images || [],
     createdAt: row?.createdAt,
+    updatedAt: row?.updatedAt,
+    deletedAt: row?.deletedAt,
+    productId: row?.productId,
+    productVariationId: row?.productVariationId,
+    productName: row?.productName,
+    sku: row?.sku,
     orderId: row?.orderId,
     orderItemId: row?.orderItemId,
-    userId: row?.userId
+    userId: row?.userId,
+    moderatedBy: row?.moderatedBy,
+    moderatedAt: row?.moderatedAt,
+    repliedBy: row?.repliedBy,
+    repliedAt: row?.repliedAt
   };
 }
 
