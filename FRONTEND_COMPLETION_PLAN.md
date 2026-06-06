@@ -413,39 +413,228 @@ Acceptance:
 
 ## Phase FE-7: Customer Account, Addresses, Orders, Payments
 
-Goal: customer self-service is complete.
+Status: completed in current workspace. `npm run build` passes.
+
+Goal: make customer self-service complete and production-practical after cart/checkout is live.
+
+Summary:
+
+- Finish `AccountPage` as the customer profile/address/session hub.
+- Upgrade `OrdersPage` from a simple list/modal into a usable order tracking screen.
+- Add payment retry UX for failed/expired/retryable online payment groups.
+- Keep review creation for completed order items from FE-5, but prevent duplicate UX actions where possible.
+- Do not add seller/shop/merchant UI.
 
 Account:
 
-- View/update profile.
-- Change password.
-- Avatar upload if backend supports current endpoint.
-- Deactivate account.
-- Active sessions list and revoke.
+- [x] Keep profile view/update wired to `/users/me`.
+- [x] Show immutable identity fields clearly:
+  - [x] username
+  - [x] email
+  - [x] provider
+  - [x] email verified state
+- [x] Profile editable fields:
+  - [x] firstName
+  - [x] lastName
+  - [x] gender
+  - [x] phoneNumber displayed read-only because the current update DTO does not accept it.
+- [x] Avatar upload:
+  - [x] keep `updateAvatar(file)`.
+  - [x] show upload busy state.
+  - [x] preview selected image only after backend success.
+  - [x] show backend validation error for invalid file.
+- [x] Change password:
+  - [x] require current password.
+  - [x] require new password and confirm password match.
+  - [x] clear password form after success.
+  - [x] show backend message for invalid current password.
+- [x] Account deactivate:
+  - [x] add explicit danger-zone section.
+  - [x] require confirm dialog or typed confirmation.
+  - [x] call `deactivateAccount()`.
+  - [x] clear auth and redirect/open login after success.
+- [x] Sessions:
+  - [x] list active sessions from backend.
+  - [x] show current session badge.
+  - [x] revoke non-current session and remove it from UI.
+  - [x] revoke current session clears local auth and opens login.
+  - [x] logout all clears auth and opens login.
 
 Addresses:
 
-- List/create/update/delete.
-- Set default.
-- Inline use during checkout.
+- [x] Keep address APIs from `userApi.js`, not legacy `orderApi.js`.
+- [x] List addresses with recipient, phone, full address, default badge.
+- [x] Create address.
+- [x] Update address.
+- [x] Delete address with confirm dialog.
+- [x] Set default address.
+- [x] Reset address form after save/cancel.
+- [x] Add address form validation before API call:
+  - [x] recipientName required.
+  - [x] phoneNumber required.
+  - [x] addressLine required.
+  - [x] city required if backend requires it.
+- [x] Keep checkout address shortcut behavior compatible with FE-6.
 
-Orders:
+Orders List:
 
-- List with status/payment status filters.
-- Detail view:
-  - item snapshots
-  - totals
-  - payment status
-  - shipping address
-  - refund metadata if present
-- Cancel allowed early orders.
-- Payment retry for retryable online payment group.
-- Review actions for completed order items.
+- [x] Replace plain order list with filterable order dashboard.
+- [x] Query backend `getOrders(params)` using URL search params.
+- [x] Filters:
+  - [x] order status.
+  - [x] hide payment status filter because current customer endpoint does not support it.
+  - [x] hide keyword/order code filter because current customer endpoint does not support it.
+  - [x] page.
+  - [x] size.
+- [x] If backend customer list does not support a filter yet, keep the control hidden instead of filtering client-side.
+- [x] Use `PageResponse` pagination:
+  - [x] currentPage.
+  - [x] totalPages.
+  - [x] totalElements.
+  - [x] hasNext.
+  - [x] hasPrevious.
+- [x] Order cards/table show:
+  - [x] orderCode.
+  - [x] orderStatus.
+  - [x] paymentMethod.
+  - [x] paymentStatus.
+  - [x] totalAmount.
+  - [x] createdAt.
+  - [x] itemCount.
+- [x] Add status badges with customer-friendly labels.
+- [x] Add loading skeleton, empty state, and backend error state.
+
+Order Detail:
+
+- [x] Keep detail loaded by `getOrder(orderId)` when opening a modal/drawer.
+- [x] Consider route detail `/orders/:orderId` only if needed later; FE-7 can keep modal/drawer.
+- [x] Detail displays:
+  - [x] orderCode.
+  - [x] orderStatus.
+  - [x] paymentMethod.
+  - [x] paymentStatus.
+  - [x] paymentGroupCode.
+  - [x] shipping recipient/phone/address.
+  - [x] item snapshots: book name, thumbnail if available, variation/SKU, quantity, unit price, discount, final line total.
+  - [x] subtotal, discountAmount, shippingFee, totalAmount.
+  - [x] couponCode if present in backend response.
+  - [x] refund metadata if `refund` exists.
+  - [x] createdAt/updatedAt if present.
+- [x] Detail action area:
+  - [x] cancel button only for statuses customer can cancel.
+  - [x] retry payment button only when online payment is retryable.
+  - [x] write review button only when order is `COMPLETED`.
+
+Cancel Order:
+
+- [x] Use existing `cancelOrder(id, reason)`.
+- [x] Show cancel action only for safe customer-cancellable statuses:
+  - [x] `PENDING_CONFIRMATION`.
+  - [x] unpaid/retryable pre-fulfillment statuses if backend allows.
+- [x] Ask for cancel reason in a small modal/input.
+- [x] On success:
+  - [x] update list item.
+  - [x] update open detail.
+  - [x] show success message.
+- [x] On failure:
+  - [x] show backend `error.message`, especially paid-order/refund-required cases.
+
+Payment Retry:
+
+- [x] Use `retryPayment(paymentGroupCode)` from `paymentApi.js`.
+- [x] Show retry only when:
+  - [x] payment method is `VNPAY` or `MOMO`.
+  - [x] payment status is retryable: FAILED, CANCELLED, or EXPIRED.
+  - [x] `paymentGroupCode` exists.
+- [x] On retry success:
+  - [x] if response has `paymentUrl || deeplink`, redirect after short delay and show fallback button.
+  - [x] if response has `qrCodeUrl`, show QR fallback.
+  - [x] preserve current order detail state.
+- [x] On retry failure:
+  - [x] show backend error message.
+  - [x] keep user on orders page.
+- [x] Payment result page remains the return landing page for provider callbacks.
+
+Review Actions:
+
+- [x] Keep FE-5 review creation flow from completed order item.
+- [x] Hide review CTA for non-completed orders.
+- [x] After successful review creation:
+  - [x] close form.
+  - [x] show pending moderation message.
+  - [x] disable the CTA locally for that order item to avoid repeated submit attempts.
+- [x] Duplicate review backend error remains visible if backend rejects it.
+- [x] Do not add review edit/delete UI in FE-7 unless current user-owned reviews are available in an order-safe response.
+
+State, UX, And i18n:
+
+- [x] Add dedicated order/account loading states instead of silent blank panels.
+- [x] Replace raw status strings with compact labels where possible, but preserve raw backend status in fallback.
+- [x] Add confirm modal component locally if shared UI phase is not started yet.
+- [x] Add i18n EN/VI keys for:
+  - [x] order filters.
+  - [x] order status labels.
+  - [x] payment retry.
+  - [x] cancel reason.
+  - [x] refund metadata.
+  - [x] account danger zone/deactivate.
+  - [x] session revoke/logout all states.
+- [x] Keep mobile layout usable:
+  - [x] account panels stack cleanly.
+  - [x] orders list becomes card layout.
+  - [x] detail modal/drawer scrolls inside viewport.
+
+Tasks:
+
+- [x] Refactor `OrdersPage` into smaller local components or `components/orders`:
+  - [x] `OrderFilters`.
+  - [x] `OrderCard` or `OrderTable`.
+  - [x] `OrderDetailModal`.
+  - [x] `CancelOrderModal`.
+  - [x] inline payment retry panel inside order detail.
+- [x] Tighten `AccountPage`:
+  - [x] add deactivate flow.
+  - [x] add busy states.
+  - [x] add address cancel/reset.
+  - [x] improve sessions section.
+- [x] Extend mappers if needed:
+  - [x] `normalizeOrder`.
+  - [x] `normalizePaymentGroup`.
+  - [x] optional `normalizeAddress`.
+- [x] Keep API calls centralized in:
+  - [x] `orderApi.js`.
+  - [x] `paymentApi.js`.
+  - [x] `userApi.js`.
+- [x] Update this plan with `[x]` after implementation.
+
+Test plan:
+
+- [x] Run `cd frontend && npm run build`.
+- [ ] Manual smoke checklist:
+  - [ ] account profile loads and saves.
+  - [ ] avatar upload success/error displays correctly.
+  - [ ] password change validates confirm password.
+  - [ ] address create/update/delete/default works.
+  - [ ] current session revoke clears auth.
+  - [ ] logout all clears auth.
+  - [ ] orders list loads with pagination.
+  - [ ] order detail shows shipping, items, totals, payment, refund metadata.
+  - [ ] cancel allowed order updates UI.
+  - [ ] invalid cancel shows backend error.
+  - [ ] online retry redirects or shows QR fallback.
+  - [ ] completed order item can open review form.
+  - [ ] non-completed order item does not show review CTA.
+  - [ ] mobile account/orders screens do not overlap.
 
 Acceptance:
 
-- Customer can manage profile/address/order lifecycle without admin support.
-- Payment retry and cancellation errors are clearly shown.
+- [x] Customer can manage profile, avatar, password, sessions, and account deactivation without admin support.
+- [x] Customer can manage addresses fully and those addresses stay compatible with checkout.
+- [x] Customer can list, filter/page, inspect, cancel eligible orders, retry eligible payments, and review completed items.
+- [x] Payment retry and cancellation errors are shown from backend messages.
+- [x] Refund metadata is visible when backend returns it.
+- [x] No seller/shop/merchant UI exists.
+- [x] `npm run build` passes.
 
 ## Phase FE-8: Admin Layout And Dashboard
 
