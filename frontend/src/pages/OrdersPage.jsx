@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { cancelOrder, getOrder, getOrders } from "../api/orderApi.js";
+import { createOrderItemReview } from "../api/reviewApi.js";
+import ReviewForm from "../components/reviews/ReviewForm.jsx";
 import { formatVND } from "../utils/formatters.js";
 import { normalizeOrder, pageRows } from "../utils/mappers.js";
 import { getAccessToken } from "../utils/storage.js";
@@ -10,6 +12,8 @@ export default function OrdersPage({ onAuth }) {
   const { t } = useTranslation();
   const [orders, setOrders] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [reviewTarget, setReviewTarget] = useState(null);
+  const [reviewBusy, setReviewBusy] = useState(false);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -38,6 +42,21 @@ export default function OrdersPage({ onAuth }) {
       setSelected(await getOrder(order.id));
     } catch (error) {
       setMessage(error.message || t("orders.detailFailed"));
+    }
+  }
+
+  async function submitReview(body) {
+    if (!reviewTarget) return;
+    setReviewBusy(true);
+    setMessage("");
+    try {
+      await createOrderItemReview(reviewTarget.orderId, reviewTarget.item.id, body);
+      setReviewTarget(null);
+      setMessage(t("orders.reviewSubmitted"));
+    } catch (error) {
+      setMessage(error.message || t("orders.reviewFailed"));
+    } finally {
+      setReviewBusy(false);
     }
   }
 
@@ -115,18 +134,42 @@ export default function OrdersPage({ onAuth }) {
             <div className="mt-6 grid gap-3">
               {(selected.items || []).map((item) => (
                 <div
-                  className="flex items-center justify-between gap-4 rounded-2xl bg-slate-50 p-4"
+                  className="flex flex-col gap-3 rounded-2xl bg-slate-50 p-4 md:flex-row md:items-center md:justify-between"
                   key={item.id || item.productId || item.productName}
                 >
-                  <span className="font-semibold text-slate-800">
-                    {item.productName || item.title} x {item.quantity}
-                  </span>
-                  <small className="font-bold text-slate-950">
-                    {formatVND(item.totalPrice || item.price || item.finalPrice || 0)}
-                  </small>
+                  <div className="min-w-0">
+                    <span className="font-semibold text-slate-800">
+                      {item.productName || item.title} x {item.quantity}
+                    </span>
+                    <small className="mt-1 block font-bold text-slate-950">
+                      {formatVND(item.totalPrice || item.price || item.finalPrice || 0)}
+                    </small>
+                  </div>
+                  {selected.orderStatus === "COMPLETED" && (
+                    <button
+                      type="button"
+                      onClick={() => setReviewTarget({ orderId: selected.id, item })}
+                      className="rounded-full border border-blue-100 px-4 py-2 text-sm font-bold text-blue-700 hover:bg-blue-50"
+                    >
+                      {t("orders.writeReview")}
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {reviewTarget && (
+        <div className="fixed inset-0 z-[60] grid place-items-center bg-slate-950/70 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl">
+            <ReviewForm
+              title={t("orders.reviewTitle", { book: reviewTarget.item.productName || reviewTarget.item.title })}
+              busy={reviewBusy}
+              onCancel={() => setReviewTarget(null)}
+              onSubmit={submitReview}
+            />
           </div>
         </div>
       )}

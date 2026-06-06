@@ -53,8 +53,21 @@ export function normalizeBook(row, fallback = {}) {
     author: row?.author || row?.bookAuthor || row?.brand || fallback.author || "Aivira",
     cat: row?.categorySlug || fallback.cat,
     catLabel: row?.categoryName || fallback.catLabel || "Books",
+    categoryId: row?.categoryId ?? fallback.categoryId,
+    categoryName: row?.categoryName || fallback.categoryName,
+    categorySlug: row?.categorySlug || fallback.categorySlug,
+    sku: row?.sku || fallback.sku,
+    isbn: row?.isbn || fallback.isbn,
+    publisher: row?.publisher || fallback.publisher,
+    publicationYear: row?.publicationYear ?? fallback.publicationYear,
+    bookLanguage: row?.bookLanguage || fallback.bookLanguage,
+    pageCount: row?.pageCount ?? fallback.pageCount,
+    bookFormat: row?.bookFormat || fallback.bookFormat,
+    dimensions: row?.dimensions || fallback.dimensions,
     price: Number(row?.price ?? fallback.price ?? 0),
     priceOld: Number(row?.originalPrice ?? fallback.priceOld ?? row?.price ?? fallback.price ?? 0),
+    discountPercentage: Number(row?.discountPercentage ?? fallback.discountPercentage ?? 0),
+    thumbnailUrl: row?.thumbnailUrl || fallback.thumbnailUrl,
     image,
     cover: image,
     desc: row?.description || fallback.desc || "",
@@ -62,7 +75,29 @@ export function normalizeBook(row, fallback = {}) {
     stockQuantity: Number(row?.stockQuantity ?? fallback.stockQuantity ?? 0),
     rating: Number(row?.averageRating ?? fallback.rating ?? 4.7),
     productVariationId: variation.id || row?.productVariationId,
-    variations: row?.variations || []
+    variations: (row?.variations || []).map((item) => ({
+      ...item,
+      additionalPrice: Number(item.additionalPrice || 0),
+      stockQuantity: Number(item.stockQuantity || 0),
+      active: item.active !== false
+    })),
+    media: row?.media || []
+  };
+}
+
+export function normalizeReview(row) {
+  return {
+    ...row,
+    id: row?.id,
+    rating: Number(row?.rating || 0),
+    comment: row?.comment || "",
+    username: row?.username || "Aivira Reader",
+    adminReply: row?.adminReply || "",
+    images: row?.images || [],
+    createdAt: row?.createdAt,
+    orderId: row?.orderId,
+    orderItemId: row?.orderItemId,
+    userId: row?.userId
   };
 }
 
