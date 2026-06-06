@@ -785,24 +785,30 @@ Goal: expose practical user/RBAC management.
 
 Users:
 
-- List/filter by keyword, role, active, locked, emailVerified.
-- Detail view with roles and account flags.
-- Lock/unlock user.
-- Replace roles with USER/ADMIN.
-- Prevent self-lock/self-role-change in UI when current user id matches.
+- [x] `/admin/users` route and admin sidebar item.
+- [x] List/filter by keyword, role, active, locked, emailVerified.
+- [x] Pagination with backend `PageResponse`.
+- [x] Detail drawer with roles and account flags.
+- [x] Lock/unlock user with confirmation.
+- [x] Replace roles with USER/ADMIN.
+- [x] Prevent self-lock/self-role-change in UI when current user id matches.
+- [x] Disable lock/unlock/role edit for deleted users.
 
 Permissions:
 
-- Existing role permissions page should be verified.
-- Direct user permissions:
-  - list effective/direct permissions.
-  - grant permission with optional reason/expiresAt.
-  - revoke permission.
+- [x] Existing role permissions page remains wired and is polished.
+- [x] Role permission list is searchable and limited to USER/ADMIN roles returned by backend.
+- [x] Direct user permission workspace accepts manual user id and `/admin/permissions?userId=<id>`.
+- [x] Direct user permissions:
+  - [x] list effective/direct/role permissions.
+  - [x] grant permission with optional reason/expiresAt.
+  - [x] revoke permission with confirmation.
 
 Acceptance:
 
-- Admin can inspect and change access state safely.
-- No seller/shop roles are shown.
+- [x] Admin can inspect and change access state safely in UI.
+- [x] No seller/shop roles are shown.
+- [ ] Manual browser smoke remains to verify user lock/unlock, role update, and direct permission grant/revoke against live backend.
 
 ## Phase FE-12: Admin Coupons And Promotions
 
