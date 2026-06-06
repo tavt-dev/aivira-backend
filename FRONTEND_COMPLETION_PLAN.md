@@ -868,39 +868,192 @@ Acceptance:
 
 ## Phase FE-13: Admin Review Moderation
 
-Goal: admin can moderate bookstore reviews.
+Goal: build a practical admin review moderation workspace for bookstore reviews. Admin can list/filter reviews, inspect review detail, approve/unapprove, hide/show, reply, and clear reply. Public product pages continue to show only approved, visible, non-deleted reviews. No seller/shop/merchant reply or moderation scope is introduced.
+
+Routes and navigation:
+
+- [x] Add `AdminReviewsPage`.
+- [x] Add route `/admin/reviews`.
+- [x] Add `Reviews` sidebar item in `AdminLayout`, placed after `Discounts` or before `Users`.
+- [x] Keep `/admin/reviews` protected by the existing admin route guard.
+- [x] Do not add broken placeholder routes or separate review settings pages.
+
+API usage:
+
+- [x] Use only `adminReviewsApi.js`.
+- [x] List reviews with:
+  - `getAdminReviews({ approved, visible, rating, keyword, productId, userId, page, size })`.
+- [x] Moderate with:
+  - `moderateReview(reviewId, { approved, visible })`.
+- [x] Reply with:
+  - `replyReview(reviewId, { adminReply })`.
+- [x] Do not call `fetch` directly from components.
+- [x] Do not add new backend endpoints.
 
 List filters:
 
-- approved.
-- visible.
-- rating.
-- keyword.
-- productId.
-- userId.
-- page/size.
+- [x] `approved`: all, approved, pending/unapproved.
+- [x] `visible`: all, visible, hidden.
+- [x] `rating`: all, 5, 4, 3, 2, 1.
+- [x] `keyword`: free text search.
+- [x] `productId`: numeric book id filter.
+- [x] `userId`: customer id filter.
+- [x] `page` and `size`, default `page=1`, `size=20`.
+- [x] Filters are stored in URL query params so refresh/share keeps the same view.
+- [x] Apply resets `page=1`.
+- [x] Clear removes filters and resets page/size defaults.
+- [x] Frontend validates numeric `productId`, `rating`, `page`, and `size` before API call.
 
-Actions:
+Review list/table:
 
-- Approve/unapprove.
-- Hide/show.
-- Reply.
-- Clear reply.
+- [x] Render dense admin table/card rows with:
+  - rating stars.
+  - comment preview.
+  - image count or first thumbnail.
+  - book name.
+  - SKU.
+  - customer username and user id.
+  - order id and order item id.
+  - approved status.
+  - visible status.
+  - deleted state if `deletedAt` exists.
+  - admin reply presence.
+  - createdAt and updatedAt.
+- [x] Use backend `PageResponse` for pagination.
+- [x] Support loading, error, and empty states while keeping filters visible.
+- [x] Display backend `error.message` for failed list/moderation/reply calls.
 
-Review display:
+Review detail drawer:
 
-- Rating.
-- Comment.
-- Images.
-- Product/book info.
-- Customer info.
-- Order/order item id.
-- Moderation metadata.
+- [x] Open detail drawer/modal from each row.
+- [x] Show full review information:
+  - review id.
+  - rating.
+  - full comment.
+  - images as thumbnail grid.
+  - productId, productVariationId, productName, sku.
+  - userId and username.
+  - orderId and orderItemId.
+  - approved, visible, deletedAt.
+  - moderatedBy, moderatedAt.
+  - adminReply, repliedBy, repliedAt.
+  - createdAt, updatedAt.
+- [x] If review image URLs exist, clicking thumbnail opens a larger preview panel/modal.
+- [x] If deleted, show disabled action state and clear explanation that deleted reviews should not be moderated back into public visibility.
+
+Moderation actions:
+
+- [x] Quick action `Approve & show` sends `{ approved: true, visible: true }`.
+- [x] Quick action `Unapprove` sends `{ approved: false, visible: false }`.
+- [x] Quick action `Hide` sends `{ approved: currentApproved, visible: false }`.
+- [x] Quick action `Show` sends `{ approved: currentApproved, visible: true }`.
+- [x] Detail drawer also has explicit approved/visible toggles with a save button.
+- [x] Disable actions while request is in flight.
+- [x] After success, update selected review detail from API response.
+- [x] After success, refresh current list page so filters/counts stay accurate.
+- [x] If backend rejects moderation, show `error.message` and keep local state unchanged.
+
+Admin reply:
+
+- [x] Reply form uses textarea max `2000` characters to match `ReviewReplyRequest`.
+- [x] Trim reply before sending.
+- [x] Submit non-blank reply with `{ adminReply }`.
+- [x] Clear reply sends `{ adminReply: "" }`.
+- [x] Show existing reply, repliedBy, and repliedAt in detail.
+- [x] Make copy explicit: this is an admin reply, not shop/seller reply.
+- [x] After reply/clear success, update selected detail and current row.
+
+Public visibility verification:
+
+- [x] Product detail public reviews remain driven by `GET /products/{slug}/reviews`.
+- [ ] Admin-approved and visible review appears in public list after refresh.
+- [ ] Hidden or unapproved review does not appear publicly.
+- [ ] Admin reply appears on public product detail only when review is public.
+
+Component structure:
+
+- [x] Keep page code maintainable by extracting components if needed:
+  - `AdminReviewFilters`.
+  - `AdminReviewTable`.
+  - `AdminReviewDetailDrawer`.
+  - `AdminReviewModerationActions`.
+  - `AdminReviewReplyForm`.
+  - `ReviewImagePreview`.
+- [x] Reuse existing `RatingStars` from customer review components if suitable.
+- [x] Reuse `formatDateTime` and existing pagination helpers/patterns from admin orders/users.
+- [x] Add small review mapper helpers only if backend response variants need normalization.
+
+i18n:
+
+- [x] Add EN/VI keys for:
+  - reviews sidebar label.
+  - review filters.
+  - approved/unapproved/pending labels.
+  - visible/hidden labels.
+  - deleted review label.
+  - rating labels.
+  - moderation actions.
+  - reply form.
+  - clear reply confirmation.
+  - review detail sections.
+  - image preview alt text.
+  - loading/error/empty states.
+  - success messages.
+- [x] Remove hardcoded user-facing strings from the new page.
+
+Plan tracking:
+
+- [x] Convert FE-13 to checklist during implementation.
+- [x] Tick implemented FE-13 items after build passes.
+- [x] Keep FE-14+ unchecked.
+- [ ] Leave live backend smoke items unchecked until manually verified.
+
+Test plan:
+
+- [x] Run build:
+
+```powershell
+cd frontend
+npm run build
+```
+
+- [ ] Manual smoke with backend:
+  - Login admin and open `/admin/reviews`.
+  - List loads with pagination.
+  - Filter by approved, visible, rating, keyword, productId, userId.
+  - Open review detail and verify product/customer/order metadata.
+  - Approve and show a pending review.
+  - Hide an approved review.
+  - Unapprove a review.
+  - Add admin reply.
+  - Clear admin reply.
+  - Backend errors display without crashing page.
+  - Approved visible review appears on public product detail.
+  - Hidden/unapproved review disappears from public product detail.
+  - Admin reply appears publicly only for approved visible review.
+  - Mobile/tablet review table and drawer remain usable.
 
 Acceptance:
 
-- Public only sees approved visible reviews.
-- Admin reply appears on public product detail.
+- [x] `/admin/reviews` exists and is reachable from admin sidebar.
+- [x] Admin can list and filter reviews using backend-supported filters.
+- [x] Admin can inspect review detail including book, customer, order item, images, and moderation metadata.
+- [x] Admin can approve/unapprove and hide/show reviews.
+- [x] Admin can add and clear `adminReply`.
+- [ ] Public product detail only shows approved, visible, non-deleted reviews.
+- [ ] Admin reply appears on public product detail after approval.
+- [x] All API calls go through `adminReviewsApi.js`.
+- [x] No seller/shop/merchant wording, role, route, or behavior is introduced.
+- [x] `npm run build` passes.
+
+Assumptions:
+
+- Backend Phase 6 review APIs are already implemented.
+- Backend admin review list supports only `approved`, `visible`, `rating`, `keyword`, `productId`, `userId`, `page`, and `size`.
+- Review image upload is not part of FE-13; admin only views existing image metadata.
+- Review deletion remains customer soft-delete flow; admin moderation uses visibility and approval only.
+- Blank `adminReply` clears the reply.
+- `ReviewResponse` has enough fields for admin list/detail without another detail endpoint.
 
 ## Phase FE-14: Admin Payments And Reconciliation
 
