@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 
 import {
   cancelAdminOrder,
@@ -43,8 +44,10 @@ const emptyFilters = {
 
 export default function AdminOrdersPage() {
   const { t, i18n } = useTranslation();
-  const [filters, setFilters] = useState(emptyFilters);
-  const [appliedFilters, setAppliedFilters] = useState(emptyFilters);
+  const [searchParams] = useSearchParams();
+  const initialFilters = useMemo(() => filtersFromSearch(searchParams), [searchParams]);
+  const [filters, setFilters] = useState(initialFilters);
+  const [appliedFilters, setAppliedFilters] = useState(initialFilters);
   const [orders, setOrders] = useState([]);
   const [pageMeta, setPageMeta] = useState(createEmptyMeta(emptyFilters));
   const [loading, setLoading] = useState(false);
@@ -60,6 +63,12 @@ export default function AdminOrdersPage() {
   useEffect(() => {
     refreshOrders(appliedFilters);
   }, [appliedFilters]);
+
+  useEffect(() => {
+    const next = filtersFromSearch(searchParams);
+    setFilters(next);
+    setAppliedFilters(next);
+  }, [searchParams]);
 
   async function refreshOrders(nextFilters = appliedFilters) {
     setLoading(true);
@@ -536,6 +545,23 @@ function formatAddress(order) {
 
 function statusLabel(status, t) {
   return t(`orders.statusLabels.${status}`, { defaultValue: status || "-" });
+}
+
+function filtersFromSearch(searchParams) {
+  return {
+    status: ORDER_STATUSES.includes(searchParams.get("status")) ? searchParams.get("status") : "",
+    keyword: searchParams.get("keyword") || "",
+    fromDate: searchParams.get("fromDate") || "",
+    toDate: searchParams.get("toDate") || "",
+    page: positiveNumber(searchParams.get("page"), 1),
+    size: PAGE_SIZES.includes(Number(searchParams.get("size"))) ? Number(searchParams.get("size")) : 20,
+  };
+}
+
+function positiveNumber(value, fallback) {
+  const text = String(value ?? "").trim();
+  if (!/^\d+$/.test(text)) return fallback;
+  return Number(text) > 0 ? Number(text) : fallback;
 }
 
 function createEmptyMeta(filters) {

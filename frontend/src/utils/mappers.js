@@ -179,9 +179,17 @@ export function normalizePaymentGroup(row) {
   return {
     ...row,
     paymentGroupCode: row?.paymentGroupCode || row?.paymentCode,
+    paymentCode: row?.paymentCode || row?.paymentGroupCode,
     status: row?.status || row?.paymentStatus,
     method: row?.method || row?.paymentMethod,
+    amount: Number(row?.amount ?? row?.totalAmount ?? 0),
     totalAmount: Number(row?.totalAmount ?? row?.amount ?? 0),
+    providerTxnRef: row?.providerTxnRef,
+    providerTransactionId: row?.providerTransactionId,
+    expiresAt: row?.expiresAt,
+    paidAt: row?.paidAt,
+    payments: row?.payments || [],
+    orders: row?.orders || [],
     paymentUrl: row?.paymentUrl,
     deeplink: row?.deeplink,
     qrCodeUrl: row?.qrCodeUrl
