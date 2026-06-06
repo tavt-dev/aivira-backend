@@ -16,6 +16,7 @@ import OrdersPage from "./pages/OrdersPage.jsx";
 import PaymentResultPage from "./pages/PaymentResultPage.jsx";
 import ProductPage from "./pages/ProductPage.jsx";
 import AdminCategoriesPage from "./pages/admin/AdminCategoriesPage.jsx";
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
 import AdminForbiddenPage from "./pages/admin/AdminForbiddenPage.jsx";
 import AdminLayout from "./pages/admin/AdminLayout.jsx";
 import AdminOrdersPendingPage from "./pages/admin/AdminOrdersPendingPage.jsx";
@@ -102,7 +103,7 @@ export default function App() {
     <>
       {!isAdminRoute && <MotionChrome />}
       <Routes>
-        <Route path="/admin/login" element={<Navigate to="/?auth=login&next=/admin/products" replace />} />
+        <Route path="/admin/login" element={<Navigate to="/?auth=login&next=/admin/dashboard" replace />} />
         <Route path="/admin/forbidden" element={<AdminForbiddenPage />} />
         <Route
           path="/admin"
@@ -112,7 +113,8 @@ export default function App() {
             </RequireAdmin>
           }
         >
-          <Route index element={<Navigate to="/admin/products" replace />} />
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboardPage />} />
           <Route path="products" element={<AdminProductsPage />} />
           <Route path="categories" element={<AdminCategoriesPage />} />
           <Route path="payments" element={<AdminPaymentsPage />} />

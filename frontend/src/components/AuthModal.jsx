@@ -108,7 +108,7 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
 
     if (canAccessAdmin) {
       onClose();
-      navigate("/admin/products", { replace: true });
+      navigate("/admin/dashboard", { replace: true });
       return;
     }
 
