@@ -638,49 +638,55 @@ Acceptance:
 
 ## Phase FE-8: Admin Layout And Dashboard
 
+Status: completed in current workspace. `npm run build` passes.
+
 Goal: admin starts with a practical bookstore operations dashboard.
 
 Admin navigation:
 
-- Dashboard.
-- Books.
-- Categories.
-- Orders.
-- Payments.
-- Coupons.
-- Promotions.
-- Reviews.
-- Users.
-- Roles/Permissions.
-- Settings/docs links if needed.
+- [x] Dashboard.
+- [x] Books.
+- [x] Categories.
+- [x] Orders pending placeholder.
+- [x] Payments.
+- [x] Roles/Permissions.
+- [x] Keep users/coupons/promotions/reviews routes out until their pages are implemented.
 
 Dashboard widgets:
 
-- Revenue.
-- Order count.
-- Successful/failed payments.
-- New users.
-- Pending orders.
-- Pending payments.
-- Low-stock count.
-- Sales points table/chart.
-- Order status counts.
-- Top books.
-- Low-stock books.
+- [x] Revenue.
+- [x] Order count.
+- [x] Successful/failed payments.
+- [x] New users.
+- [x] Pending orders.
+- [x] Pending payments.
+- [x] Low-stock count.
+- [x] Sales points table/bar list.
+- [x] Order status counts.
+- [x] Top books.
+- [x] Low-stock books.
 
 Tasks:
 
-- Add `AdminDashboardPage`.
-- Wire `/admin/dashboard`.
-- Make `/admin` redirect to dashboard, not products.
-- Add date range filters.
-- Add limit/threshold controls for top/low-stock.
-- Use compact admin UI with tables and summary tiles.
+- [x] Add `AdminDashboardPage`.
+- [x] Wire `/admin/dashboard`.
+- [x] Make `/admin` redirect to dashboard, not products.
+- [x] Make `/admin/login` use `next=/admin/dashboard`.
+- [x] Add date range filters.
+- [x] Add limit/threshold controls for top/low-stock.
+- [x] Fetch dashboard endpoints in parallel.
+- [x] Use per-section error messages.
+- [x] Use compact admin UI with tables and summary tiles.
+- [x] Add EN/VI i18n keys for dashboard.
 
 Acceptance:
 
-- Admin can understand store health from one screen.
-- Dashboard uses backend live data.
+- [x] Admin can understand store health from one screen.
+- [x] Dashboard uses backend live data.
+- [x] Existing admin routes remain wired.
+- [x] No seller/shop/merchant navigation is introduced.
+- [x] `npm run build` passes.
+- [ ] Manual browser smoke checklist remains to run against a live backend.
 
 ## Phase FE-9: Admin Catalog Management
 
