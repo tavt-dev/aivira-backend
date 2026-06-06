@@ -17,6 +17,7 @@ import PaymentResultPage from "./pages/PaymentResultPage.jsx";
 import ProductPage from "./pages/ProductPage.jsx";
 import AdminCategoriesPage from "./pages/admin/AdminCategoriesPage.jsx";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
+import AdminDiscountsPage from "./pages/admin/AdminDiscountsPage.jsx";
 import AdminForbiddenPage from "./pages/admin/AdminForbiddenPage.jsx";
 import AdminLayout from "./pages/admin/AdminLayout.jsx";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage.jsx";
@@ -120,6 +121,9 @@ export default function App() {
           <Route path="categories" element={<AdminCategoriesPage />} />
           <Route path="orders" element={<AdminOrdersPage />} />
           <Route path="orders-pending" element={<Navigate to="/admin/orders" replace />} />
+          <Route path="discounts" element={<AdminDiscountsPage />} />
+          <Route path="coupons" element={<Navigate to="/admin/discounts" replace />} />
+          <Route path="promotions" element={<Navigate to="/admin/discounts" replace />} />
           <Route path="payments" element={<AdminPaymentsPage />} />
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="permissions" element={<AdminPermissionsPage />} />
