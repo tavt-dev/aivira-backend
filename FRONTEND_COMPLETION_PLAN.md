@@ -1059,18 +1059,73 @@ Assumptions:
 
 Goal: admin payment screen is operationally useful.
 
-Tasks:
+Backend prerequisite:
 
-- Audit existing `AdminPaymentsPage`.
-- Show payment group detail.
-- Show payment status, method, provider transaction ids, amount, paidAt.
-- Reconcile payment group.
-- Link payment group to order detail.
-- Make provider callback/IPN pages not customer-facing except result page.
+- [x] Add `GET /admin/payments/groups/{paymentGroupCode}`.
+- [x] Protect admin payment group read with `PAYMENT_MANAGE_ALL` or `PAYMENT_READ_ALL`.
+- [x] Reuse `PaymentGroupResponse`; no new DTO.
+- [x] Keep existing reconcile endpoint unchanged.
+- [x] No schema migration.
+- [x] No checkout/retry/callback/IPN behavior change.
+
+Frontend API:
+
+- [x] Add `getAdminPaymentGroup(code)` in `adminPaymentsApi.js`.
+- [x] Keep `reconcilePaymentGroup(code)`.
+- [x] Stop using customer `getPaymentGroup()` in admin payments page.
+
+Admin payments workspace:
+
+- [x] Audit and replace existing simple `AdminPaymentsPage`.
+- [x] Lookup payment group by code.
+- [x] Support `/admin/payments?code=<paymentGroupCode>` initial lookup.
+- [x] Show payment group detail:
+  - payment code.
+  - method.
+  - status.
+  - amount.
+  - provider txn ref.
+  - provider transaction id.
+  - paidAt.
+  - expiresAt.
+  - payment URL/deeplink/QR availability.
+- [x] Show payment rows:
+  - payment id.
+  - order code/id.
+  - method.
+  - status.
+  - amount.
+  - transaction id.
+  - paidAt.
+- [x] Show related orders from payment group response.
+- [x] Link related orders to `/admin/orders?keyword=<orderCode>`.
+- [x] Update `AdminOrdersPage` to read initial query params.
+- [x] Reconcile payment group from admin page.
+- [x] Show reconcile result:
+  - before/after local status.
+  - provider status.
+  - changed flag.
+  - provider txn ref.
+  - checkedAt.
+  - provider message.
+- [x] Refresh payment group after reconcile.
+- [x] Confirm before reconciling terminal statuses.
+- [x] Display backend `error.message`.
+- [x] Add EN/VI i18n keys.
+
+Provider/callback visibility:
+
+- [x] Do not add callback/IPN routes to customer or admin navigation.
+- [x] Keep customer-facing payment result page unchanged.
 
 Acceptance:
 
-- Admin can investigate pending/failed payments and run reconcile.
+- [x] Admin can investigate payment groups by code.
+- [x] Admin can see payment rows and related orders.
+- [x] Admin can run reconcile.
+- [x] Admin order link uses keyword query.
+- [x] Admin payments page does not use customer self payment endpoint.
+- [ ] Live provider smoke remains to run reconcile against sandbox data.
 
 ## Phase FE-15: UI System, Accessibility, And Responsiveness
 
