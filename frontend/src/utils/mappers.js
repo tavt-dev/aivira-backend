@@ -108,10 +108,50 @@ export function normalizeOrder(row) {
     orderCode: row?.orderCode || String(row?.id || ""),
     orderStatus: row?.orderStatus || row?.status || "UNKNOWN",
     totalAmount: Number(row?.totalAmount || 0),
+    subtotal: Number(row?.subtotal || 0),
+    shippingFee: Number(row?.shippingFee || 0),
+    discountAmount: Number(row?.discountAmount || 0),
+    couponCode: row?.couponCode,
+    notes: row?.notes,
+    cancelReason: row?.cancelReason,
     paymentGroupCode: row?.paymentGroupCode,
     paymentMethod: row?.paymentMethod,
     paymentStatus: row?.paymentStatus,
-    itemCount: row?.itemCount || row?.items?.length || 0
+    paidAt: row?.paidAt,
+    refund: row?.refund,
+    shippingRecipientName: row?.shippingRecipientName || row?.recipientName,
+    shippingPhoneNumber: row?.shippingPhoneNumber || row?.phoneNumber,
+    shippingAddressLine: row?.shippingAddressLine || row?.addressLine,
+    shippingWard: row?.shippingWard || row?.ward,
+    shippingDistrict: row?.shippingDistrict || row?.district,
+    shippingCity: row?.shippingCity || row?.city,
+    itemCount: row?.itemCount || row?.items?.length || 0,
+    items: (row?.items || []).map(normalizeOrderItem),
+    createdAt: row?.createdAt,
+    updatedAt: row?.updatedAt
+  };
+}
+
+export function normalizeOrderItem(row) {
+  const quantity = Number(row?.quantity || 1);
+  const finalPrice = Number(row?.finalPrice ?? row?.price ?? row?.totalPrice ?? 0);
+
+  return {
+    ...row,
+    id: row?.id ?? row?.orderItemId,
+    productId: row?.productId,
+    productVariationId: row?.productVariationId,
+    productName: row?.productName || row?.title || "Aivira Book",
+    sku: row?.sku,
+    variationColor: row?.variationColor || row?.color,
+    variationSize: row?.variationSize || row?.size,
+    thumbnailUrl: row?.thumbnailUrl || row?.image,
+    basePrice: Number(row?.basePrice || 0),
+    additionalPrice: Number(row?.additionalPrice || 0),
+    discountAmount: Number(row?.discountAmount || 0),
+    finalPrice,
+    quantity,
+    lineTotal: finalPrice * quantity
   };
 }
 
@@ -125,6 +165,22 @@ export function normalizePaymentGroup(row) {
     paymentUrl: row?.paymentUrl,
     deeplink: row?.deeplink,
     qrCodeUrl: row?.qrCodeUrl
+  };
+}
+
+export function normalizeAddress(row) {
+  if (!row) return null;
+
+  return {
+    ...row,
+    id: row.id,
+    recipientName: row.recipientName || "",
+    phoneNumber: row.phoneNumber || "",
+    addressLine: row.addressLine || "",
+    ward: row.ward || "",
+    district: row.district || "",
+    city: row.city || "",
+    defaultAddress: Boolean(row.defaultAddress)
   };
 }
 
