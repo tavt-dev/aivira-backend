@@ -9,7 +9,7 @@ const links = [
   ["/admin/dashboard", "admin.dashboard"],
   ["/admin/products", "admin.products"],
   ["/admin/categories", "admin.categories"],
-  ["/admin/orders-pending", "admin.orders"],
+  ["/admin/orders", "admin.orders"],
   ["/admin/payments", "admin.payments"],
   ["/admin/permissions", "admin.permissions"]
 ];

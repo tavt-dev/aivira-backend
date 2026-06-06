@@ -739,39 +739,45 @@ Goal: replace pending-only orders page with full admin order operations.
 
 Pages:
 
-- `AdminOrdersPage`
-- `AdminOrderDetailPage` or drawer/modal detail.
+- [x] `AdminOrdersPage`.
+- [x] Order detail drawer/modal.
+- [x] `/admin/orders` route.
+- [x] `/admin/orders-pending` redirects to `/admin/orders`.
+- [x] Admin sidebar points to `/admin/orders`.
 
 List filters:
 
-- status.
-- keyword.
-- fromDate.
-- toDate.
-- page/size.
+- [x] status.
+- [x] keyword.
+- [x] fromDate.
+- [x] toDate.
+- [x] page/size.
+- [x] Frontend blocks invalid date ranges.
 
 Actions:
 
-- Confirm.
-- Mark packing.
-- Mark shipping.
-- Mark completed.
-- Cancel.
-- Mark refunded.
+- [x] Confirm.
+- [x] Mark packing.
+- [x] Mark shipping.
+- [x] Mark completed.
+- [x] Cancel.
+- [x] Mark refunded.
 
 UX rules:
 
-- Only show valid next actions based on current status.
-- Paid cancellation should guide admin to manual refund.
-- Manual refund form requires amount, reason, note.
-- Show stock restore/coupon/refund behavior notes where useful.
-- Show payment group/payment status.
+- [x] Only show valid next actions based on current status.
+- [x] Paid cancellation guides admin to manual refund by showing refund instead of cancel.
+- [x] Manual refund form requires amount, reason, note.
+- [x] Show stock restore/manual refund behavior notes where useful.
+- [x] Show payment group/payment status.
+- [x] Backend `error.message` is displayed for invalid transitions/refund/cancel failures.
 
 Acceptance:
 
-- Admin can run COD order lifecycle end to end.
-- Invalid transitions are not offered in UI and backend errors are still handled.
-- Paid pre-shipping order can be marked refunded.
+- [ ] Manual smoke: admin can run COD order lifecycle end to end.
+- [x] Invalid transitions are not offered in UI and backend errors are still handled.
+- [x] Paid pre-shipping order can be marked refunded from the UI.
+- [ ] Manual smoke remains to verify refund/cancel behavior against live backend data.
 
 ## Phase FE-11: Admin Users, Roles, And Permissions
 

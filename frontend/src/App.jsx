@@ -19,7 +19,7 @@ import AdminCategoriesPage from "./pages/admin/AdminCategoriesPage.jsx";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
 import AdminForbiddenPage from "./pages/admin/AdminForbiddenPage.jsx";
 import AdminLayout from "./pages/admin/AdminLayout.jsx";
-import AdminOrdersPendingPage from "./pages/admin/AdminOrdersPendingPage.jsx";
+import AdminOrdersPage from "./pages/admin/AdminOrdersPage.jsx";
 import AdminPaymentsPage from "./pages/admin/AdminPaymentsPage.jsx";
 import AdminPermissionsPage from "./pages/admin/AdminPermissionsPage.jsx";
 import AdminProductsPage from "./pages/admin/AdminProductsPage.jsx";
@@ -117,9 +117,10 @@ export default function App() {
           <Route path="dashboard" element={<AdminDashboardPage />} />
           <Route path="products" element={<AdminProductsPage />} />
           <Route path="categories" element={<AdminCategoriesPage />} />
+          <Route path="orders" element={<AdminOrdersPage />} />
+          <Route path="orders-pending" element={<Navigate to="/admin/orders" replace />} />
           <Route path="payments" element={<AdminPaymentsPage />} />
           <Route path="permissions" element={<AdminPermissionsPage />} />
-          <Route path="orders-pending" element={<AdminOrdersPendingPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
         <Route element={<Layout user={user} onAuth={() => openAuth("login")} />}>
