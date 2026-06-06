@@ -301,56 +301,61 @@ Acceptance:
 
 ## Phase FE-5: Product Detail, Reviews, And Add-To-Cart
 
+Status: completed in current workspace. `npm run build` passes.
+
 Goal: product detail should feel complete for a book.
 
 Product detail content:
 
-- Cover gallery.
-- Title.
-- Author.
-- ISBN.
-- Publisher.
-- Publication year.
-- Language.
-- Page count.
-- Format.
-- Dimensions.
-- Description.
-- Category.
-- Price/discount.
-- Stock.
-- Variation selector.
-- Quantity stepper.
-- Add to cart.
+- [x] Cover gallery.
+- [x] Title.
+- [x] Author.
+- [x] ISBN.
+- [x] Publisher.
+- [x] Publication year.
+- [x] Language.
+- [x] Page count.
+- [x] Format.
+- [x] Dimensions.
+- [x] Description.
+- [x] Category.
+- [x] Price/discount.
+- [x] Stock.
+- [x] Variation selector.
+- [x] Quantity stepper.
+- [x] Add to cart.
 
 Reviews:
 
-- Public approved reviews list.
-- Filter by rating.
-- Sort newest/oldest/rating.
-- Admin reply display.
-- Customer review CTA when applicable.
+- [x] Public approved reviews list.
+- [x] Filter by rating.
+- [x] Sort newest/oldest/rating.
+- [x] Admin reply display.
+- [x] Customer review CTA when applicable.
 
 Tasks:
 
-- Extend `ProductPage` with book metadata.
-- Load reviews from `/products/{slug}/reviews`.
-- Add review components:
-  - `ReviewList`
-  - `ReviewCard`
-  - `RatingStars`
-  - `ReviewForm`
-- Create/update/delete review flows from order detail or order item actions.
-- Handle backend errors:
-  - order not completed
-  - duplicate review
-  - review not allowed
+- [x] Extend `ProductPage` with book metadata.
+- [x] Load reviews from `/products/{slug}/reviews`.
+- [x] Add review components:
+  - [x] `ReviewList`
+  - [x] `ReviewCard`
+  - [x] `RatingStars`
+  - [x] `ReviewForm`
+- [x] Create review flow from completed order item actions.
+- [x] Keep update/delete review API support available for later UI.
+- [x] Handle backend review errors through inline backend messages:
+  - [x] order not completed
+  - [x] duplicate review
+  - [x] review not allowed
+- [x] Add i18n keys for product metadata, variations, reviews, and order review CTA.
 
 Acceptance:
 
-- Public product detail includes book metadata and reviews.
-- Customer can add selected variation to cart.
-- Customer can review completed purchased item.
+- [x] Public product detail includes book metadata and reviews.
+- [x] Customer can add selected variation to cart.
+- [x] Customer can review completed purchased item.
+- [x] `npm run build` passes.
 
 ## Phase FE-6: Cart And Checkout
 
