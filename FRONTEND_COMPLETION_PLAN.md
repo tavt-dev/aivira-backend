@@ -694,21 +694,22 @@ Goal: admin book/category management is complete and ergonomic.
 
 Books:
 
-- List/search/filter admin products.
-- Create book.
-- Edit book.
-- Soft delete book.
-- Upload/update/delete media.
-- Manage variations.
-- Update stock.
-- Validate required fields:
+- [x] List/search/filter admin products using backend `status`, `categoryId`, `keyword`, `page`, and `size`.
+- [x] Render dense admin book list with cover, title, author, ISBN, category, price, stock, status, featured state, and timestamps.
+- [x] Create book with bookstore metadata and default variation.
+- [x] Edit book metadata, pricing, category, and featured flag.
+- [x] Soft delete book with confirmation.
+- [x] Upload/update/delete media.
+- [x] Manage variations with create/edit/delete.
+- [x] Update variation stock.
+- [x] Validate required fields:
   - productName
   - sku
   - bookAuthor
   - categoryId
   - price
   - at least one variation
-- Book metadata fields:
+- [x] Book metadata fields:
   - author
   - ISBN
   - publisher
@@ -717,20 +718,20 @@ Books:
   - page count
   - format
   - dimensions
-- Duplicate ISBN/SKU/slug backend errors displayed.
+- [x] Duplicate ISBN/SKU/slug backend errors displayed through backend `error.message`.
 
 Categories:
 
-- Tree/list view.
-- Create/update/delete category.
-- Parent category selector.
-- Active/visible flags.
-- Display order.
+- [x] Tree/list view.
+- [x] Create/update/delete category.
+- [x] Parent category selector.
+- [x] Active/visible flags.
+- [x] Display order.
 
 Acceptance:
 
-- Admin can manage all bookstore catalog data without Postman.
-- New book created from FE is immediately visible in public catalog.
+- [x] Admin can manage bookstore catalog data without Postman for books, variations, media, stock, and categories.
+- [ ] Manual browser smoke remains to verify a newly created active book appears in public catalog with a live backend.
 
 ## Phase FE-10: Admin Order Lifecycle And Manual Refund
 

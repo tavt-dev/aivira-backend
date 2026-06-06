@@ -57,6 +57,8 @@ export function normalizeBook(row, fallback = {}) {
     categoryName: row?.categoryName || fallback.categoryName,
     categorySlug: row?.categorySlug || fallback.categorySlug,
     sku: row?.sku || fallback.sku,
+    brand: row?.brand || fallback.brand,
+    material: row?.material || fallback.material,
     isbn: row?.isbn || fallback.isbn,
     publisher: row?.publisher || fallback.publisher,
     publicationYear: row?.publicationYear ?? fallback.publicationYear,
@@ -67,6 +69,7 @@ export function normalizeBook(row, fallback = {}) {
     price: Number(row?.price ?? fallback.price ?? 0),
     priceOld: Number(row?.originalPrice ?? fallback.priceOld ?? row?.price ?? fallback.price ?? 0),
     discountPercentage: Number(row?.discountPercentage ?? fallback.discountPercentage ?? 0),
+    weight: row?.weight ?? fallback.weight,
     thumbnailUrl: row?.thumbnailUrl || fallback.thumbnailUrl,
     image,
     cover: image,
@@ -74,6 +77,11 @@ export function normalizeBook(row, fallback = {}) {
     sold: Number(row?.soldCount ?? fallback.sold ?? 0),
     stockQuantity: Number(row?.stockQuantity ?? fallback.stockQuantity ?? 0),
     rating: Number(row?.averageRating ?? fallback.rating ?? 4.7),
+    active: row?.active ?? fallback.active,
+    featured: row?.featured ?? fallback.featured,
+    status: row?.status || fallback.status,
+    createdAt: row?.createdAt || fallback.createdAt,
+    updatedAt: row?.updatedAt || fallback.updatedAt,
     productVariationId: variation.id || row?.productVariationId,
     variations: (row?.variations || []).map((item) => ({
       ...item,
@@ -214,6 +222,7 @@ export function normalizeCartItem(item) {
 export function buildProductPayload(form) {
   const price = Number(form.price || 0);
   const stockQuantity = Number(form.stockQuantity || 0);
+  const variationSku = form.variationSku || `${form.sku}-PB`;
   return {
     sku: form.sku,
     productName: form.productName,
@@ -221,6 +230,14 @@ export function buildProductPayload(form) {
     description: form.description,
     brand: form.brand || "Aivira",
     material: form.material || "Book",
+    bookAuthor: form.bookAuthor,
+    isbn: optionalString(form.isbn),
+    publisher: optionalString(form.publisher),
+    publicationYear: optionalNumber(form.publicationYear),
+    bookLanguage: optionalString(form.bookLanguage),
+    pageCount: optionalNumber(form.pageCount),
+    bookFormat: form.bookFormat || "PAPERBACK",
+    dimensions: optionalString(form.dimensions),
     categoryId: Number(form.categoryId),
     price,
     originalPrice: form.originalPrice ? Number(form.originalPrice) : price,
@@ -228,13 +245,61 @@ export function buildProductPayload(form) {
     weight: form.weight ? Number(form.weight) : null,
     variations: [
       {
-        sku: `${form.sku}-DEFAULT`,
-        color: "Default",
-        size: "Default",
-        additionalPrice: 0,
+        sku: variationSku,
+        color: form.variationColor || "Default",
+        size: form.variationSize || formatLabel(form.bookFormat || "PAPERBACK"),
+        additionalPrice: form.variationAdditionalPrice ? Number(form.variationAdditionalPrice) : 0,
         stockQuantity,
         active: true
       }
     ]
   };
+}
+
+export function buildProductUpdatePayload(form) {
+  return compactPayload({
+    sku: form.sku,
+    productName: form.productName,
+    slug: form.slug,
+    description: form.description,
+    brand: form.brand,
+    material: form.material,
+    bookAuthor: form.bookAuthor,
+    isbn: form.isbn,
+    publisher: form.publisher,
+    publicationYear: optionalNumber(form.publicationYear),
+    bookLanguage: form.bookLanguage,
+    pageCount: optionalNumber(form.pageCount),
+    bookFormat: form.bookFormat,
+    dimensions: form.dimensions,
+    categoryId: optionalNumber(form.categoryId),
+    price: optionalNumber(form.price),
+    originalPrice: optionalNumber(form.originalPrice),
+    discountPercentage: optionalNumber(form.discountPercentage),
+    weight: optionalNumber(form.weight),
+    featured: form.featured
+  });
+}
+
+function compactPayload(payload) {
+  return Object.fromEntries(Object.entries(payload).filter(([, value]) => value !== undefined));
+}
+
+function optionalString(value) {
+  if (value === undefined || value === null) return null;
+  const text = String(value).trim();
+  return text ? text : null;
+}
+
+function optionalNumber(value) {
+  if (value === undefined || value === null || value === "") return undefined;
+  return Number(value);
+}
+
+function formatLabel(value) {
+  return String(value || "PAPERBACK")
+    .toLowerCase()
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }
