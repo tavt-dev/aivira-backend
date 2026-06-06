@@ -259,42 +259,45 @@ Acceptance:
 
 ## Phase FE-4: Catalog Search, Filter, And Listing
 
+Status: completed in current workspace. `npm run build` passes.
+
 Goal: make `/category/:slug` or catalog listing useful for bookstore browsing.
 
 Filters:
 
-- Keyword.
-- Category.
-- Author.
-- Publisher.
-- ISBN.
-- Price min/max.
-- Availability.
-- Sort:
-  - newest
-  - price_asc
-  - price_desc
-  - best_selling
-  - name_asc
+- [x] Keyword.
+- [x] Category.
+- [x] Author.
+- [x] Publisher.
+- [x] ISBN.
+- [x] Price min/max.
+- [x] Availability.
+- [x] Sort:
+  - [x] newest
+  - [x] price_asc
+  - [x] price_desc
+  - [x] best_selling
+  - [x] name_asc
 
 Tasks:
 
-- Expand `catalogApi.getProducts(params)`.
-- Add filter panel suitable for desktop and mobile.
-- Keep current category route working.
-- Add "All books" route if useful:
-  - `/books`
-  - or keep `/category/all`.
-- Persist filters in URL query params.
-- Add pagination controls.
-- Add loading/empty/error states.
-- Make filter labels bookstore-specific.
+- [x] Expand `catalogApi.getProducts(params)`.
+- [x] Add filter panel suitable for desktop and mobile.
+- [x] Keep current category route working.
+- [x] Keep `/category/all` as the all-books route.
+- [x] Persist filters in URL query params.
+- [x] Add pagination controls.
+- [x] Add loading/empty/error states.
+- [x] Make filter labels bookstore-specific.
+- [x] Preserve legacy navbar `search` query by mapping it to backend `keyword`.
+- [x] Move filtering/sorting/pagination to backend `GET /products`.
 
 Acceptance:
 
-- Public user can browse and search by title/author/publisher/ISBN.
-- URL can be shared and restores filters.
-- Mobile filtering is usable.
+- [x] Public user can browse and search by title/author/publisher/ISBN.
+- [x] URL can be shared and restores filters.
+- [x] Mobile filtering is usable.
+- [x] `npm run build` passes after FE-4 changes.
 
 ## Phase FE-5: Product Detail, Reviews, And Add-To-Cart
 
