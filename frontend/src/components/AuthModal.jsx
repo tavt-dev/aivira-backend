@@ -353,14 +353,20 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
           <div className="grid gap-3" key={mode}>
             {(mode === "login" || mode === "register") && (
               <>
-                <Field label={t("auth.username")} value={form.username} onChange={(value) => update("username", value)} autoComplete="username" minLength={4} />
+                <Field
+                  label={t("auth.username")}
+                  value={form.username}
+                  onChange={(value) => update("username", value)}
+                  autoComplete="username"
+                  minLength={mode === "register" ? 4 : undefined}
+                />
                 <Field
                   label={t("auth.password")}
                   type={visiblePasswords.password ? "text" : "password"}
                   value={form.password}
                   onChange={(value) => update("password", value)}
                   autoComplete={mode === "login" ? "current-password" : "new-password"}
-                  minLength={6}
+                  minLength={mode === "register" ? 6 : undefined}
                   passwordToggle={{
                     visible: Boolean(visiblePasswords.password),
                     onToggle: () => togglePassword("password"),
@@ -503,10 +509,16 @@ function Field({ label, type = "text", value, onChange, required = true, passwor
 }
 
 function validateForm(mode, form, t) {
-  if ((mode === "login" || mode === "register") && form.username.trim().length < 4) {
+  if (mode === "login" && !form.username.trim()) {
+    throw new Error(t("auth.validation.loginUsername"));
+  }
+  if (mode === "login" && !form.password) {
+    throw new Error(t("auth.validation.loginPassword"));
+  }
+  if (mode === "register" && form.username.trim().length < 4) {
     throw new Error(t("auth.validation.username"));
   }
-  if ((mode === "login" || mode === "register") && form.password.length < 6) {
+  if (mode === "register" && form.password.length < 6) {
     throw new Error(t("auth.validation.password"));
   }
   if (mode === "register" && form.password !== form.confirmPassword) {
