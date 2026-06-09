@@ -95,7 +95,7 @@ const resources = {
         loginCopy: "Dùng tài khoản Aivira đã xác minh để tiếp tục khám phá những cuốn sách mới.",
         loginAction: "Đăng nhập",
         registerTitle: "Tạo tài khoản",
-        registerCopy: "Tạo tài khoản để lưu giỏ hàng, thanh toán và theo dõi đơn hàng.",
+        registerCopy: "Tạo tài khoản Aivira để truy cập vào thư viện sách phong phú và các tính năng cá nhân hóa.",
         registerAction: "Tạo tài khoản",
         verifyTitle: "Xác minh email",
         verifyKicker: "OTP bảo mật",
