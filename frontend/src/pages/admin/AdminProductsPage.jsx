@@ -500,7 +500,7 @@ export default function AdminProductsPage() {
                   <td className="px-4 py-3 font-semibold">{formatVND(book.price, i18n.language)}</td>
                   <td className="px-4 py-3">{book.stockQuantity}</td>
                   <td className="px-4 py-3">
-                    <StatusBadge status={book.status} featured={book.featured} />
+                    <StatusBadge status={book.status} featured={book.featured} t={t} />
                   </td>
                   <td className="px-4 py-3 text-slate-500">{formatDateTime(book.updatedAt || book.createdAt, i18n.language)}</td>
                   <td className="px-4 py-3">
@@ -802,11 +802,11 @@ function createEmptyMeta(filters) {
   };
 }
 
-function StatusBadge({ status, featured }) {
+function StatusBadge({ status, featured, t }) {
   return (
     <div className="flex flex-wrap gap-1">
       <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-bold text-slate-700">{status || "-"}</span>
-      {featured && <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-bold text-amber-700">Featured</span>}
+      {featured && <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-bold text-amber-700">{t("admin.featured")}</span>}
     </div>
   );
 }

@@ -280,7 +280,7 @@ export default function CheckoutPage({ onAuth }) {
                   onChange={(event) => setForm({ ...form, paymentMethod: event.target.value })}
                   className="sr-only"
                 />
-                {method === "VNPAY" ? "VNPay" : method === "MOMO" ? "MoMo" : "COD"}
+                {t(`checkout.methodLabel.${method}`, { defaultValue: method })}
               </label>
             ))}
           </div>

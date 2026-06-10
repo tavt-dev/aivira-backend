@@ -413,7 +413,7 @@ function CouponForm({ editing, form, onCancel, onChange, onSubmit, t }) {
       <form className="grid gap-4" onSubmit={onSubmit}>
         <Input required maxLength={50} value={form.code} onChange={(event) => onChange({ ...form, code: event.target.value.toUpperCase() })} placeholder={t("admin.code")} />
         <div className="grid gap-3 md:grid-cols-2">
-          <TypeSelect value={form.type} onChange={(value) => onChange({ ...form, type: value })} />
+          <TypeSelect value={form.type} onChange={(value) => onChange({ ...form, type: value })} t={t} />
           <Input required min="0" type="number" value={form.value} onChange={(event) => onChange({ ...form, value: event.target.value })} placeholder={t("admin.value")} />
         </div>
         <div className="grid gap-3 md:grid-cols-2">
@@ -497,11 +497,11 @@ function PromotionForm({ categories, editing, form, onCancel, onChange, onProduc
         <Input required maxLength={150} value={form.promotionName} onChange={(event) => onChange({ ...form, promotionName: event.target.value })} placeholder={t("admin.promotionName")} />
         <Textarea required value={form.description} onChange={(event) => onChange({ ...form, description: event.target.value })} placeholder={t("admin.description")} />
         <div className="grid gap-3 md:grid-cols-2">
-          <TypeSelect value={form.promotionType} onChange={(value) => onChange({ ...form, promotionType: value })} />
+          <TypeSelect value={form.promotionType} onChange={(value) => onChange({ ...form, promotionType: value })} t={t} />
           <Input required min="0" type="number" value={form.value} onChange={(event) => onChange({ ...form, value: event.target.value })} placeholder={t("admin.value")} />
           <Input min="0" type="number" value={form.maxDiscountAmount} onChange={(event) => onChange({ ...form, maxDiscountAmount: event.target.value })} placeholder={t("admin.maxDiscountAmount")} />
           <Select value={form.promotionScope} onChange={(event) => onChange({ ...form, promotionScope: event.target.value, targetId: "" })}>
-            {PROMOTION_SCOPES.map((scope) => <option key={scope} value={scope}>{scope}</option>)}
+            {PROMOTION_SCOPES.map((scope) => <option key={scope} value={scope}>{t(`admin.promotionScopeLabel.${scope}`, { defaultValue: scope })}</option>)}
           </Select>
         </div>
         {form.promotionScope === "CATEGORY" ? (
@@ -538,10 +538,10 @@ function DateRangeInputs({ form, onChange, t }) {
   );
 }
 
-function TypeSelect({ onChange, value }) {
+function TypeSelect({ onChange, t, value }) {
   return (
     <Select value={value} onChange={(event) => onChange(event.target.value)}>
-      {DISCOUNT_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}
+      {DISCOUNT_TYPES.map((type) => <option key={type} value={type}>{t(`admin.discountTypeLabel.${type}`, { defaultValue: type })}</option>)}
     </Select>
   );
 }
