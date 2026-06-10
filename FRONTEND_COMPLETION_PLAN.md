@@ -1193,25 +1193,34 @@ Acceptance:
 
 ## Phase FE-16: Internationalization And Copy
 
+Status: completed. commit `2dc488f` on `feature/frontend`.
+
 Goal: keep Vietnamese/English support maintainable.
 
 Tasks:
 
-- Audit `src/i18n.js`; split into namespace files if it becomes too large.
-- Add keys for all new pages:
-  - admin dashboard.
-  - orders/refunds.
-  - users.
-  - coupons/promotions.
-  - reviews.
-  - checkout preview.
-- Remove hardcoded user-facing strings from components.
-- Keep technical admin labels precise.
+- [x] Audit `src/i18n.js`; split into locale files.
+  - [x] Extracted 2004-line monolith into `locales/vi/translation.js` and `locales/en/translation.js`.
+  - [x] `i18n.js` replaced with lean 43-line entry point; public API unchanged.
+- [x] Add keys for all new pages:
+  - [x] admin dashboard (`admin.dashboardTitle`, `admin.metricRevenue`, `admin.salesTrend`, etc.)
+  - [x] orders/refunds (`admin.ordersTitle`, `admin.refundReason`, `admin.refundNote`, etc.)
+  - [x] users (`admin.usersTitle`, `admin.lockUser`, `admin.roleEditor`, etc.)
+  - [x] coupons/promotions (`admin.discountsTitle`, `admin.coupons`, `admin.promotions`, etc.)
+  - [x] reviews (`admin.reviewsTitle`, `admin.approveShow`, `admin.saveModeration`, etc.)
+  - [x] checkout preview (`checkout.cod`, `checkout.vnpay`, `checkout.momo`, `checkout.methodLabel.*`)
+- [x] Remove hardcoded user-facing strings from components:
+  - [x] `CheckoutPage.jsx` — payment method labels `"VNPay"/"MoMo"/"COD"` → `t("checkout.methodLabel.METHOD")`
+  - [x] `AdminDiscountsPage.jsx` — enum options `PERCENT/FIXED/PRODUCT/CATEGORY` → `t("admin.discountTypeLabel.*")` / `t("admin.promotionScopeLabel.*")`
+  - [x] `AdminProductsPage.jsx` — `"Featured"` badge → `t("admin.featured")`
+- [x] Add missing keys: `checkout.methodLabel`, `admin.discountTypeLabel`, `admin.promotionScopeLabel`, `admin.bookFormat`, `admin.shippingInfo`, `admin.orderItems`, `admin.paidAt`.
+- [x] Keep technical admin labels precise.
 
 Acceptance:
 
-- Language switch works across all new screens.
-- No visible raw translation keys.
+- [x] Language switch works across all new screens.
+- [x] No visible raw translation keys.
+- [x] `npm run build` passes (2255 modules, 0 errors).
 
 ## Phase FE-17: Frontend Testing
 
