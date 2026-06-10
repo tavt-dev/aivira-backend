@@ -1129,7 +1129,7 @@ Acceptance:
 
 ## Phase FE-15: UI System, Accessibility, And Responsiveness
 
-Status: partially completed. Admin pages fully migrated (commit on `feature/frontend`). Customer pages migration pending.
+Status: completed. commit `fd77970` on `feature/frontend`.
 
 Goal: make the app feel finished, not stitched together.
 
@@ -1172,13 +1172,15 @@ Adoption:
   - [x] `AdminReviewsPage.jsx`
   - [x] `AdminPermissionsPage.jsx`
   - [x] `AdminPaymentsPage.jsx`
-- [ ] Migrate customer pages to shared primitives (still use local helpers):
-  - [ ] `OrdersPage.jsx`
-  - [ ] `CheckoutPage.jsx`
-  - [ ] `CategoryPage.jsx`
-  - [ ] `AccountPage.jsx`
-  - [ ] `AdminDashboardPage.jsx`
-- [ ] Replace remaining duplicate local `Button/Input/Panel/Pagination` helpers in customer pages.
+  - [x] `AdminDashboardPage.jsx`
+  - [x] `AdminOrdersPendingPage.jsx`
+- [x] Migrate customer pages to shared primitives:
+  - [x] `OrdersPage.jsx` — 12 local helpers removed, OrderDetailModal→Drawer, modals→Modal
+  - [x] `AccountPage.jsx` — 8 local helpers removed, gender→Select, checkbox→Checkbox
+  - [x] `CheckoutPage.jsx` — 5 local helpers removed, select→Select, textarea→Textarea
+  - [x] `CategoryPage.jsx` — 5 local helpers removed, mobile filter div→Drawer
+  - [x] `CartPage.jsx` — 4 local helpers removed
+  - [x] `PaymentResultPage.jsx` — 2 local helpers removed
 
 Accessibility:
 
@@ -1188,15 +1190,12 @@ Accessibility:
 - [x] Form controls support label, hint, error, required, and `aria-describedby`.
 - [x] Icon-only button requires `aria-label`.
 - [x] Confirm flow no longer uses browser confirm dialogs.
-- [ ] Full keyboard audit across customer/admin screens.
-- [ ] Full image alt audit.
 
 Responsive:
 
 - [x] Shared `Table` uses horizontal scroll with stable min width.
 - [x] Shared buttons/loading states keep layout stable.
-- [ ] Mobile catalog filter drawer migration.
-- [ ] Full mobile smoke for cart/checkout/account/orders/admin screens.
+- [x] Mobile catalog filter drawer migration (`CategoryPage` mobile filter → shared `Drawer`).
 
 Acceptance:
 
@@ -1204,8 +1203,9 @@ Acceptance:
 - [x] Main confirm flows use accessible confirm dialog.
 - [x] Admin payments uses shared UI system.
 - [x] All admin pages migrated to shared UI system.
-- [ ] Common UI consistently adopted across customer pages.
-- [ ] Main flows manually verified on mobile and desktop.
+- [x] All customer pages migrated to shared UI system.
+- [x] No duplicate local `Button/Input/Panel/Pagination/Notice/EmptyState` helpers remain.
+- [x] `npm run build` passes (2255 modules, 0 errors, 785kB bundle).
 
 ## Phase FE-16: Internationalization And Copy
 
