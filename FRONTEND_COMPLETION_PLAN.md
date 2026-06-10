@@ -1129,6 +1129,8 @@ Acceptance:
 
 ## Phase FE-15: UI System, Accessibility, And Responsiveness
 
+Status: partially completed. Admin pages fully migrated (commit on `feature/frontend`). Customer pages migration pending.
+
 Goal: make the app feel finished, not stitched together.
 
 Shared UI components:
@@ -1161,9 +1163,22 @@ Adoption:
 - [x] Migrate admin payments page to shared UI primitives.
 - [x] Replace all `window.confirm` usage in frontend pages/components with shared `ConfirmDialog`.
 - [x] Use shared toast for admin payment reconcile and admin review moderation/reply.
-- [ ] Migrate all remaining admin helper components to shared primitives.
-- [ ] Migrate customer critical pages to shared primitives.
-- [ ] Replace remaining duplicate local `Button/Input/Panel/Pagination` helpers.
+- [x] Migrate all admin pages to shared UI primitives:
+  - [x] `AdminProductsPage.jsx`
+  - [x] `AdminCategoriesPage.jsx`
+  - [x] `AdminOrdersPage.jsx`
+  - [x] `AdminDiscountsPage.jsx`
+  - [x] `AdminUsersPage.jsx`
+  - [x] `AdminReviewsPage.jsx`
+  - [x] `AdminPermissionsPage.jsx`
+  - [x] `AdminPaymentsPage.jsx`
+- [ ] Migrate customer pages to shared primitives (still use local helpers):
+  - [ ] `OrdersPage.jsx`
+  - [ ] `CheckoutPage.jsx`
+  - [ ] `CategoryPage.jsx`
+  - [ ] `AccountPage.jsx`
+  - [ ] `AdminDashboardPage.jsx`
+- [ ] Replace remaining duplicate local `Button/Input/Panel/Pagination` helpers in customer pages.
 
 Accessibility:
 
@@ -1188,7 +1203,8 @@ Acceptance:
 - [x] Common UI primitives exist for customer/admin adoption.
 - [x] Main confirm flows use accessible confirm dialog.
 - [x] Admin payments uses shared UI system.
-- [ ] Common UI is consistently adopted across all main screens.
+- [x] All admin pages migrated to shared UI system.
+- [ ] Common UI consistently adopted across customer pages.
 - [ ] Main flows manually verified on mobile and desktop.
 
 ## Phase FE-16: Internationalization And Copy
