@@ -8,15 +8,17 @@ const API = "http://localhost/api/v1";
 
 describe("api client", () => {
   it("builds query strings without empty values while preserving false and zero", () => {
-    expect(query({
-      keyword: "clean",
-      empty: "",
-      missing: null,
-      omitted: undefined,
-      available: false,
-      page: 0,
-      tags: ["book", "", null, "sale"]
-    })).toBe("?keyword=clean&available=false&page=0&tags=book&tags=sale");
+    expect(
+      query({
+        keyword: "clean",
+        empty: "",
+        missing: null,
+        omitted: undefined,
+        available: false,
+        page: 0,
+        tags: ["book", "", null, "sale"]
+      })
+    ).toBe("?keyword=clean&available=false&page=0&tags=book&tags=sale");
   });
 
   it("returns ApiResponse.data on success", async () => {
@@ -28,12 +30,17 @@ describe("api client", () => {
 
   it("normalizes backend error envelope", async () => {
     server.use(
-      http.get(`${API}/products`, () => HttpResponse.json({
-        success: false,
-        errorCode: "PRODUCT_NOT_FOUND",
-        message: "Book not found",
-        data: { slug: "missing" }
-      }, { status: 404 }))
+      http.get(`${API}/products`, () =>
+        HttpResponse.json(
+          {
+            success: false,
+            errorCode: "PRODUCT_NOT_FOUND",
+            message: "Book not found",
+            data: { slug: "missing" }
+          },
+          { status: 404 }
+        )
+      )
     );
 
     await expect(request("/products")).rejects.toMatchObject({
@@ -59,7 +66,9 @@ describe("api client", () => {
       }),
       http.post(`${API}/auth/refresh-token`, () => {
         refreshCalls += 1;
-        return HttpResponse.json(apiResponse({ token: "new-access-token", refreshToken: "refresh-token", user: customerUser }));
+        return HttpResponse.json(
+          apiResponse({ token: "new-access-token", refreshToken: "refresh-token", user: customerUser })
+        );
       })
     );
 
@@ -76,11 +85,16 @@ describe("api client", () => {
 
     server.use(
       http.get(`${API}/users/me`, () => HttpResponse.json({ success: false, message: "Expired" }, { status: 401 })),
-      http.post(`${API}/auth/refresh-token`, () => HttpResponse.json({
-        success: false,
-        errorCode: "AUTH_REFRESH_INVALID",
-        message: "Refresh token is invalid"
-      }, { status: 401 }))
+      http.post(`${API}/auth/refresh-token`, () =>
+        HttpResponse.json(
+          {
+            success: false,
+            errorCode: "AUTH_REFRESH_INVALID",
+            message: "Refresh token is invalid"
+          },
+          { status: 401 }
+        )
+      )
     );
 
     await expect(request("/users/me")).rejects.toMatchObject({

@@ -23,7 +23,10 @@ describe("CategoryPage", () => {
       <Routes>
         <Route path="/category/:slug" element={<CategoryPage />} />
       </Routes>,
-      { route: "/category/programming?search=architecture&author=Robert&publisher=Prentice&isbn=978&minPrice=1000&maxPrice=900000&available=false&sort=name_asc&page=2&size=24" }
+      {
+        route:
+          "/category/programming?search=architecture&author=Robert&publisher=Prentice&isbn=978&minPrice=1000&maxPrice=900000&available=false&sort=name_asc&page=2&size=24"
+      }
     );
 
     await screen.findByText("Clean Architecture");

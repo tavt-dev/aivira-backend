@@ -11,7 +11,14 @@ describe("route guards", () => {
     renderWithProviders(
       <Routes>
         <Route path="/" element={<div>Home</div>} />
-        <Route path="/cart" element={<RequireAuth><div>Cart</div></RequireAuth>} />
+        <Route
+          path="/cart"
+          element={
+            <RequireAuth>
+              <div>Cart</div>
+            </RequireAuth>
+          }
+        />
       </Routes>,
       { route: "/cart?x=1" }
     );
@@ -23,7 +30,14 @@ describe("route guards", () => {
     seedAuth(customerUser);
     renderWithProviders(
       <Routes>
-        <Route path="/cart" element={<RequireAuth><div>Cart</div></RequireAuth>} />
+        <Route
+          path="/cart"
+          element={
+            <RequireAuth>
+              <div>Cart</div>
+            </RequireAuth>
+          }
+        />
       </Routes>,
       { route: "/cart" }
     );
@@ -35,7 +49,14 @@ describe("route guards", () => {
     seedAuth(adminUser, "admin-token");
     renderWithProviders(
       <Routes>
-        <Route path="/admin" element={<RequireAdmin><div>Admin area</div></RequireAdmin>} />
+        <Route
+          path="/admin"
+          element={
+            <RequireAdmin>
+              <div>Admin area</div>
+            </RequireAdmin>
+          }
+        />
         <Route path="/admin/forbidden" element={<div>Forbidden</div>} />
         <Route path="/" element={<div>Home</div>} />
       </Routes>,
@@ -49,7 +70,14 @@ describe("route guards", () => {
     seedAuth(customerUser, "access-token");
     renderWithProviders(
       <Routes>
-        <Route path="/admin" element={<RequireAdmin><div>Admin area</div></RequireAdmin>} />
+        <Route
+          path="/admin"
+          element={
+            <RequireAdmin>
+              <div>Admin area</div>
+            </RequireAdmin>
+          }
+        />
         <Route path="/admin/forbidden" element={<div>Forbidden</div>} />
         <Route path="/" element={<div>Home</div>} />
       </Routes>,

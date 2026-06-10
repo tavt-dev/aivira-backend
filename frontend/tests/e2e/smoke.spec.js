@@ -39,7 +39,9 @@ const book = {
   status: "ACTIVE",
   thumbnailUrl: "https://example.test/clean-architecture.jpg",
   media: [],
-  variations: [{ id: 201, sku: "BOOK-CLEAN-CODE-PB", size: "Paperback", color: "Default", stockQuantity: 8, active: true }],
+  variations: [
+    { id: 201, sku: "BOOK-CLEAN-CODE-PB", size: "Paperback", color: "Default", stockQuantity: 8, active: true }
+  ],
   createdAt: now,
   updatedAt: now
 };
@@ -156,7 +158,10 @@ async function seedCustomer(page) {
   await page.addInitScript(() => {
     window.localStorage.setItem("aivira_access_token", "access-token");
     window.localStorage.setItem("aivira_refresh_token", "refresh-token");
-    window.localStorage.setItem("aivira_user", JSON.stringify({ id: "user-1", username: "reader", roles: [{ code: "USER" }] }));
+    window.localStorage.setItem(
+      "aivira_user",
+      JSON.stringify({ id: "user-1", username: "reader", roles: [{ code: "USER" }] })
+    );
   });
 }
 
@@ -164,7 +169,10 @@ async function seedAdmin(page) {
   await page.addInitScript(() => {
     window.localStorage.setItem("aivira_access_token", "admin-token");
     window.localStorage.setItem("aivira_refresh_token", "refresh-token");
-    window.localStorage.setItem("aivira_user", JSON.stringify({ id: "admin-1", username: "admin", roles: [{ code: "ADMIN" }] }));
+    window.localStorage.setItem(
+      "aivira_user",
+      JSON.stringify({ id: "admin-1", username: "admin", roles: [{ code: "ADMIN" }] })
+    );
   });
 }
 
@@ -177,23 +185,54 @@ async function mockApi(page) {
 
     if (method === "GET" && path === "/users/me") {
       const auth = request.headers().authorization || "";
-      return ok(route, auth.includes("admin")
-        ? { id: "admin-1", username: "admin", roles: [{ code: "ADMIN" }], permissions: ["DASHBOARD_READ_ADMIN"] }
-        : { id: "user-1", username: "reader", roles: [{ code: "USER" }] });
+      return ok(
+        route,
+        auth.includes("admin")
+          ? { id: "admin-1", username: "admin", roles: [{ code: "ADMIN" }], permissions: ["DASHBOARD_READ_ADMIN"] }
+          : { id: "user-1", username: "reader", roles: [{ code: "USER" }] }
+      );
     }
     if (method === "GET" && path === "/storefront/home") {
-      return ok(route, { featuredBooks: [book], newArrivals: [book, secondBook], bestsellingBooks: [secondBook, book], categoryHighlights: [{ ...category, bookCount: 2 }] });
+      return ok(route, {
+        featuredBooks: [book],
+        newArrivals: [book, secondBook],
+        bestsellingBooks: [secondBook, book],
+        categoryHighlights: [{ ...category, bookCount: 2 }]
+      });
     }
     if (method === "GET" && path === "/categories") return ok(route, [category]);
     if (method === "GET" && path === "/categories/tree") return ok(route, [{ ...category, children: [] }]);
     if (method === "GET" && path === "/products") return ok(route, pageResponse([book, secondBook]));
     if (method === "GET" && path.startsWith("/products/") && path.endsWith("/reviews")) {
-      return ok(route, pageResponse([{ id: 301, rating: 5, comment: "Clear writing and excellent book quality.", approved: true, visible: true, username: "reader", productName: book.productName, createdAt: now }]));
+      return ok(
+        route,
+        pageResponse([
+          {
+            id: 301,
+            rating: 5,
+            comment: "Clear writing and excellent book quality.",
+            approved: true,
+            visible: true,
+            username: "reader",
+            productName: book.productName,
+            createdAt: now
+          }
+        ])
+      );
     }
     if (method === "GET" && path.startsWith("/products/")) return ok(route, book);
     if (method === "GET" && path === "/cart") return ok(route, { items: [cartItem], totalAmount: 900000 });
     if (method === "GET" && path === "/users/me/addresses") {
-      return ok(route, [{ id: 801, recipientName: "Aivira Reader", phoneNumber: "0900000000", addressLine: "1 Book Street", city: "Ho Chi Minh City", defaultAddress: true }]);
+      return ok(route, [
+        {
+          id: 801,
+          recipientName: "Aivira Reader",
+          phoneNumber: "0900000000",
+          addressLine: "1 Book Street",
+          city: "Ho Chi Minh City",
+          defaultAddress: true
+        }
+      ]);
     }
     if (method === "POST" && path === "/checkout/preview") {
       return ok(route, {
@@ -203,34 +242,107 @@ async function mockApi(page) {
         discountAmount: 50000,
         shippingFee: 0,
         totalAmount: 850000,
-        items: [{ cartItemId: 701, productName: book.productName, quantity: 2, lineSubtotal: 900000, promotionDiscountAmount: 50000, promotionName: "Architecture Week", finalLineAmount: 850000 }],
+        items: [
+          {
+            cartItemId: 701,
+            productName: book.productName,
+            quantity: 2,
+            lineSubtotal: 900000,
+            promotionDiscountAmount: 50000,
+            promotionName: "Architecture Week",
+            finalLineAmount: 850000
+          }
+        ],
         appliedPromotions: [{ promotionName: "Architecture Week", discountAmount: 50000 }]
       });
     }
     if (method === "GET" && path === "/orders") return ok(route, pageResponse([order]));
     if (method === "GET" && path.startsWith("/orders/")) return ok(route, order);
-    if (method === "GET" && path === "/admin/dashboard/summary") return ok(route, { revenue: 810000, orderCount: 3, successfulPaymentCount: 2, failedPaymentCount: 1, newUserCount: 5, pendingOrderCount: 2, pendingPaymentCount: 1, lowStockCount: 1 });
-    if (method === "GET" && path === "/admin/dashboard/sales") return ok(route, { points: [{ date: "2026-06-11", revenue: 810000, orderCount: 1 }] });
-    if (method === "GET" && path === "/admin/dashboard/orders") return ok(route, { statusCounts: [{ status: "PENDING_CONFIRMATION", count: 1 }] });
-    if (method === "GET" && path === "/admin/dashboard/top-books") return ok(route, { books: [{ ...book, quantitySold: 2, revenue: 810000 }] });
+    if (method === "GET" && path === "/admin/dashboard/summary")
+      return ok(route, {
+        revenue: 810000,
+        orderCount: 3,
+        successfulPaymentCount: 2,
+        failedPaymentCount: 1,
+        newUserCount: 5,
+        pendingOrderCount: 2,
+        pendingPaymentCount: 1,
+        lowStockCount: 1
+      });
+    if (method === "GET" && path === "/admin/dashboard/sales")
+      return ok(route, { points: [{ date: "2026-06-11", revenue: 810000, orderCount: 1 }] });
+    if (method === "GET" && path === "/admin/dashboard/orders")
+      return ok(route, { statusCounts: [{ status: "PENDING_CONFIRMATION", count: 1 }] });
+    if (method === "GET" && path === "/admin/dashboard/top-books")
+      return ok(route, { books: [{ ...book, quantitySold: 2, revenue: 810000 }] });
     if (method === "GET" && path === "/admin/dashboard/low-stock") return ok(route, { books: [secondBook] });
     if (method === "GET" && path === "/admin/products") return ok(route, pageResponse([book]));
     if (method === "GET" && path === "/admin/orders") return ok(route, pageResponse([order]));
     if (method === "GET" && path.startsWith("/admin/orders/")) return ok(route, order);
-    if (method === "GET" && path === "/admin/coupons") return ok(route, pageResponse([{ id: 901, code: "AIVIRA10", type: "PERCENT", value: 10, active: true }]));
-    if (method === "GET" && path === "/admin/promotions") return ok(route, pageResponse([{ id: 902, promotionName: "Architecture Week", promotionType: "FIXED", value: 50000, promotionScope: "PRODUCT", targetId: 101, active: true }]));
-    if (method === "GET" && path === "/admin/reviews") return ok(route, pageResponse([{ id: 301, rating: 5, comment: "Clear writing and excellent book quality.", approved: false, visible: true, username: "reader", productName: book.productName, createdAt: now }]));
+    if (method === "GET" && path === "/admin/coupons")
+      return ok(route, pageResponse([{ id: 901, code: "AIVIRA10", type: "PERCENT", value: 10, active: true }]));
+    if (method === "GET" && path === "/admin/promotions")
+      return ok(
+        route,
+        pageResponse([
+          {
+            id: 902,
+            promotionName: "Architecture Week",
+            promotionType: "FIXED",
+            value: 50000,
+            promotionScope: "PRODUCT",
+            targetId: 101,
+            active: true
+          }
+        ])
+      );
+    if (method === "GET" && path === "/admin/reviews")
+      return ok(
+        route,
+        pageResponse([
+          {
+            id: 301,
+            rating: 5,
+            comment: "Clear writing and excellent book quality.",
+            approved: false,
+            visible: true,
+            username: "reader",
+            productName: book.productName,
+            createdAt: now
+          }
+        ])
+      );
     if (method === "GET" && path.startsWith("/admin/payments/groups/")) return ok(route, paymentGroup());
     if (method === "POST" && path.includes("/admin/payments/groups/") && path.endsWith("/reconcile")) {
-      return ok(route, { paymentGroupCode: "PG-20260611-001", localStatusBefore: "PENDING", localStatusAfter: "SUCCESS", providerStatus: "SUCCESS", changed: true, message: "Payment status reconciled", checkedAt: now });
+      return ok(route, {
+        paymentGroupCode: "PG-20260611-001",
+        localStatusBefore: "PENDING",
+        localStatusAfter: "SUCCESS",
+        providerStatus: "SUCCESS",
+        changed: true,
+        message: "Payment status reconciled",
+        checkedAt: now
+      });
     }
 
-    return route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ success: false, message: `Unhandled ${method} ${path}` }) });
+    return route.fulfill({
+      status: 404,
+      contentType: "application/json",
+      body: JSON.stringify({ success: false, message: `Unhandled ${method} ${path}` })
+    });
   });
 }
 
 function pageResponse(data) {
-  return { data, currentPage: 1, totalPages: 1, pageSize: data.length, totalElements: data.length, hasNext: false, hasPrevious: false };
+  return {
+    data,
+    currentPage: 1,
+    totalPages: 1,
+    pageSize: data.length,
+    totalElements: data.length,
+    hasNext: false,
+    hasPrevious: false
+  };
 }
 
 function paymentGroup() {
@@ -241,7 +353,9 @@ function paymentGroup() {
     status: "PENDING",
     amount: 810000,
     providerTxnRef: "VNP-001",
-    payments: [{ id: 601, orderId: order.id, orderCode: order.orderCode, method: "VNPAY", status: "PENDING", amount: 810000 }],
+    payments: [
+      { id: 601, orderId: order.id, orderCode: order.orderCode, method: "VNPAY", status: "PENDING", amount: 810000 }
+    ],
     orders: [order]
   };
 }

@@ -19,7 +19,10 @@ export function renderWithProviders(ui, { route = "/", router = true } = {}) {
   return render(tree);
 }
 
-export function seedAuth(user = { id: "user-1", username: "reader", roles: [{ code: "USER" }] }, token = "access-token") {
+export function seedAuth(
+  user = { id: "user-1", username: "reader", roles: [{ code: "USER" }] },
+  token = "access-token"
+) {
   localStorage.setItem("aivira_access_token", token);
   localStorage.setItem("aivira_refresh_token", "refresh-token");
   localStorage.setItem("aivira_user", JSON.stringify(user));
