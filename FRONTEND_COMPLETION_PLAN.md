@@ -1240,39 +1240,69 @@ Acceptance:
 
 ## Phase FE-17: Frontend Testing
 
+Status: completed in current workspace. `npm run build`, `npm run test`, and `npm run test:e2e` pass.
+
 Goal: add safety net for critical flows.
 
 Add dependencies:
 
-- Vitest.
-- React Testing Library.
-- MSW for API mocking.
-- Playwright for E2E if feasible.
+- [x] Vitest.
+- [x] React Testing Library.
+- [x] MSW for API mocking.
+- [x] Playwright for E2E smoke.
+
+Tooling:
+
+- [x] Add `npm run test`.
+- [x] Add `npm run test:watch`.
+- [x] Add `npm run test:coverage`.
+- [x] Add `npm run test:e2e`.
+- [x] Add `npm run quality`.
+- [x] Configure Vitest with `jsdom` and setup file.
+- [x] Configure MSW server and shared mock bookstore data.
+- [x] Configure Playwright with Vite dev server and mocked `/api/v1/**`.
+- [x] Add shared `renderWithProviders()` test helper.
+- [x] Add auth seeding helper for customer/admin tests.
 
 Unit/component tests:
 
-- API client error handling.
-- Auth modal login success/error.
-- Product filter query building.
-- Checkout preview totals rendering.
-- Admin order action visibility.
-- Coupon/promotion forms.
-- Review form validation.
+- [x] API client query builder, success envelope, normalized errors, refresh-on-401, and refresh failure auth expiry.
+- [x] Auth storage supports backend token shapes.
+- [x] Customer and admin route guards.
+- [x] Checkout cart item selection helpers.
+- [x] Catalog URL filters map to backend product query params.
+- [x] Product detail renders book metadata and public reviews.
+- [x] Checkout preview renders backend totals and coupon backend errors.
+- [x] Admin dashboard renders live summary/book sections from mocked endpoints.
+- [x] Admin order lifecycle action visibility for pending confirmation orders.
+- [x] Coupon/promotion admin tabs render backend data.
+- [x] Admin review moderation sends `{ approved, visible }`.
+- [x] Admin payment lookup and reconcile result render.
+- [ ] Auth modal login success/error component test can be expanded later.
+- [ ] Review form validation component test can be expanded later.
 
 E2E smoke tests:
 
-- Public browse product detail.
-- Login.
-- Add to cart.
-- Checkout preview.
-- Admin dashboard loads.
-- Admin product create/edit smoke.
+- [x] Public browse homepage, catalog, and product detail.
+- [x] Customer auth seed, cart, checkout preview, and orders.
+- [x] Admin auth seed and dashboard.
+- [x] Admin products list smoke.
+- [x] Admin orders lifecycle action smoke.
+- [x] Admin discounts coupon/promotion smoke.
+- [x] Admin reviews smoke.
+- [x] Admin payments lookup/reconcile smoke.
+- [ ] Live backend manual smoke remains to be run separately.
 
 Acceptance:
 
-- `npm test` or `npm run test` available.
-- `npm run build` passes.
-- Core user/admin flows have smoke coverage.
+- [x] `npm run test` available.
+- [x] `npm run test:e2e` available.
+- [x] Tests use mocked backend responses and do not require backend/Testcontainers.
+- [x] `npm run build` passes.
+- [x] `npm run test` passes.
+- [x] `npm run test:e2e` passes.
+- [x] Core user/admin flows have smoke coverage.
+- [x] No seller/shop/merchant wording or workflow added.
 
 ## Phase FE-18: Frontend Config, Build, And Deployment
 
