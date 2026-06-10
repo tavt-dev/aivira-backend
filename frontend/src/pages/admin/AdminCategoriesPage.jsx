@@ -6,7 +6,16 @@ import {
   deleteAdminCategory,
   updateAdminCategory,
 } from "../../api/adminApi.js";
-import { useConfirm } from "../../components/ui/index.jsx";
+import {
+  Button,
+  Input,
+  Notice,
+  PageHeader,
+  Panel,
+  Select,
+  Textarea,
+  useConfirm,
+} from "../../components/ui/index.jsx";
 import { getCategories, getCategoryTree } from "../../api/catalogApi.js";
 import { normalizeCategory, pageRows } from "../../utils/mappers.js";
 
@@ -140,8 +149,8 @@ export default function AdminCategoriesPage() {
                 <Badge>{category.visible === false ? t("common.hidden") : t("common.visible")}</Badge>
               </div>
               <div className="flex flex-wrap gap-2">
-                <SmallButton onClick={() => edit(category)}>{t("common.edit")}</SmallButton>
-                <SmallButton danger onClick={() => remove(category)}>{t("common.delete")}</SmallButton>
+              <Button size="sm" variant="secondary" onClick={() => edit(category)}>{t("common.edit")}</Button>
+                <Button size="sm" variant="danger" onClick={() => remove(category)}>{t("common.delete")}</Button>
               </div>
             </div>
           ))}
@@ -154,7 +163,7 @@ export default function AdminCategoriesPage() {
         <form className="grid gap-4" onSubmit={submit}>
           <div className="flex flex-wrap justify-between gap-3">
             <p className="text-sm text-slate-500">{t("admin.categoryFormHelp")}</p>
-            {editingId && <Button secondary type="button" onClick={resetForm}>{t("admin.newCategory")}</Button>}
+            {editingId && <Button variant="secondary" type="button" onClick={resetForm}>{t("admin.newCategory")}</Button>}
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <Input value={form.categoryName} onChange={(e) => setForm({ ...form, categoryName: e.target.value })} placeholder={t("admin.categoryName")} required />
@@ -184,7 +193,7 @@ export default function AdminCategoriesPage() {
           </div>
           <div className="flex flex-wrap gap-3">
             <Button type="submit">{editingId ? t("admin.updateCategory") : t("admin.saveCategory")}</Button>
-            {editingId && <Button secondary type="button" onClick={resetForm}>{t("common.cancel")}</Button>}
+            {editingId && <Button variant="secondary" type="button" onClick={resetForm}>{t("common.cancel")}</Button>}
           </div>
         </form>
       </Panel>
@@ -208,50 +217,4 @@ function validateCategoryForm(form, t) {
   if (!String(form.description || "").trim()) return t("admin.validationCategoryDescription");
   if (form.displayOrder !== "" && Number(form.displayOrder) < 0) return t("admin.validationNonNegative");
   return "";
-}
-
-function PageHeader({ title, eyebrow }) {
-  return (
-    <div className="border-b border-slate-200 pb-6">
-      <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-600">{eyebrow}</span>
-      <h2 className="mt-3 font-serif text-4xl font-bold text-slate-950">{title}</h2>
-    </div>
-  );
-}
-
-function Panel({ title, children }) {
-  return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
-      <h3 className="mb-5 text-xl font-bold text-slate-950">{title}</h3>
-      {children}
-    </section>
-  );
-}
-
-function Badge({ children }) {
-  return <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-bold text-slate-600">{children}</span>;
-}
-
-function Input(props) {
-  return <input {...props} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />;
-}
-
-function Textarea(props) {
-  return <textarea {...props} className="min-h-28 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />;
-}
-
-function Select(props) {
-  return <select {...props} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />;
-}
-
-function Button({ secondary = false, ...props }) {
-  return <button {...props} className={["rounded-full px-5 py-3 text-sm font-bold transition-colors", secondary ? "border border-slate-200 text-slate-700 hover:bg-slate-50" : "bg-slate-950 text-white hover:bg-blue-600"].join(" ")} />;
-}
-
-function SmallButton({ danger = false, ...props }) {
-  return <button type="button" {...props} className={["rounded-full border px-3 py-1.5 text-xs font-bold transition-colors", danger ? "border-red-100 text-red-600 hover:bg-red-50" : "border-slate-200 text-slate-600 hover:bg-slate-50"].join(" ")} />;
-}
-
-function Notice({ children }) {
-  return <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-700">{children}</div>;
 }

@@ -11,7 +11,15 @@ import {
   revokeUserPermission,
   updateRolePermissions,
 } from "../../api/adminApi.js";
-import { useConfirm } from "../../components/ui/index.jsx";
+import {
+  Button,
+  Input,
+  Notice,
+  PageHeader,
+  Panel,
+  Select,
+  useConfirm,
+} from "../../components/ui/index.jsx";
 import { formatDateTime } from "../../utils/formatters.js";
 import { pageRows } from "../../utils/mappers.js";
 
@@ -218,7 +226,7 @@ export default function AdminPermissionsPage() {
             </Select>
             <Input maxLength={500} value={grantForm.reason} onChange={(event) => setGrantForm({ ...grantForm, reason: event.target.value })} placeholder={t("admin.reason")} />
             <Input type="datetime-local" value={grantForm.expiresAt} onChange={(event) => setGrantForm({ ...grantForm, expiresAt: event.target.value })} />
-            <Button secondary type="submit">{t("admin.grantPermission")}</Button>
+            <Button variant="secondary" type="submit">{t("admin.grantPermission")}</Button>
           </form>
         </Panel>
       </div>
@@ -276,7 +284,7 @@ function DirectPermissionRow({ language, onRevoke, permission, t }) {
           {permission.currentlyActive === false || permission.active === false ? t("admin.inactive") : t("common.active")}
         </p>
       </div>
-      <SmallButton onClick={onRevoke}>{t("admin.revokePermission")}</SmallButton>
+      <Button size="sm" variant="secondary" onClick={onRevoke}>{t("admin.revokePermission")}</Button>
     </div>
   );
 }
@@ -293,40 +301,4 @@ function roleCode(role) {
   return String(role?.code || role?.roleCode || role || "");
 }
 
-function PageHeader({ title, eyebrow }) {
-  return (
-    <div className="border-b border-slate-200 pb-6">
-      <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-600">{eyebrow}</span>
-      <h2 className="mt-3 font-serif text-4xl font-bold text-slate-950">{title}</h2>
-    </div>
-  );
-}
 
-function Panel({ title, children }) {
-  return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
-      <h3 className="mb-5 text-xl font-bold text-slate-950">{title}</h3>
-      {children}
-    </section>
-  );
-}
-
-function Input(props) {
-  return <input {...props} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />;
-}
-
-function Select(props) {
-  return <select {...props} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />;
-}
-
-function Button({ secondary = false, ...props }) {
-  return <button {...props} className={["rounded-full px-5 py-3 text-sm font-bold transition-colors", secondary ? "border border-slate-200 text-slate-700 hover:bg-slate-50" : "bg-slate-950 text-white hover:bg-blue-600"].join(" ")} />;
-}
-
-function SmallButton(props) {
-  return <button type="button" {...props} className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 transition-colors hover:bg-white" />;
-}
-
-function Notice({ children }) {
-  return <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-700">{children}</div>;
-}

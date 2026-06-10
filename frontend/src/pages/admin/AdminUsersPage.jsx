@@ -9,7 +9,18 @@ import {
   unlockUser,
   updateUserRoles,
 } from "../../api/adminUsersApi.js";
-import { useConfirm } from "../../components/ui/index.jsx";
+import {
+  Button,
+  InfoCard,
+  Input,
+  MetaRow as Meta,
+  Notice,
+  PageHeader,
+  Pagination,
+  Panel,
+  Select,
+  useConfirm,
+} from "../../components/ui/index.jsx";
 import { formatDateTime } from "../../utils/formatters.js";
 import { pageRows } from "../../utils/mappers.js";
 import { getCurrentUser } from "../../utils/storage.js";
@@ -188,7 +199,7 @@ export default function AdminUsersPage() {
             {PAGE_SIZES.map((size) => <option key={size} value={size}>{size}</option>)}
           </Select>
           <Button type="submit">{t("admin.applyFilters")}</Button>
-          <Button secondary type="button" onClick={clearFilters}>{t("admin.clearFilters")}</Button>
+          <Button variant="secondary" type="button" onClick={clearFilters}>{t("admin.clearFilters")}</Button>
         </form>
       </Panel>
 
@@ -229,7 +240,7 @@ export default function AdminUsersPage() {
                   <td className="px-4 py-3 text-slate-500">{formatDateTime(user.lockoutUntil, i18n.language)}</td>
                   <td className="px-4 py-3 text-slate-500">{formatDateTime(user.createdAt, i18n.language)}</td>
                   <td className="px-4 py-3">
-                    <SmallButton onClick={() => openDetail(user)}>{t("common.detail")}</SmallButton>
+                    <Button size="sm" variant="secondary" onClick={() => openDetail(user)}>{t("common.detail")}</Button>
                   </td>
                 </tr>
               ))}
@@ -285,7 +296,7 @@ function UserDetailDrawer({ busy, currentUser, language, onClose, onLock, onRole
             ) : (
               <Button disabled={!canMutate || Boolean(busy)} type="button" onClick={onLock}>{t("admin.lockUser")}</Button>
             )}
-            <Button secondary type="button" onClick={onClose}>{t("common.close")}</Button>
+            <Button variant="secondary" type="button" onClick={onClose}>{t("common.close")}</Button>
           </div>
         </div>
 
@@ -389,41 +400,6 @@ function createEmptyMeta(filters) {
   };
 }
 
-function PageHeader({ title, eyebrow }) {
-  return (
-    <div className="border-b border-slate-200 pb-6">
-      <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-600">{eyebrow}</span>
-      <h2 className="mt-3 font-serif text-4xl font-bold text-slate-950">{title}</h2>
-    </div>
-  );
-}
-
-function Panel({ title, children }) {
-  return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
-      <h3 className="mb-5 text-xl font-bold text-slate-950">{title}</h3>
-      {children}
-    </section>
-  );
-}
-
-function InfoCard({ children, title }) {
-  return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5">
-      <h3 className="mb-4 text-lg font-bold text-slate-950">{title}</h3>
-      <div className="grid gap-2">{children}</div>
-    </section>
-  );
-}
-
-function Meta({ label, value }) {
-  return (
-    <div className="flex flex-wrap items-start justify-between gap-3 text-sm">
-      <span className="text-slate-500">{label}</span>
-      <span className="max-w-[70%] text-right font-semibold text-slate-700">{value}</span>
-    </div>
-  );
-}
 
 function RoleBadges({ roles }) {
   return (
@@ -467,47 +443,10 @@ function BooleanSelect({ label, onChange, t, value }) {
   );
 }
 
-function Pagination({ loading, meta, onPage, t }) {
-  if (!meta.totalPages || meta.totalPages <= 1) return null;
-  return (
-    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm">
-      <span className="font-semibold text-slate-500">
-        {t("catalog.pageIndicator", { page: meta.currentPage, total: meta.totalPages })} - {meta.totalElements}
-      </span>
-      <div className="flex flex-wrap gap-2">
-        <SmallButton disabled={loading || !meta.hasPrevious} onClick={() => onPage(1)}>{t("catalog.firstPage")}</SmallButton>
-        <SmallButton disabled={loading || !meta.hasPrevious} onClick={() => onPage(meta.currentPage - 1)}>{t("catalog.previousPage")}</SmallButton>
-        <SmallButton disabled={loading || !meta.hasNext} onClick={() => onPage(meta.currentPage + 1)}>{t("catalog.nextPage")}</SmallButton>
-        <SmallButton disabled={loading || !meta.hasNext} onClick={() => onPage(meta.totalPages)}>{t("catalog.lastPage")}</SmallButton>
-      </div>
-    </div>
-  );
-}
-
 function BlockingLoader({ text }) {
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 px-4 backdrop-blur-sm">
       <div className="rounded-2xl bg-white p-8 text-sm font-bold text-slate-700 shadow-2xl">{text}</div>
     </div>
   );
-}
-
-function Input(props) {
-  return <input {...props} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-slate-50" />;
-}
-
-function Select(props) {
-  return <select {...props} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />;
-}
-
-function Button({ secondary = false, ...props }) {
-  return <button {...props} className={["rounded-full px-5 py-3 text-sm font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50", secondary ? "border border-slate-200 text-slate-700 hover:bg-slate-50" : "bg-slate-950 text-white hover:bg-blue-600"].join(" ")} />;
-}
-
-function SmallButton({ danger = false, ...props }) {
-  return <button type="button" {...props} className={["rounded-full border px-3 py-1.5 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50", danger ? "border-red-100 text-red-600 hover:bg-red-50" : "border-slate-200 text-slate-600 hover:bg-slate-50"].join(" ")} />;
-}
-
-function Notice({ children }) {
-  return <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-700">{children}</div>;
 }

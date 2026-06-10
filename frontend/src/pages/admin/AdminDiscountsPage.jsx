@@ -14,7 +14,17 @@ import {
   getPromotions,
   updatePromotion,
 } from "../../api/adminPromotionsApi.js";
-import { useConfirm } from "../../components/ui/index.jsx";
+import {
+  Button,
+  Input,
+  Notice,
+  PageHeader,
+  Pagination,
+  Panel,
+  Select,
+  Textarea,
+  useConfirm,
+} from "../../components/ui/index.jsx";
 import { getAdminProducts } from "../../api/adminProductsApi.js";
 import { getCategories } from "../../api/catalogApi.js";
 import { formatDateTime, formatVND } from "../../utils/formatters.js";
@@ -380,9 +390,9 @@ function CouponList({ coupons, language, loading, meta, onCopy, onDeactivate, on
                 <td className="px-4 py-3"><Status active={coupon.active} t={t} /></td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-2">
-                    <SmallButton onClick={() => onCopy(coupon.code)}>{t("admin.copyCode")}</SmallButton>
-                    <SmallButton onClick={() => onEdit(coupon)}>{t("common.edit")}</SmallButton>
-                    <SmallButton danger onClick={() => onDeactivate(coupon)}>{t("admin.deactivate")}</SmallButton>
+                    <Button size="sm" variant="secondary" onClick={() => onCopy(coupon.code)}>{t("admin.copyCode")}</Button>
+                    <Button size="sm" variant="secondary" onClick={() => onEdit(coupon)}>{t("common.edit")}</Button>
+                    <Button size="sm" variant="danger" onClick={() => onDeactivate(coupon)}>{t("admin.deactivate")}</Button>
                   </div>
                 </td>
               </tr>
@@ -416,7 +426,7 @@ function CouponForm({ editing, form, onCancel, onChange, onSubmit, t }) {
         <ActiveCheckbox checked={form.active} onChange={(active) => onChange({ ...form, active })} t={t} />
         <div className="flex flex-wrap gap-2">
           <Button type="submit">{editing ? t("admin.updateCoupon") : t("admin.createCoupon")}</Button>
-          {editing && <Button secondary type="button" onClick={onCancel}>{t("common.cancel")}</Button>}
+          {editing && <Button variant="secondary" type="button" onClick={onCancel}>{t("common.cancel")}</Button>}
         </div>
       </form>
     </Panel>
@@ -464,8 +474,8 @@ function PromotionList({ language, loading, meta, onDeactivate, onEdit, onPage, 
                 <td className="px-4 py-3"><Status active={promotion.active} t={t} /></td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-2">
-                    <SmallButton onClick={() => onEdit(promotion)}>{t("common.edit")}</SmallButton>
-                    <SmallButton danger onClick={() => onDeactivate(promotion)}>{t("admin.deactivate")}</SmallButton>
+                    <Button size="sm" variant="secondary" onClick={() => onEdit(promotion)}>{t("common.edit")}</Button>
+                    <Button size="sm" variant="danger" onClick={() => onDeactivate(promotion)}>{t("admin.deactivate")}</Button>
                   </div>
                 </td>
               </tr>
@@ -512,7 +522,7 @@ function PromotionForm({ categories, editing, form, onCancel, onChange, onProduc
         <ActiveCheckbox checked={form.active} onChange={(active) => onChange({ ...form, active })} t={t} />
         <div className="flex flex-wrap gap-2">
           <Button type="submit">{editing ? t("admin.updatePromotion") : t("admin.createPromotion")}</Button>
-          {editing && <Button secondary type="button" onClick={onCancel}>{t("common.cancel")}</Button>}
+          {editing && <Button variant="secondary" type="button" onClick={onCancel}>{t("common.cancel")}</Button>}
         </div>
       </form>
     </Panel>
@@ -668,65 +678,8 @@ function Status({ active, t }) {
   return <span className={["rounded-full px-2 py-1 text-xs font-bold", active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"].join(" ")}>{active ? t("common.active") : t("admin.inactive")}</span>;
 }
 
-function PageHeader({ title, eyebrow }) {
-  return (
-    <div className="border-b border-slate-200 pb-6">
-      <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-600">{eyebrow}</span>
-      <h2 className="mt-3 font-serif text-4xl font-bold text-slate-950">{title}</h2>
-    </div>
-  );
-}
-
-function Panel({ title, children }) {
-  return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
-      <h3 className="mb-5 text-xl font-bold text-slate-950">{title}</h3>
-      {children}
-    </section>
-  );
-}
-
-function Pagination({ loading, meta, onPage, t }) {
-  if (!meta.totalPages || meta.totalPages <= 1) return null;
-  return (
-    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm">
-      <span className="font-semibold text-slate-500">
-        {t("catalog.pageIndicator", { page: meta.currentPage, total: meta.totalPages })} - {meta.totalElements}
-      </span>
-      <div className="flex flex-wrap gap-2">
-        <SmallButton disabled={loading || !meta.hasPrevious} onClick={() => onPage(1)}>{t("catalog.firstPage")}</SmallButton>
-        <SmallButton disabled={loading || !meta.hasPrevious} onClick={() => onPage(meta.currentPage - 1)}>{t("catalog.previousPage")}</SmallButton>
-        <SmallButton disabled={loading || !meta.hasNext} onClick={() => onPage(meta.currentPage + 1)}>{t("catalog.nextPage")}</SmallButton>
-        <SmallButton disabled={loading || !meta.hasNext} onClick={() => onPage(meta.totalPages)}>{t("catalog.lastPage")}</SmallButton>
-      </div>
-    </div>
-  );
-}
-
 function TabButton({ active, children, onClick }) {
   return <button className={["rounded-full px-4 py-2 text-sm font-bold transition-colors", active ? "bg-slate-950 text-white" : "border border-slate-200 text-slate-600 hover:bg-slate-50"].join(" ")} type="button" onClick={onClick}>{children}</button>;
 }
 
-function Input(props) {
-  return <input {...props} className={["w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100", props.className || ""].join(" ")} />;
-}
 
-function Textarea(props) {
-  return <textarea {...props} className="min-h-28 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />;
-}
-
-function Select(props) {
-  return <select {...props} className={["w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100", props.className || ""].join(" ")} />;
-}
-
-function Button({ secondary = false, ...props }) {
-  return <button {...props} className={["rounded-full px-5 py-3 text-sm font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50", secondary ? "border border-slate-200 text-slate-700 hover:bg-slate-50" : "bg-slate-950 text-white hover:bg-blue-600"].join(" ")} />;
-}
-
-function SmallButton({ danger = false, ...props }) {
-  return <button type="button" {...props} className={["rounded-full border px-3 py-1.5 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50", danger ? "border-red-100 text-red-600 hover:bg-red-50" : "border-slate-200 text-slate-600 hover:bg-slate-50"].join(" ")} />;
-}
-
-function Notice({ children }) {
-  return <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-700">{children}</div>;
-}

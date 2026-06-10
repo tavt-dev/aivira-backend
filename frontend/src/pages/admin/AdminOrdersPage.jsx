@@ -12,6 +12,20 @@ import {
   markRefunded,
   markShipping,
 } from "../../api/adminOrdersApi.js";
+import {
+  Button,
+  Drawer,
+  InfoCard,
+  Input,
+  MetaRow as MetaRow,
+  Modal,
+  Notice,
+  PageHeader,
+  Pagination,
+  Panel,
+  Select,
+  Textarea,
+} from "../../components/ui/index.jsx";
 import { formatDateTime, formatVND } from "../../utils/formatters.js";
 import { normalizeOrder, pageRows } from "../../utils/mappers.js";
 
@@ -228,7 +242,7 @@ export default function AdminOrdersPage() {
             {PAGE_SIZES.map((size) => <option key={size} value={size}>{size}</option>)}
           </Select>
           <Button type="submit">{t("admin.applyFilters")}</Button>
-          <Button secondary type="button" onClick={clearFilters}>{t("admin.clearFilters")}</Button>
+          <Button variant="secondary" type="button" onClick={clearFilters}>{t("admin.clearFilters")}</Button>
         </form>
       </Panel>
 
@@ -267,7 +281,7 @@ export default function AdminOrdersPage() {
                   <td className="px-4 py-3 text-slate-500">{formatDateTime(order.createdAt, i18n.language)}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-2">
-                      <SmallButton onClick={() => openDetail(order)}>{t("common.detail")}</SmallButton>
+                      <Button size="sm" variant="secondary" onClick={() => openDetail(order)}>{t("common.detail")}</Button>
                       <OrderActions
                         busy={actionBusy}
                         order={order}
@@ -288,7 +302,7 @@ export default function AdminOrdersPage() {
           {loading && <div className="p-5 text-sm font-semibold text-slate-500">{t("common.loading")}</div>}
           {!loading && !orders.length && <div className="p-5 text-sm text-slate-500">{t("admin.noAdminOrders")}</div>}
         </div>
-        <Pagination meta={pageMeta} loading={loading} onPage={changePage} t={t} />
+          <Pagination meta={pageMeta} loading={loading} onPage={changePage} t={t} />
       </Panel>
 
       {detailLoading && <BlockingLoader text={t("common.loading")} />}
@@ -342,50 +356,49 @@ export default function AdminOrdersPage() {
 
 function OrderDetailDrawer({ actionBusy, language, onCancel, onClose, onCompleted, onConfirm, onPacking, onRefund, onShipping, order, t }) {
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/60 backdrop-blur-sm">
-      <aside className="h-full w-full max-w-5xl overflow-y-auto bg-white p-5 shadow-2xl md:p-8">
-        <div className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-5 md:flex-row md:items-start md:justify-between">
-          <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-blue-600">{t("admin.orderDetail")}</span>
-            <h2 className="mt-2 text-3xl font-bold text-slate-950">{order.orderCode}</h2>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <StatusBadge status={order.orderStatus} t={t} />
-              <PaymentBadge status={order.paymentStatus} />
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <OrderActions
-              busy={actionBusy}
-              order={order}
-              onCancel={onCancel}
-              onCompleted={onCompleted}
-              onConfirm={onConfirm}
-              onPacking={onPacking}
-              onRefund={onRefund}
-              onShipping={onShipping}
-              t={t}
-            />
-            <Button secondary type="button" onClick={onClose}>{t("common.close")}</Button>
+    <Drawer title={order.orderCode} onClose={onClose}>
+      <div className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-5 md:flex-row md:items-start md:justify-between">
+        <div>
+          <span className="text-xs font-bold uppercase tracking-wider text-blue-600">{t("admin.orderDetail")}</span>
+          <h2 className="mt-2 text-3xl font-bold text-slate-950">{order.orderCode}</h2>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <StatusBadge status={order.orderStatus} t={t} />
+            <PaymentBadge status={order.paymentStatus} />
           </div>
         </div>
+        <div className="flex flex-wrap gap-2">
+          <OrderActions
+            busy={actionBusy}
+            order={order}
+            onCancel={onCancel}
+            onCompleted={onCompleted}
+            onConfirm={onConfirm}
+            onPacking={onPacking}
+            onRefund={onRefund}
+            onShipping={onShipping}
+            t={t}
+          />
+          <Button variant="secondary" type="button" onClick={onClose}>{t("common.close")}</Button>
+        </div>
+      </div>
 
         <div className="grid gap-5 xl:grid-cols-3">
-          <InfoCard title={t("orders.payment")}>
-            <Meta label={t("orders.paymentMethod")} value={order.paymentMethod || "-"} />
-            <Meta label={t("orders.paymentStatus")} value={order.paymentStatus || "-"} />
-            <Meta label={t("orders.paymentGroup")} value={order.paymentGroupCode || "-"} />
-            <Meta label={t("orders.paidAt")} value={formatDateTime(order.paidAt, language)} />
+        <InfoCard title={t("orders.payment")}>
+            <MetaRow label={t("orders.paymentMethod")} value={order.paymentMethod || "-"} />
+            <MetaRow label={t("orders.paymentStatus")} value={order.paymentStatus || "-"} />
+            <MetaRow label={t("orders.paymentGroup")} value={order.paymentGroupCode || "-"} />
+            <MetaRow label={t("orders.paidAt")} value={formatDateTime(order.paidAt, language)} />
           </InfoCard>
           <InfoCard title={t("orders.shipping")}>
-            <Meta label={t("account.recipientName")} value={order.shippingRecipientName || "-"} />
-            <Meta label={t("account.phoneNumber")} value={order.shippingPhoneNumber || "-"} />
-            <Meta label={t("account.addressLine")} value={formatAddress(order)} />
+            <MetaRow label={t("account.recipientName")} value={order.shippingRecipientName || "-"} />
+            <MetaRow label={t("account.phoneNumber")} value={order.shippingPhoneNumber || "-"} />
+            <MetaRow label={t("account.addressLine")} value={formatAddress(order)} />
           </InfoCard>
           <InfoCard title={t("orders.status")}>
-            <Meta label={t("orders.createdAt")} value={formatDateTime(order.createdAt, language)} />
-            <Meta label={t("orders.updatedAt")} value={formatDateTime(order.updatedAt, language)} />
-            <Meta label={t("admin.cancelReason")} value={order.cancelReason || "-"} />
-            <Meta label={t("checkout.notes")} value={order.notes || "-"} />
+            <MetaRow label={t("orders.createdAt")} value={formatDateTime(order.createdAt, language)} />
+            <MetaRow label={t("orders.updatedAt")} value={formatDateTime(order.updatedAt, language)} />
+            <MetaRow label={t("admin.cancelReason")} value={order.cancelReason || "-"} />
+            <MetaRow label={t("checkout.notes")} value={order.notes || "-"} />
           </InfoCard>
         </div>
 
@@ -410,20 +423,20 @@ function OrderDetailDrawer({ actionBusy, language, onCancel, onClose, onComplete
 
         <div className="mt-5 grid gap-5 xl:grid-cols-2">
           <InfoCard title={t("common.total")}>
-            <Meta label={t("checkout.subtotal")} value={formatVND(order.subtotal, language)} />
-            <Meta label={t("orders.discount")} value={formatVND(order.discountAmount, language)} />
-            <Meta label={t("checkout.shippingFee")} value={formatVND(order.shippingFee, language)} />
-            <Meta label={t("common.total")} value={formatVND(order.totalAmount, language)} strong />
+            <MetaRow label={t("checkout.subtotal")} value={formatVND(order.subtotal, language)} />
+            <MetaRow label={t("orders.discount")} value={formatVND(order.discountAmount, language)} />
+            <MetaRow label={t("checkout.shippingFee")} value={formatVND(order.shippingFee, language)} />
+            <MetaRow label={t("common.total")} value={formatVND(order.totalAmount, language)} strong />
           </InfoCard>
           {order.refund ? (
             <InfoCard title={t("orders.refund")}>
-              <Meta label={t("orders.refundCode")} value={order.refund.refundCode || "-"} />
-              <Meta label={t("common.amount")} value={formatVND(order.refund.amount, language)} />
-              <Meta label={t("orders.refundStatus")} value={order.refund.status || "-"} />
-              <Meta label={t("admin.refundedBy")} value={order.refund.refundedBy || "-"} />
-              <Meta label={t("orders.refundedAt")} value={formatDateTime(order.refund.refundedAt, language)} />
-              <Meta label={t("admin.refundReason")} value={order.refund.reason || "-"} />
-              <Meta label={t("admin.refundNote")} value={order.refund.note || "-"} />
+              <MetaRow label={t("orders.refundCode")} value={order.refund.refundCode || "-"} />
+              <MetaRow label={t("common.amount")} value={formatVND(order.refund.amount, language)} />
+              <MetaRow label={t("orders.refundStatus")} value={order.refund.status || "-"} />
+              <MetaRow label={t("admin.refundedBy")} value={order.refund.refundedBy || "-"} />
+              <MetaRow label={t("orders.refundedAt")} value={formatDateTime(order.refund.refundedAt, language)} />
+              <MetaRow label={t("admin.refundReason")} value={order.refund.reason || "-"} />
+              <MetaRow label={t("admin.refundNote")} value={order.refund.note || "-"} />
             </InfoCard>
           ) : (
             <InfoCard title={t("orders.refund")}>
@@ -431,8 +444,7 @@ function OrderDetailDrawer({ actionBusy, language, onCancel, onClose, onComplete
             </InfoCard>
           )}
         </div>
-      </aside>
-    </div>
+      </Drawer>
   );
 }
 
@@ -442,12 +454,12 @@ function OrderActions({ busy, order, onCancel, onCompleted, onConfirm, onPacking
 
   return (
     <>
-      {actions.includes("confirm") && <SmallButton disabled={Boolean(busy)} onClick={onConfirm}>{t("admin.confirmOrder")}</SmallButton>}
-      {actions.includes("packing") && <SmallButton disabled={Boolean(busy)} onClick={onPacking}>{t("admin.markPacking")}</SmallButton>}
-      {actions.includes("shipping") && <SmallButton disabled={Boolean(busy)} onClick={onShipping}>{t("admin.markShipping")}</SmallButton>}
-      {actions.includes("completed") && <SmallButton disabled={Boolean(busy)} onClick={onCompleted}>{t("admin.markCompleted")}</SmallButton>}
-      {actions.includes("cancel") && <SmallButton danger disabled={Boolean(busy)} onClick={onCancel}>{t("admin.cancelAdminOrder")}</SmallButton>}
-      {actions.includes("refund") && <SmallButton danger disabled={Boolean(busy)} onClick={onRefund}>{t("admin.markRefunded")}</SmallButton>}
+      {actions.includes("confirm") && <Button size="sm" variant="secondary" disabled={Boolean(busy)} onClick={onConfirm}>{t("admin.confirmOrder")}</Button>}
+      {actions.includes("packing") && <Button size="sm" variant="secondary" disabled={Boolean(busy)} onClick={onPacking}>{t("admin.markPacking")}</Button>}
+      {actions.includes("shipping") && <Button size="sm" variant="secondary" disabled={Boolean(busy)} onClick={onShipping}>{t("admin.markShipping")}</Button>}
+      {actions.includes("completed") && <Button size="sm" variant="secondary" disabled={Boolean(busy)} onClick={onCompleted}>{t("admin.markCompleted")}</Button>}
+      {actions.includes("cancel") && <Button size="sm" variant="danger" disabled={Boolean(busy)} onClick={onCancel}>{t("admin.cancelAdminOrder")}</Button>}
+      {actions.includes("refund") && <Button size="sm" variant="danger" disabled={Boolean(busy)} onClick={onRefund}>{t("admin.markRefunded")}</Button>}
     </>
   );
 }
@@ -474,7 +486,7 @@ function CancelModal({ busy, onClose, onSubmit, order, reason, setReason, t }) {
         <p className="rounded-xl bg-amber-50 p-4 text-sm font-semibold text-amber-700">{t("admin.cancelStockNote")}</p>
         <Textarea maxLength={500} value={reason} onChange={(event) => setReason(event.target.value)} placeholder={t("orders.cancelReasonPlaceholder")} />
         <div className="flex flex-wrap justify-end gap-2">
-          <Button secondary type="button" onClick={onClose}>{t("common.cancel")}</Button>
+          <Button variant="secondary" type="button" onClick={onClose}>{t("common.cancel")}</Button>
           <Button disabled={busy} type="submit">{t("orders.confirmCancel")}</Button>
         </div>
       </form>
@@ -487,30 +499,16 @@ function RefundModal({ busy, form, language, onClose, onSubmit, order, setForm, 
     <Modal title={t("admin.refundOrderTitle", { code: order.orderCode })} onClose={onClose}>
       <form className="grid gap-4" onSubmit={onSubmit}>
         <p className="rounded-xl bg-blue-50 p-4 text-sm font-semibold text-blue-700">{t("admin.manualRefundNote")}</p>
-        <Meta label={t("common.total")} value={formatVND(order.totalAmount, language)} strong />
+        <MetaRow label={t("common.total")} value={formatVND(order.totalAmount, language)} strong />
         <Input required min="0" step="1000" type="number" value={form.amount} onChange={(event) => setForm({ ...form, amount: event.target.value })} placeholder={t("common.amount")} />
         <Input required maxLength={255} value={form.reason} onChange={(event) => setForm({ ...form, reason: event.target.value })} placeholder={t("admin.refundReason")} />
         <Textarea required maxLength={1000} value={form.note} onChange={(event) => setForm({ ...form, note: event.target.value })} placeholder={t("admin.refundNote")} />
         <div className="flex flex-wrap justify-end gap-2">
-          <Button secondary type="button" onClick={onClose}>{t("common.cancel")}</Button>
+          <Button variant="secondary" type="button" onClick={onClose}>{t("common.cancel")}</Button>
           <Button disabled={busy} type="submit">{t("admin.markRefunded")}</Button>
         </div>
       </form>
     </Modal>
-  );
-}
-
-function Modal({ children, onClose, title }) {
-  return (
-    <div className="fixed inset-0 z-[60] grid place-items-center bg-slate-950/60 px-4 backdrop-blur-sm">
-      <section className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-2xl">
-        <div className="mb-4 flex items-start justify-between gap-4">
-          <h3 className="text-xl font-bold text-slate-950">{title}</h3>
-          <button className="rounded-full border border-slate-200 px-3 py-1 text-sm font-bold text-slate-600" type="button" onClick={onClose}>×</button>
-        </div>
-        {children}
-      </section>
-    </div>
   );
 }
 
@@ -575,59 +573,6 @@ function createEmptyMeta(filters) {
   };
 }
 
-function PageHeader({ title, eyebrow }) {
-  return (
-    <div className="border-b border-slate-200 pb-6">
-      <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-600">{eyebrow}</span>
-      <h2 className="mt-3 font-serif text-4xl font-bold text-slate-950">{title}</h2>
-    </div>
-  );
-}
-
-function Panel({ title, children }) {
-  return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
-      <h3 className="mb-5 text-xl font-bold text-slate-950">{title}</h3>
-      {children}
-    </section>
-  );
-}
-
-function InfoCard({ children, className = "", title }) {
-  return (
-    <section className={["rounded-xl border border-slate-200 bg-white p-5", className].join(" ")}>
-      <h3 className="mb-4 text-lg font-bold text-slate-950">{title}</h3>
-      <div className="grid gap-2">{children}</div>
-    </section>
-  );
-}
-
-function Meta({ label, strong = false, value }) {
-  return (
-    <div className="flex flex-wrap items-start justify-between gap-3 text-sm">
-      <span className="text-slate-500">{label}</span>
-      <span className={["max-w-[70%] text-right", strong ? "font-bold text-slate-950" : "font-semibold text-slate-700"].join(" ")}>{value}</span>
-    </div>
-  );
-}
-
-function Pagination({ loading, meta, onPage, t }) {
-  if (!meta.totalPages || meta.totalPages <= 1) return null;
-  return (
-    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm">
-      <span className="font-semibold text-slate-500">
-        {t("catalog.pageIndicator", { page: meta.currentPage, total: meta.totalPages })} - {meta.totalElements}
-      </span>
-      <div className="flex flex-wrap gap-2">
-        <SmallButton disabled={loading || !meta.hasPrevious} onClick={() => onPage(1)}>{t("catalog.firstPage")}</SmallButton>
-        <SmallButton disabled={loading || !meta.hasPrevious} onClick={() => onPage(meta.currentPage - 1)}>{t("catalog.previousPage")}</SmallButton>
-        <SmallButton disabled={loading || !meta.hasNext} onClick={() => onPage(meta.currentPage + 1)}>{t("catalog.nextPage")}</SmallButton>
-        <SmallButton disabled={loading || !meta.hasNext} onClick={() => onPage(meta.totalPages)}>{t("catalog.lastPage")}</SmallButton>
-      </div>
-    </div>
-  );
-}
-
 function StatusBadge({ status, t }) {
   return <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-bold text-slate-700">{statusLabel(status, t)}</span>;
 }
@@ -644,26 +589,3 @@ function BlockingLoader({ text }) {
   );
 }
 
-function Input(props) {
-  return <input {...props} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-slate-50" />;
-}
-
-function Textarea(props) {
-  return <textarea {...props} className="min-h-28 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />;
-}
-
-function Select(props) {
-  return <select {...props} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />;
-}
-
-function Button({ secondary = false, ...props }) {
-  return <button {...props} className={["rounded-full px-5 py-3 text-sm font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50", secondary ? "border border-slate-200 text-slate-700 hover:bg-slate-50" : "bg-slate-950 text-white hover:bg-blue-600"].join(" ")} />;
-}
-
-function SmallButton({ danger = false, ...props }) {
-  return <button type="button" {...props} className={["rounded-full border px-3 py-1.5 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50", danger ? "border-red-100 text-red-600 hover:bg-red-50" : "border-slate-200 text-slate-600 hover:bg-slate-50"].join(" ")} />;
-}
-
-function Notice({ children }) {
-  return <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-700">{children}</div>;
-}

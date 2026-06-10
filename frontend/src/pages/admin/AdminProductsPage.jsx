@@ -15,7 +15,17 @@ import {
   updateProductVariation,
   uploadProductMedia,
 } from "../../api/adminApi.js";
-import { useConfirm } from "../../components/ui/index.jsx";
+import {
+  Button,
+  Input,
+  Notice,
+  PageHeader,
+  Pagination,
+  Panel,
+  Select,
+  Textarea,
+  useConfirm,
+} from "../../components/ui/index.jsx";
 import { getCategories } from "../../api/catalogApi.js";
 import { formatDateTime, formatVND } from "../../utils/formatters.js";
 import {
@@ -453,7 +463,7 @@ export default function AdminProductsPage() {
             {PAGE_SIZES.map((size) => <option key={size} value={size}>{size}</option>)}
           </Select>
           <Button type="submit">{t("admin.applyFilters")}</Button>
-          <Button secondary type="button" onClick={clearFilters}>{t("admin.clearFilters")}</Button>
+          <Button variant="secondary" type="button" onClick={clearFilters}>{t("admin.clearFilters")}</Button>
         </form>
       </Panel>
 
@@ -495,9 +505,9 @@ export default function AdminProductsPage() {
                   <td className="px-4 py-3 text-slate-500">{formatDateTime(book.updatedAt || book.createdAt, i18n.language)}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-2">
-                      <SmallButton onClick={() => manageProduct(book)}>{t("admin.manage")}</SmallButton>
-                      <SmallButton onClick={() => startEdit(book)}>{t("common.edit")}</SmallButton>
-                      <SmallButton danger onClick={() => remove(book)}>{t("common.delete")}</SmallButton>
+                      <Button size="sm" variant="secondary" onClick={() => manageProduct(book)}>{t("admin.manage")}</Button>
+                      <Button size="sm" variant="secondary" onClick={() => startEdit(book)}>{t("common.edit")}</Button>
+                      <Button size="sm" variant="danger" onClick={() => remove(book)}>{t("common.delete")}</Button>
                     </div>
                   </td>
                 </tr>
@@ -514,7 +524,7 @@ export default function AdminProductsPage() {
         <form className="grid gap-5" onSubmit={submitBook}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-slate-500">{t("admin.productNote")}</p>
-            <Button secondary type="button" onClick={startCreate}>{t("admin.newBook")}</Button>
+            <Button variant="secondary" type="button" onClick={startCreate}>{t("admin.newBook")}</Button>
           </div>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <Input required={!editingProductId} value={bookForm.sku} onChange={(e) => handleBookField("sku", e.target.value)} placeholder={t("admin.sku")} />
@@ -566,7 +576,7 @@ export default function AdminProductsPage() {
 
           <div className="flex flex-wrap gap-3">
             <Button type="submit">{editingProductId ? t("admin.updateBook") : t("admin.saveBackend")}</Button>
-            {editingProductId && <Button secondary type="button" onClick={startCreate}>{t("common.cancel")}</Button>}
+            {editingProductId && <Button variant="secondary" type="button" onClick={startCreate}>{t("common.cancel")}</Button>}
           </div>
         </form>
       </Panel>
@@ -583,7 +593,7 @@ export default function AdminProductsPage() {
               <p>{selectedProduct.publisher || "-"} {selectedProduct.publicationYear ? `- ${selectedProduct.publicationYear}` : ""}</p>
               <p>{selectedProduct.bookLanguage || "-"} / {selectedProduct.pageCount || "-"} / {selectedProduct.bookFormat || "-"}</p>
             </div>
-            <Button secondary type="button" onClick={() => setSelectedProduct(null)}>{t("common.close")}</Button>
+            <Button variant="secondary" type="button" onClick={() => setSelectedProduct(null)}>{t("common.close")}</Button>
           </div>
 
           <div className="grid gap-6 xl:grid-cols-2">
@@ -599,9 +609,9 @@ export default function AdminProductsPage() {
                     <span>{formatVND(variation.additionalPrice || 0, i18n.language)}</span>
                     <span>{t("admin.stockLeft", { count: variation.stockQuantity || 0 })}</span>
                     <div className="flex flex-wrap gap-2">
-                      <SmallButton onClick={() => editVariation(variation)}>{t("common.edit")}</SmallButton>
-                      <SmallButton onClick={() => setStockForm({ variationId: variation.id, stockQuantity: variation.stockQuantity || 0 })}>{t("admin.stock")}</SmallButton>
-                      <SmallButton danger onClick={() => removeVariation(variation.id)}>{t("common.delete")}</SmallButton>
+                      <Button size="sm" variant="secondary" onClick={() => editVariation(variation)}>{t("common.edit")}</Button>
+                      <Button size="sm" variant="secondary" onClick={() => setStockForm({ variationId: variation.id, stockQuantity: variation.stockQuantity || 0 })}>{t("admin.stock")}</Button>
+                      <Button size="sm" variant="danger" onClick={() => removeVariation(variation.id)}>{t("common.delete")}</Button>
                     </div>
                   </div>
                 ))}
@@ -624,8 +634,8 @@ export default function AdminProductsPage() {
                   <Input value={variationForm.imagePublicId} onChange={(e) => setVariationForm({ ...variationForm, imagePublicId: e.target.value })} placeholder={t("admin.imagePublicId")} />
                 </div>
                 <div className="flex gap-2">
-                  <Button secondary type="submit">{editingVariationId ? t("admin.updateVariation") : t("admin.addVariation")}</Button>
-                  {editingVariationId && <Button secondary type="button" onClick={resetVariationForm}>{t("common.cancel")}</Button>}
+                  <Button variant="secondary" type="submit">{editingVariationId ? t("admin.updateVariation") : t("admin.addVariation")}</Button>
+                  {editingVariationId && <Button variant="secondary" type="button" onClick={resetVariationForm}>{t("common.cancel")}</Button>}
                 </div>
               </form>
 
@@ -637,7 +647,7 @@ export default function AdminProductsPage() {
                     {(selectedProduct.variations || []).map((variation) => <option key={variation.id} value={variation.id}>{variation.sku}</option>)}
                   </Select>
                   <Input required value={stockForm.stockQuantity} onChange={(e) => setStockForm({ ...stockForm, stockQuantity: e.target.value })} placeholder={t("admin.stockQuantity")} type="number" min="0" />
-                  <Button secondary type="submit">{t("admin.updateStock")}</Button>
+                  <Button variant="secondary" type="submit">{t("admin.updateStock")}</Button>
                 </div>
               </form>
             </section>
@@ -654,8 +664,8 @@ export default function AdminProductsPage() {
                       <span>{t("admin.sortOrder")}: {media.sortOrder ?? 0} / {media.active === false ? t("common.hidden") : t("common.active")}</span>
                     </div>
                     <div className="mt-3 flex gap-2">
-                      <SmallButton onClick={() => editMedia(media)}>{t("common.edit")}</SmallButton>
-                      <SmallButton danger onClick={() => removeMedia(media.id)}>{t("common.delete")}</SmallButton>
+                      <Button size="sm" variant="secondary" onClick={() => editMedia(media)}>{t("common.edit")}</Button>
+                      <Button size="sm" variant="danger" onClick={() => removeMedia(media.id)}>{t("common.delete")}</Button>
                     </div>
                   </div>
                 ))}
@@ -671,7 +681,7 @@ export default function AdminProductsPage() {
                   <input checked={mediaForm.primary} type="checkbox" onChange={(e) => setMediaForm({ ...mediaForm, primary: e.target.checked })} />
                   {t("admin.primary")}
                 </label>
-                <Button secondary type="submit">{t("admin.uploadMedia")}</Button>
+                <Button variant="secondary" type="submit">{t("admin.uploadMedia")}</Button>
               </form>
 
               {mediaEditForm.id && (
@@ -688,8 +698,8 @@ export default function AdminProductsPage() {
                     {t("common.active")}
                   </label>
                   <div className="flex gap-2">
-                    <Button secondary type="submit">{t("admin.updateMedia")}</Button>
-                    <Button secondary type="button" onClick={() => setMediaEditForm(emptyMediaEditForm)}>{t("common.cancel")}</Button>
+                    <Button variant="secondary" type="submit">{t("admin.updateMedia")}</Button>
+                    <Button variant="secondary" type="button" onClick={() => setMediaEditForm(emptyMediaEditForm)}>{t("common.cancel")}</Button>
                   </div>
                 </form>
               )}
@@ -792,41 +802,6 @@ function createEmptyMeta(filters) {
   };
 }
 
-function PageHeader({ title, eyebrow }) {
-  return (
-    <div className="border-b border-slate-200 pb-6">
-      <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-600">{eyebrow}</span>
-      <h2 className="mt-3 font-serif text-4xl font-bold text-slate-950">{title}</h2>
-    </div>
-  );
-}
-
-function Panel({ title, children }) {
-  return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
-      <h3 className="mb-5 text-xl font-bold text-slate-950">{title}</h3>
-      {children}
-    </section>
-  );
-}
-
-function Pagination({ meta, loading, onPage, t }) {
-  if (!meta.totalPages || meta.totalPages <= 1) return null;
-  return (
-    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm">
-      <span className="font-semibold text-slate-500">
-        {t("catalog.pageIndicator", { page: meta.currentPage, total: meta.totalPages })} - {meta.totalElements}
-      </span>
-      <div className="flex flex-wrap gap-2">
-        <SmallButton disabled={loading || !meta.hasPrevious} onClick={() => onPage(1)}>{t("catalog.firstPage")}</SmallButton>
-        <SmallButton disabled={loading || !meta.hasPrevious} onClick={() => onPage(meta.currentPage - 1)}>{t("catalog.previousPage")}</SmallButton>
-        <SmallButton disabled={loading || !meta.hasNext} onClick={() => onPage(meta.currentPage + 1)}>{t("catalog.nextPage")}</SmallButton>
-        <SmallButton disabled={loading || !meta.hasNext} onClick={() => onPage(meta.totalPages)}>{t("catalog.lastPage")}</SmallButton>
-      </div>
-    </div>
-  );
-}
-
 function StatusBadge({ status, featured }) {
   return (
     <div className="flex flex-wrap gap-1">
@@ -834,28 +809,4 @@ function StatusBadge({ status, featured }) {
       {featured && <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-bold text-amber-700">Featured</span>}
     </div>
   );
-}
-
-function Input(props) {
-  return <input {...props} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-slate-50" />;
-}
-
-function Textarea(props) {
-  return <textarea {...props} className="min-h-28 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />;
-}
-
-function Select(props) {
-  return <select {...props} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />;
-}
-
-function Button({ secondary = false, ...props }) {
-  return <button {...props} className={["rounded-full px-5 py-3 text-sm font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50", secondary ? "border border-slate-200 text-slate-700 hover:bg-slate-50" : "bg-slate-950 text-white hover:bg-blue-600"].join(" ")} />;
-}
-
-function SmallButton({ danger = false, ...props }) {
-  return <button type="button" {...props} className={["rounded-full border px-3 py-1.5 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50", danger ? "border-red-100 text-red-600 hover:bg-red-50" : "border-slate-200 text-slate-600 hover:bg-slate-50"].join(" ")} />;
-}
-
-function Notice({ children }) {
-  return <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-700">{children}</div>;
 }
