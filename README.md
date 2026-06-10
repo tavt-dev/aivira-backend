@@ -154,3 +154,21 @@ Success responses use `ApiResponse<T>`. Paginated list responses use `ApiRespons
 ```
 
 Integration tests use Testcontainers and are skipped when Docker is unavailable.
+
+## Frontend
+
+The React/Vite frontend lives in `frontend/`.
+
+Local development:
+
+```powershell
+cd frontend
+npm ci
+npm run dev
+```
+
+Open `http://localhost:5173`. By default, frontend API calls use `/api/v1` and Vite proxies `/api/**` to `http://localhost:8080`.
+
+Production deployments can either keep the same-origin `/api/v1` reverse proxy or set `VITE_API_BASE_URL` to a deployed backend API origin. The backend must allow the frontend origin for CORS and refresh-cookie credentials. VNPay/MoMo browser return URLs should point to the frontend `/payment-result` route, while callback/IPN URLs remain backend URLs.
+
+See `frontend/README.md` for frontend environment variables, build, preview, tests, CI, and deployment notes.

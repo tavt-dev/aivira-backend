@@ -1306,36 +1306,57 @@ Acceptance:
 
 ## Phase FE-18: Frontend Config, Build, And Deployment
 
+Status: completed in current workspace. `npm run ci` passes.
+
 Goal: production-practical frontend delivery.
 
 Config:
 
-- `.env.example` documents:
-  - `VITE_API_BASE_URL`
-  - optional feature flags if introduced.
-- Local dev uses Vite proxy to `/api/v1`.
-- Production points to deployed backend API.
+- [x] `.env.example` documents:
+  - [x] `VITE_API_BASE_URL`.
+  - [x] `VITE_DEV_PROXY_TARGET`.
+  - [x] Same-origin reverse proxy mode.
+  - [x] Split frontend/backend domain mode.
+- [x] Local dev uses Vite proxy to `/api/v1`.
+- [x] `vite.config.js` reads `VITE_DEV_PROXY_TARGET`.
+- [x] Production can point to deployed backend API through `VITE_API_BASE_URL`.
+- [x] No frontend secrets are introduced.
 
 Build:
 
-- `npm run build`.
-- `npm run preview`.
-- Add lint/format scripts if dependencies are added:
-  - ESLint.
-  - Prettier.
+- [x] `npm run build`.
+- [x] `npm run preview`.
+- [x] `npm run test`.
+- [x] `npm run test:e2e`.
+- [x] `npm run lint`.
+- [x] `npm run lint:fix`.
+- [x] `npm run format`.
+- [x] `npm run format:check`.
+- [x] `npm run ci`.
+- [x] ESLint config added.
+- [x] Prettier config added.
+- [x] Prettier gate scoped to docs/config/test files to avoid unrelated full-source formatting churn.
 
 Deployment docs:
 
-- Static hosting option.
-- Reverse proxy option.
-- CORS requirements.
-- Refresh cookie secure/sameSite considerations.
-- Payment return URL configuration.
+- [x] `frontend/README.md` added.
+- [x] Root `README.md` links to frontend docs.
+- [x] Static hosting option documented.
+- [x] Reverse proxy option documented.
+- [x] Split-origin option documented.
+- [x] CORS requirements documented.
+- [x] Refresh cookie secure/sameSite/domain considerations documented.
+- [x] Payment return URL configuration documented.
+- [x] GitHub Actions frontend quality workflow added.
+- [ ] Live production deployment verification remains pending.
 
 Acceptance:
 
-- A developer can run and build FE using README instructions.
-- Production environment variables are clearly documented.
+- [x] A developer can run and build FE using README instructions.
+- [x] Production environment variables are clearly documented.
+- [x] CI workflow runs frontend build, tests, E2E smoke, lint, and format check.
+- [x] No runtime business behavior changed.
+- [x] No seller/shop/merchant UI introduced.
 
 ## Recommended Implementation Order
 
