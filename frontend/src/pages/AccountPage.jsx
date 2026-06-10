@@ -3,7 +3,19 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 import { getSessions, logoutAll, revokeSession } from "../api/authApi.js";
-import { useConfirm } from "../components/ui/index.jsx";
+import {
+  Badge,
+  Button,
+  Checkbox,
+  EmptyState,
+  Input,
+  MetaRow,
+  Notice,
+  PageHeader,
+  Panel,
+  Select,
+  useConfirm,
+} from "../components/ui/index.jsx";
 import {
   changePassword,
   createAddress,
@@ -325,23 +337,20 @@ export default function AccountPage({ onAuth }) {
   return (
     <div className="mx-auto w-full max-w-7xl px-4 pb-20 pt-28 md:px-8">
       <PageHeader title={t("account.title")} eyebrow={t("account.eyebrow")} />
-      {message && <Notice>{message}</Notice>}
+      {message && <Notice className="mb-6">{message}</Notice>}
 
       {!loggedIn || !profile ? (
         <EmptyState
           title={t("account.loginRequired")}
           action={
-            <button
-              type="button"
-              className="rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-600"
-              onClick={onAuth}
-            >
+            <Button type="button" onClick={onAuth}>
               {t("common.login")}
-            </button>
+            </Button>
           }
         />
       ) : (
         <div className="grid gap-8 lg:grid-cols-2">
+          {/* Profile Panel */}
           <Panel title={t("account.profile")}>
             <div className="flex items-center gap-4">
               {profile.avatarUrl ? (
@@ -356,7 +365,7 @@ export default function AccountPage({ onAuth }) {
                 <p className="truncate text-sm text-slate-500">{profile.email || t("account.aiviraAccount")}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <Badge>{profile.provider || "LOCAL"}</Badge>
-                  <Badge tone={profile.emailVerified ? "success" : "warn"}>
+                  <Badge variant={profile.emailVerified ? "success" : "warning"}>
                     {profile.emailVerified ? t("account.emailVerified") : t("account.emailUnverified")}
                   </Badge>
                 </div>
@@ -382,16 +391,15 @@ export default function AccountPage({ onAuth }) {
                   placeholder={t("account.lastName")}
                 />
               </div>
-              <select
+              <Select
                 value={profileForm.gender}
                 onChange={(event) => setProfileForm({ ...profileForm, gender: event.target.value })}
-                className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
               >
                 <option value="">{t("account.gender")}</option>
                 <option value="MALE">{t("account.male")}</option>
                 <option value="FEMALE">{t("account.female")}</option>
                 <option value="OTHER">{t("account.other")}</option>
-              </select>
+              </Select>
               <Button disabled={busy === "profileSave"} type="submit">
                 {busy === "profileSave" ? t("common.working") : t("account.saveProfile")}
               </Button>
@@ -432,13 +440,14 @@ export default function AccountPage({ onAuth }) {
                   placeholder={t("account.confirmPassword")}
                   required
                 />
-                <Button secondary disabled={busy === "password"} type="submit">
+                <Button variant="secondary" disabled={busy === "password"} type="submit">
                   {busy === "password" ? t("common.working") : t("account.changePassword")}
                 </Button>
               </form>
             </div>
           </Panel>
 
+          {/* Addresses & Sessions Panel */}
           <Panel title={t("account.addresses")}>
             <div className="grid gap-3">
               {addresses.length ? (
@@ -453,13 +462,13 @@ export default function AccountPage({ onAuth }) {
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        <SmallButton onClick={() => editAddress(address)}>{t("common.edit")}</SmallButton>
-                        <SmallButton disabled={busy === `default-${address.id}`} onClick={() => makeDefault(address)}>
+                        <Button size="sm" variant="secondary" onClick={() => editAddress(address)}>{t("common.edit")}</Button>
+                        <Button size="sm" variant="secondary" disabled={busy === `default-${address.id}`} onClick={() => makeDefault(address)}>
                           {t("common.default")}
-                        </SmallButton>
-                        <SmallButton danger disabled={busy === `delete-${address.id}`} onClick={() => removeAddress(address)}>
+                        </Button>
+                        <Button size="sm" variant="danger" disabled={busy === `delete-${address.id}`} onClick={() => removeAddress(address)}>
                           {t("common.delete")}
-                        </SmallButton>
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -475,7 +484,7 @@ export default function AccountPage({ onAuth }) {
                   {editingAddressId ? t("account.editAddress") : t("account.addAddress")}
                 </h3>
                 {editingAddressId && (
-                  <SmallButton onClick={resetAddressForm}>{t("account.cancelEdit")}</SmallButton>
+                  <Button size="sm" variant="secondary" type="button" onClick={resetAddressForm}>{t("account.cancelEdit")}</Button>
                 )}
               </div>
               <div className="grid gap-4 md:grid-cols-2">
@@ -503,14 +512,12 @@ export default function AccountPage({ onAuth }) {
                 <Input value={addressForm.district} onChange={(event) => setAddressForm({ ...addressForm, district: event.target.value })} placeholder={t("checkout.district")} />
                 <Input value={addressForm.city} onChange={(event) => setAddressForm({ ...addressForm, city: event.target.value })} placeholder={t("checkout.city")} />
               </div>
-              <label className="flex items-center gap-2 text-sm font-semibold text-slate-600">
-                <input
-                  type="checkbox"
-                  checked={addressForm.defaultAddress}
-                  onChange={(event) => setAddressForm({ ...addressForm, defaultAddress: event.target.checked })}
-                />
+              <Checkbox
+                checked={addressForm.defaultAddress}
+                onChange={(event) => setAddressForm({ ...addressForm, defaultAddress: event.target.checked })}
+              >
                 {t("account.defaultAddress")}
-              </label>
+              </Checkbox>
               <Button disabled={busy === "address"} type="submit">
                 {busy === "address"
                   ? t("common.working")
@@ -532,12 +539,12 @@ export default function AccountPage({ onAuth }) {
                         {session.ipAddress || ""}
                       </span>
                       <div className="flex items-center gap-2">
-                        <small className="rounded-full bg-slate-200 px-2 py-1 text-xs font-bold text-slate-600">
+                        <Badge variant={session.current ? "info" : "neutral"}>
                           {session.current ? t("common.current") : t("common.active")}
-                        </small>
-                        <SmallButton disabled={busy === `session-${sessionId}`} onClick={() => revoke(sessionId)}>
+                        </Badge>
+                        <Button size="sm" variant="secondary" disabled={busy === `session-${sessionId}`} onClick={() => revoke(sessionId)}>
                           {t("account.revoke")}
-                        </SmallButton>
+                        </Button>
                       </div>
                     </div>
                   );
@@ -545,7 +552,7 @@ export default function AccountPage({ onAuth }) {
               ) : (
                 <p className="text-sm text-slate-500">{t("account.noSessions")}</p>
               )}
-              <Button secondary disabled={busy === "logoutAll"} type="button" onClick={logoutEverywhere}>
+              <Button variant="secondary" disabled={busy === "logoutAll"} type="button" onClick={logoutEverywhere}>
                 {busy === "logoutAll" ? t("common.working") : t("account.logoutAll")}
               </Button>
             </div>
@@ -560,7 +567,7 @@ export default function AccountPage({ onAuth }) {
                 placeholder="DEACTIVATE"
               />
               <Button
-                danger
+                variant="danger"
                 className="mt-4"
                 disabled={busy === "deactivate" || deactivateConfirmation !== "DEACTIVATE"}
                 type="button"
@@ -578,103 +585,4 @@ export default function AccountPage({ onAuth }) {
 
 function fullAddress(address) {
   return [address.addressLine, address.ward, address.district, address.city].filter(Boolean).join(", ");
-}
-
-function PageHeader({ title, eyebrow }) {
-  return (
-    <div className="mb-8 border-b border-slate-200 pb-6">
-      <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-600">
-        {eyebrow}
-      </span>
-      <h1 className="mt-3 font-serif text-4xl font-bold text-slate-950 md:text-5xl">{title}</h1>
-    </div>
-  );
-}
-
-function Panel({ title, children }) {
-  return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-      <h2 className="mb-6 font-serif text-3xl font-bold text-slate-950">{title}</h2>
-      {children}
-    </section>
-  );
-}
-
-function MetaRow({ label, value }) {
-  return (
-    <div className="flex items-center justify-between gap-4">
-      <span className="font-semibold">{label}</span>
-      <span className="truncate text-right text-slate-950">{value || "-"}</span>
-    </div>
-  );
-}
-
-function Badge({ children, tone = "default" }) {
-  const toneClass =
-    tone === "success"
-      ? "bg-emerald-50 text-emerald-700"
-      : tone === "warn"
-        ? "bg-amber-50 text-amber-700"
-        : "bg-slate-100 text-slate-700";
-  return <span className={`rounded-full px-2 py-1 text-xs font-bold ${toneClass}`}>{children}</span>;
-}
-
-function Input({ className = "", ...props }) {
-  return (
-    <input
-      {...props}
-      className={[
-        "w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60",
-        className,
-      ].join(" ")}
-    />
-  );
-}
-
-function Button({ danger = false, secondary = false, className = "", ...props }) {
-  return (
-    <button
-      {...props}
-      className={[
-        "rounded-full px-6 py-3 text-sm font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50",
-        danger
-          ? "bg-red-600 text-white hover:bg-red-700"
-          : secondary
-            ? "border border-slate-200 text-slate-700 hover:bg-slate-50"
-            : "bg-slate-950 text-white hover:bg-blue-600",
-        className,
-      ].join(" ")}
-    />
-  );
-}
-
-function SmallButton({ danger = false, className = "", ...props }) {
-  return (
-    <button
-      type="button"
-      {...props}
-      className={[
-        "rounded-full border px-3 py-1.5 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50",
-        danger ? "border-red-100 text-red-600 hover:bg-red-50" : "border-slate-200 text-slate-600 hover:bg-white",
-        className,
-      ].join(" ")}
-    />
-  );
-}
-
-function EmptyState({ title, action }) {
-  return (
-    <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-8 py-16 text-center">
-      <h2 className="font-serif text-3xl font-bold text-slate-950">{title}</h2>
-      {action && <div className="mt-6 flex justify-center">{action}</div>}
-    </div>
-  );
-}
-
-function Notice({ children }) {
-  return (
-    <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-700">
-      {children}
-    </div>
-  );
 }

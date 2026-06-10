@@ -6,6 +6,16 @@ import { getCart } from "../api/cartApi.js";
 import { createCheckout, previewCheckout } from "../api/checkoutApi.js";
 import { createAddress, getAddresses } from "../api/userApi.js";
 import {
+  Button,
+  Input,
+  MetaRow,
+  Notice,
+  PageHeader,
+  Select,
+  Skeleton,
+  Textarea,
+} from "../components/ui/index.jsx";
+import {
   clearCheckoutCartItemIds,
   getCheckoutCartItemIds,
 } from "../utils/checkoutSelection.js";
@@ -192,24 +202,24 @@ export default function CheckoutPage({ onAuth }) {
       <PageHeader title={t("checkout.title")} eyebrow={t("checkout.eyebrow")} />
 
       {!loggedIn && (
-        <Notice>
+        <Notice className="mb-6">
           {t("checkout.loginRequired")}{" "}
           <button className="font-bold text-blue-700 underline" type="button" onClick={onAuth}>
             {t("common.login")}
           </button>
         </Notice>
       )}
-      {loggedIn && cartSource === "error" && <Notice>{t("checkout.disabled")}</Notice>}
+      {loggedIn && cartSource === "error" && <Notice className="mb-6">{t("checkout.disabled")}</Notice>}
 
       <form className="grid gap-8 lg:grid-cols-[1fr_420px]" onSubmit={submit}>
         <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
           <h2 className="font-serif text-3xl font-bold text-slate-950">{t("checkout.shipping")}</h2>
 
           {addresses.length > 0 && (
-            <select
+            <Select
               value={selectedAddress}
               onChange={(event) => setSelectedAddress(event.target.value)}
-              className="mt-6 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+              className="mt-6"
             >
               <option value="">{t("checkout.createNewAddress")}</option>
               {addresses.map((address) => (
@@ -217,7 +227,7 @@ export default function CheckoutPage({ onAuth }) {
                   {address.recipientName} - {address.addressLine}
                 </option>
               ))}
-            </select>
+            </Select>
           )}
 
           {!selectedAddress && (
@@ -302,11 +312,11 @@ export default function CheckoutPage({ onAuth }) {
           </div>
           {previewError && <Notice className="mt-4">{previewError}</Notice>}
 
-          <textarea
+          <Textarea
             placeholder={t("checkout.notes")}
             value={form.notes}
             onChange={(event) => setForm({ ...form, notes: event.target.value })}
-            className="mt-8 min-h-32 w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+            className="mt-8 resize-y"
           />
         </section>
 
@@ -315,7 +325,7 @@ export default function CheckoutPage({ onAuth }) {
           {!canPreview && selectedAddress === "" && (
             <p className="mt-3 text-sm font-semibold text-slate-500">{t("checkout.previewNeedsAddress")}</p>
           )}
-          {previewLoading && <SummarySkeleton />}
+          {previewLoading && <Skeleton rows={3} />}
 
           <div className="mt-6 grid gap-4">
             {summaryItems.length ? (
@@ -343,10 +353,10 @@ export default function CheckoutPage({ onAuth }) {
           </div>
 
           <div className="mt-6 grid gap-3 border-t border-slate-100 pt-5">
-            <MoneyRow label={t("checkout.subtotal")} value={preview?.subtotal ?? temporaryTotal} />
-            <MoneyRow label={t("checkout.promotionDiscount")} value={-(preview?.promotionDiscountAmount || 0)} tone="discount" />
-            <MoneyRow label={t("checkout.couponDiscount")} value={-(preview?.couponDiscountAmount || 0)} tone="discount" />
-            <MoneyRow label={t("checkout.shippingFee")} value={preview?.shippingFee || 0} />
+            <MetaRow label={t("checkout.subtotal")} value={formatVND(preview?.subtotal ?? temporaryTotal)} />
+            <MetaRow label={t("checkout.promotionDiscount")} value={formatVND(-(preview?.promotionDiscountAmount || 0))} />
+            <MetaRow label={t("checkout.couponDiscount")} value={formatVND(-(preview?.couponDiscountAmount || 0))} />
+            <MetaRow label={t("checkout.shippingFee")} value={formatVND(preview?.shippingFee || 0)} />
             {!preview && <p className="text-xs font-semibold text-amber-600">{t("checkout.temporaryTotal")}</p>}
           </div>
 
@@ -423,62 +433,4 @@ function buildCheckoutBody(addressId, cartItemIds, form) {
     couponCode: couponCode || undefined,
     notes: notes || undefined,
   };
-}
-
-function PageHeader({ title, eyebrow }) {
-  return (
-    <div className="mb-8 border-b border-slate-200 pb-6">
-      <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-600">
-        {eyebrow}
-      </span>
-      <h1 className="mt-3 font-serif text-4xl font-bold text-slate-950 md:text-5xl">{title}</h1>
-    </div>
-  );
-}
-
-function Input({ className = "", ...props }) {
-  return (
-    <input
-      {...props}
-      className={[
-        "w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100",
-        className,
-      ].join(" ")}
-    />
-  );
-}
-
-function MoneyRow({ label, value, tone = "default" }) {
-  const numeric = Number(value || 0);
-  return (
-    <div className="flex items-center justify-between text-sm">
-      <span className="font-semibold text-slate-500">{label}</span>
-      <strong className={tone === "discount" && numeric < 0 ? "text-emerald-600" : "text-slate-950"}>
-        {formatVND(numeric)}
-      </strong>
-    </div>
-  );
-}
-
-function SummarySkeleton() {
-  return (
-    <div className="mt-6 grid gap-3" aria-hidden="true">
-      <div className="h-16 animate-pulse rounded-2xl bg-slate-100" />
-      <div className="h-16 animate-pulse rounded-2xl bg-slate-100" />
-      <div className="h-28 animate-pulse rounded-2xl bg-slate-100" />
-    </div>
-  );
-}
-
-function Notice({ children, className = "" }) {
-  return (
-    <div
-      className={[
-        "mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-700",
-        className,
-      ].join(" ")}
-    >
-      {children}
-    </div>
-  );
 }

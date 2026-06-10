@@ -1,5 +1,7 @@
 import { useTranslation } from "react-i18next";
 
+import { PageHeader } from "../../components/ui/index.jsx";
+
 export default function AdminOrdersPendingPage() {
   const { t } = useTranslation();
   return (
@@ -13,17 +15,6 @@ export default function AdminOrdersPendingPage() {
           {t("admin.ordersPendingCopy")}
         </p>
       </section>
-    </div>
-  );
-}
-
-function PageHeader({ title, eyebrow }) {
-  return (
-    <div className="border-b border-slate-200 pb-6">
-      <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-600">
-        {eyebrow}
-      </span>
-      <h2 className="mt-3 font-serif text-4xl font-bold text-slate-950">{title}</h2>
     </div>
   );
 }

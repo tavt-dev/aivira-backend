@@ -10,6 +10,7 @@ import {
   removeCheckoutCartItemIds,
   saveCheckoutCartItemIds,
 } from "../utils/checkoutSelection.js";
+import { Button, EmptyState, MetaRow, Notice, PageHeader } from "../components/ui/index.jsx";
 import { cartTotal, formatVND } from "../utils/formatters.js";
 import { normalizeCartItem } from "../utils/mappers.js";
 import { getAccessToken } from "../utils/storage.js";
@@ -125,7 +126,7 @@ export default function CartPage({ onAuth }) {
     <div className="mx-auto w-full max-w-7xl px-4 pb-20 pt-28 md:px-8">
       <PageHeader title={t("cart.title")} eyebrow={t("cart.eyebrow")} />
 
-      {message && <Notice>{message}</Notice>}
+      {message && <Notice className="mb-6">{message}</Notice>}
 
       {!loggedIn ? (
         <EmptyState
@@ -144,12 +145,9 @@ export default function CartPage({ onAuth }) {
         <EmptyState
           title={t("cart.empty")}
           action={
-            <Link
-              className="inline-flex rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-600"
-              to="/category/all"
-            >
+            <Button type="button" onClick={() => navigate("/category/all")}>
               {t("cart.browse")}
-            </Link>
+            </Button>
           }
         />
       ) : (
@@ -257,8 +255,8 @@ export default function CartPage({ onAuth }) {
           <aside className="h-fit rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="font-serif text-3xl font-bold text-slate-950">{t("cart.summary")}</h2>
             <div className="mt-6 grid gap-3 text-sm">
-              <SummaryRow label={t("cart.selectedItems")} value={selectedIds.length} />
-              <SummaryRow label={t("cart.availableItems")} value={availableItems.length} />
+              <MetaRow label={t("cart.selectedItems")} value={selectedIds.length} />
+              <MetaRow label={t("cart.availableItems")} value={availableItems.length} />
             </div>
             <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-5">
               <span className="font-semibold text-slate-500">{t("common.total")}</span>
@@ -282,43 +280,6 @@ export default function CartPage({ onAuth }) {
           </aside>
         </div>
       )}
-    </div>
-  );
-}
-
-function PageHeader({ title, eyebrow }) {
-  return (
-    <div className="mb-8 border-b border-slate-200 pb-6">
-      <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-600">
-        {eyebrow}
-      </span>
-      <h1 className="mt-3 font-serif text-4xl font-bold text-slate-950 md:text-5xl">{title}</h1>
-    </div>
-  );
-}
-
-function SummaryRow({ label, value }) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="font-semibold text-slate-500">{label}</span>
-      <strong className="text-slate-950">{value}</strong>
-    </div>
-  );
-}
-
-function EmptyState({ title, action }) {
-  return (
-    <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-8 py-16 text-center">
-      <h2 className="font-serif text-3xl font-bold text-slate-950">{title}</h2>
-      {action && <div className="mt-6 flex justify-center">{action}</div>}
-    </div>
-  );
-}
-
-function Notice({ children }) {
-  return (
-    <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-700">
-      {children}
     </div>
   );
 }

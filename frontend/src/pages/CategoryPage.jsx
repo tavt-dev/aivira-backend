@@ -1,10 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 
 import { getCategories, getProducts } from "../api/catalogApi.js";
 import BookCard from "../components/BookCard.jsx";
+import {
+  Button,
+  Drawer,
+  EmptyState,
+  Input,
+  Notice,
+  Pagination,
+  Select,
+} from "../components/ui/index.jsx";
 import { normalizeBook, normalizeCategory, pageRows } from "../utils/mappers.js";
 
 const DEFAULT_PAGE = 1;
@@ -130,6 +139,7 @@ export default function CategoryPage() {
 
   return (
     <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-8 px-4 pb-20 pt-28 md:px-8 lg:grid-cols-[280px_1fr]">
+      {/* Desktop sidebar */}
       <aside className="hidden lg:block lg:sticky lg:top-28 lg:self-start">
         <CatalogSidebar
           categories={categories}
@@ -161,14 +171,16 @@ export default function CategoryPage() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <button
+            {/* Mobile filter button */}
+            <Button
               type="button"
+              variant="secondary"
+              className="lg:hidden"
               onClick={() => setMobileFiltersOpen(true)}
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm lg:hidden"
             >
               <SlidersHorizontal className="h-4 w-4" />
               {t("catalog.filters")}
-            </button>
+            </Button>
             <SortSelect
               value={filters.sort}
               size={filters.size}
@@ -180,11 +192,7 @@ export default function CategoryPage() {
           </div>
         </div>
 
-        {message && (
-          <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-700">
-            {message}
-          </div>
-        )}
+        {message && <Notice className="mb-6">{message}</Notice>}
 
         {loading ? (
           <BookGridSkeleton count={filters.size} />
@@ -195,45 +203,40 @@ export default function CategoryPage() {
             ))}
           </div>
         ) : (
-          <EmptyState title={t("catalog.noBooks")} action={hasActiveFilters ? (
-            <button type="button" onClick={clearFilters} className="rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white hover:bg-blue-600">
-              {t("catalog.clearFilters")}
-            </button>
-          ) : null} />
+          <EmptyState
+            title={t("catalog.noBooks")}
+            action={
+              hasActiveFilters ? (
+                <Button type="button" onClick={clearFilters}>
+                  {t("catalog.clearFilters")}
+                </Button>
+              ) : null
+            }
+          />
         )}
 
         <Pagination meta={pageMeta} loading={loading} onPage={goToPage} t={t} />
       </main>
 
-      {mobileFiltersOpen && (
-        <div className="fixed inset-0 z-[6000] bg-slate-950/60 backdrop-blur-sm lg:hidden" role="presentation">
-          <div className="ml-auto flex h-full w-[min(420px,92vw)] flex-col overflow-y-auto bg-white p-5 shadow-2xl">
-            <div className="mb-5 flex items-center justify-between">
-              <h2 className="font-serif text-2xl font-bold text-slate-950">{t("catalog.filters")}</h2>
-              <button
-                type="button"
-                onClick={() => setMobileFiltersOpen(false)}
-                className="grid h-10 w-10 place-items-center rounded-full bg-slate-100 text-slate-700"
-                aria-label={t("common.close")}
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <CatalogSidebar
-              categories={categories}
-              slug={slug}
-              categoryLink={categoryLink}
-              form={form}
-              setForm={setForm}
-              onApply={applyFilters}
-              onClear={clearFilters}
-              hasActiveFilters={hasActiveFilters}
-              t={t}
-              compact
-            />
-          </div>
-        </div>
-      )}
+      {/* Mobile filter drawer — using shared Drawer */}
+      <Drawer
+        open={mobileFiltersOpen}
+        title={t("catalog.filters")}
+        onClose={() => setMobileFiltersOpen(false)}
+      >
+        <CatalogSidebar
+          categories={categories}
+          slug={slug}
+          categoryLink={categoryLink}
+          form={form}
+          setForm={setForm}
+          onApply={applyFilters}
+          onClear={clearFilters}
+          hasActiveFilters={hasActiveFilters}
+          t={t}
+          compact
+        />
+      </Drawer>
     </div>
   );
 }
@@ -241,7 +244,7 @@ export default function CategoryPage() {
 function CatalogSidebar({ categories, slug, categoryLink, form, setForm, onApply, onClear, hasActiveFilters, t, compact = false }) {
   return (
     <div className="grid gap-5">
-      <Panel title={t("common.categories")}>
+      <SidebarPanel title={t("common.categories")}>
         <div className="grid gap-1">
           {categories.filter(Boolean).map((category) => (
             <Link
@@ -258,9 +261,9 @@ function CatalogSidebar({ categories, slug, categoryLink, form, setForm, onApply
             </Link>
           ))}
         </div>
-      </Panel>
+      </SidebarPanel>
 
-      <Panel title={t("catalog.filters")}>
+      <SidebarPanel title={t("catalog.filters")}>
         <form className="grid gap-4" onSubmit={onApply}>
           <FilterInput label={t("catalog.keyword")} value={form.keyword} onChange={(value) => setForm({ ...form, keyword: value })} placeholder={t("catalog.keywordPlaceholder")} />
           <FilterInput label={t("catalog.author")} value={form.author} onChange={(value) => setForm({ ...form, author: value })} placeholder={t("catalog.authorPlaceholder")} />
@@ -274,32 +277,24 @@ function CatalogSidebar({ categories, slug, categoryLink, form, setForm, onApply
 
           <label className="grid gap-2">
             <span className="text-xs font-black uppercase tracking-wider text-slate-400">{t("catalog.availability")}</span>
-            <select
+            <Select
               value={form.available}
               onChange={(event) => setForm({ ...form, available: event.target.value })}
-              className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
             >
               <option value="">{t("catalog.anyAvailability")}</option>
               <option value="true">{t("catalog.availableOnly")}</option>
               <option value="false">{t("catalog.outOfStockOnly")}</option>
-            </select>
+            </Select>
           </label>
 
           <div className={["grid gap-3", compact ? "sticky bottom-0 bg-white py-3" : ""].join(" ")}>
-            <button type="submit" className="rounded-full bg-slate-950 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-600">
-              {t("catalog.applyFilters")}
-            </button>
-            <button
-              type="button"
-              onClick={onClear}
-              disabled={!hasActiveFilters}
-              className="rounded-full border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-            >
+            <Button type="submit">{t("catalog.applyFilters")}</Button>
+            <Button type="button" variant="secondary" disabled={!hasActiveFilters} onClick={onClear}>
               {t("catalog.clearFilters")}
-            </button>
+            </Button>
           </div>
         </form>
-      </Panel>
+      </SidebarPanel>
     </div>
   );
 }
@@ -307,49 +302,34 @@ function CatalogSidebar({ categories, slug, categoryLink, form, setForm, onApply
 function SortSelect({ value, size, onChange, t }) {
   return (
     <div className="flex flex-wrap gap-2">
-      <select
+      <Select
         value={value}
         onChange={(event) => onChange({ sort: event.target.value })}
-        className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm outline-none focus:border-blue-500"
         aria-label={t("catalog.sort")}
+        className="rounded-full px-4 py-2 text-sm"
       >
         <option value="newest">{t("catalog.sortNewest")}</option>
         <option value="price_asc">{t("catalog.sortPriceAsc")}</option>
         <option value="price_desc">{t("catalog.sortPriceDesc")}</option>
         <option value="best_selling">{t("catalog.sortBestSelling")}</option>
         <option value="name_asc">{t("catalog.sortNameAsc")}</option>
-      </select>
-      <select
+      </Select>
+      <Select
         value={size}
         onChange={(event) => onChange({ size: Number(event.target.value) })}
-        className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm outline-none focus:border-blue-500"
         aria-label={t("catalog.pageSize")}
+        className="rounded-full px-4 py-2 text-sm"
       >
         {PAGE_SIZES.map((candidate) => (
           <option key={candidate} value={candidate}>{t("catalog.perPage", { count: candidate })}</option>
         ))}
-      </select>
+      </Select>
     </div>
   );
 }
 
-function Pagination({ meta, loading, onPage, t }) {
-  if (!meta.totalPages || meta.totalPages <= 1) return null;
-
-  return (
-    <div className="mt-10 flex flex-wrap items-center justify-center gap-2">
-      <PageButton disabled={loading || !meta.hasPrevious} onClick={() => onPage(1)}>{t("catalog.firstPage")}</PageButton>
-      <PageButton disabled={loading || !meta.hasPrevious} onClick={() => onPage(meta.currentPage - 1)}>{t("catalog.previousPage")}</PageButton>
-      <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700">
-        {t("catalog.pageIndicator", { page: meta.currentPage, total: meta.totalPages })}
-      </span>
-      <PageButton disabled={loading || !meta.hasNext} onClick={() => onPage(meta.currentPage + 1)}>{t("catalog.nextPage")}</PageButton>
-      <PageButton disabled={loading || !meta.hasNext} onClick={() => onPage(meta.totalPages)}>{t("catalog.lastPage")}</PageButton>
-    </div>
-  );
-}
-
-function Panel({ title, children }) {
+// Lightweight sidebar panel (different style from shared Panel — smaller, header tracking)
+function SidebarPanel({ title, children }) {
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-400">{title}</h2>
@@ -358,31 +338,18 @@ function Panel({ title, children }) {
   );
 }
 
+// Filter input with label wrapper (not using shared Input label to preserve sidebar compact style)
 function FilterInput({ label, value, onChange, type = "text", ...props }) {
   return (
     <label className="grid gap-2">
       <span className="text-xs font-black uppercase tracking-wider text-slate-400">{label}</span>
-      <input
+      <Input
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
         {...props}
       />
     </label>
-  );
-}
-
-function PageButton({ disabled, onClick, children }) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45"
-    >
-      {children}
-    </button>
   );
 }
 
@@ -398,15 +365,6 @@ function BookGridSkeleton({ count }) {
           <div className="mt-2 h-4 w-2/3 animate-pulse rounded bg-slate-100" />
         </div>
       ))}
-    </div>
-  );
-}
-
-function EmptyState({ title, action }) {
-  return (
-    <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-8 py-16 text-center">
-      <h3 className="font-serif text-2xl font-bold text-slate-950">{title}</h3>
-      {action && <div className="mt-6 flex justify-center">{action}</div>}
     </div>
   );
 }

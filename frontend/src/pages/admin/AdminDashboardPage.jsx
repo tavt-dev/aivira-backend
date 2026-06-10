@@ -9,14 +9,20 @@ import {
   getDashboardSummary,
   getDashboardTopBooks,
 } from "../../api/adminDashboardApi.js";
+import {
+  Button,
+  Notice,
+  PageHeader,
+  Panel,
+  Input,
+  Skeleton,
+} from "../../components/ui/index.jsx";
 import { formatVND } from "../../utils/formatters.js";
 
 const DEFAULT_TOP_LIMIT = 10;
 const DEFAULT_LOW_STOCK_LIMIT = 10;
 const DEFAULT_LOW_STOCK_THRESHOLD = 5;
 const MAX_LIMIT = 50;
-const ADMIN_INPUT =
-  "w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100";
 
 export default function AdminDashboardPage() {
   const { t } = useTranslation();
@@ -89,24 +95,24 @@ export default function AdminDashboardPage() {
     <div className="grid gap-8">
       <PageHeader title={t("admin.dashboardTitle")} eyebrow={t("admin.dashboardEyebrow")} />
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <Panel>
         <div className="grid gap-4 lg:grid-cols-[1fr_1fr_150px_150px_170px_auto]">
-          <Field label={t("admin.fromDate")}>
-            <input
+          <label className="grid gap-2 text-sm font-bold text-slate-600">
+            {t("admin.fromDate")}
+            <Input
               type="date"
               value={filters.fromDate}
               onChange={(event) => updateFilter("fromDate", event.target.value)}
-              className={ADMIN_INPUT}
             />
-          </Field>
-          <Field label={t("admin.toDate")}>
-            <input
+          </label>
+          <label className="grid gap-2 text-sm font-bold text-slate-600">
+            {t("admin.toDate")}
+            <Input
               type="date"
               value={filters.toDate}
               onChange={(event) => updateFilter("toDate", event.target.value)}
-              className={ADMIN_INPUT}
             />
-          </Field>
+          </label>
           <NumberField
             label={t("admin.topLimit")}
             value={filters.topLimit}
@@ -123,16 +129,16 @@ export default function AdminDashboardPage() {
             value={filters.lowStockLimit}
             onChange={(value) => updateFilter("lowStockLimit", clamp(value, 1, MAX_LIMIT))}
           />
-          <button
+          <Button
             type="button"
-            onClick={() => setRefreshKey((current) => current + 1)}
-            className="self-end rounded-xl bg-slate-950 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-600 disabled:cursor-wait disabled:opacity-60"
+            className="self-end"
             disabled={loading}
+            onClick={() => setRefreshKey((current) => current + 1)}
           >
             {loading ? t("admin.dashboardLoading") : t("admin.refresh")}
-          </button>
+          </Button>
         </div>
-      </section>
+      </Panel>
 
       <SummarySection summary={data.summary} error={errors.summary} loading={loading} t={t} />
 
@@ -163,8 +169,8 @@ function SummarySection({ summary, error, loading, t }) {
 
   return (
     <section className="grid gap-4">
-      <SectionHeader title={t("admin.summaryMetrics")} />
-      {error && <InlineError message={error} />}
+      <h3 className="font-serif text-3xl font-bold text-slate-950">{t("admin.summaryMetrics")}</h3>
+      {error && <Notice variant="warning">{error}</Notice>}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {metrics.map(([key, label, value]) => (
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" key={key}>
@@ -182,11 +188,12 @@ function SalesSection({ sales, error, loading, t }) {
   const maxRevenue = Math.max(...points.map((point) => Number(point.revenue || 0)), 1);
 
   return (
-    <Panel title={t("admin.salesTrend")} error={error}>
+    <Panel title={t("admin.salesTrend")}>
+      {error && <Notice variant="warning">{error}</Notice>}
       {loading && points.length === 0 ? (
-        <SkeletonRows />
+        <Skeleton rows={3} />
       ) : points.length === 0 ? (
-        <EmptyState>{t("admin.noSalesPoints")}</EmptyState>
+        <EmptyText>{t("admin.noSalesPoints")}</EmptyText>
       ) : (
         <div className="grid gap-3">
           {points.map((point) => {
@@ -215,11 +222,12 @@ function OrderStatusSection({ orders, error, loading, t }) {
   const maxCount = Math.max(...rows.map((row) => Number(row.count || 0)), 1);
 
   return (
-    <Panel title={t("admin.orderStatusCounts")} error={error}>
+    <Panel title={t("admin.orderStatusCounts")}>
+      {error && <Notice variant="warning">{error}</Notice>}
       {loading && rows.length === 0 ? (
-        <SkeletonRows />
+        <Skeleton rows={3} />
       ) : rows.length === 0 ? (
-        <EmptyState>{t("admin.noOrderStatusCounts")}</EmptyState>
+        <EmptyText>{t("admin.noOrderStatusCounts")}</EmptyText>
       ) : (
         <div className="grid gap-3">
           {rows.map((row) => {
@@ -246,11 +254,12 @@ function TopBooksSection({ topBooks, error, loading, t }) {
   const books = topBooks?.books || [];
 
   return (
-    <Panel title={t("admin.topBooks")} error={error}>
+    <Panel title={t("admin.topBooks")}>
+      {error && <Notice variant="warning">{error}</Notice>}
       {loading && books.length === 0 ? (
-        <SkeletonRows />
+        <Skeleton rows={3} />
       ) : books.length === 0 ? (
-        <EmptyState>{t("admin.noTopBooks")}</EmptyState>
+        <EmptyText>{t("admin.noTopBooks")}</EmptyText>
       ) : (
         <div className="grid gap-3">
           {books.map((book) => (
@@ -274,11 +283,12 @@ function LowStockSection({ lowStock, error, loading, t }) {
   const books = lowStock?.books || [];
 
   return (
-    <Panel title={t("admin.lowStockBooks")} error={error}>
+    <Panel title={t("admin.lowStockBooks")}>
+      {error && <Notice variant="warning">{error}</Notice>}
       {loading && books.length === 0 ? (
-        <SkeletonRows />
+        <Skeleton rows={3} />
       ) : books.length === 0 ? (
-        <EmptyState>{t("admin.noLowStockBooks")}</EmptyState>
+        <EmptyText>{t("admin.noLowStockBooks")}</EmptyText>
       ) : (
         <div className="grid gap-3">
           {books.map((book) => (
@@ -312,77 +322,25 @@ function BookRow({ image, title, sku, meta, value, to }) {
   );
 }
 
-function PageHeader({ title, eyebrow }) {
-  return (
-    <div className="border-b border-slate-200 pb-6">
-      <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-600">
-        {eyebrow}
-      </span>
-      <h2 className="mt-3 font-serif text-4xl font-bold text-slate-950">{title}</h2>
-    </div>
-  );
-}
-
-function SectionHeader({ title }) {
-  return <h3 className="font-serif text-3xl font-bold text-slate-950">{title}</h3>;
-}
-
-function Panel({ title, error, children }) {
-  return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-      <SectionHeader title={title} />
-      {error && <InlineError message={error} />}
-      <div className="mt-5">{children}</div>
-    </section>
-  );
-}
-
-function Field({ label, children }) {
+function NumberField({ label, value, onChange, min = 1 }) {
   return (
     <label className="grid gap-2 text-sm font-bold text-slate-600">
       {label}
-      {children}
-    </label>
-  );
-}
-
-function NumberField({ label, value, onChange, min = 1 }) {
-  return (
-    <Field label={label}>
-      <input
+      <Input
         type="number"
         min={min}
         max={MAX_LIMIT}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        className={ADMIN_INPUT}
       />
-    </Field>
+    </label>
   );
 }
 
-function InlineError({ message }) {
-  return (
-    <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-700">
-      {message}
-    </div>
-  );
-}
-
-function EmptyState({ children }) {
+function EmptyText({ children }) {
   return (
     <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-5 py-8 text-center text-sm font-bold text-slate-500">
       {children}
-    </div>
-  );
-}
-
-function SkeletonRows() {
-  return (
-    <div className="grid gap-3" aria-hidden="true">
-      <div className="h-16 animate-pulse rounded-2xl bg-slate-100" />
-      <div className="h-16 animate-pulse rounded-2xl bg-slate-100" />
-      <div className="h-16 animate-pulse rounded-2xl bg-slate-100" />
     </div>
   );
 }
