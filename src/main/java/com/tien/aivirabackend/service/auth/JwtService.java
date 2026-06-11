@@ -85,6 +85,10 @@ public class JwtService {
         return createToken(user, TokenType.ACCESS, validDuration, null);
     }
 
+    public long getAccessTokenExpiresIn() {
+        return validDuration;
+    }
+
     @Transactional
     public String createRefreshToken(User user, String deviceInfo, String ipAddress, String familyId) {
         validateUser(user);

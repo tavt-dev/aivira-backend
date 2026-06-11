@@ -2,6 +2,7 @@ package com.tien.aivirabackend.config;
 
 import java.time.Duration;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -11,6 +12,12 @@ import com.tien.aivirabackend.config.properties.PaymentProperties;
 
 @Configuration
 public class PaymentHttpClientConfig {
+    @Bean
+    @ConditionalOnMissingBean
+    RestClient.Builder restClientBuilder() {
+        return RestClient.builder();
+    }
+
     @Bean
     RestClient paymentRestClient(PaymentProperties paymentProperties) {
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
