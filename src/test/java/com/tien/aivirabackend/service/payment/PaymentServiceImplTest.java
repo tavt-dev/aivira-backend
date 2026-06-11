@@ -111,6 +111,23 @@ class PaymentServiceImplTest {
     }
 
     @Test
+    void getAdminPaymentGroup_shouldReadGroupWithoutCurrentUserScope() {
+        PaymentGroup group = paymentGroup(PaymentStatus.PENDING);
+        Order order = order(group, OrderStatus.PENDING_PAYMENT);
+
+        when(paymentGroupRepository.findByPaymentCode("PAY123")).thenReturn(Optional.of(group));
+        when(orderRepository.findByPaymentsPaymentGroupId(group.getId())).thenReturn(List.of(order));
+
+        var response = paymentService.getAdminPaymentGroup("PAY123");
+
+        assertThat(response.getPaymentCode()).isEqualTo("PAY123");
+        assertThat(response.getStatus()).isEqualTo(PaymentStatus.PENDING);
+        assertThat(response.getOrders()).hasSize(1);
+        verify(currentUserService, never()).getCurrentUser();
+        verify(paymentGroupRepository, never()).findByPaymentCodeAndUserId(anyString(), anyString());
+    }
+
+    @Test
     void handleCallback_whenPendingSuccess_shouldMarkPaidAndStoreJsonCallback() {
         PaymentGroup group = paymentGroup(PaymentStatus.PENDING);
         PaymentAttempt attempt = attempt(group, PaymentStatus.PENDING);

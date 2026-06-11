@@ -69,8 +69,8 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-slate-800 text-center text-xs flex flex-col md:flex-row items-center justify-between gap-4">
          <p>{t("footer.rights", { year })}</p>
          <div className="flex gap-4">
-            <a href="#" className="hover:text-white transition-colors">{t("footer.privacy")}</a>
-            <a href="#" className="hover:text-white transition-colors">{t("footer.terms")}</a>
+            <button type="button" className="hover:text-white transition-colors">{t("footer.privacy")}</button>
+            <button type="button" className="hover:text-white transition-colors">{t("footer.terms")}</button>
          </div>
       </div>
     </footer>

@@ -3,32 +3,31 @@ import { useTranslation } from "react-i18next";
 import { Navigate, useLocation } from "react-router-dom";
 import { getProfile } from "../api/userApi.js";
 import { hasAdminAccess } from "../utils/authz.js";
-import { clearAuth, getAccessToken, saveCurrentUser } from "../utils/storage.js";
+import { getAccessToken, hasAccessToken, saveCurrentUser } from "../utils/storage.js";
 
 export default function RequireAdmin({ children }) {
   const { t } = useTranslation();
-  const [status, setStatus] = useState(getAccessToken() ? "checking" : "guest");
+  const [status, setStatus] = useState(hasAccessToken() ? "checking" : "guest");
   const location = useLocation();
 
   useEffect(() => {
     let alive = true;
 
     async function verifyAdmin() {
-      if (!getAccessToken()) {
+      if (!hasAccessToken()) {
         setStatus("guest");
         return;
       }
 
       setStatus("checking");
       try {
-        const accessToken = getAccessToken();
         const profile = await getProfile();
         if (!alive) return;
         saveCurrentUser(profile);
+        const accessToken = getAccessToken();
         setStatus(hasAdminAccess(profile, accessToken) ? "allowed" : "forbidden");
       } catch {
         if (!alive) return;
-        clearAuth();
         setStatus("guest");
       }
     }

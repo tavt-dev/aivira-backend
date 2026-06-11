@@ -110,12 +110,12 @@ export default function Navbar({ solid, user, onAuth }) {
       if (refreshToken) await logoutRequest(refreshToken);
     } catch {
       // Local logout still succeeds when the backend is offline.
+    } finally {
+      clearAuth();
+      navigate("/");
+      setMobileOpen(false);
+      setUserMenuOpen(false);
     }
-
-    clearAuth();
-    navigate("/");
-    setMobileOpen(false);
-    setUserMenuOpen(false);
   }
 
   function submitSearch(event) {

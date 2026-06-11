@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ArrowUp } from "lucide-react";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import AuthModal from "./components/AuthModal.jsx";
 import IntroBook, { hasSeenIntro } from "./components/IntroBook.jsx";
 import Layout from "./components/Layout.jsx";
+import RequireAuth from "./components/RequireAuth.jsx";
 import RequireAdmin from "./components/RequireAdmin.jsx";
+import { ConfirmDialogProvider, ToastProvider } from "./components/ui/index.jsx";
 import AccountPage from "./pages/AccountPage.jsx";
 import CartPage from "./pages/CartPage.jsx";
 import CategoryPage from "./pages/CategoryPage.jsx";
@@ -15,12 +17,16 @@ import OrdersPage from "./pages/OrdersPage.jsx";
 import PaymentResultPage from "./pages/PaymentResultPage.jsx";
 import ProductPage from "./pages/ProductPage.jsx";
 import AdminCategoriesPage from "./pages/admin/AdminCategoriesPage.jsx";
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
+import AdminDiscountsPage from "./pages/admin/AdminDiscountsPage.jsx";
 import AdminForbiddenPage from "./pages/admin/AdminForbiddenPage.jsx";
 import AdminLayout from "./pages/admin/AdminLayout.jsx";
-import AdminOrdersPendingPage from "./pages/admin/AdminOrdersPendingPage.jsx";
+import AdminOrdersPage from "./pages/admin/AdminOrdersPage.jsx";
 import AdminPaymentsPage from "./pages/admin/AdminPaymentsPage.jsx";
 import AdminPermissionsPage from "./pages/admin/AdminPermissionsPage.jsx";
 import AdminProductsPage from "./pages/admin/AdminProductsPage.jsx";
+import AdminReviewsPage from "./pages/admin/AdminReviewsPage.jsx";
+import AdminUsersPage from "./pages/admin/AdminUsersPage.jsx";
 import { initMotionEffects } from "./utils/motion.js";
 import { getCurrentUser } from "./utils/storage.js";
 
@@ -30,12 +36,14 @@ export default function App() {
   const [user, setUser] = useState(getCurrentUser());
   const [introDone, setIntroDone] = useState(hasSeenIntro);
   const location = useLocation();
+  const navigate = useNavigate();
   const isAdminRoute = location.pathname.startsWith("/admin");
   const searchParams = new URLSearchParams(location.search);
+  const authParam = searchParams.get("auth");
   const isAuthRequest = location.pathname === "/login"
     || location.pathname === "/register"
-    || searchParams.get("auth") === "login"
-    || searchParams.get("auth") === "register";
+    || authParam === "login"
+    || authParam === "register";
   const authNextPath = sanitizeNextPath(searchParams.get("next"));
 
   useEffect(() => {
@@ -43,6 +51,22 @@ export default function App() {
     window.addEventListener("aivira-auth", sync);
     return () => window.removeEventListener("aivira-auth", sync);
   }, []);
+
+  useEffect(() => {
+    const handleExpired = () => {
+      setUser(null);
+      setAuthMode("login");
+      const next = `${location.pathname}${location.search}${location.hash}`;
+      if (location.pathname.startsWith("/admin")) {
+        navigate(`/?auth=login&next=${encodeURIComponent(next)}`, { replace: true });
+        return;
+      }
+      setAuthOpen(true);
+    };
+
+    window.addEventListener("aivira-auth-expired", handleExpired);
+    return () => window.removeEventListener("aivira-auth-expired", handleExpired);
+  }, [location.hash, location.pathname, location.search, navigate]);
 
   useEffect(() => {
     document.body.classList.toggle("admin-route", isAdminRoute);
@@ -63,13 +87,13 @@ export default function App() {
 
   useEffect(() => {
     if ((!introDone && !isAuthRequest) || isAdminRoute) return;
-    if (location.pathname === "/login" || searchParams.get("auth") === "login") {
+    if (location.pathname === "/login" || authParam === "login") {
       openAuth("login");
     }
-    if (location.pathname === "/register" || searchParams.get("auth") === "register") {
+    if (location.pathname === "/register" || authParam === "register") {
       openAuth("register");
     }
-  }, [introDone, isAuthRequest, isAdminRoute, location.pathname, location.search]);
+  }, [authParam, introDone, isAuthRequest, isAdminRoute, location.pathname]);
 
   function openAuth(mode = "login") {
     setAuthMode(mode);
@@ -81,10 +105,11 @@ export default function App() {
   }
 
   return (
-    <>
+    <ToastProvider>
+      <ConfirmDialogProvider>
       {!isAdminRoute && <MotionChrome />}
       <Routes>
-        <Route path="/admin/login" element={<Navigate to="/?auth=login&next=/admin/products" replace />} />
+        <Route path="/admin/login" element={<Navigate to="/?auth=login&next=/admin/dashboard" replace />} />
         <Route path="/admin/forbidden" element={<AdminForbiddenPage />} />
         <Route
           path="/admin"
@@ -94,12 +119,19 @@ export default function App() {
             </RequireAdmin>
           }
         >
-          <Route index element={<Navigate to="/admin/products" replace />} />
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboardPage />} />
           <Route path="products" element={<AdminProductsPage />} />
           <Route path="categories" element={<AdminCategoriesPage />} />
+          <Route path="orders" element={<AdminOrdersPage />} />
+          <Route path="orders-pending" element={<Navigate to="/admin/orders" replace />} />
+          <Route path="discounts" element={<AdminDiscountsPage />} />
+          <Route path="coupons" element={<Navigate to="/admin/discounts" replace />} />
+          <Route path="promotions" element={<Navigate to="/admin/discounts" replace />} />
           <Route path="payments" element={<AdminPaymentsPage />} />
+          <Route path="reviews" element={<AdminReviewsPage />} />
+          <Route path="users" element={<AdminUsersPage />} />
           <Route path="permissions" element={<AdminPermissionsPage />} />
-          <Route path="orders-pending" element={<AdminOrdersPendingPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
         <Route element={<Layout user={user} onAuth={() => openAuth("login")} />}>
@@ -111,10 +143,10 @@ export default function App() {
           <Route path="/category/:slug" element={<CategoryPage />} />
           <Route path="/books/:slug" element={<LegacyProductRedirect />} />
           <Route path="/product/:slug" element={<ProductPage onAuth={() => openAuth("login")} />} />
-          <Route path="/cart" element={<CartPage onAuth={() => openAuth("login")} />} />
-          <Route path="/checkout" element={<CheckoutPage onAuth={() => openAuth("login")} />} />
-          <Route path="/orders" element={<OrdersPage onAuth={() => openAuth("login")} />} />
-          <Route path="/account" element={<AccountPage onAuth={() => openAuth("login")} />} />
+          <Route path="/cart" element={<RequireAuth><CartPage onAuth={() => openAuth("login")} /></RequireAuth>} />
+          <Route path="/checkout" element={<RequireAuth><CheckoutPage onAuth={() => openAuth("login")} /></RequireAuth>} />
+          <Route path="/orders" element={<RequireAuth><OrdersPage onAuth={() => openAuth("login")} /></RequireAuth>} />
+          <Route path="/account" element={<RequireAuth><AccountPage onAuth={() => openAuth("login")} /></RequireAuth>} />
           <Route path="/payment/result" element={<Navigate to="/payment-result" replace />} />
           <Route path="/payment-result" element={<PaymentResultPage />} />
           <Route path="*" element={<NotFoundPage />} />
@@ -128,7 +160,8 @@ export default function App() {
           onClose={() => setAuthOpen(false)}
         />
       )}
-    </>
+      </ConfirmDialogProvider>
+    </ToastProvider>
   );
 }
 

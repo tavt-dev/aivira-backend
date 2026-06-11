@@ -6,11 +6,15 @@ import LanguageSwitcher from "../../components/LanguageSwitcher.jsx";
 import { clearAuth, getCurrentUser, getRefreshToken } from "../../utils/storage.js";
 
 const links = [
+  ["/admin/dashboard", "admin.dashboard"],
   ["/admin/products", "admin.products"],
   ["/admin/categories", "admin.categories"],
+  ["/admin/orders", "admin.orders"],
+  ["/admin/discounts", "admin.discounts"],
   ["/admin/payments", "admin.payments"],
-  ["/admin/permissions", "admin.permissions"],
-  ["/admin/orders-pending", "admin.orders"]
+  ["/admin/reviews", "admin.reviews"],
+  ["/admin/users", "admin.users"],
+  ["/admin/permissions", "admin.permissions"]
 ];
 
 export default function AdminLayout() {
@@ -30,15 +34,16 @@ export default function AdminLayout() {
       if (refreshToken) await logoutRequest(refreshToken);
     } catch {
       // Local logout still succeeds when the backend is offline.
+    } finally {
+      clearAuth();
+      navigate("/?auth=login&next=/admin/dashboard", { replace: true });
     }
-    clearAuth();
-    navigate("/?auth=login&next=/admin/products", { replace: true });
   }
 
   return (
     <div className="min-h-screen bg-slate-100 lg:grid lg:grid-cols-[260px_1fr]">
       <aside className="sticky top-0 z-30 flex min-h-0 flex-col gap-2 border-b border-white/10 bg-slate-950 p-5 text-white lg:min-h-screen lg:border-b-0">
-        <Link to="/admin/products" className="mb-4 flex items-center gap-3">
+        <Link to="/admin/dashboard" className="mb-4 flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 font-serif text-xl font-bold">A</span>
           <span className="font-serif text-2xl font-bold tracking-wider">{t("admin.brand")}</span>
         </Link>

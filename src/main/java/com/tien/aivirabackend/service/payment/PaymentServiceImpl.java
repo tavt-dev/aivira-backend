@@ -84,6 +84,15 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional(readOnly = true)
+    public PaymentGroupResponse getAdminPaymentGroup(String paymentGroupCode) {
+        PaymentGroup group = paymentGroupRepository
+                .findByPaymentCode(paymentGroupCode)
+                .orElseThrow(() -> new AppException(PaymentErrorCode.PAYMENT_GROUP_NOT_FOUND));
+        return toPaymentGroupResponse(group);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public PaymentResponse getMyPayment(Long paymentId) {
         User user = currentUserService.getCurrentUser();
         Payment payment = paymentRepository

@@ -207,7 +207,9 @@ export default function IntroBook({ onFinish }) {
   function completeIntro() {
     try {
       sessionStorage.setItem(INTRO_SESSION_KEY, "true");
-    } catch {}
+    } catch {
+      // Session storage can be unavailable in private browsing modes.
+    }
     onFinish?.();
   }
 
@@ -353,7 +355,7 @@ export default function IntroBook({ onFinish }) {
 
       <div className="aiv-intro-stage">
         <div className="aiv-intro-book-container" ref={bookContainerRef}>
-          <div className="aiv-intro-book" ref={bookRef} onClick={openBook}>
+          <button className="aiv-intro-book" ref={bookRef} type="button" onClick={openBook}>
             <div className="aiv-book-back" />
             <div className="aiv-book-pages-right">
               <div className="aiv-right-page-content">
@@ -391,7 +393,7 @@ export default function IntroBook({ onFinish }) {
               </div>
             </div>
             <div className="aiv-book-shadow" />
-          </div>
+          </button>
         </div>
 
         <div className="aiv-intro-copy" ref={copyRef}>

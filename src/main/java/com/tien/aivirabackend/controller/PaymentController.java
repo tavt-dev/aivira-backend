@@ -45,6 +45,16 @@ public class PaymentController {
                 "Get payment group successful", paymentService.getMyPaymentGroup(paymentGroupCode)));
     }
 
+    @GetMapping("/admin/payments/groups/{paymentGroupCode}")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Get payment group for admin")
+    @PreAuthorize("@authorizationService.hasAnyPermission('PAYMENT_MANAGE_ALL', 'PAYMENT_READ_ALL')")
+    public ResponseEntity<ApiResponse<PaymentGroupResponse>> getAdminPaymentGroup(
+            @PathVariable String paymentGroupCode) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Get admin payment group successful", paymentService.getAdminPaymentGroup(paymentGroupCode)));
+    }
+
     @GetMapping("/payments/{paymentId}")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Get my payment")

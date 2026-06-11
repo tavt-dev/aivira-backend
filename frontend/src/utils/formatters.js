@@ -25,3 +25,14 @@ export function discount(book) {
 export function cartTotal(items) {
   return items.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 1), 0);
 }
+
+export function formatDateTime(value, language) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return new Intl.DateTimeFormat(currentLocale(language), {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}

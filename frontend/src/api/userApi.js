@@ -21,3 +21,23 @@ export function changePassword(body) {
 export function deactivateAccount() {
   return request("/users/me/deactivate", { method: "POST" });
 }
+
+export function getAddresses() {
+  return request("/users/me/addresses");
+}
+
+export function createAddress(body) {
+  return request("/users/me/addresses", { method: "POST", body });
+}
+
+export function updateAddress(id, body) {
+  return request(`/users/me/addresses/${encodeURIComponent(id)}`, { method: "PUT", body });
+}
+
+export function deleteAddress(id) {
+  return request(`/users/me/addresses/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
+export function setDefaultAddress(id) {
+  return request(`/users/me/addresses/${encodeURIComponent(id)}/default`, { method: "PUT" });
+}
