@@ -15,7 +15,7 @@ Spring Boot backend for the Aivira single-vendor online bookstore. Aivira/Admin 
 
 ## Current Scope
 
-- Auth: register, verify email, login, refresh token, logout, password reset, active sessions.
+- Auth: register, verify email, login, Google OAuth login, refresh token, logout, password reset, active sessions.
 - User profile and address book.
 - Hybrid RBAC with roles, permissions, and direct user permissions.
 - Public catalog: categories, product search, product detail.
@@ -42,6 +42,9 @@ Public:
 - `GET /categories`
 - `GET /categories/tree`
 - `GET /storefront/home`
+- `GET /auth/google/authorize`
+- `GET /auth/google/callback`
+- `POST /auth/google/exchange-ticket`
 
 Customer:
 
@@ -90,6 +93,7 @@ Admin:
 - `V7__coupon_usage_status.sql`: coupon usage lifecycle for online payment safety.
 - `V8__manual_refunds.sql`: manual refund metadata table.
 - `V9__review_order_item_visibility.sql`: review order item ownership, visibility, and moderation metadata.
+- `V10__google_oauth_login.sql`: one-time Google OAuth state and login-ticket tables.
 
 ## Seed Data
 
@@ -110,6 +114,7 @@ Practical local/dev configuration is environment-driven:
 - Database: `DB_URL`, `USERNAME_DB`, `PASSWORD_DB`.
 - JWT: `JWT_SIGNER_KEY`, access/refresh expiry settings.
 - Mail/OTP: SMTP host, port, username, password, sender, and OTP expiry settings.
+- Google OAuth: `GOOGLE_OAUTH_ENABLED`, `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI`, `GOOGLE_OAUTH_FRONTEND_SUCCESS_URL`, and `GOOGLE_OAUTH_FRONTEND_FAILURE_URL`. The Google Console authorized redirect URI must exactly match `GOOGLE_OAUTH_REDIRECT_URI`.
 - Cloudinary: cloud name, API key, API secret, upload folder/preset settings.
 - Payment providers: VNPay and MoMo enable flags, merchant ids/codes, secret keys, callback/IPN/return URLs, and expiry settings.
 - Seed: `SEED_ENABLED`, `SEED_ADMIN_USERNAME`, `SEED_ADMIN_PASSWORD`, `SEED_ADMIN_EMAIL`, `SEED_DEMO_CATALOG_ENABLED`.
@@ -137,7 +142,7 @@ Important domain error groups:
 - Checkout/payment/coupon: invalid cart or checkout state, invalid/expired/over-limit coupon, coupon minimum order not met, provider disabled, invalid callback/signature, payment retry not allowed, and reconciliation failures.
 - Orders/refunds: order not found, invalid status transition, cancellation not allowed, paid cancellation requiring refund, refund not allowed, refund already processed, and invalid refund amount.
 - Reviews: review not found, review not allowed, duplicate order-item review, order not completed, deleted review, and invalid review image metadata.
-- Auth/RBAC: authentication failure, access denied, locked/deleted account, invalid/expired JWT, OTP errors, role errors, and permission errors.
+- Auth/RBAC: authentication failure, access denied, locked/deleted account, invalid/expired JWT, OTP errors, role errors, permission errors, and Google OAuth state/ticket/token validation errors.
 
 Success responses use `ApiResponse<T>`. Paginated list responses use `ApiResponse<PageResponse<T>>`.
 
