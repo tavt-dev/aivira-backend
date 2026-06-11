@@ -220,7 +220,8 @@ class UserServiceImplTest {
         user.setLockoutUntil(Instant.now().plusSeconds(300));
         user.setFailedLoginAttempts(3);
         user.setFirstFailedLoginAt(Instant.now());
-        AdminUserResponse response = AdminUserResponse.builder().id("user-1").isLocked(true).build();
+        AdminUserResponse response =
+                AdminUserResponse.builder().id("user-1").isLocked(true).build();
         when(userRepository.findWithRolesById("user-1")).thenReturn(Optional.of(user));
         when(userRepository.save(user)).thenReturn(user);
         when(userMapper.toAdminUserResponse(user)).thenReturn(response);
@@ -240,10 +241,9 @@ class UserServiceImplTest {
         User user = buildUser("user-1");
         user.setIsLocked(true);
         when(userRepository.findWithRolesById("user-1")).thenReturn(Optional.of(user));
-        when(userMapper.toAdminUserResponse(user)).thenReturn(AdminUserResponse.builder()
-                .id("user-1")
-                .isLocked(true)
-                .build());
+        when(userMapper.toAdminUserResponse(user))
+                .thenReturn(
+                        AdminUserResponse.builder().id("user-1").isLocked(true).build());
 
         userService.lockUser("user-1");
 
@@ -266,10 +266,9 @@ class UserServiceImplTest {
         user.setFirstFailedLoginAt(Instant.now());
         when(userRepository.findWithRolesById("user-1")).thenReturn(Optional.of(user));
         when(userRepository.save(user)).thenReturn(user);
-        when(userMapper.toAdminUserResponse(user)).thenReturn(AdminUserResponse.builder()
-                .id("user-1")
-                .isLocked(false)
-                .build());
+        when(userMapper.toAdminUserResponse(user))
+                .thenReturn(
+                        AdminUserResponse.builder().id("user-1").isLocked(false).build());
 
         userService.unlockUser("user-1");
 
@@ -289,10 +288,14 @@ class UserServiceImplTest {
         when(roleRepository.findByCode(PredefinedRole.USER)).thenReturn(Optional.of(userRole));
         when(userRepository.countActiveUsersByRole(PredefinedRole.ADMIN)).thenReturn(2L);
         when(userRepository.save(user)).thenReturn(user);
-        when(userMapper.toAdminUserResponse(user)).thenReturn(AdminUserResponse.builder().id("user-1").build());
+        when(userMapper.toAdminUserResponse(user))
+                .thenReturn(AdminUserResponse.builder().id("user-1").build());
 
         userService.updateUserRoles(
-                "user-1", UpdateUserRolesRequest.builder().roles(Set.of(PredefinedRole.USER)).build());
+                "user-1",
+                UpdateUserRolesRequest.builder()
+                        .roles(Set.of(PredefinedRole.USER))
+                        .build());
 
         assertThat(user.getRoles()).containsExactly(userRole);
         verify(jwtService).revokeAllTokensOfUser("user-1", RevocationReason.USER_LOGOUT_ALL);
@@ -308,7 +311,8 @@ class UserServiceImplTest {
         when(roleRepository.findByCode(PredefinedRole.ADMIN)).thenReturn(Optional.of(adminRole));
         when(roleRepository.findByCode(PredefinedRole.USER)).thenReturn(Optional.of(userRole));
         when(userRepository.save(user)).thenReturn(user);
-        when(userMapper.toAdminUserResponse(user)).thenReturn(AdminUserResponse.builder().id("user-1").build());
+        when(userMapper.toAdminUserResponse(user))
+                .thenReturn(AdminUserResponse.builder().id("user-1").build());
 
         userService.updateUserRoles(
                 "user-1",
@@ -324,7 +328,9 @@ class UserServiceImplTest {
     void updateUserRoles_whenSelf_shouldThrowAccessDenied() {
         assertThatThrownBy(() -> userService.updateUserRoles(
                         "admin-1",
-                        UpdateUserRolesRequest.builder().roles(Set.of(PredefinedRole.USER)).build()))
+                        UpdateUserRolesRequest.builder()
+                                .roles(Set.of(PredefinedRole.USER))
+                                .build()))
                 .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
                         .isEqualTo(CommonErrorCode.ACCESS_DENIED));
     }
@@ -338,7 +344,9 @@ class UserServiceImplTest {
 
         assertThatThrownBy(() -> userService.updateUserRoles(
                         "user-1",
-                        UpdateUserRolesRequest.builder().roles(Set.of(PredefinedRole.USER)).build()))
+                        UpdateUserRolesRequest.builder()
+                                .roles(Set.of(PredefinedRole.USER))
+                                .build()))
                 .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
                         .isEqualTo(UserErrorCode.CANNOT_REMOVE_ROLE));
     }
@@ -389,6 +397,10 @@ class UserServiceImplTest {
     }
 
     private Role role(PredefinedRole code) {
-        return Role.builder().id((long) code.ordinal()).code(code).description(code.name()).build();
+        return Role.builder()
+                .id((long) code.ordinal())
+                .code(code)
+                .description(code.name())
+                .build();
     }
 }

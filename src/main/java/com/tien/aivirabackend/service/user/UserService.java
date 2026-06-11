@@ -22,7 +22,13 @@ public interface UserService {
     void requestDeactivateMyAccount();
 
     PageResponse<AdminUserResponse> getAdminUsers(
-            String keyword, PredefinedRole role, Boolean active, Boolean locked, Boolean emailVerified, int page, int size);
+            String keyword,
+            PredefinedRole role,
+            Boolean active,
+            Boolean locked,
+            Boolean emailVerified,
+            int page,
+            int size);
 
     AdminUserResponse getAdminUser(String userId);
 

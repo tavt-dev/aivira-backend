@@ -53,8 +53,8 @@ class DiscountServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        discountService =
-                new DiscountServiceImpl(promotionRepository, couponRepository, couponUsageRepository, new DiscountMapper());
+        discountService = new DiscountServiceImpl(
+                promotionRepository, couponRepository, couponUsageRepository, new DiscountMapper());
     }
 
     @Test
@@ -62,7 +62,8 @@ class DiscountServiceImplTest {
         User user = user();
         ProductVariation variation = variation();
         CartItem cartItem = cartItem(variation, 2);
-        Promotion productPromotion = promotion(1L, "Product 10%", PromotionScope.PRODUCT, 20L, PromotionType.PERCENT, "10");
+        Promotion productPromotion =
+                promotion(1L, "Product 10%", PromotionScope.PRODUCT, 20L, PromotionType.PERCENT, "10");
         Promotion categoryPromotion =
                 promotion(2L, "Category 15K", PromotionScope.CATEGORY, 10L, PromotionType.FIXED, "15");
         Coupon coupon = coupon("SAVE10", CouponType.PERCENT, "10", "25");
@@ -79,7 +80,11 @@ class DiscountServiceImplTest {
         assertThat(calculation.discountAmount()).isEqualByComparingTo("47.00");
         assertThat(calculation.totalAmount()).isEqualByComparingTo("153.00");
         assertThat(calculation.items().getFirst().promotionName()).isEqualTo("Category 15K");
-        assertThat(discountService.toPreviewResponse(calculation).getAppliedPromotions().getFirst().getDiscountAmount())
+        assertThat(discountService
+                        .toPreviewResponse(calculation)
+                        .getAppliedPromotions()
+                        .getFirst()
+                        .getDiscountAmount())
                 .isEqualByComparingTo("30.00");
     }
 
@@ -92,11 +97,12 @@ class DiscountServiceImplTest {
         coupon.setUsageLimit(1);
         when(promotionRepository.findActiveAt(any())).thenReturn(List.of());
         when(couponRepository.findByCode("SAVE10")).thenReturn(Optional.of(coupon));
-        when(couponUsageRepository.countByCoupon_IdAndStatusIn(eq(1L), anyCollection())).thenReturn(1L);
+        when(couponUsageRepository.countByCoupon_IdAndStatusIn(eq(1L), anyCollection()))
+                .thenReturn(1L);
 
         assertThatThrownBy(() -> discountService.calculate(user, List.of(cartItem), Map.of(30L, variation), "SAVE10"))
-                .isInstanceOfSatisfying(AppException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(CouponErrorCode.COUPON_USAGE_LIMIT_EXCEEDED));
+                .isInstanceOfSatisfying(AppException.class, exception -> assertThat(exception.getErrorCode())
+                        .isEqualTo(CouponErrorCode.COUPON_USAGE_LIMIT_EXCEEDED));
     }
 
     @Test
@@ -196,16 +202,15 @@ class DiscountServiceImplTest {
     }
 
     private CartItem cartItem(ProductVariation variation, int quantity) {
-        return CartItem.builder().id(40L).productVariation(variation).quantity(quantity).build();
+        return CartItem.builder()
+                .id(40L)
+                .productVariation(variation)
+                .quantity(quantity)
+                .build();
     }
 
     private Promotion promotion(
-            Long id,
-            String name,
-            PromotionScope scope,
-            Long targetId,
-            PromotionType type,
-            String value) {
+            Long id, String name, PromotionScope scope, Long targetId, PromotionType type, String value) {
         LocalDateTime now = LocalDateTime.now();
         return Promotion.builder()
                 .id(id)

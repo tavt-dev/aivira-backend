@@ -1,17 +1,17 @@
 package com.tien.aivirabackend.repository;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.time.Instant;
 
 import jakarta.persistence.LockModeType;
 
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -61,43 +61,43 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
 
     @Query(
             """
-            select o.orderStatus as status, count(o.id) as count
-            from Order o
-            where o.createdAt between :fromDate and :toDate
-            group by o.orderStatus
-            """)
+			select o.orderStatus as status, count(o.id) as count
+			from Order o
+			where o.createdAt between :fromDate and :toDate
+			group by o.orderStatus
+			""")
     List<OrderStatusCountProjection> countOrdersByStatusBetween(
             @Param("fromDate") Instant fromDate, @Param("toDate") Instant toDate);
 
     @Query(
             value =
                     """
-                    select date(o.created_at) as orderDate,
-                           count(o.id) as orderCount
-                    from orders o
-                    where o.created_at between :fromDate and :toDate
-                    group by date(o.created_at)
-                    order by orderDate asc
-                    """,
+					select date(o.created_at) as orderDate,
+						count(o.id) as orderCount
+					from orders o
+					where o.created_at between :fromDate and :toDate
+					group by date(o.created_at)
+					order by orderDate asc
+					""",
             nativeQuery = true)
     List<DailyOrderCountProjection> countDailyOrdersBetween(
             @Param("fromDate") Instant fromDate, @Param("toDate") Instant toDate);
 
     @Query(
             """
-            select oi.productId as productId,
-                   max(oi.productName) as productName,
-                   max(oi.sku) as sku,
-                   max(oi.thumbnailUrl) as thumbnailUrl,
-                   sum(oi.quantity) as quantitySold,
-                   coalesce(sum(oi.finalPrice * oi.quantity), 0) as revenue
-            from OrderItem oi
-            join oi.order o
-            where o.orderStatus not in :excludedStatuses
-              and o.createdAt between :fromDate and :toDate
-            group by oi.productId
-            order by sum(oi.quantity) desc, max(oi.productName) asc
-            """)
+			select oi.productId as productId,
+				max(oi.productName) as productName,
+				max(oi.sku) as sku,
+				max(oi.thumbnailUrl) as thumbnailUrl,
+				sum(oi.quantity) as quantitySold,
+				coalesce(sum(oi.finalPrice * oi.quantity), 0) as revenue
+			from OrderItem oi
+			join oi.order o
+			where o.orderStatus not in :excludedStatuses
+			and o.createdAt between :fromDate and :toDate
+			group by oi.productId
+			order by sum(oi.quantity) desc, max(oi.productName) asc
+			""")
     List<TopBookProjection> findTopBooksBetween(
             @Param("excludedStatuses") Collection<OrderStatus> excludedStatuses,
             @Param("fromDate") Instant fromDate,

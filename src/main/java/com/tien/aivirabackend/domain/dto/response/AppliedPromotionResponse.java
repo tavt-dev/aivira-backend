@@ -16,8 +16,10 @@ import lombok.experimental.FieldDefaults;
 public class AppliedPromotionResponse {
     @Schema(example = "11")
     Long promotionId;
+
     @Schema(example = "Programming Books Week")
     String promotionName;
+
     @Schema(example = "50000")
     BigDecimal discountAmount;
 }

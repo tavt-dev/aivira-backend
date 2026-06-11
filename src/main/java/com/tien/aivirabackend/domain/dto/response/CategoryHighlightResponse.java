@@ -14,14 +14,18 @@ import lombok.experimental.FieldDefaults;
 public class CategoryHighlightResponse {
     @Schema(example = "12")
     Long categoryId;
+
     @Schema(example = "Programming")
     String categoryName;
+
     @Schema(example = "programming")
     String slug;
+
     String description;
     String imageUrl;
     String imagePublicId;
     Integer displayOrder;
+
     @Schema(example = "24")
     Long bookCount;
 }

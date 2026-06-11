@@ -21,18 +21,25 @@ import lombok.experimental.FieldDefaults;
 public class OrderSummaryResponse {
     @Schema(example = "120")
     Long id;
+
     @Schema(example = "ORD-20260605-ABC123")
     String orderCode;
+
     @Schema(example = "320000")
     BigDecimal totalAmount;
+
     @Schema(example = "PENDING_CONFIRMATION")
     OrderStatus orderStatus;
+
     String cancelReason;
     String paymentGroupCode;
+
     @Schema(example = "COD")
     PaymentMethod paymentMethod;
+
     @Schema(example = "PENDING")
     PaymentStatus paymentStatus;
+
     Instant paidAt;
     Integer itemCount;
     Instant createdAt;

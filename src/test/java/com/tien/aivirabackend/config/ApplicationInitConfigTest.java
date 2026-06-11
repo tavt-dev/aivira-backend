@@ -81,8 +81,8 @@ class ApplicationInitConfigTest {
         runner().run(null);
 
         verify(permissionService).seedDefaultPermissions();
-        verify(userRepository).save(argThat(user ->
-                user.getUsername().equals("admin")
+        verify(userRepository)
+                .save(argThat(user -> user.getUsername().equals("admin")
                         && user.getEmail().equals("admin@example.com")
                         && user.getPassword().equals("encoded")
                         && user.getRoles().size() == 2));

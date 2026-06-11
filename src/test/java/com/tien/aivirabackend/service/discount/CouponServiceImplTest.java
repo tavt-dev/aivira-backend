@@ -55,8 +55,8 @@ class CouponServiceImplTest {
         when(couponRepository.existsByCode("SAVE10")).thenReturn(true);
 
         assertThatThrownBy(() -> couponService.createCoupon(createRequest("save10")))
-                .isInstanceOfSatisfying(AppException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(CouponErrorCode.COUPON_CODE_ALREADY_EXISTS));
+                .isInstanceOfSatisfying(AppException.class, exception -> assertThat(exception.getErrorCode())
+                        .isEqualTo(CouponErrorCode.COUPON_CODE_ALREADY_EXISTS));
 
         verify(couponRepository, never()).save(any());
     }
@@ -67,8 +67,8 @@ class CouponServiceImplTest {
         request.setValue(BigDecimal.valueOf(101));
 
         assertThatThrownBy(() -> couponService.createCoupon(request))
-                .isInstanceOfSatisfying(AppException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(PromotionErrorCode.DISCOUNT_INVALID_VALUE));
+                .isInstanceOfSatisfying(AppException.class, exception -> assertThat(exception.getErrorCode())
+                        .isEqualTo(PromotionErrorCode.DISCOUNT_INVALID_VALUE));
     }
 
     @Test

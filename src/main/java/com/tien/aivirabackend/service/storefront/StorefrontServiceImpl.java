@@ -40,11 +40,10 @@ public class StorefrontServiceImpl implements StorefrontService {
                 .bestsellingBooks(findBooks(
                         publicBookSpec(),
                         Sort.by(Sort.Direction.DESC, "soldCount").and(Sort.by(Sort.Direction.DESC, "createdAt"))))
-                .categoryHighlights(categoryRepository
-                        .findCategoryHighlights(PageRequest.of(0, CATEGORY_HIGHLIGHT_LIMIT))
-                        .stream()
-                        .map(this::toCategoryHighlight)
-                        .toList())
+                .categoryHighlights(
+                        categoryRepository.findCategoryHighlights(PageRequest.of(0, CATEGORY_HIGHLIGHT_LIMIT)).stream()
+                                .map(this::toCategoryHighlight)
+                                .toList())
                 .build();
     }
 
