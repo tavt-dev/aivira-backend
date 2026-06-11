@@ -18,16 +18,22 @@ import lombok.experimental.FieldDefaults;
 public class ReviewResponse {
     @Schema(example = "42")
     Long id;
+
     @Schema(example = "5")
     Integer rating;
+
     @Schema(example = "Excellent book quality and fast delivery.")
     String comment;
+
     @Schema(example = "true")
     Boolean approved;
+
     @Schema(example = "true")
     Boolean visible;
+
     @Schema(description = "Admin reply only. No shop/seller reply exists.", example = "Thank you for your feedback.")
     String adminReply;
+
     Long productId;
     Long productVariationId;
     Long orderId;

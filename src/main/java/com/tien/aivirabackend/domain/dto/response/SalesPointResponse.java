@@ -17,8 +17,10 @@ import lombok.experimental.FieldDefaults;
 public class SalesPointResponse {
     @Schema(example = "2026-06-05")
     LocalDate date;
+
     @Schema(example = "1250000")
     BigDecimal revenue;
+
     @Schema(example = "8")
     Long orderCount;
 }

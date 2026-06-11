@@ -136,7 +136,9 @@ public class CouponServiceImpl implements CouponService {
     }
 
     private Coupon findCoupon(Long couponId) {
-        return couponRepository.findById(couponId).orElseThrow(() -> new AppException(CouponErrorCode.COUPON_NOT_FOUND));
+        return couponRepository
+                .findById(couponId)
+                .orElseThrow(() -> new AppException(CouponErrorCode.COUPON_NOT_FOUND));
     }
 
     private void validateCoupon(

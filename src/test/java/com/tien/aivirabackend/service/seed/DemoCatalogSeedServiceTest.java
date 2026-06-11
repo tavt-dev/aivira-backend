@@ -75,20 +75,21 @@ class DemoCatalogSeedServiceTest {
         seedService.seedDemoCatalog();
 
         assertThat(categoriesBySlug).hasSize(13);
-        assertThat(categoriesBySlug).containsKeys(
-                "fiction",
-                "non-fiction",
-                "business",
-                "technology",
-                "children",
-                "vietnamese-books",
-                "fantasy",
-                "mystery",
-                "biography",
-                "self-help",
-                "programming",
-                "ai-data",
-                "picture-books");
+        assertThat(categoriesBySlug)
+                .containsKeys(
+                        "fiction",
+                        "non-fiction",
+                        "business",
+                        "technology",
+                        "children",
+                        "vietnamese-books",
+                        "fantasy",
+                        "mystery",
+                        "biography",
+                        "self-help",
+                        "programming",
+                        "ai-data",
+                        "picture-books");
         assertThat(categoriesBySlug.get("fantasy").getParentCategory()).isEqualTo(categoriesBySlug.get("fiction"));
 
         assertThat(productsBySku).hasSize(30);
@@ -109,8 +110,11 @@ class DemoCatalogSeedServiceTest {
         assertThat(firstBook.getProductMedia()).hasSize(1);
         assertThat(firstBook.getProductMedia().iterator().next().getMediaType()).isEqualTo(MediaType.IMAGE);
         assertThat(firstBook.getProductMedia().iterator().next().getPrimary()).isTrue();
-        assertThat(productsBySku.values().stream().filter(Product::getFeatured).count()).isEqualTo(8);
-        assertThat(productsBySku.values().stream().filter(product -> product.getStockQuantity() <= 5).count())
+        assertThat(productsBySku.values().stream().filter(Product::getFeatured).count())
+                .isEqualTo(8);
+        assertThat(productsBySku.values().stream()
+                        .filter(product -> product.getStockQuantity() <= 5)
+                        .count())
                 .isGreaterThanOrEqualTo(4);
     }
 

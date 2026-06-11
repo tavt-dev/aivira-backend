@@ -46,7 +46,8 @@ public class ReviewController {
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
             summary = "Create review for completed order item",
-            description = "Creates one pending review for a purchased order item. The order must belong to the current user and be COMPLETED.")
+            description =
+                    "Creates one pending review for a purchased order item. The order must belong to the current user and be COMPLETED.")
     @PreAuthorize("@authorizationService.hasPermission('REVIEW_CREATE_SELF')")
     public ResponseEntity<ApiResponse<ReviewResponse>> createReview(
             @PathVariable Long orderId,
@@ -59,7 +60,9 @@ public class ReviewController {
     @PutMapping("/reviews/{reviewId}")
     @Tag(name = "Customer Reviews")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "Update own review", description = "Updates the current user's review and resets approval until admin moderation.")
+    @Operation(
+            summary = "Update own review",
+            description = "Updates the current user's review and resets approval until admin moderation.")
     @PreAuthorize("@authorizationService.hasPermission('REVIEW_UPDATE_SELF')")
     public ResponseEntity<ApiResponse<ReviewResponse>> updateReview(
             @PathVariable Long reviewId, @Valid @RequestBody ReviewUpdateRequest request) {
@@ -70,7 +73,9 @@ public class ReviewController {
     @DeleteMapping("/reviews/{reviewId}")
     @Tag(name = "Customer Reviews")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "Delete own review", description = "Soft-deletes the current user's review so order history remains intact.")
+    @Operation(
+            summary = "Delete own review",
+            description = "Soft-deletes the current user's review so order history remains intact.")
     @PreAuthorize("@authorizationService.hasPermission('REVIEW_DELETE_SELF')")
     public ResponseEntity<ApiResponse<Void>> deleteReview(@PathVariable Long reviewId) {
         reviewService.deleteReview(reviewId);

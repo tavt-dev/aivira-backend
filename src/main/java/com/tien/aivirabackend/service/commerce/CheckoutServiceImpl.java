@@ -149,11 +149,7 @@ public class CheckoutServiceImpl implements CheckoutService {
                 .build();
     }
 
-    private Order buildOrder(
-            User user,
-            Address address,
-            CheckoutRequest request,
-            DiscountCalculation calculation) {
+    private Order buildOrder(User user, Address address, CheckoutRequest request, DiscountCalculation calculation) {
         Order order = Order.builder()
                 .orderCode(generateOrderCode())
                 .user(user)
@@ -216,8 +212,9 @@ public class CheckoutServiceImpl implements CheckoutService {
         }
         Map<Long, ProductVariation> variations = lockInventory
                 ? inventoryService.lockVariationsForCartItems(cartItems)
-                : cartItems.stream().collect(java.util.stream.Collectors.toMap(
-                        item -> item.getProductVariation().getId(), CartItem::getProductVariation));
+                : cartItems.stream()
+                        .collect(java.util.stream.Collectors.toMap(
+                                item -> item.getProductVariation().getId(), CartItem::getProductVariation));
         inventoryService.validateCheckoutItems(cartItems, variations);
         return new CheckoutContext(address, cartItems, variations);
     }
@@ -260,6 +257,5 @@ public class CheckoutServiceImpl implements CheckoutService {
         return StringUtils.hasText(value) ? value.trim() : null;
     }
 
-    private record CheckoutContext(
-            Address address, List<CartItem> cartItems, Map<Long, ProductVariation> variations) {}
+    private record CheckoutContext(Address address, List<CartItem> cartItems, Map<Long, ProductVariation> variations) {}
 }

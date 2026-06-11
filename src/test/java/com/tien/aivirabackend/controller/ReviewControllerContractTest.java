@@ -41,15 +41,12 @@ class ReviewControllerContractTest {
     @Test
     void customerEndpoints_shouldDeclareExpectedPermissions() throws Exception {
         assertPreAuthorize(
-                ReviewController.class.getMethod(
-                        "createReview", Long.class, Long.class, ReviewCreateRequest.class),
+                ReviewController.class.getMethod("createReview", Long.class, Long.class, ReviewCreateRequest.class),
                 "REVIEW_CREATE_SELF");
         assertPreAuthorize(
                 ReviewController.class.getMethod("updateReview", Long.class, ReviewUpdateRequest.class),
                 "REVIEW_UPDATE_SELF");
-        assertPreAuthorize(
-                ReviewController.class.getMethod("deleteReview", Long.class),
-                "REVIEW_DELETE_SELF");
+        assertPreAuthorize(ReviewController.class.getMethod("deleteReview", Long.class), "REVIEW_DELETE_SELF");
     }
 
     @Test
@@ -78,27 +75,29 @@ class ReviewControllerContractTest {
 
     @Test
     void createReview_whenPayloadInvalid_shouldReturnValidationError() throws Exception {
-        mockMvc.perform(post("/orders/21/items/31/review")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "rating":6,
-                                  "comment":"ok",
-                                  "images":[{"imageUrl":"","imagePublicId":"","sortOrder":0}]
-                                }
-                                """))
+        mockMvc.perform(
+                        post("/orders/21/items/31/review")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+								{
+								"rating":6,
+								"comment":"ok",
+								"images":[{"imageUrl":"","imagePublicId":"","sortOrder":0}]
+								}
+								"""))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false));
     }
 
     private String validReviewJson() {
         return """
-                {
-                  "rating":5,
-                  "comment":"Great book",
-                  "images":[{"imageUrl":"https://cdn.example.com/review.jpg","imagePublicId":"review-img","sortOrder":0}]
-                }
-                """;
+				{
+				"rating":5,
+				"comment":"Great book",
+				"images":[{"imageUrl":"https://cdn.example.com/review.jpg","imagePublicId":"review-img","sortOrder":0}]
+				}
+				""";
     }
 
     private void assertPreAuthorize(Method method, String permission) {

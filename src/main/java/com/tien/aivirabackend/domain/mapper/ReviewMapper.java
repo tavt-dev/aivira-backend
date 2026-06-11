@@ -23,9 +23,12 @@ public class ReviewMapper {
                 .approved(review.isApproved())
                 .visible(review.isVisible())
                 .adminReply(review.getAdminReply())
-                .productId(review.getProduct() == null ? null : review.getProduct().getId())
+                .productId(
+                        review.getProduct() == null ? null : review.getProduct().getId())
                 .productVariationId(
-                        review.getProductVariation() == null ? null : review.getProductVariation().getId())
+                        review.getProductVariation() == null
+                                ? null
+                                : review.getProductVariation().getId())
                 .orderId(review.getOrder() == null ? null : review.getOrder().getId())
                 .orderItemId(orderItem == null ? null : orderItem.getId())
                 .productName(orderItem == null ? null : orderItem.getProductName())

@@ -1,31 +1,22 @@
 package com.tien.aivirabackend.service.review;
 
+import jakarta.persistence.criteria.JoinType;
+
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.tien.aivirabackend.domain.entity.review.Review;
 
-import jakarta.persistence.criteria.JoinType;
-
 @Component
 public class ReviewSpecifications {
     public Specification<Review> publicReviews(String productSlug, Integer rating) {
         return Specification.allOf(
-                productSlug(productSlug),
-                rating(rating),
-                approved(true),
-                visible(true),
-                notDeleted());
+                productSlug(productSlug), rating(rating), approved(true), visible(true), notDeleted());
     }
 
     public Specification<Review> adminReviews(
-            Boolean approved,
-            Boolean visible,
-            Integer rating,
-            String keyword,
-            Long productId,
-            String userId) {
+            Boolean approved, Boolean visible, Integer rating, String keyword, Long productId, String userId) {
         return Specification.allOf(
                 approved(approved),
                 visible(visible),
@@ -45,7 +36,8 @@ public class ReviewSpecifications {
     }
 
     private Specification<Review> productId(Long productId) {
-        return (root, query, cb) -> productId == null ? null : cb.equal(root.get("product").get("id"), productId);
+        return (root, query, cb) ->
+                productId == null ? null : cb.equal(root.get("product").get("id"), productId);
     }
 
     private Specification<Review> userId(String userId) {

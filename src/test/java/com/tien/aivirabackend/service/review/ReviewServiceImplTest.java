@@ -82,8 +82,10 @@ class ReviewServiceImplTest {
 
         assertThat(response.getData()).hasSize(1);
         assertThat(response.getData().getFirst().getRating()).isEqualTo(5);
-        verify(reviewRepository).findAll(any(Specification.class), argThat((Pageable pageable) ->
-                pageable.getSort().getOrderFor("rating") != null));
+        verify(reviewRepository)
+                .findAll(
+                        any(Specification.class),
+                        argThat((Pageable pageable) -> pageable.getSort().getOrderFor("rating") != null));
     }
 
     @Test
@@ -107,8 +109,8 @@ class ReviewServiceImplTest {
         assertThat(response.getApproved()).isFalse();
         assertThat(response.getVisible()).isTrue();
         assertThat(response.getImages()).hasSize(1);
-        verify(reviewRepository).save(argThat(review ->
-                review.getOrderItem().getId().equals(31L)
+        verify(reviewRepository)
+                .save(argThat(review -> review.getOrderItem().getId().equals(31L)
                         && review.getProduct().getId().equals(10L)
                         && !review.isApproved()
                         && review.isVisible()));
@@ -120,8 +122,8 @@ class ReviewServiceImplTest {
         when(orderRepository.findDetailedByIdAndUserId(21L, "user-1")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> reviewService.createReview(21L, 31L, createRequest()))
-                .isInstanceOfSatisfying(AppException.class, ex ->
-                        assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.ORDER_NOT_FOUND));
+                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
+                        .isEqualTo(OrderErrorCode.ORDER_NOT_FOUND));
     }
 
     @Test
@@ -131,8 +133,8 @@ class ReviewServiceImplTest {
                 .thenReturn(Optional.of(order(OrderStatus.CONFIRMED)));
 
         assertThatThrownBy(() -> reviewService.createReview(21L, 31L, createRequest()))
-                .isInstanceOfSatisfying(AppException.class, ex ->
-                        assertThat(ex.getErrorCode()).isEqualTo(ReviewErrorCode.REVIEW_ORDER_NOT_COMPLETED));
+                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
+                        .isEqualTo(ReviewErrorCode.REVIEW_ORDER_NOT_COMPLETED));
     }
 
     @Test
@@ -143,8 +145,8 @@ class ReviewServiceImplTest {
         when(reviewRepository.existsByOrderItem_Id(31L)).thenReturn(true);
 
         assertThatThrownBy(() -> reviewService.createReview(21L, 31L, createRequest()))
-                .isInstanceOfSatisfying(AppException.class, ex ->
-                        assertThat(ex.getErrorCode()).isEqualTo(ReviewErrorCode.REVIEW_ALREADY_EXISTS));
+                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
+                        .isEqualTo(ReviewErrorCode.REVIEW_ALREADY_EXISTS));
     }
 
     @Test
@@ -154,8 +156,8 @@ class ReviewServiceImplTest {
                 .thenReturn(Optional.of(order(OrderStatus.COMPLETED)));
 
         assertThatThrownBy(() -> reviewService.createReview(21L, 999L, createRequest()))
-                .isInstanceOfSatisfying(AppException.class, ex ->
-                        assertThat(ex.getErrorCode()).isEqualTo(ReviewErrorCode.REVIEW_NOT_ALLOWED));
+                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
+                        .isEqualTo(ReviewErrorCode.REVIEW_NOT_ALLOWED));
     }
 
     @Test
@@ -181,8 +183,8 @@ class ReviewServiceImplTest {
         when(reviewRepository.findDetailedByIdAndUserId(99L, "user-1")).thenReturn(Optional.of(review));
 
         assertThatThrownBy(() -> reviewService.updateReview(99L, updateRequest()))
-                .isInstanceOfSatisfying(AppException.class, ex ->
-                        assertThat(ex.getErrorCode()).isEqualTo(ReviewErrorCode.REVIEW_DELETED));
+                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
+                        .isEqualTo(ReviewErrorCode.REVIEW_DELETED));
     }
 
     @Test
@@ -207,7 +209,8 @@ class ReviewServiceImplTest {
         when(reviewRepository.save(review)).thenReturn(review);
 
         var response = reviewService.moderateReview(
-                99L, ReviewModerateRequest.builder().approved(true).visible(false).build());
+                99L,
+                ReviewModerateRequest.builder().approved(true).visible(false).build());
 
         assertThat(response.getApproved()).isTrue();
         assertThat(response.getVisible()).isFalse();
@@ -253,7 +256,11 @@ class ReviewServiceImplTest {
     }
 
     private ReviewImageRequest imageRequest(String url, String publicId) {
-        return ReviewImageRequest.builder().imageUrl(url).imagePublicId(publicId).sortOrder(0).build();
+        return ReviewImageRequest.builder()
+                .imageUrl(url)
+                .imagePublicId(publicId)
+                .sortOrder(0)
+                .build();
     }
 
     private Review approvedReview() {
@@ -285,8 +292,16 @@ class ReviewServiceImplTest {
     }
 
     private Order order(OrderStatus status) {
-        User user = User.builder().id("user-1").username("buyer").email("buyer@example.com").build();
-        Order order = Order.builder().user(user).orderCode("ORD123").orderStatus(status).build();
+        User user = User.builder()
+                .id("user-1")
+                .username("buyer")
+                .email("buyer@example.com")
+                .build();
+        Order order = Order.builder()
+                .user(user)
+                .orderCode("ORD123")
+                .orderStatus(status)
+                .build();
         order.setId(21L);
         order.getItems()
                 .add(OrderItem.builder()
@@ -304,13 +319,15 @@ class ReviewServiceImplTest {
     }
 
     private Product product() {
-        Product product = Product.builder().productName("Aivira Book").slug("aivira-book").build();
+        Product product =
+                Product.builder().productName("Aivira Book").slug("aivira-book").build();
         product.setId(10L);
         return product;
     }
 
     private ProductVariation variation(Product product) {
-        ProductVariation variation = ProductVariation.builder().product(product).sku("BOOK-001").build();
+        ProductVariation variation =
+                ProductVariation.builder().product(product).sku("BOOK-001").build();
         variation.setId(11L);
         return variation;
     }

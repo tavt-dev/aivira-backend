@@ -16,13 +16,18 @@ import lombok.experimental.FieldDefaults;
 public class TopBookResponse {
     @Schema(example = "101")
     Long productId;
+
     @Schema(example = "Clean Code")
     String productName;
+
     @Schema(example = "BOOK-CLN-CODE-PB")
     String sku;
+
     String thumbnailUrl;
+
     @Schema(example = "42")
     Long quantitySold;
+
     @Schema(example = "13440000")
     BigDecimal revenue;
 }

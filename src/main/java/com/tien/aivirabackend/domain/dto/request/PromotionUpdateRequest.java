@@ -25,18 +25,25 @@ public class PromotionUpdateRequest {
     String promotionName;
 
     String description;
+
     @Schema(example = "PERCENT")
     PromotionType promotionType;
+
     @Schema(example = "15")
     BigDecimal value;
+
     @Schema(example = "75000")
     BigDecimal maxDiscountAmount;
+
     @Schema(example = "CATEGORY")
     PromotionScope promotionScope;
+
     @Schema(description = "Product id for PRODUCT scope or category id for CATEGORY scope.", example = "12")
     Long targetId;
+
     LocalDateTime startAt;
     LocalDateTime endAt;
+
     @Schema(example = "true")
     Boolean active;
 }

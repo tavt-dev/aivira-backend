@@ -54,21 +54,15 @@ class AdminUserControllerContractTest {
                 "USER_MANAGE_ALL",
                 "USER_READ_ALL");
         assertPreAuthorize(
-                AdminUserController.class.getMethod("getAdminUser", String.class),
-                "USER_MANAGE_ALL",
-                "USER_READ_ALL");
+                AdminUserController.class.getMethod("getAdminUser", String.class), "USER_MANAGE_ALL", "USER_READ_ALL");
     }
 
     @Test
     void lockUnlockAndRoles_shouldRequireExpectedPermissions() throws Exception {
         assertPreAuthorize(
-                AdminUserController.class.getMethod("lockUser", String.class),
-                "USER_MANAGE_ALL",
-                "USER_LOCK");
+                AdminUserController.class.getMethod("lockUser", String.class), "USER_MANAGE_ALL", "USER_LOCK");
         assertPreAuthorize(
-                AdminUserController.class.getMethod("unlockUser", String.class),
-                "USER_MANAGE_ALL",
-                "USER_UNLOCK");
+                AdminUserController.class.getMethod("unlockUser", String.class), "USER_MANAGE_ALL", "USER_UNLOCK");
         assertPreAuthorize(
                 AdminUserController.class.getMethod("updateUserRoles", String.class, UpdateUserRolesRequest.class),
                 "USER_MANAGE_ALL",

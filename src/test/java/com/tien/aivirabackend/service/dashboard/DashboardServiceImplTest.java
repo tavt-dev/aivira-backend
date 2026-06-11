@@ -50,7 +50,8 @@ class DashboardServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        dashboardService = new DashboardServiceImpl(productRepository, orderRepository, paymentRepository, userRepository);
+        dashboardService =
+                new DashboardServiceImpl(productRepository, orderRepository, paymentRepository, userRepository);
     }
 
     @Test
@@ -130,11 +131,10 @@ class DashboardServiceImplTest {
         var response = dashboardService.getOrders(from, to);
 
         assertThat(response.getStatusCounts()).hasSize(OrderStatus.values().length);
-        assertThat(response.getStatusCounts())
-                .anySatisfy(item -> {
-                    assertThat(item.getStatus()).isEqualTo(OrderStatus.COMPLETED);
-                    assertThat(item.getCount()).isEqualTo(8L);
-                });
+        assertThat(response.getStatusCounts()).anySatisfy(item -> {
+            assertThat(item.getStatus()).isEqualTo(OrderStatus.COMPLETED);
+            assertThat(item.getCount()).isEqualTo(8L);
+        });
     }
 
     @Test
@@ -148,7 +148,9 @@ class DashboardServiceImplTest {
 
         assertThat(response.getBooks()).hasSize(1);
         assertThat(response.getBooks().getFirst().getQuantitySold()).isEqualTo(4L);
-        verify(orderRepository).findTopBooksBetween(anyCollection(), eq(from), eq(to), argThat(pageable -> pageable.getPageSize() == 50));
+        verify(orderRepository)
+                .findTopBooksBetween(
+                        anyCollection(), eq(from), eq(to), argThat(pageable -> pageable.getPageSize() == 50));
         verify(productRepository, never()).findByActiveTrueAndStatusOrderBySoldCountDescCreatedAtDesc(any(), any());
     }
 

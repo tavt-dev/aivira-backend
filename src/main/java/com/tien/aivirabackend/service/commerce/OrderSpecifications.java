@@ -13,8 +13,7 @@ import com.tien.aivirabackend.domain.entity.transaction.Order;
 
 @Component
 public class OrderSpecifications {
-    public Specification<Order> adminOrders(
-            OrderStatus status, String keyword, Instant fromDate, Instant toDate) {
+    public Specification<Order> adminOrders(OrderStatus status, String keyword, Instant fromDate, Instant toDate) {
         return Specification.where(hasStatus(status))
                 .and(createdFrom(fromDate))
                 .and(createdTo(toDate))
