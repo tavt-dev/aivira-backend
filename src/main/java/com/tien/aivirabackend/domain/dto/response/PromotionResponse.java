@@ -21,19 +21,27 @@ import lombok.experimental.FieldDefaults;
 public class PromotionResponse {
     @Schema(example = "11")
     Long id;
+
     @Schema(example = "Programming Books Week")
     String promotionName;
+
     String description;
+
     @Schema(example = "PERCENT")
     PromotionType promotionType;
+
     @Schema(example = "15")
     BigDecimal value;
+
     @Schema(example = "75000")
     BigDecimal maxDiscountAmount;
+
     @Schema(example = "CATEGORY")
     PromotionScope promotionScope;
+
     @Schema(example = "12")
     Long targetId;
+
     LocalDateTime startAt;
     LocalDateTime endAt;
     Boolean active;

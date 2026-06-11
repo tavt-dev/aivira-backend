@@ -33,8 +33,7 @@ public class AdminPromotionController {
     @Operation(summary = "List promotions")
     @PreAuthorize("@authorizationService.hasAnyPermission('PROMOTION_MANAGE_ALL', 'PROMOTION_READ')")
     public ResponseEntity<ApiResponse<PageResponse<PromotionResponse>>> getPromotions(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(
                 ApiResponse.success("Get promotions successful", promotionService.getPromotions(page, size)));
     }
@@ -68,7 +67,9 @@ public class AdminPromotionController {
     }
 
     @DeleteMapping("/{promotionId}")
-    @Operation(summary = "Deactivate promotion", description = "Soft-deactivates a promotion instead of deleting historical order snapshots.")
+    @Operation(
+            summary = "Deactivate promotion",
+            description = "Soft-deactivates a promotion instead of deleting historical order snapshots.")
     @PreAuthorize("@authorizationService.hasAnyPermission('PROMOTION_MANAGE_ALL', 'PROMOTION_DELETE_ALL')")
     public ResponseEntity<ApiResponse<Void>> deletePromotion(@PathVariable Long promotionId) {
         promotionService.deletePromotion(promotionId);

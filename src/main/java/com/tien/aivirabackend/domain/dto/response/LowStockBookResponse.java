@@ -14,13 +14,18 @@ import lombok.experimental.FieldDefaults;
 public class LowStockBookResponse {
     @Schema(example = "101")
     Long productId;
+
     @Schema(example = "Clean Code")
     String productName;
+
     @Schema(example = "clean-code")
     String slug;
+
     @Schema(example = "BOOK-CLN-CODE-PB")
     String sku;
+
     String thumbnailUrl;
+
     @Schema(example = "3")
     Integer stockQuantity;
 }

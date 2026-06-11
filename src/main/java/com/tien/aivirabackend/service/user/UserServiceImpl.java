@@ -6,8 +6,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -261,7 +261,9 @@ public class UserServiceImpl implements UserService {
     }
 
     private User findUserWithRoles(String userId) {
-        return userRepository.findWithRolesById(userId).orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND_BY_ID));
+        return userRepository
+                .findWithRolesById(userId)
+                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND_BY_ID));
     }
 
     private Role findRole(PredefinedRole role) {

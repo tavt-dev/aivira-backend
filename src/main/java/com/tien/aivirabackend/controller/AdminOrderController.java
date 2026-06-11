@@ -70,7 +70,8 @@ public class AdminOrderController {
     @Operation(summary = "Mark order as packing", description = "Allowed from CONFIRMED to PACKING.")
     @PreAuthorize("@authorizationService.hasAnyPermission('ORDER_MANAGE_ALL', 'ORDER_UPDATE_STATUS_ALL')")
     public ResponseEntity<ApiResponse<OrderResponse>> markPacking(@PathVariable Long orderId) {
-        return ResponseEntity.ok(ApiResponse.success("Mark order packing successful", orderService.markPacking(orderId)));
+        return ResponseEntity.ok(
+                ApiResponse.success("Mark order packing successful", orderService.markPacking(orderId)));
     }
 
     @PutMapping("/{orderId}/shipping")
@@ -92,18 +93,20 @@ public class AdminOrderController {
     @PutMapping("/{orderId}/cancel")
     @Operation(
             summary = "Cancel order as admin",
-            description = "Cancels safe pre-shipping orders and restores stock. Paid cancellation is handled by manual refund flow.")
+            description =
+                    "Cancels safe pre-shipping orders and restores stock. Paid cancellation is handled by manual refund flow.")
     @PreAuthorize("@authorizationService.hasAnyPermission('ORDER_MANAGE_ALL', 'ORDER_CANCEL_ALL')")
     public ResponseEntity<ApiResponse<OrderResponse>> cancelAdminOrder(
             @PathVariable Long orderId, @Valid @RequestBody OrderCancelRequest request) {
-        return ResponseEntity.ok(ApiResponse.success(
-                "Cancel admin order successful", orderService.cancelAdminOrder(orderId, request)));
+        return ResponseEntity.ok(
+                ApiResponse.success("Cancel admin order successful", orderService.cancelAdminOrder(orderId, request)));
     }
 
     @PutMapping("/{orderId}/mark-refunded")
     @Operation(
             summary = "Mark order as manually refunded",
-            description = "Records a full manual refund for a paid pre-shipping order without calling VNPay or MoMo refund APIs.")
+            description =
+                    "Records a full manual refund for a paid pre-shipping order without calling VNPay or MoMo refund APIs.")
     @PreAuthorize("@authorizationService.hasAnyPermission('ORDER_MANAGE_ALL', 'REFUND_MANAGE_ALL')")
     public ResponseEntity<ApiResponse<OrderResponse>> markRefunded(
             @PathVariable Long orderId, @Valid @RequestBody ManualRefundRequest request) {

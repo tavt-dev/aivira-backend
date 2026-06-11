@@ -16,18 +16,25 @@ import lombok.experimental.FieldDefaults;
 public class DashboardSummaryResponse {
     @Schema(description = "Revenue from successful payments.", example = "12500000")
     BigDecimal revenue;
+
     @Schema(example = "42")
     Long orderCount;
+
     @Schema(example = "35")
     Long successfulPaymentCount;
+
     @Schema(example = "3")
     Long failedPaymentCount;
+
     @Schema(example = "18")
     Long newUserCount;
+
     @Schema(example = "7")
     Long pendingOrderCount;
+
     @Schema(example = "4")
     Long pendingPaymentCount;
+
     @Schema(example = "6")
     Long lowStockCount;
 }

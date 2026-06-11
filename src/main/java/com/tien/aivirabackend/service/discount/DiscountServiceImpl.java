@@ -60,7 +60,8 @@ public class DiscountServiceImpl implements DiscountService {
         BigDecimal promotionDiscount = ZERO;
 
         for (CartItem cartItem : cartItems) {
-            ProductVariation variation = variations.get(cartItem.getProductVariation().getId());
+            ProductVariation variation =
+                    variations.get(cartItem.getProductVariation().getId());
             Product product = variation.getProduct();
             BigDecimal unitPrice = money(product.getPrice().add(nullToZero(variation.getAdditionalPrice())));
             BigDecimal lineSubtotal = money(unitPrice.multiply(BigDecimal.valueOf(cartItem.getQuantity())));
@@ -75,7 +76,8 @@ public class DiscountServiceImpl implements DiscountService {
                     }
                 }
             }
-            BigDecimal finalLineAmount = money(lineSubtotal.subtract(bestDiscount).max(BigDecimal.ZERO));
+            BigDecimal finalLineAmount =
+                    money(lineSubtotal.subtract(bestDiscount).max(BigDecimal.ZERO));
             subtotal = subtotal.add(lineSubtotal);
             promotionDiscount = promotionDiscount.add(bestDiscount);
             items.add(new DiscountItem(
@@ -118,11 +120,13 @@ public class DiscountServiceImpl implements DiscountService {
                 BigDecimal amount = existing == null
                         ? item.promotionDiscountAmount()
                         : existing.getDiscountAmount().add(item.promotionDiscountAmount());
-                promotions.put(item.promotionId(), AppliedPromotionResponse.builder()
-                        .promotionId(item.promotionId())
-                        .promotionName(item.promotionName())
-                        .discountAmount(money(amount))
-                        .build());
+                promotions.put(
+                        item.promotionId(),
+                        AppliedPromotionResponse.builder()
+                                .promotionId(item.promotionId())
+                                .promotionName(item.promotionName())
+                                .discountAmount(money(amount))
+                                .build());
             }
         }
 
@@ -136,9 +140,7 @@ public class DiscountServiceImpl implements DiscountService {
                 .couponCode(calculation.couponCode())
                 .coupon(discountMapper.toCouponResponse(calculation.coupon()))
                 .appliedPromotions(new ArrayList<>(promotions.values()))
-                .items(calculation.items().stream()
-                        .map(this::toPreviewItem)
-                        .toList())
+                .items(calculation.items().stream().map(this::toPreviewItem).toList())
                 .build();
     }
 
@@ -152,7 +154,11 @@ public class DiscountServiceImpl implements DiscountService {
         Coupon coupon = couponRepository
                 .findByCodeForUpdate(calculation.couponCode())
                 .orElseThrow(() -> new AppException(CouponErrorCode.COUPON_NOT_FOUND));
-        validateCouponAvailability(user, coupon, calculation.subtotal().subtract(calculation.promotionDiscountAmount()), LocalDateTime.now());
+        validateCouponAvailability(
+                user,
+                coupon,
+                calculation.subtotal().subtract(calculation.promotionDiscountAmount()),
+                LocalDateTime.now());
         LocalDateTime now = LocalDateTime.now();
         CouponUsage usage = CouponUsage.builder()
                 .coupon(coupon)
@@ -215,7 +221,9 @@ public class DiscountServiceImpl implements DiscountService {
             Coupon coupon = couponRepository
                     .findByCodeForUpdate(usage.getCoupon().getCode())
                     .orElseThrow(() -> new AppException(CouponErrorCode.COUPON_NOT_FOUND));
-            BigDecimal eligibleAmount = usage.getOrder().getSubtotal().subtract(usage.getOrder().getDiscountAmount())
+            BigDecimal eligibleAmount = usage.getOrder()
+                    .getSubtotal()
+                    .subtract(usage.getOrder().getDiscountAmount())
                     .add(usage.getDiscountAmount());
             validateCouponAvailability(usage.getUser(), coupon, eligibleAmount, now);
             usage.setStatus(CouponUsageStatus.RESERVED);
@@ -287,7 +295,8 @@ public class DiscountServiceImpl implements DiscountService {
         if (promotion.getPromotionScope() == PromotionScope.PRODUCT) {
             return Objects.equals(promotion.getTargetId(), product.getId());
         }
-        return product.getCategory() != null && Objects.equals(promotion.getTargetId(), product.getCategory().getId());
+        return product.getCategory() != null
+                && Objects.equals(promotion.getTargetId(), product.getCategory().getId());
     }
 
     private CheckoutPreviewItemResponse toPreviewItem(DiscountItem item) {

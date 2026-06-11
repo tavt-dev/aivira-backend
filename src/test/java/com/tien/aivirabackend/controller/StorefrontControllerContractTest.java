@@ -38,7 +38,8 @@ class StorefrontControllerContractTest {
         assertThat(StorefrontController.class.getMethod("getHome").getAnnotation(PreAuthorize.class))
                 .isNull();
 
-        org.mockito.Mockito.when(storefrontService.getHome()).thenReturn(StorefrontHomeResponse.builder().build());
+        org.mockito.Mockito.when(storefrontService.getHome())
+                .thenReturn(StorefrontHomeResponse.builder().build());
 
         mockMvc.perform(get("/storefront/home"))
                 .andExpect(status().isOk())

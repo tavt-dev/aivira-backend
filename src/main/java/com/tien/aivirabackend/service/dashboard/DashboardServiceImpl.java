@@ -8,7 +8,6 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.EnumSet;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.PageRequest;
@@ -36,7 +35,6 @@ import com.tien.aivirabackend.repository.PaymentRepository;
 import com.tien.aivirabackend.repository.ProductRepository;
 import com.tien.aivirabackend.repository.UserRepository;
 import com.tien.aivirabackend.repository.projection.DailyOrderCountProjection;
-import com.tien.aivirabackend.repository.projection.SalesPointProjection;
 import com.tien.aivirabackend.repository.projection.TopBookProjection;
 
 import lombok.AccessLevel;
@@ -88,18 +86,16 @@ public class DashboardServiceImpl implements DashboardService {
     @Transactional(readOnly = true)
     public DashboardSalesResponse getSales(Instant fromDate, Instant toDate) {
         DateRange range = resolveRange(fromDate, toDate);
-        Map<LocalDate, BigDecimal> revenueByDate = paymentRepository
-                .aggregateDailySuccessfulRevenue(range.fromDate(), range.toDate())
-                .stream()
-                .collect(Collectors.toMap(
-                        projection -> toLocalDate(projection.getSalesDate()),
-                        projection -> defaultMoney(projection.getRevenue())));
-        Map<LocalDate, Long> orderCountByDate = orderRepository
-                .countDailyOrdersBetween(range.fromDate(), range.toDate())
-                .stream()
-                .collect(Collectors.toMap(
-                        projection -> toLocalDate(projection.getOrderDate()),
-                        DailyOrderCountProjection::getOrderCount));
+        Map<LocalDate, BigDecimal> revenueByDate =
+                paymentRepository.aggregateDailySuccessfulRevenue(range.fromDate(), range.toDate()).stream()
+                        .collect(Collectors.toMap(
+                                projection -> toLocalDate(projection.getSalesDate()),
+                                projection -> defaultMoney(projection.getRevenue())));
+        Map<LocalDate, Long> orderCountByDate =
+                orderRepository.countDailyOrdersBetween(range.fromDate(), range.toDate()).stream()
+                        .collect(Collectors.toMap(
+                                projection -> toLocalDate(projection.getOrderDate()),
+                                DailyOrderCountProjection::getOrderCount));
 
         LocalDate start = range.fromDate().atZone(ZoneOffset.UTC).toLocalDate();
         LocalDate end = range.toDate().atZone(ZoneOffset.UTC).toLocalDate();
@@ -122,12 +118,11 @@ public class DashboardServiceImpl implements DashboardService {
     @Transactional(readOnly = true)
     public DashboardOrdersResponse getOrders(Instant fromDate, Instant toDate) {
         DateRange range = resolveRange(fromDate, toDate);
-        Map<OrderStatus, Long> counts = orderRepository
-                .countOrdersByStatusBetween(range.fromDate(), range.toDate())
-                .stream()
-                .collect(Collectors.toMap(
-                        com.tien.aivirabackend.repository.projection.OrderStatusCountProjection::getStatus,
-                        com.tien.aivirabackend.repository.projection.OrderStatusCountProjection::getCount));
+        Map<OrderStatus, Long> counts =
+                orderRepository.countOrdersByStatusBetween(range.fromDate(), range.toDate()).stream()
+                        .collect(Collectors.toMap(
+                                com.tien.aivirabackend.repository.projection.OrderStatusCountProjection::getStatus,
+                                com.tien.aivirabackend.repository.projection.OrderStatusCountProjection::getCount));
 
         return DashboardOrdersResponse.builder()
                 .statusCounts(java.util.Arrays.stream(OrderStatus.values())
@@ -190,7 +185,8 @@ public class DashboardServiceImpl implements DashboardService {
 
     private DateRange resolveRange(Instant fromDate, Instant toDate) {
         Instant resolvedToDate = toDate == null ? Instant.now() : toDate;
-        Instant resolvedFromDate = fromDate == null ? resolvedToDate.minus(DEFAULT_RANGE_DAYS, ChronoUnit.DAYS) : fromDate;
+        Instant resolvedFromDate =
+                fromDate == null ? resolvedToDate.minus(DEFAULT_RANGE_DAYS, ChronoUnit.DAYS) : fromDate;
         if (resolvedFromDate.isAfter(resolvedToDate)) {
             throw new AppException(CommonErrorCode.INVALID_INPUT);
         }
@@ -235,7 +231,10 @@ public class DashboardServiceImpl implements DashboardService {
                 .productName(product.getProductName())
                 .sku(product.getSku())
                 .thumbnailUrl(product.getThumbnailUrl())
-                .quantitySold(product.getSoldCount() == null ? 0L : product.getSoldCount().longValue())
+                .quantitySold(
+                        product.getSoldCount() == null
+                                ? 0L
+                                : product.getSoldCount().longValue())
                 .revenue(BigDecimal.ZERO)
                 .build();
     }

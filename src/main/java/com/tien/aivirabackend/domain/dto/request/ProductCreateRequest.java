@@ -23,7 +23,9 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Schema(description = "Request to create a bookstore product. Backend resource name remains Product, but fields describe a book.")
+@Schema(
+        description =
+                "Request to create a bookstore product. Backend resource name remains Product, but fields describe a book.")
 public class ProductCreateRequest {
     @Schema(example = "BOOK-CLN-CODE-PB")
     @NotBlank

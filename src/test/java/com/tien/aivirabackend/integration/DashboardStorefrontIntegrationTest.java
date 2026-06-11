@@ -73,7 +73,8 @@ class DashboardStorefrontIntegrationTest extends AbstractIntegrationTest {
                 .active(true)
                 .visible(true)
                 .build());
-        Product bestseller = saveBook(category, "BOOK-001", "Bestseller", "bestseller", 2, 15, true, ProductStatus.ACTIVE);
+        Product bestseller =
+                saveBook(category, "BOOK-001", "Bestseller", "bestseller", 2, 15, true, ProductStatus.ACTIVE);
         saveBook(category, "BOOK-002", "Inactive Book", "inactive-book", 10, 1, true, ProductStatus.INACTIVE);
         savePaidOrder(customer, bestseller);
 

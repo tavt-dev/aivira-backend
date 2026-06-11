@@ -104,15 +104,17 @@ class AdminOrderControllerContractTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"reason\":\"customer requested\"}"))
                 .andExpect(status().isOk());
-        mockMvc.perform(put("/admin/orders/21/mark-refunded")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "amount":100.00,
-                                  "reason":"customer refund",
-                                  "note":"manual bank transfer completed"
-                                }
-                                """))
+        mockMvc.perform(
+                        put("/admin/orders/21/mark-refunded")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+								{
+								"amount":100.00,
+								"reason":"customer refund",
+								"note":"manual bank transfer completed"
+								}
+								"""))
                 .andExpect(status().isOk());
 
         verify(orderService)
@@ -134,15 +136,17 @@ class AdminOrderControllerContractTest {
 
     @Test
     void markRefunded_whenRequestInvalid_shouldReturnValidationError() throws Exception {
-        mockMvc.perform(put("/admin/orders/21/mark-refunded")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "amount":0,
-                                  "reason":"",
-                                  "note":""
-                                }
-                                """))
+        mockMvc.perform(
+                        put("/admin/orders/21/mark-refunded")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+								{
+								"amount":0,
+								"reason":"",
+								"note":""
+								}
+								"""))
                 .andExpect(status().isBadRequest());
     }
 

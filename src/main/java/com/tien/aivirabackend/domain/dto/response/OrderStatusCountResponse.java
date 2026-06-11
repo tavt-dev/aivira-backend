@@ -16,6 +16,7 @@ import lombok.experimental.FieldDefaults;
 public class OrderStatusCountResponse {
     @Schema(example = "PENDING_CONFIRMATION")
     OrderStatus status;
+
     @Schema(example = "7")
     Long count;
 }

@@ -33,10 +33,8 @@ public class AdminCouponController {
     @Operation(summary = "List coupons")
     @PreAuthorize("@authorizationService.hasPermission('COUPON_MANAGE_ALL')")
     public ResponseEntity<ApiResponse<PageResponse<CouponResponse>>> getCoupons(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(
-                ApiResponse.success("Get coupons successful", couponService.getCoupons(page, size)));
+            @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(ApiResponse.success("Get coupons successful", couponService.getCoupons(page, size)));
     }
 
     @GetMapping("/{couponId}")
@@ -49,7 +47,8 @@ public class AdminCouponController {
     @PostMapping
     @Operation(
             summary = "Create coupon",
-            description = "Creates an order-level coupon. Coupon codes are normalized to uppercase and applied after promotions.")
+            description =
+                    "Creates an order-level coupon. Coupon codes are normalized to uppercase and applied after promotions.")
     @PreAuthorize("@authorizationService.hasAnyPermission('COUPON_MANAGE_ALL', 'COUPON_CREATE_ALL')")
     public ResponseEntity<ApiResponse<CouponResponse>> createCoupon(@Valid @RequestBody CouponCreateRequest request) {
         return ResponseEntity.ok(ApiResponse.success("Create coupon successful", couponService.createCoupon(request)));
@@ -65,7 +64,9 @@ public class AdminCouponController {
     }
 
     @DeleteMapping("/{couponId}")
-    @Operation(summary = "Deactivate coupon", description = "Soft-deactivates a coupon instead of deleting historical usage.")
+    @Operation(
+            summary = "Deactivate coupon",
+            description = "Soft-deactivates a coupon instead of deleting historical usage.")
     @PreAuthorize("@authorizationService.hasAnyPermission('COUPON_MANAGE_ALL', 'COUPON_DELETE_ALL')")
     public ResponseEntity<ApiResponse<Void>> deleteCoupon(@PathVariable Long couponId) {
         couponService.deleteCoupon(couponId);
