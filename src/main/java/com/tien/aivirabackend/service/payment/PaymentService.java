@@ -11,6 +11,8 @@ import com.tien.aivirabackend.domain.dto.response.VnpayIpnResponse;
 public interface PaymentService {
     PaymentGroupResponse getMyPaymentGroup(String paymentGroupCode);
 
+    PaymentGroupResponse getAdminPaymentGroup(String paymentGroupCode);
+
     PaymentResponse getMyPayment(Long paymentId);
 
     PaymentGroupResponse retry(String paymentGroupCode, RequestMetadata requestMetadata);
