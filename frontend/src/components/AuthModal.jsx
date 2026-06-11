@@ -1,11 +1,19 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { forgotPassword, login, register, resendVerification, resetPassword, verifyUser } from "../api/authApi.js";
 import { getProfile } from "../api/userApi.js";
 import { hasAdminAccess } from "../utils/authz.js";
-import { clearPendingVerify, getPendingVerify, saveAuth, saveCurrentUser, savePendingVerify } from "../utils/storage.js";
+import {
+  clearPendingVerify,
+  getPendingVerify,
+  saveAuth,
+  saveCurrentUser,
+  savePendingVerify
+} from "../utils/storage.js";
+
+const GOOGLE_AUTHORIZE_URL = import.meta.env.VITE_GOOGLE_OAUTH_AUTHORIZE_URL || "/api/v1/auth/google/authorize";
 
 const initialForm = {
   username: "",
@@ -87,6 +95,10 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
 
   function togglePassword(field) {
     setVisiblePasswords((current) => ({ ...current, [field]: !current[field] }));
+  }
+
+  function startGoogleLogin() {
+    window.location.assign(buildGoogleAuthorizeUrl(nextPath || "/"));
   }
 
   async function handleLoginRedirect(accessToken) {
@@ -213,9 +225,7 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
     }));
     setMessage({
       type: "success",
-      text: context?.source === "register"
-        ? t("auth.registerOtp")
-        : t("auth.loginOtp")
+      text: context?.source === "register" ? t("auth.registerOtp") : t("auth.loginOtp")
     });
     setMode("verify");
   }
@@ -266,9 +276,7 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
           <div className="relative font-display text-6xl tracking-[0.18em] text-white [text-shadow:0_20px_50px_rgba(0,0,0,0.35)]">
             AIVIRA
           </div>
-          <p className="relative mt-2 font-serif text-lg italic text-white/45">
-            {t("auth.sideSubtitle")}
-          </p>
+          <p className="relative mt-2 font-serif text-lg italic text-white/45">{t("auth.sideSubtitle")}</p>
           <div className="relative mt-7 flex flex-wrap justify-center gap-2">
             {t("auth.tags", { returnObjects: true }).map((item) => (
               <span
@@ -281,15 +289,21 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
           </div>
         </aside>
 
-        <form className="grid max-h-[min(92vh,100dvh)] content-center gap-3 sm:gap-4 overflow-y-auto p-4 sm:p-7 md:p-[42px] scroll-smooth" onSubmit={submit}>
-          <div className="grid grid-cols-2 gap-1 sm:gap-1.5 rounded-full border border-white/10 bg-white/5 p-1 sm:p-1.5" aria-label={t("auth.modes")}>
+        <form
+          className="grid max-h-[min(92vh,100dvh)] content-center gap-3 sm:gap-4 overflow-y-auto p-4 sm:p-7 md:p-[42px] scroll-smooth"
+          onSubmit={submit}
+        >
+          <div
+            className="grid grid-cols-2 gap-1 sm:gap-1.5 rounded-full border border-white/10 bg-white/5 p-1 sm:p-1.5"
+            aria-label={t("auth.modes")}
+          >
             <button
               type="button"
               className={[
                 "rounded-full px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-black transition",
                 mode === "login"
                   ? "bg-white text-slate-950 shadow-[0_12px_30px_rgba(0,0,0,0.22)]"
-                  : "text-white/60 hover:text-white",
+                  : "text-white/60 hover:text-white"
               ].join(" ")}
               onClick={() => switchMode("login")}
             >
@@ -301,7 +315,7 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
                 "rounded-full px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-black transition",
                 mode === "register"
                   ? "bg-white text-slate-950 shadow-[0_12px_30px_rgba(0,0,0,0.22)]"
-                  : "text-white/60 hover:text-white",
+                  : "text-white/60 hover:text-white"
               ].join(" ")}
               onClick={() => switchMode("register")}
             >
@@ -313,10 +327,7 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
             <div className="mx-auto inline-flex w-fit rounded-full bg-blue-500/10 px-2 sm:px-2.5 py-1 sm:py-1.5 text-[0.65rem] sm:text-[0.72rem] font-black uppercase tracking-[0.12em] text-blue-300">
               {t(meta.kicker)}
             </div>
-            <h2
-              id="auth-title"
-              className="my-2 font-serif text-[clamp(1.5rem,3.5vw,2.8rem)] italic text-white"
-            >
+            <h2 id="auth-title" className="my-2 font-serif text-[clamp(1.5rem,3.5vw,2.8rem)] italic text-white">
               {t(meta.title)}
             </h2>
             <p className="mx-auto max-w-[390px] text-xs sm:text-sm leading-5 sm:leading-6 text-white/50 px-1">
@@ -325,13 +336,16 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
           </div>
 
           {(mode === "verify" || mode === "forgot" || mode === "reset") && (
-            <div className="grid grid-cols-[28px_1fr_28px] sm:grid-cols-[34px_1fr_34px] items-center gap-2 sm:gap-2.5" aria-label="Auth progress">
+            <div
+              className="grid grid-cols-[28px_1fr_28px] sm:grid-cols-[34px_1fr_34px] items-center gap-2 sm:gap-2.5"
+              aria-label="Auth progress"
+            >
               <span
                 className={[
                   "grid h-[28px] sm:h-[34px] w-[28px] sm:w-[34px] place-items-center rounded-full border text-xs sm:text-base font-black",
                   step >= 1
                     ? "border-blue-600 bg-blue-600 text-white shadow-[0_0_28px_rgba(45,107,240,0.45)]"
-                    : "border-white/15 text-white/50",
+                    : "border-white/15 text-white/50"
                 ].join(" ")}
               >
                 1
@@ -342,7 +356,7 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
                   "grid h-[28px] sm:h-[34px] w-[28px] sm:w-[34px] place-items-center rounded-full border text-xs sm:text-base font-black",
                   step >= 2
                     ? "border-blue-600 bg-blue-600 text-white shadow-[0_0_28px_rgba(45,107,240,0.45)]"
-                    : "border-white/15 text-white/50",
+                    : "border-white/15 text-white/50"
                 ].join(" ")}
               >
                 2
@@ -354,11 +368,14 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
             {(mode === "login" || mode === "register") && (
               <>
                 <Field
-                  label={t("auth.username")}
+                  label={mode === "login" ? t("auth.email") : t("auth.username")}
                   value={form.username}
                   onChange={(value) => update("username", value)}
                   autoComplete="username"
                   minLength={mode === "register" ? 4 : undefined}
+                  icon={mode === "login" ? Mail : User}
+                  placeholder={mode === "login" ? "you@example.com" : t("auth.username")}
+                  variant="bright"
                 />
                 <Field
                   label={t("auth.password")}
@@ -369,18 +386,39 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
                   minLength={mode === "register" ? 6 : undefined}
                   passwordToggle={{
                     visible: Boolean(visiblePasswords.password),
-                    onToggle: () => togglePassword("password"),
+                    onToggle: () => togglePassword("password")
                   }}
+                  icon={Lock}
+                  placeholder={t("auth.passwordPlaceholder")}
+                  variant="bright"
                 />
               </>
             )}
 
-            {(mode === "register") && (
+            {mode === "register" && (
               <>
-                <Field label={t("auth.email")} type="email" value={form.email} onChange={(value) => update("email", value)} autoComplete="email" />
+                <Field
+                  label={t("auth.email")}
+                  type="email"
+                  value={form.email}
+                  onChange={(value) => update("email", value)}
+                  autoComplete="email"
+                />
                 <div className="grid gap-2 sm:gap-2.5 md:grid-cols-2">
-                  <Field label={t("auth.firstName")} value={form.firstName} onChange={(value) => update("firstName", value)} autoComplete="given-name" required={false} />
-                  <Field label={t("auth.lastName")} value={form.lastName} onChange={(value) => update("lastName", value)} autoComplete="family-name" required={false} />
+                  <Field
+                    label={t("auth.firstName")}
+                    value={form.firstName}
+                    onChange={(value) => update("firstName", value)}
+                    autoComplete="given-name"
+                    required={false}
+                  />
+                  <Field
+                    label={t("auth.lastName")}
+                    value={form.lastName}
+                    onChange={(value) => update("lastName", value)}
+                    autoComplete="family-name"
+                    required={false}
+                  />
                 </div>
                 <Field
                   label={t("auth.confirmPassword")}
@@ -391,7 +429,7 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
                   minLength={6}
                   passwordToggle={{
                     visible: Boolean(visiblePasswords.confirmPassword),
-                    onToggle: () => togglePassword("confirmPassword"),
+                    onToggle: () => togglePassword("confirmPassword")
                   }}
                 />
               </>
@@ -420,7 +458,13 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
 
             {mode === "reset" && (
               <>
-                <Field label={t("auth.otpCode")} value={form.otpCode} onChange={(value) => update("otpCode", value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" maxLength={6} />
+                <Field
+                  label={t("auth.otpCode")}
+                  value={form.otpCode}
+                  onChange={(value) => update("otpCode", value.replace(/\D/g, "").slice(0, 6))}
+                  inputMode="numeric"
+                  maxLength={6}
+                />
                 <Field
                   label={t("auth.newPassword")}
                   type={visiblePasswords.newPassword ? "text" : "password"}
@@ -430,7 +474,7 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
                   minLength={6}
                   passwordToggle={{
                     visible: Boolean(visiblePasswords.newPassword),
-                    onToggle: () => togglePassword("newPassword"),
+                    onToggle: () => togglePassword("newPassword")
                   }}
                 />
               </>
@@ -443,7 +487,7 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
                 "rounded-lg sm:rounded-xl border px-3 sm:px-3.5 py-2.5 sm:py-3 text-xs sm:text-sm leading-5 sm:leading-6",
                 message.type === "success"
                   ? "border-emerald-300/30 bg-emerald-500/15 text-emerald-100"
-                  : "border-red-300/30 bg-red-500/15 text-red-100",
+                  : "border-red-300/30 bg-red-500/15 text-red-100"
               ].join(" ")}
             >
               {message.text}
@@ -458,34 +502,130 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
             <span>{busy ? t("common.working") : t(meta.action)}</span>
           </button>
 
+          {(mode === "login" || mode === "register") && (
+            <>
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-[0.7rem] font-bold uppercase tracking-[0.08em] text-white/45">
+                <span className="h-px bg-white/15" />
+                {t("auth.or")}
+                <span className="h-px bg-white/15" />
+              </div>
+              <button
+                className="flex items-center justify-center gap-3 rounded-[10px] border border-white bg-white px-4 py-3 text-sm font-bold text-slate-700 shadow-[0_12px_30px_rgba(255,255,255,0.16)] transition hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-[0_18px_38px_rgba(255,255,255,0.22)] focus:outline-none focus:ring-4 focus:ring-blue-300/35"
+                type="button"
+                onClick={startGoogleLogin}
+              >
+                <span className="grid h-6 w-6 place-items-center rounded-full border border-slate-200 bg-white text-sm font-black text-[#4285F4] shadow-sm">
+                  G
+                </span>
+                {t("auth.continueWithGoogle")}
+              </button>
+            </>
+          )}
+
           <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2.5">
-            {mode === "verify" && <button className="px-1.5 sm:px-1.5 py-1 text-xs sm:text-sm font-extrabold text-[#c8d9ff] hover:text-white disabled:cursor-wait disabled:opacity-55" type="button" onClick={resendOtp} disabled={busy}>{t("auth.resendOtp")}</button>}
-            {(mode === "login" || mode === "register") && <button className="px-1.5 sm:px-1.5 py-1 text-xs sm:text-sm font-extrabold text-[#c8d9ff] hover:text-white" type="button" onClick={() => switchMode("forgot")}>{t("auth.forgotPassword")}</button>}
-            {(mode === "verify" || mode === "forgot" || mode === "reset") && <button className="px-1.5 sm:px-1.5 py-1 text-xs sm:text-sm font-extrabold text-[#c8d9ff] hover:text-white" type="button" onClick={() => switchMode("login")}>{t("auth.backToLogin")}</button>}
+            {mode === "verify" && (
+              <button
+                className="px-1.5 sm:px-1.5 py-1 text-xs sm:text-sm font-extrabold text-[#c8d9ff] hover:text-white disabled:cursor-wait disabled:opacity-55"
+                type="button"
+                onClick={resendOtp}
+                disabled={busy}
+              >
+                {t("auth.resendOtp")}
+              </button>
+            )}
+            {(mode === "login" || mode === "register") && (
+              <button
+                className="px-1.5 sm:px-1.5 py-1 text-xs sm:text-sm font-extrabold text-[#c8d9ff] hover:text-white"
+                type="button"
+                onClick={() => switchMode("forgot")}
+              >
+                {t("auth.forgotPassword")}
+              </button>
+            )}
+            {(mode === "verify" || mode === "forgot" || mode === "reset") && (
+              <button
+                className="px-1.5 sm:px-1.5 py-1 text-xs sm:text-sm font-extrabold text-[#c8d9ff] hover:text-white"
+                type="button"
+                onClick={() => switchMode("login")}
+              >
+                {t("auth.backToLogin")}
+              </button>
+            )}
           </div>
+          {(mode === "login" || mode === "register") && (
+            <div className="grid gap-4 text-center text-xs text-white/55">
+              <p>
+                {mode === "login" ? t("auth.noAccount") : t("auth.hasAccount")}{" "}
+                <button
+                  className="font-extrabold text-blue-300 hover:text-white"
+                  type="button"
+                  onClick={() => switchMode(mode === "login" ? "register" : "login")}
+                >
+                  {mode === "login" ? t("auth.createNow") : t("common.login")}
+                </button>
+              </p>
+              <p className="leading-5">
+                {t("auth.termsPrefix")}{" "}
+                <button className="font-bold text-blue-300 hover:text-white" type="button">
+                  {t("footer.privacy")}
+                </button>{" "}
+                {t("auth.and")}{" "}
+                <button className="font-bold text-blue-300 hover:text-white" type="button">
+                  {t("footer.terms")}
+                </button>
+                .
+              </p>
+            </div>
+          )}
         </form>
       </div>
     </div>
   );
 }
 
-function Field({ label, type = "text", value, onChange, required = true, passwordToggle, ...props }) {
+function Field({
+  label,
+  type = "text",
+  value,
+  onChange,
+  required = true,
+  passwordToggle,
+  icon: Icon,
+  placeholder,
+  variant = "default",
+  ...props
+}) {
   const { t } = useTranslation();
+  const bright = variant === "bright";
   return (
     <label className="grid gap-1.5 sm:gap-2">
       <span className="text-[0.7rem] sm:text-[0.78rem] font-black uppercase tracking-[0.08em] text-white/65">
         {label}
       </span>
       <span className="relative block">
+        {Icon && (
+          <Icon
+            className={[
+              "pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2",
+              bright ? "text-blue-700" : "text-slate-500"
+            ].join(" ")}
+            strokeWidth={2.4}
+            aria-hidden="true"
+          />
+        )}
         <input
           type={type}
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          placeholder={label}
+          placeholder={placeholder || label}
           required={required}
           className={[
-            "w-full rounded-[8px] sm:rounded-[10px] border border-white/10 bg-white/95 px-3 sm:px-3.5 py-2.5 sm:py-3 text-sm sm:text-base text-slate-950 outline-none transition focus:-translate-y-px focus:border-sky-300 focus:shadow-[0_0_0_4px_rgba(45,107,240,0.16)] disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-white/70",
-            passwordToggle ? "pr-[62px] sm:pr-[72px]" : "",
+            "w-full rounded-[8px] sm:rounded-[10px] border px-3 sm:px-3.5 py-2.5 sm:py-3 text-sm sm:text-base outline-none transition focus:-translate-y-px disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-white/70",
+            bright
+              ? "border-white/80 bg-white text-slate-950 placeholder:text-slate-400 shadow-[0_10px_28px_rgba(255,255,255,0.08)] focus:border-blue-300 focus:shadow-[0_0_0_4px_rgba(45,107,240,0.18)]"
+              : "border-white/10 bg-white/95 text-slate-950 focus:border-sky-300 focus:shadow-[0_0_0_4px_rgba(45,107,240,0.16)]",
+            Icon ? "pl-10" : "",
+            passwordToggle ? "pr-[62px] sm:pr-[72px]" : ""
           ].join(" ")}
           {...props}
         />
@@ -535,6 +675,14 @@ function validateForm(mode, form, t) {
   }
 }
 
+export function buildGoogleAuthorizeUrl(nextPath = "/") {
+  const url = new URL(GOOGLE_AUTHORIZE_URL, window.location.origin);
+  const safeNext =
+    typeof nextPath === "string" && nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/";
+  url.searchParams.set("next", safeNext);
+  return url.toString();
+}
+
 function shouldVerifyOtp(response, registerSuccess = false) {
   const nextStep = response?.nextStep || response?.status || response?.authStep;
   if (String(nextStep || "").toUpperCase() === "VERIFY_OTP") return true;
@@ -545,14 +693,16 @@ function shouldVerifyOtp(response, registerSuccess = false) {
 
 function isVerifyRequiredError(error) {
   const text = normalizeText(`${error?.message || ""} ${error?.errorCode || ""}`);
-  return error?.errorCode === "E2202"
-    || error?.errorCode === "E3106"
-    || text.includes("verify")
-    || text.includes("verified")
-    || text.includes("active")
-    || text.includes("otp")
-    || text.includes("xac minh")
-    || text.includes("kich hoat");
+  return (
+    error?.errorCode === "E2202" ||
+    error?.errorCode === "E3106" ||
+    text.includes("verify") ||
+    text.includes("verified") ||
+    text.includes("active") ||
+    text.includes("otp") ||
+    text.includes("xac minh") ||
+    text.includes("kich hoat")
+  );
 }
 
 function normalizeText(value) {

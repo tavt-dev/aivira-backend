@@ -12,6 +12,7 @@ import AccountPage from "./pages/AccountPage.jsx";
 import CartPage from "./pages/CartPage.jsx";
 import CategoryPage from "./pages/CategoryPage.jsx";
 import CheckoutPage from "./pages/CheckoutPage.jsx";
+import GoogleOAuthResultPage from "./pages/GoogleOAuthResultPage.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import OrdersPage from "./pages/OrdersPage.jsx";
 import PaymentResultPage from "./pages/PaymentResultPage.jsx";
@@ -109,6 +110,8 @@ export default function App() {
       <ConfirmDialogProvider>
       {!isAdminRoute && <MotionChrome />}
       <Routes>
+        <Route path="/auth/google/success" element={<GoogleOAuthResultPage />} />
+        <Route path="/auth/google/failure" element={<GoogleOAuthResultPage failure />} />
         <Route path="/admin/login" element={<Navigate to="/?auth=login&next=/admin/dashboard" replace />} />
         <Route path="/admin/forbidden" element={<AdminForbiddenPage />} />
         <Route
