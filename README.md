@@ -160,6 +160,20 @@ Success responses use `ApiResponse<T>`. Paginated list responses use `ApiRespons
 
 Integration tests use Testcontainers and are skipped when Docker is unavailable.
 
+## Code Formatting
+
+To format the Java code using the `formatter-maven-plugin`:
+
+```powershell
+.\mvnw.cmd formatter:format
+```
+
+To validate that the Java code matches the formatter rules:
+
+```powershell
+.\mvnw.cmd formatter:validate
+```
+
 ## Frontend
 
 The React/Vite frontend lives in `frontend/`.
