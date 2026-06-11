@@ -156,7 +156,7 @@ Improve `client.js`:
   - [x] `payload`
   - [x] `data`
 - [x] `query(params)` drops `undefined`, `null`, and `""`, but keeps `false` and `0`.
-- [ ] Add helper for paginated response shape where useful.
+- [x] Add helper for paginated response shape where useful.
 
 Acceptance:
 
@@ -1278,8 +1278,9 @@ Unit/component tests:
 - [x] Coupon/promotion admin tabs render backend data.
 - [x] Admin review moderation sends `{ approved, visible }`.
 - [x] Admin payment lookup and reconcile result render.
-- [ ] Auth modal login success/error component test can be expanded later.
-- [ ] Review form validation component test can be expanded later.
+- [x] Auth modal login success/error component test added.
+- [x] Review form validation component test added.
+- [x] PageResponse `pageMeta()` helper test added.
 
 E2E smoke tests:
 
@@ -1358,6 +1359,39 @@ Acceptance:
 - [x] No runtime business behavior changed.
 - [x] No seller/shop/merchant UI introduced.
 
+## Phase FE-19: Frontend Closure, Live Verification, And Final Hardening
+
+Status: completed in current workspace for code hardening and automated checks. Live backend/provider smoke remains pending because it requires a running backend with real local data/provider sandbox configuration.
+
+Goal: close stale checklist items and make CI strict enough to prevent frontend regressions.
+
+Code hardening:
+
+- [x] Added shared `pageMeta(payload, defaults)` helper.
+- [x] Migrated catalog, product reviews, customer orders, admin products, admin orders, admin users, admin discounts, and admin reviews to `pageMeta`.
+- [x] Removed duplicate translation key `admin.brand` by using `admin.productBrand` for product form label.
+- [x] Fixed footer placeholder links to accessible buttons.
+- [x] Fixed intro book click target semantics.
+- [x] Fixed review image preview overlay semantics.
+- [x] Fixed permission checkbox accessibility.
+- [x] Removed unused imports/constants/components found by lint.
+- [x] Fixed hook dependency warnings without disabling lint.
+- [x] Changed `npm run lint` to `eslint . --max-warnings=0`.
+
+Test completion:
+
+- [x] Added AuthModal login success/error component tests.
+- [x] Added ReviewForm validation/payload tests.
+- [x] Added mapper pagination tests for `pageRows()` and `pageMeta()`.
+- [x] `npm run test` now covers 15 files and 29 tests.
+
+Plan closure:
+
+- [x] Updated API coverage checklist to match implemented modules/pages.
+- [x] Documented that order/user detail remains drawer/modal based, not separate routes.
+- [ ] Live backend smoke remains to be executed with backend running on `localhost:8080`.
+- [ ] VNPay/MoMo sandbox redirect/result/reconcile smoke remains pending until provider env is available.
+
 ## Recommended Implementation Order
 
 1. Complete API modules for backend Phase 1-9.
@@ -1387,7 +1421,7 @@ Public/customer:
 - `/cart`
 - `/checkout`
 - `/orders`
-- `/orders/:orderId` if detail page is split out.
+- Order detail is currently drawer/modal based inside `/orders`; no `/orders/:orderId` route is implemented.
 - `/account`
 - `/payment-result`
 - `/login` and `/register` redirect/open auth modal.
@@ -1398,12 +1432,13 @@ Admin:
 - `/admin/products`
 - `/admin/categories`
 - `/admin/orders`
-- `/admin/orders/:orderId` if detail page is split out.
+- Admin order detail is currently drawer/modal based inside `/admin/orders`; no `/admin/orders/:orderId` route is implemented.
 - `/admin/payments`
 - `/admin/users`
-- `/admin/users/:userId`
-- `/admin/coupons`
-- `/admin/promotions`
+- Admin user detail is currently drawer/modal based inside `/admin/users`; no `/admin/users/:userId` route is implemented.
+- `/admin/discounts`
+- `/admin/coupons` redirects to `/admin/discounts`.
+- `/admin/promotions` redirects to `/admin/discounts`.
 - `/admin/reviews`
 - `/admin/permissions`
 - `/admin/forbidden`
@@ -1412,36 +1447,36 @@ Admin:
 
 Public:
 
-- [ ] `GET /storefront/home`
-- [ ] `GET /products`
-- [ ] `GET /products/{slug}`
-- [ ] `GET /products/{slug}/reviews`
-- [ ] `GET /categories`
-- [ ] `GET /categories/tree`
+- [x] `GET /storefront/home`
+- [x] `GET /products`
+- [x] `GET /products/{slug}`
+- [x] `GET /products/{slug}/reviews`
+- [x] `GET /categories`
+- [x] `GET /categories/tree`
 
 Customer:
 
-- [ ] Auth register/verify/resend/login/refresh/logout/logout-all/sessions.
-- [ ] Profile update/avatar/password/deactivate.
-- [ ] Addresses CRUD/default.
-- [ ] Cart get/add/update/remove/clear.
-- [ ] Checkout preview/create.
-- [ ] Orders list/detail/cancel.
-- [ ] Payments group/detail/retry/result.
-- [ ] Reviews create/update/delete.
+- [x] Auth register/verify/resend/login/refresh/logout/logout-all/sessions.
+- [x] Profile update/avatar/password/deactivate.
+- [x] Addresses CRUD/default.
+- [x] Cart get/add/update/remove/clear.
+- [x] Checkout preview/create.
+- [x] Orders list/detail/cancel.
+- [x] Payments group/detail/retry/result.
+- [x] Reviews create/update/delete.
 
 Admin:
 
-- [ ] Products/media/variations/stock.
-- [ ] Categories.
-- [ ] Orders lifecycle/refund.
-- [ ] Users lock/unlock/roles.
-- [ ] Roles/permissions/direct permissions.
-- [ ] Coupons.
-- [ ] Promotions.
-- [ ] Reviews moderation/reply.
-- [ ] Dashboard.
-- [ ] Payments reconciliation.
+- [x] Products/media/variations/stock.
+- [x] Categories.
+- [x] Orders lifecycle/refund.
+- [x] Users lock/unlock/roles.
+- [x] Roles/permissions/direct permissions.
+- [x] Coupons.
+- [x] Promotions.
+- [x] Reviews moderation/reply.
+- [x] Dashboard.
+- [x] Payments reconciliation.
 
 ## Acceptance Criteria For Complete Frontend
 
