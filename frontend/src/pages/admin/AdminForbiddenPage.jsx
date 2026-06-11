@@ -10,7 +10,7 @@ export default function AdminForbiddenPage() {
         <h1 className="mt-4 font-serif text-4xl font-bold text-slate-950">{t("admin.forbiddenTitle")}</h1>
         <p className="mt-3 text-slate-500">{t("admin.forbiddenCopy")}</p>
         <div className="mt-7 flex flex-wrap gap-3">
-          <Link className="rounded-full bg-blue-600 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-500" to="/?auth=login&next=/admin/products">
+          <Link className="rounded-full bg-blue-600 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-500" to="/?auth=login&next=/admin/dashboard">
             {t("admin.loginAsAdmin")}
           </Link>
           <Link className="rounded-full border border-slate-200 px-5 py-3 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-50" to="/">

@@ -6,6 +6,7 @@ export default function BookCard({ book }) {
   const { t } = useTranslation();
   const hasOldPrice = Number(book.priceOld || 0) > Number(book.price || 0);
   const rating = Number(book.rating || 0);
+  const stockQuantity = Number(book.stockQuantity || 0);
 
   return (
     <Link
@@ -45,6 +46,13 @@ export default function BookCard({ book }) {
         <p className="mb-4 line-clamp-1 text-sm text-slate-500">
           {book.author}
         </p>
+
+        <span className={[
+          "mb-3 inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-bold",
+          stockQuantity > 0 ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"
+        ].join(" ")}>
+          {stockQuantity > 0 ? t("home.inStock", { count: stockQuantity }) : t("home.outOfStock")}
+        </span>
 
         <div className="mt-auto flex items-end justify-between gap-3">
           <div className="flex min-w-0 flex-col items-start gap-1">

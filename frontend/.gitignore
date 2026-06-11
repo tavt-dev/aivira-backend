@@ -1,6 +1,9 @@
 node_modules/
 dist/
 .vite/
+test-results/
+playwright-report/
+coverage/
 
 # Local environment files. Keep real secrets/config out of git.
 .env

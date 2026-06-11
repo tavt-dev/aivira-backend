@@ -3,109 +3,23 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 
-import { getProducts } from "../api/catalogApi.js";
+import { getStorefrontHome } from "../api/storefrontApi.js";
 import BookCard from "../components/BookCard.jsx";
-import { normalizeBook, pageRows } from "../utils/mappers.js";
+import { normalizeBook, normalizeCategoryHighlight } from "../utils/mappers.js";
 
-const FALLBACK_BOOKS = [
-  {
-    id: "demo-how-innovation-works",
-    slug: "how-innovation-works",
-    title: "How Innovation Works",
-    author: "Matt Ridley",
-    catLabel: "Business",
-    price: 150000,
-    priceOld: 180000,
-    rating: 4.9,
-    badge: "Bestseller",
-    image:
-      "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    id: "demo-deep-work",
-    slug: "deep-work",
-    title: "Deep Work",
-    author: "Cal Newport",
-    catLabel: "Skills",
-    price: 128000,
-    rating: 4.8,
-    image:
-      "https://images.unsplash.com/photo-1519682337058-a94d519337bc?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    id: "demo-business-strategy",
-    slug: "business-strategy",
-    title: "Business Strategy",
-    author: "Aivira Editorial",
-    catLabel: "Business",
-    price: 250000,
-    rating: 4.9,
-    image:
-      "https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    id: "demo-night-library",
-    slug: "night-library",
-    title: "The Night Library",
-    author: "Aivira Editorial",
-    catLabel: "Literature",
-    price: 210000,
-    rating: 4.7,
-    badge: "New",
-    image:
-      "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    id: "demo-focused-work",
-    slug: "focused-work-flow",
-    title: "Focused Work Flow",
-    author: "Aivira Editorial",
-    catLabel: "Education",
-    price: 140000,
-    rating: 4.6,
-    image:
-      "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    id: "demo-code-craft",
-    slug: "code-craft",
-    title: "Code Craft",
-    author: "Aivira Editorial",
-    catLabel: "Technology",
-    price: 240000,
-    rating: 4.8,
-    image:
-      "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    id: "demo-psychology-money",
-    slug: "psychology-of-money",
-    title: "The Psychology of Money",
-    author: "Morgan Housel",
-    catLabel: "Finance",
-    price: 165000,
-    rating: 4.9,
-    image:
-      "https://images.unsplash.com/photo-1621351183012-e2f9972dd9bf?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    id: "demo-moon-reader",
-    slug: "moon-reader",
-    title: "Moon Reader",
-    author: "Aivira Editorial",
-    catLabel: "Science",
-    price: 160000,
-    rating: 4.7,
-    image:
-      "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=600&auto=format&fit=crop",
-  },
+const CATEGORY_FALLBACK_IMAGES = [
+  "https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=600&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1519682337058-a94d519337bc?q=80&w=600&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?q=80&w=600&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=600&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=600&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=600&auto=format&fit=crop",
 ];
 
 export default function HomePage() {
   const { t } = useTranslation();
-  const { books, message } = useCatalog();
-  const featured = books.slice(0, 4);
-  const orbitBooks = featured.concat(books.slice(4, 9));
+  const { featured, newArrivals, bestselling, categoryHighlights, books, loading, message } = useStorefrontHome();
+  const orbitBooks = featured.length ? featured : newArrivals.length ? newArrivals : bestselling;
   const [activeOrbit, setActiveOrbit] = useState(0);
 
   useEffect(() => {
@@ -219,34 +133,47 @@ export default function HomePage() {
             </motion.div>
           </motion.div>
 
-          <HeroBookOrbit
-            books={orbitBooks}
-            activeOrbit={activeOrbit}
-          />
+          <HeroBookOrbit books={orbitBooks} activeOrbit={activeOrbit} />
+          <MobileHeroBooks books={orbitBooks.slice(0, 3)} loading={loading} />
         </div>
       </section>
 
       <Ticker />
 
-      <CategoryShowcase />
+      <CategoryShowcase categories={categoryHighlights} loading={loading} />
 
       <section className="bg-white px-4 py-24 md:px-8">
         <div className="mx-auto max-w-7xl">
           <SectionHead chip={t("home.backendCatalog")} title={t("home.weeklyPicks")} link="/category/all" />
           {message && <div className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-700">{message}</div>}
-          <div className="mt-12 grid grid-cols-2 gap-6 md:grid-cols-4">
-            {featured.map((book, index) => (
-              <motion.div
-                key={book.id}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-              >
-                <BookCard book={book} />
-              </motion.div>
-            ))}
-          </div>
+          {loading ? (
+            <BookGridSkeleton count={4} />
+          ) : (
+            <BookGrid books={featured.slice(0, 4)} emptyMessage={t("home.noFeaturedBooks")} />
+          )}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-24 md:px-8">
+        <SectionHead chip={t("home.collection")} title={t("home.newArrivals")} link="/category/all?sort=newest" />
+        {loading ? (
+          <BookGridSkeleton />
+        ) : (
+          <BookGrid books={newArrivals.slice(0, 8)} emptyMessage={t("home.noNewArrivals")} />
+        )}
+      </section>
+
+      <section className="bg-white px-4 py-24 md:px-8">
+        <div className="mx-auto max-w-7xl">
+          <SectionHead chip={t("home.featuredBooks")} title={t("home.bestsellingBooks")} link="/category/all?sort=popular" />
+          {loading ? (
+            <BookGridSkeleton />
+          ) : (
+            <BookGrid
+              books={bestselling.slice(0, 8).map((book) => ({ ...book, badge: t("home.bestsellerBadge") }))}
+              emptyMessage={t("home.noBestsellers")}
+            />
+          )}
         </div>
       </section>
 
@@ -254,7 +181,11 @@ export default function HomePage() {
 
       <section className="mx-auto max-w-7xl px-4 py-24 md:px-8">
         <SectionHead chip={t("home.collection")} title={t("home.allBooks")} link="/category/all" />
-        <BookGrid books={books.slice(0, 12)} />
+        {loading ? (
+          <BookGridSkeleton />
+        ) : (
+          <BookGrid books={books.slice(0, 12)} emptyMessage={t("home.noBooks")} />
+        )}
       </section>
 
       <HowItWorks />
@@ -266,35 +197,71 @@ export default function HomePage() {
   );
 }
 
-function useCatalog(params = {}) {
+function useStorefrontHome() {
   const { t } = useTranslation();
-  const [books, setBooks] = useState(FALLBACK_BOOKS);
+  const [state, setState] = useState({
+    featured: [],
+    newArrivals: [],
+    bestselling: [],
+    categoryHighlights: [],
+    books: []
+  });
+  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    let alive = true;
+    const controller = new AbortController();
+    setLoading(true);
     setMessage("");
 
-    getProducts({ page: 1, size: 50, ...params })
-      .then((page) => {
-        const rows = pageRows(page);
-        if (!alive) return;
-        const normalized = rows.map((row) => normalizeBook(row));
-        setBooks(normalized.length ? normalized : FALLBACK_BOOKS);
+    getStorefrontHome({ signal: controller.signal })
+      .then((payload) => {
+        const featured = (payload?.featuredBooks || []).map((row) => normalizeBook(row));
+        const newArrivals = (payload?.newArrivals || []).map((row) => normalizeBook(row));
+        const bestselling = (payload?.bestsellingBooks || []).map((row) => normalizeBook(row));
+        const categoryHighlights = (payload?.categoryHighlights || [])
+          .map((row) => normalizeCategoryHighlight(row))
+          .filter(Boolean);
+
+        setState({
+          featured,
+          newArrivals,
+          bestselling,
+          categoryHighlights,
+          books: uniqueBooks([...featured, ...newArrivals, ...bestselling])
+        });
       })
       .catch((error) => {
-        if (alive) {
-          setBooks(FALLBACK_BOOKS);
-          setMessage(error.message || t("home.demoMessage"));
-        }
+        if (error.name === "AbortError") return;
+        setState({
+          featured: [],
+          newArrivals: [],
+          bestselling: [],
+          categoryHighlights: [],
+          books: []
+        });
+        setMessage(error.message || t("home.storefrontFailed"));
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
       });
 
     return () => {
-      alive = false;
+      controller.abort();
     };
-  }, [params.keyword, params.categorySlug, t]);
+  }, [t]);
 
-  return { books, message };
+  return { ...state, loading, message };
+}
+
+function uniqueBooks(items) {
+  const seen = new Set();
+  return items.filter((book) => {
+    const key = book.productId || book.id || book.slug;
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function HeroBookOrbit({ books, activeOrbit }) {
@@ -405,6 +372,46 @@ function HeroBookOrbit({ books, activeOrbit }) {
   );
 }
 
+function MobileHeroBooks({ books, loading }) {
+  const { t } = useTranslation();
+
+  if (loading) {
+    return (
+      <div className="grid gap-3 lg:hidden">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div key={index} className="h-24 animate-pulse rounded-2xl border border-white/10 bg-white/10" />
+        ))}
+      </div>
+    );
+  }
+
+  if (!books.length) {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-5 text-sm text-slate-300 lg:hidden">
+        {t("home.noFeaturedBooks")}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-3 lg:hidden">
+      {books.map((book) => (
+        <Link
+          key={book.id}
+          to={`/product/${book.slug}`}
+          className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-3 backdrop-blur"
+        >
+          <img src={book.image || book.cover} alt={book.title} className="h-24 w-16 rounded-xl object-cover" />
+          <span className="min-w-0">
+            <strong className="line-clamp-2 font-serif text-lg text-white">{book.title}</strong>
+            <small className="mt-1 line-clamp-1 block text-slate-400">{book.author}</small>
+          </span>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 function Ticker() {
   const { t } = useTranslation();
   const text = t("home.ticker");
@@ -424,54 +431,31 @@ function Ticker() {
   );
 }
 
-function CategoryShowcase() {
+function CategoryShowcase({ categories, loading }) {
   const { t } = useTranslation();
-  const cards = [
-    {
-      id: "business",
-      title: t("home.categories.business"),
-      count: t("home.categories.count120"),
-      image: "https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=600&auto=format&fit=crop",
-    },
-    {
-      id: "self-help",
-      title: t("home.categories.selfHelp"),
-      count: t("home.categories.count180"),
-      image: "https://images.unsplash.com/photo-1519682337058-a94d519337bc?q=80&w=600&auto=format&fit=crop",
-    },
-    {
-      id: "literature",
-      title: t("home.categories.literature"),
-      count: t("home.categories.count95"),
-      image: "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?q=80&w=600&auto=format&fit=crop",
-    },
-    {
-      id: "skills",
-      title: t("home.categories.wellness"),
-      count: t("home.categories.count110"),
-      image: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=600&auto=format&fit=crop",
-    },
-  ];
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-24 md:px-8">
-      <SectionHead chip={t("home.explore")} title={t("home.curatedCollections")} link="/category/all" />
+      <SectionHead chip={t("home.explore")} title={t("home.categoryHighlights")} link="/category/all" />
+      {loading ? (
+        <CategorySkeleton />
+      ) : categories.length ? (
       <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {cards.map((category, index) => (
+        {categories.slice(0, 6).map((category, index) => (
           <motion.div
-            key={category.id}
+            key={category.id || category.slug}
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.6, delay: index * 0.1 }}
           >
             <Link
-              to={`/category/${category.id}`}
+              to={`/category/${category.slug}`}
               className="group relative block aspect-[4/5] w-full overflow-hidden rounded-2xl bg-slate-200 shadow-sm transition-all duration-500 hover:shadow-2xl"
             >
               <img
-                src={category.image}
-                alt={category.title}
+                src={category.imageUrl || CATEGORY_FALLBACK_IMAGES[index % CATEGORY_FALLBACK_IMAGES.length]}
+                alt={category.categoryName}
                 className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/80" />
@@ -479,9 +463,11 @@ function CategoryShowcase() {
                 0{index + 1}
               </div>
               <div className="absolute bottom-6 left-6 right-6 z-10 transition-transform duration-500 group-hover:-translate-y-2">
-                <h3 className="mb-1 font-serif text-2xl font-bold text-white">{category.title}</h3>
+                <h3 className="mb-1 font-serif text-2xl font-bold text-white">{category.categoryName}</h3>
                 <div className="flex items-center justify-between">
-                  <p className="text-sm tracking-wide text-white/70">{category.count}</p>
+                  <p className="line-clamp-2 text-sm tracking-wide text-white/70">
+                    {category.bookCount ? t("home.categoryBookCount", { count: category.bookCount }) : category.description}
+                  </p>
                   <span className="flex h-8 w-8 -translate-x-4 items-center justify-center rounded-full bg-white text-slate-900 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
                     <span className="text-lg leading-none">-&gt;</span>
                   </span>
@@ -491,6 +477,9 @@ function CategoryShowcase() {
           </motion.div>
         ))}
       </div>
+      ) : (
+        <HomeEmptyState title={t("home.noCategoryHighlights")} />
+      )}
     </section>
   );
 }
@@ -507,7 +496,7 @@ function QuoteSection() {
         transition={{ duration: 1 }}
         className="relative z-10 mx-auto max-w-4xl text-center"
       >
-        <div className="mb-8 inline-block h-10 overflow-hidden font-serif text-8xl leading-none text-blue-400/30">"</div>
+        <div className="mb-8 inline-block h-10 overflow-hidden font-serif text-8xl leading-none text-blue-400/30">&quot;</div>
         <p className="mb-8 font-serif text-3xl font-medium leading-tight md:text-5xl">
           {t("home.quote")}
         </p>
@@ -519,14 +508,9 @@ function QuoteSection() {
   );
 }
 
-function BookGrid({ books }) {
-  const { t } = useTranslation();
+function BookGrid({ books, emptyMessage }) {
   if (!books.length) {
-    return (
-      <div className="mt-12 rounded-3xl border border-slate-200 bg-white px-8 py-16 text-center">
-        <h3 className="font-serif text-2xl font-bold text-slate-900">{t("home.noBooks")}</h3>
-      </div>
-    );
+    return <HomeEmptyState title={emptyMessage} />;
   }
 
   return (
@@ -542,6 +526,39 @@ function BookGrid({ books }) {
           <BookCard book={book} />
         </motion.div>
       ))}
+    </div>
+  );
+}
+
+function BookGridSkeleton({ count = 8 }) {
+  return (
+    <div className="mt-12 grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-3 lg:grid-cols-4">
+      {Array.from({ length: count }).map((_, index) => (
+        <div key={index} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+          <div className="aspect-[2/3] animate-pulse rounded-xl bg-slate-100" />
+          <div className="mt-5 h-3 w-20 animate-pulse rounded bg-slate-100" />
+          <div className="mt-3 h-5 w-full animate-pulse rounded bg-slate-100" />
+          <div className="mt-2 h-4 w-2/3 animate-pulse rounded bg-slate-100" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CategorySkeleton() {
+  return (
+    <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+      {Array.from({ length: 4 }).map((_, index) => (
+        <div key={index} className="aspect-[4/5] animate-pulse rounded-2xl bg-slate-200" />
+      ))}
+    </div>
+  );
+}
+
+function HomeEmptyState({ title }) {
+  return (
+    <div className="mt-12 rounded-3xl border border-dashed border-slate-300 bg-white px-8 py-16 text-center">
+      <h3 className="font-serif text-2xl font-bold text-slate-900">{title}</h3>
     </div>
   );
 }

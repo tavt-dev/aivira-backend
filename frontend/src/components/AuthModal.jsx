@@ -108,7 +108,7 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
 
     if (canAccessAdmin) {
       onClose();
-      navigate("/admin/products", { replace: true });
+      navigate("/admin/dashboard", { replace: true });
       return;
     }
 
@@ -242,18 +242,18 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
 
   return (
     <div
-      className="fixed inset-0 z-[5000] flex items-center justify-center bg-slate-950/80 px-4 py-8 backdrop-blur-md"
+      className="fixed inset-0 z-[5000] flex items-center justify-center bg-slate-950/80 px-3 py-4 sm:px-4 sm:py-8 backdrop-blur-md"
       role="presentation"
       onMouseDown={(event) => event.target === event.currentTarget && onClose()}
     >
       <div
-        className="relative grid max-h-[92vh] w-[min(900px,94vw)] overflow-hidden rounded-[20px] border border-white/10 bg-[radial-gradient(circle_at_85%_12%,rgba(72,139,255,0.18),transparent_26%),#020a16] shadow-[0_36px_110px_rgba(5,9,15,0.4)] md:grid-cols-[0.95fr_1.05fr]"
+        className="relative grid max-h-[min(92vh,100dvh)] w-[min(900px,96vw)] sm:w-[min(900px,94vw)] overflow-hidden rounded-[16px] sm:rounded-[20px] border border-white/10 bg-[radial-gradient(circle_at_85%_12%,rgba(72,139,255,0.18),transparent_26%),#020a16] shadow-[0_36px_110px_rgba(5,9,15,0.4)] md:grid-cols-[0.95fr_1.05fr]"
         role="dialog"
         aria-modal="true"
         aria-labelledby="auth-title"
       >
         <button
-          className="absolute right-[18px] top-[15px] z-20 h-[38px] w-[38px] rounded-full border-0 bg-white/10 text-xl text-white/75 transition hover:rotate-90 hover:bg-white/15 hover:text-white"
+          className="absolute right-[12px] sm:right-[18px] top-[10px] sm:top-[15px] z-20 h-[32px] sm:h-[38px] w-[32px] sm:w-[38px] rounded-full border-0 bg-white/10 text-lg sm:text-xl text-white/75 transition hover:rotate-90 hover:bg-white/15 hover:text-white"
           type="button"
           onClick={onClose}
           aria-label={t("auth.close")}
@@ -261,7 +261,7 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
           x
         </button>
 
-        <aside className="relative grid min-h-[190px] place-content-center overflow-hidden bg-[radial-gradient(ellipse_at_center,rgba(45,107,240,0.42),transparent_58%),linear-gradient(140deg,rgba(13,32,72,0.9),rgba(2,10,22,0.98))] p-10 text-center text-white before:absolute before:left-1/2 before:top-1/2 before:h-[360px] before:w-[360px] before:-translate-x-1/2 before:-translate-y-1/2 before:animate-spin before:rounded-full before:border before:border-white/10 before:content-[''] after:absolute after:-bottom-[70px] after:-right-20 after:h-[220px] after:w-[220px] after:rounded-full after:border after:border-white/10 after:bg-blue-500/15 after:blur-[2px] after:content-[''] md:min-h-[610px]">
+        <aside className="hidden md:grid relative min-h-[190px] place-content-center overflow-hidden bg-[radial-gradient(ellipse_at_center,rgba(45,107,240,0.42),transparent_58%),linear-gradient(140deg,rgba(13,32,72,0.9),rgba(2,10,22,0.98))] p-10 text-center text-white before:absolute before:left-1/2 before:top-1/2 before:h-[360px] before:w-[360px] before:-translate-x-1/2 before:-translate-y-1/2 before:animate-spin before:rounded-full before:border before:border-white/10 before:content-[''] after:absolute after:-bottom-[70px] after:-right-20 after:h-[220px] after:w-[220px] after:rounded-full after:border after:border-white/10 after:bg-blue-500/15 after:blur-[2px] after:content-[''] md:min-h-[610px]">
           <div className="absolute left-[calc(50%_-_6px)] top-[calc(50%_-_186px)] h-3 w-3 origin-[6px_186px] animate-spin rounded-full bg-[#c8d9ff] shadow-[0_0_24px_rgba(111,191,255,0.9)]" />
           <div className="relative font-display text-6xl tracking-[0.18em] text-white [text-shadow:0_20px_50px_rgba(0,0,0,0.35)]">
             AIVIRA
@@ -281,12 +281,12 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
           </div>
         </aside>
 
-        <form className="grid max-h-[92vh] content-center gap-4 overflow-y-auto p-7 md:p-[42px]" onSubmit={submit}>
-          <div className="grid grid-cols-2 gap-1.5 rounded-full border border-white/10 bg-white/5 p-1.5" aria-label={t("auth.modes")}>
+        <form className="grid max-h-[min(92vh,100dvh)] content-center gap-3 sm:gap-4 overflow-y-auto p-4 sm:p-7 md:p-[42px] scroll-smooth" onSubmit={submit}>
+          <div className="grid grid-cols-2 gap-1 sm:gap-1.5 rounded-full border border-white/10 bg-white/5 p-1 sm:p-1.5" aria-label={t("auth.modes")}>
             <button
               type="button"
               className={[
-                "rounded-full px-3 py-2.5 font-black transition",
+                "rounded-full px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-black transition",
                 mode === "login"
                   ? "bg-white text-slate-950 shadow-[0_12px_30px_rgba(0,0,0,0.22)]"
                   : "text-white/60 hover:text-white",
@@ -298,7 +298,7 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
             <button
               type="button"
               className={[
-                "rounded-full px-3 py-2.5 font-black transition",
+                "rounded-full px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-black transition",
                 mode === "register"
                   ? "bg-white text-slate-950 shadow-[0_12px_30px_rgba(0,0,0,0.22)]"
                   : "text-white/60 hover:text-white",
@@ -310,25 +310,25 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
           </div>
 
           <div className="text-center">
-            <div className="mx-auto inline-flex w-fit rounded-full bg-blue-500/10 px-2.5 py-1.5 text-[0.72rem] font-black uppercase tracking-[0.12em] text-blue-300">
+            <div className="mx-auto inline-flex w-fit rounded-full bg-blue-500/10 px-2 sm:px-2.5 py-1 sm:py-1.5 text-[0.65rem] sm:text-[0.72rem] font-black uppercase tracking-[0.12em] text-blue-300">
               {t(meta.kicker)}
             </div>
             <h2
               id="auth-title"
-              className="my-2 font-serif text-[clamp(2rem,4vw,2.8rem)] italic text-white"
+              className="my-2 font-serif text-[clamp(1.5rem,3.5vw,2.8rem)] italic text-white"
             >
               {t(meta.title)}
             </h2>
-            <p className="mx-auto max-w-[390px] text-sm leading-6 text-white/50">
+            <p className="mx-auto max-w-[390px] text-xs sm:text-sm leading-5 sm:leading-6 text-white/50 px-1">
               {t(meta.copy)}
             </p>
           </div>
 
           {(mode === "verify" || mode === "forgot" || mode === "reset") && (
-            <div className="grid grid-cols-[34px_1fr_34px] items-center gap-2.5" aria-label="Auth progress">
+            <div className="grid grid-cols-[28px_1fr_28px] sm:grid-cols-[34px_1fr_34px] items-center gap-2 sm:gap-2.5" aria-label="Auth progress">
               <span
                 className={[
-                  "grid h-[34px] w-[34px] place-items-center rounded-full border font-black",
+                  "grid h-[28px] sm:h-[34px] w-[28px] sm:w-[34px] place-items-center rounded-full border text-xs sm:text-base font-black",
                   step >= 1
                     ? "border-blue-600 bg-blue-600 text-white shadow-[0_0_28px_rgba(45,107,240,0.45)]"
                     : "border-white/15 text-white/50",
@@ -339,7 +339,7 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
               <i className="h-px bg-gradient-to-r from-blue-500 to-white/15" />
               <span
                 className={[
-                  "grid h-[34px] w-[34px] place-items-center rounded-full border font-black",
+                  "grid h-[28px] sm:h-[34px] w-[28px] sm:w-[34px] place-items-center rounded-full border text-xs sm:text-base font-black",
                   step >= 2
                     ? "border-blue-600 bg-blue-600 text-white shadow-[0_0_28px_rgba(45,107,240,0.45)]"
                     : "border-white/15 text-white/50",
@@ -350,17 +350,23 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
             </div>
           )}
 
-          <div className="grid gap-3" key={mode}>
+          <div className="grid gap-2 sm:gap-3" key={mode}>
             {(mode === "login" || mode === "register") && (
               <>
-                <Field label={t("auth.username")} value={form.username} onChange={(value) => update("username", value)} autoComplete="username" minLength={4} />
+                <Field
+                  label={t("auth.username")}
+                  value={form.username}
+                  onChange={(value) => update("username", value)}
+                  autoComplete="username"
+                  minLength={mode === "register" ? 4 : undefined}
+                />
                 <Field
                   label={t("auth.password")}
                   type={visiblePasswords.password ? "text" : "password"}
                   value={form.password}
                   onChange={(value) => update("password", value)}
                   autoComplete={mode === "login" ? "current-password" : "new-password"}
-                  minLength={6}
+                  minLength={mode === "register" ? 6 : undefined}
                   passwordToggle={{
                     visible: Boolean(visiblePasswords.password),
                     onToggle: () => togglePassword("password"),
@@ -369,10 +375,10 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
               </>
             )}
 
-            {mode === "register" && (
+            {(mode === "register") && (
               <>
                 <Field label={t("auth.email")} type="email" value={form.email} onChange={(value) => update("email", value)} autoComplete="email" />
-                <div className="grid gap-2.5 md:grid-cols-2">
+                <div className="grid gap-2 sm:gap-2.5 md:grid-cols-2">
                   <Field label={t("auth.firstName")} value={form.firstName} onChange={(value) => update("firstName", value)} autoComplete="given-name" required={false} />
                   <Field label={t("auth.lastName")} value={form.lastName} onChange={(value) => update("lastName", value)} autoComplete="family-name" required={false} />
                 </div>
@@ -434,7 +440,7 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
           {message && (
             <div
               className={[
-                "rounded-xl border px-3.5 py-3 text-sm leading-6",
+                "rounded-lg sm:rounded-xl border px-3 sm:px-3.5 py-2.5 sm:py-3 text-xs sm:text-sm leading-5 sm:leading-6",
                 message.type === "success"
                   ? "border-emerald-300/30 bg-emerald-500/15 text-emerald-100"
                   : "border-red-300/30 bg-red-500/15 text-red-100",
@@ -445,17 +451,17 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
           )}
 
           <button
-            className="relative overflow-hidden rounded-[10px] border-0 bg-blue-700 px-5 py-3.5 font-extrabold text-white shadow-[0_10px_30px_rgba(24,83,227,0.28)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_38px_rgba(24,83,227,0.36)] disabled:cursor-wait disabled:opacity-70 disabled:hover:translate-y-0"
+            className="relative overflow-hidden rounded-[10px] border-0 bg-blue-700 px-4 sm:px-5 py-3 sm:py-3.5 font-extrabold text-sm sm:text-base text-white shadow-[0_10px_30px_rgba(24,83,227,0.28)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_38px_rgba(24,83,227,0.36)] disabled:cursor-wait disabled:opacity-70 disabled:hover:translate-y-0"
             disabled={busy}
             type="submit"
           >
             <span>{busy ? t("common.working") : t(meta.action)}</span>
           </button>
 
-          <div className="flex flex-wrap justify-center gap-2.5">
-            {mode === "verify" && <button className="px-1.5 py-1 font-extrabold text-[#c8d9ff] hover:text-white disabled:cursor-wait disabled:opacity-55" type="button" onClick={resendOtp} disabled={busy}>{t("auth.resendOtp")}</button>}
-            {(mode === "login" || mode === "register") && <button className="px-1.5 py-1 font-extrabold text-[#c8d9ff] hover:text-white" type="button" onClick={() => switchMode("forgot")}>{t("auth.forgotPassword")}</button>}
-            {(mode === "verify" || mode === "forgot" || mode === "reset") && <button className="px-1.5 py-1 font-extrabold text-[#c8d9ff] hover:text-white" type="button" onClick={() => switchMode("login")}>{t("auth.backToLogin")}</button>}
+          <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2.5">
+            {mode === "verify" && <button className="px-1.5 sm:px-1.5 py-1 text-xs sm:text-sm font-extrabold text-[#c8d9ff] hover:text-white disabled:cursor-wait disabled:opacity-55" type="button" onClick={resendOtp} disabled={busy}>{t("auth.resendOtp")}</button>}
+            {(mode === "login" || mode === "register") && <button className="px-1.5 sm:px-1.5 py-1 text-xs sm:text-sm font-extrabold text-[#c8d9ff] hover:text-white" type="button" onClick={() => switchMode("forgot")}>{t("auth.forgotPassword")}</button>}
+            {(mode === "verify" || mode === "forgot" || mode === "reset") && <button className="px-1.5 sm:px-1.5 py-1 text-xs sm:text-sm font-extrabold text-[#c8d9ff] hover:text-white" type="button" onClick={() => switchMode("login")}>{t("auth.backToLogin")}</button>}
           </div>
         </form>
       </div>
@@ -466,8 +472,8 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
 function Field({ label, type = "text", value, onChange, required = true, passwordToggle, ...props }) {
   const { t } = useTranslation();
   return (
-    <label className="grid gap-2">
-      <span className="text-[0.78rem] font-black uppercase tracking-[0.08em] text-white/65">
+    <label className="grid gap-1.5 sm:gap-2">
+      <span className="text-[0.7rem] sm:text-[0.78rem] font-black uppercase tracking-[0.08em] text-white/65">
         {label}
       </span>
       <span className="relative block">
@@ -478,8 +484,8 @@ function Field({ label, type = "text", value, onChange, required = true, passwor
           placeholder={label}
           required={required}
           className={[
-            "w-full rounded-[10px] border border-white/10 bg-white/95 px-3.5 py-3 text-slate-950 outline-none transition focus:-translate-y-px focus:border-sky-300 focus:shadow-[0_0_0_4px_rgba(45,107,240,0.16)] disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-white/70",
-            passwordToggle ? "pr-[72px]" : "",
+            "w-full rounded-[8px] sm:rounded-[10px] border border-white/10 bg-white/95 px-3 sm:px-3.5 py-2.5 sm:py-3 text-sm sm:text-base text-slate-950 outline-none transition focus:-translate-y-px focus:border-sky-300 focus:shadow-[0_0_0_4px_rgba(45,107,240,0.16)] disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-white/70",
+            passwordToggle ? "pr-[62px] sm:pr-[72px]" : "",
           ].join(" ")}
           {...props}
         />
@@ -487,13 +493,13 @@ function Field({ label, type = "text", value, onChange, required = true, passwor
           <button
             type="button"
             onClick={passwordToggle.onToggle}
-            className="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-950"
+            className="absolute right-1.5 sm:right-2 top-1/2 grid h-8 sm:h-9 w-8 sm:w-9 -translate-y-1/2 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-950"
             aria-label={passwordToggle.visible ? t("auth.hidePassword", { label }) : t("auth.showPassword", { label })}
           >
             {passwordToggle.visible ? (
-              <EyeOff className="h-4 w-4" strokeWidth={2.4} />
+              <EyeOff className="h-3.5 sm:h-4 w-3.5 sm:w-4" strokeWidth={2.4} />
             ) : (
-              <Eye className="h-4 w-4" strokeWidth={2.4} />
+              <Eye className="h-3.5 sm:h-4 w-3.5 sm:w-4" strokeWidth={2.4} />
             )}
           </button>
         )}
@@ -503,10 +509,16 @@ function Field({ label, type = "text", value, onChange, required = true, passwor
 }
 
 function validateForm(mode, form, t) {
-  if ((mode === "login" || mode === "register") && form.username.trim().length < 4) {
+  if (mode === "login" && !form.username.trim()) {
+    throw new Error(t("auth.validation.loginUsername"));
+  }
+  if (mode === "login" && !form.password) {
+    throw new Error(t("auth.validation.loginPassword"));
+  }
+  if (mode === "register" && form.username.trim().length < 4) {
     throw new Error(t("auth.validation.username"));
   }
-  if ((mode === "login" || mode === "register") && form.password.length < 6) {
+  if (mode === "register" && form.password.length < 6) {
     throw new Error(t("auth.validation.password"));
   }
   if (mode === "register" && form.password !== form.confirmPassword) {
