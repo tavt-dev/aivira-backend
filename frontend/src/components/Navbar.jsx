@@ -153,18 +153,40 @@ export default function Navbar({ solid, user, onAuth }) {
       ].join(" ")}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 md:px-8">
-        <Link to="/" onClick={closePanels} className="group flex flex-shrink-0 items-center gap-2">
+        <Link to="/" onClick={closePanels} className="group flex flex-shrink-0 items-center gap-2.5">
+          {/* Book icon mark */}
           <div
             className={[
-              "flex h-9 w-9 items-center justify-center rounded-xl shadow-lg transition-all duration-500 group-hover:scale-105",
-              isSolid ? "bg-slate-900 shadow-slate-900/20" : "bg-white shadow-white/20"
+              "flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-500 group-hover:scale-105",
+              isSolid
+                ? "bg-slate-900 shadow-[0_4px_14px_rgba(0,0,0,0.18)]"
+                : "bg-white/12 shadow-[0_4px_14px_rgba(255,255,255,0.08)] backdrop-blur-sm"
             ].join(" ")}
+            style={{ filter: isSolid ? "none" : "drop-shadow(0 0 8px rgba(96,165,250,0.35))" }}
           >
-            <span className={["font-serif text-xl font-bold leading-none", isSolid ? "text-white" : "text-slate-900"].join(" ")}>
-              A
-            </span>
+            <svg
+              width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke={isSolid ? "white" : "rgba(255,255,255,0.95)"}
+              strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+            </svg>
           </div>
-          <span className={["font-serif text-xl font-bold tracking-wider transition-colors duration-500", isSolid ? "text-slate-900" : "text-white"].join(" ")}>
+          {/* Brand wordmark */}
+          <span
+            className={[
+              "transition-all duration-500 group-hover:opacity-90",
+              isSolid ? "text-slate-900" : "text-white"
+            ].join(" ")}
+            style={{
+              fontFamily: "var(--f-display, 'Bebas Neue', sans-serif)",
+              fontSize: "1.45rem",
+              letterSpacing: "0.2em",
+              lineHeight: 1
+            }}
+          >
             AIVIRA
           </span>
         </Link>

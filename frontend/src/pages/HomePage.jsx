@@ -2,18 +2,29 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
+import { ArrowRight } from "lucide-react";
 
 import { getStorefrontHome } from "../api/storefrontApi.js";
 import BookCard from "../components/BookCard.jsx";
 import { normalizeBook, normalizeCategoryHighlight } from "../utils/mappers.js";
 
 const CATEGORY_FALLBACK_IMAGES = [
-  "https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=600&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1519682337058-a94d519337bc?q=80&w=600&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?q=80&w=600&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=600&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=600&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=600&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1519682337058-a94d519337bc?q=80&w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?q=80&w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=800&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=800&auto=format&fit=crop",
+];
+
+// Accent color per category index — harmonizes with the blue brand palette
+const CAT_ACCENTS = [
+  { color: "#f59e0b", glow: "rgba(245,158,11,0.35)" },   // amber
+  { color: "#3b82f6", glow: "rgba(59,130,246,0.35)" },   // blue (brand)
+  { color: "#ec4899", glow: "rgba(236,72,153,0.35)" },   // pink
+  { color: "#10b981", glow: "rgba(16,185,129,0.35)" },   // emerald
+  { color: "#8b5cf6", glow: "rgba(139,92,246,0.35)" },   // violet
+  { color: "#38bdf8", glow: "rgba(56,189,248,0.35)" },   // sky
 ];
 
 export default function HomePage() {
@@ -94,13 +105,14 @@ export default function HomePage() {
             >
               <Link
                 to="/category/all"
-                className="rounded-full bg-white px-8 py-4 font-bold tracking-wide text-slate-900 shadow-[0_0_40px_rgba(255,255,255,0.2)] transition-all duration-300 hover:scale-105 hover:bg-slate-200"
+                className="group relative overflow-hidden rounded-full px-8 py-4 font-bold tracking-wide shadow-[0_0_40px_rgba(37,99,235,0.4)] transition-all duration-300 hover:scale-105 hover:shadow-[0_0_60px_rgba(56,189,248,0.6)]"
               >
-                {t("home.exploreLibrary")}
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-400 transition-transform duration-500 group-hover:scale-110" />
+                <span className="relative text-white">{t("home.exploreLibrary")}</span>
               </Link>
               <Link
                 to="/cart"
-                className="rounded-full border border-white/20 bg-white/5 px-8 py-4 font-bold tracking-wide backdrop-blur transition-all duration-300 hover:bg-white/10"
+                className="rounded-full border border-white/20 bg-white/5 px-8 py-4 font-bold tracking-wide text-white backdrop-blur transition-all duration-300 hover:bg-white/10"
               >
                 {t("home.viewCart")}
               </Link>
@@ -113,20 +125,20 @@ export default function HomePage() {
               className="mt-4 grid w-full grid-cols-3 gap-8 border-t border-white/10 pt-8"
             >
               <div>
-                <strong className="block font-serif text-2xl">{books.length}+</strong>
-                <span className="mt-1 block text-sm uppercase tracking-widest text-slate-500">
+                <strong className="block font-display text-4xl text-blue-400">{books.length}+</strong>
+                <span className="mt-1 block text-xs uppercase tracking-widest text-slate-400">
                   {t("home.titles")}
                 </span>
               </div>
               <div>
-                <strong className="block font-serif text-2xl">COD</strong>
-                <span className="mt-1 block text-sm uppercase tracking-widest text-slate-500">
+                <strong className="block font-display text-4xl text-white">COD</strong>
+                <span className="mt-1 block text-xs uppercase tracking-widest text-slate-400">
                   {t("home.supported")}
                 </span>
               </div>
               <div>
-                <strong className="block font-serif text-2xl">VNPay</strong>
-                <span className="mt-1 block text-sm uppercase tracking-widest text-slate-500">
+                <strong className="block font-display text-4xl text-white">VNPay</strong>
+                <span className="mt-1 block text-xs uppercase tracking-widest text-slate-400">
                   {t("home.momo")}
                 </span>
               </div>
@@ -417,14 +429,17 @@ function Ticker() {
   const text = t("home.ticker");
 
   return (
-    <div className="flex overflow-hidden whitespace-nowrap border-y border-white/5 bg-slate-900 py-4">
+    <div className="flex overflow-hidden whitespace-nowrap border-y border-white/5 bg-slate-950 py-4">
       <motion.div
         animate={{ x: ["0%", "-50%"] }}
         transition={{ ease: "linear", duration: 25, repeat: Infinity }}
-        className="flex items-center space-x-16 text-sm font-bold uppercase tracking-[0.3em] text-slate-500"
+        className="flex items-center space-x-16 text-sm font-bold uppercase tracking-[0.3em] text-blue-500/80"
       >
         {Array.from({ length: 4 }).map((_, index) => (
-          <span key={index}>{text}</span>
+          <span key={index} className="flex items-center gap-16">
+            <span>{text}</span>
+            <span className="h-1.5 w-1.5 rotate-45 bg-blue-500/40" />
+          </span>
         ))}
       </motion.div>
     </div>
@@ -433,50 +448,138 @@ function Ticker() {
 
 function CategoryShowcase({ categories, loading }) {
   const { t } = useTranslation();
+  const cats = categories.slice(0, 6);
+
+  // Bento grid: items 0,5 span 2 cols; 1–4 span 1 col
+  // On desktop: row1 = [wide][small][small] (4cols), row2 = [small][small][wide] (4cols)
+  function getGridClass(index) {
+    if (index === 0) return "lg:col-span-2 lg:row-span-1";
+    if (index === 5) return "lg:col-span-2 lg:row-span-1";
+    return "lg:col-span-1";
+  }
+
+  function getAspect(index) {
+    if (index === 0 || index === 5) return "aspect-[16/9] lg:aspect-[16/10]";
+    return "aspect-[4/5]";
+  }
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-24 md:px-8">
       <SectionHead chip={t("home.explore")} title={t("home.categoryHighlights")} link="/category/all" />
       {loading ? (
         <CategorySkeleton />
-      ) : categories.length ? (
-      <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {categories.slice(0, 6).map((category, index) => (
-          <motion.div
-            key={category.id || category.slug}
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.6, delay: index * 0.1 }}
-          >
-            <Link
-              to={`/category/${category.slug}`}
-              className="group relative block aspect-[4/5] w-full overflow-hidden rounded-2xl bg-slate-200 shadow-sm transition-all duration-500 hover:shadow-2xl"
-            >
-              <img
-                src={category.imageUrl || CATEGORY_FALLBACK_IMAGES[index % CATEGORY_FALLBACK_IMAGES.length]}
-                alt={category.categoryName}
-                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/80" />
-              <div className="absolute left-6 top-6 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/30 font-serif font-bold italic text-white backdrop-blur-md transition-transform duration-500 group-hover:scale-110">
-                0{index + 1}
-              </div>
-              <div className="absolute bottom-6 left-6 right-6 z-10 transition-transform duration-500 group-hover:-translate-y-2">
-                <h3 className="mb-1 font-serif text-2xl font-bold text-white">{category.categoryName}</h3>
-                <div className="flex items-center justify-between">
-                  <p className="line-clamp-2 text-sm tracking-wide text-white/70">
-                    {category.bookCount ? t("home.categoryBookCount", { count: category.bookCount }) : category.description}
-                  </p>
-                  <span className="flex h-8 w-8 -translate-x-4 items-center justify-center rounded-full bg-white text-slate-900 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
-                    <span className="text-lg leading-none">-&gt;</span>
-                  </span>
-                </div>
-              </div>
-            </Link>
-          </motion.div>
-        ))}
-      </div>
+      ) : cats.length ? (
+        <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {cats.map((category, index) => {
+            const accent = CAT_ACCENTS[index % CAT_ACCENTS.length];
+            return (
+              <motion.div
+                key={category.id || category.slug}
+                className={getGridClass(index)}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ duration: 0.55, delay: index * 0.08 }}
+              >
+                <Link
+                  to={`/category/${category.slug}`}
+                  className={["group relative block w-full overflow-hidden rounded-2xl bg-slate-800", getAspect(index)].join(" ")}
+                  style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.10)" }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = `0 20px 60px rgba(0,0,0,0.22), 0 0 0 1px ${accent.color}30`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = "0 4px 24px rgba(0,0,0,0.10)";
+                  }}
+                >
+                  {/* Background image */}
+                  <img
+                    src={category.imageUrl || CATEGORY_FALLBACK_IMAGES[index % CATEGORY_FALLBACK_IMAGES.length]}
+                    alt={category.categoryName}
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.07]"
+                  />
+
+                  {/* Gradient overlay — heavier at bottom */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/25 to-black/88" />
+
+                  {/* Accent bottom glow */}
+                  <div
+                    className="absolute bottom-0 left-0 right-0 h-32 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                    style={{ background: `linear-gradient(to top, ${accent.glow}, transparent)` }}
+                  />
+
+                  {/* Index badge — top left */}
+                  <div
+                    className="absolute left-4 top-4 z-10 flex h-8 items-center rounded-full px-2.5"
+                    style={{
+                      background: `${accent.color}cc`,
+                      backdropFilter: "blur(8px)",
+                      fontFamily: "var(--f-display, 'Bebas Neue', sans-serif)",
+                      fontSize: "0.95rem",
+                      letterSpacing: "0.08em",
+                      color: "#fff",
+                      boxShadow: `0 2px 12px ${accent.glow}`
+                    }}
+                  >
+                    {String(index + 1).padStart(2, "0")}
+                  </div>
+
+                  {/* Bottom content */}
+                  <div className="absolute bottom-0 left-0 right-0 z-10 p-5 transition-transform duration-400 group-hover:-translate-y-1">
+                    {/* Glassmorphism info bar */}
+                    <div
+                      className="rounded-xl p-4"
+                      style={{
+                        background: "rgba(2,6,23,0.62)",
+                        backdropFilter: "blur(14px)",
+                        borderTop: `2px solid ${accent.color}60`,
+                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)"
+                      }}
+                    >
+                      {/* Category name */}
+                      <h3 className="mb-2 font-serif text-lg font-bold leading-tight text-white">
+                        {category.categoryName}
+                      </h3>
+
+                      <div className="flex items-center justify-between gap-2">
+                        {/* Book count chip */}
+                        {category.bookCount ? (
+                          <span
+                            className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[0.68rem] font-bold"
+                            style={{
+                              background: "rgba(255,255,255,0.1)",
+                              border: "1px solid rgba(255,255,255,0.18)",
+                              color: "rgba(255,255,255,0.85)"
+                            }}
+                          >
+                            <span
+                              className="h-1.5 w-1.5 rounded-full flex-shrink-0"
+                              style={{ background: accent.color }}
+                            />
+                            {t("home.categoryBookCount", { count: category.bookCount })}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-white/50">{category.description}</span>
+                        )}
+
+                        {/* Arrow */}
+                        <span
+                          className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full transition-all duration-300 group-hover:translate-x-0.5"
+                          style={{
+                            background: accent.color,
+                            boxShadow: `0 2px 10px ${accent.glow}`
+                          }}
+                        >
+                          <ArrowRight size={13} color="#fff" strokeWidth={2.5} />
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            );
+          })}
+        </div>
       ) : (
         <HomeEmptyState title={t("home.noCategoryHighlights")} />
       )}
@@ -487,8 +590,9 @@ function CategoryShowcase({ categories, loading }) {
 function QuoteSection() {
   const { t } = useTranslation();
   return (
-    <section className="relative flex items-center justify-center overflow-hidden bg-blue-900 px-4 py-32 text-white">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_white_1px,_transparent_1px)] opacity-10 [background-size:24px_24px]" />
+    <section className="relative flex items-center justify-center overflow-hidden bg-slate-950 px-4 py-32 text-white">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/40 via-slate-950 to-slate-950" />
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         whileInView={{ opacity: 1, scale: 1 }}
@@ -496,12 +600,14 @@ function QuoteSection() {
         transition={{ duration: 1 }}
         className="relative z-10 mx-auto max-w-4xl text-center"
       >
-        <div className="mb-8 inline-block h-10 overflow-hidden font-serif text-8xl leading-none text-blue-400/30">&quot;</div>
-        <p className="mb-8 font-serif text-3xl font-medium leading-tight md:text-5xl">
+        <div className="mb-4 inline-block font-serif text-8xl leading-none text-blue-500/30">&quot;</div>
+        <p className="mb-10 font-serif text-4xl font-light italic leading-relaxed md:text-5xl">
           {t("home.quote")}
         </p>
-        <div className="text-sm font-bold uppercase tracking-[0.3em] text-blue-300">
+        <div className="inline-flex items-center gap-4 text-xs font-bold uppercase tracking-[0.3em] text-blue-400">
+          <span className="h-px w-8 bg-blue-400/50" />
           {t("home.philosophy")}
+          <span className="h-px w-8 bg-blue-400/50" />
         </div>
       </motion.div>
     </section>
@@ -547,11 +653,27 @@ function BookGridSkeleton({ count = 8 }) {
 
 function CategorySkeleton() {
   return (
-    <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-      {Array.from({ length: 4 }).map((_, index) => (
-        <div key={index} className="aspect-[4/5] animate-pulse rounded-2xl bg-slate-200" />
-      ))}
-    </div>
+    <>
+      <style>{`
+        @keyframes cat-shimmer {
+          0% { background-position: -600px 0; }
+          100% { background-position: 600px 0; }
+        }
+        .cat-skel {
+          background: linear-gradient(105deg, #e2e8f0 30%, #eff3fb 50%, #e2e8f0 70%);
+          background-size: 1200px 100%;
+          animation: cat-shimmer 1.8s ease-in-out infinite;
+        }
+      `}</style>
+      <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="cat-skel aspect-[16/10] rounded-2xl lg:col-span-2" />
+        <div className="cat-skel aspect-[4/5] rounded-2xl" style={{ animationDelay: "120ms" }} />
+        <div className="cat-skel aspect-[4/5] rounded-2xl" style={{ animationDelay: "240ms" }} />
+        <div className="cat-skel aspect-[4/5] rounded-2xl" style={{ animationDelay: "80ms" }} />
+        <div className="cat-skel aspect-[4/5] rounded-2xl" style={{ animationDelay: "160ms" }} />
+        <div className="cat-skel aspect-[16/10] rounded-2xl lg:col-span-2" style={{ animationDelay: "200ms" }} />
+      </div>
+    </>
   );
 }
 
@@ -584,18 +706,18 @@ function HowItWorks() {
   ];
 
   return (
-    <section className="mt-12 rounded-t-[3rem] bg-slate-900 px-4 py-24 text-white md:px-8">
+    <section className="mt-12 rounded-t-[3rem] bg-slate-950 px-4 py-24 text-white shadow-[0_-20px_40px_rgba(0,0,0,0.1)] md:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="mx-auto mb-16 max-w-2xl text-center">
-          <div className="mb-4 inline-block rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-400">
+        <div className="mx-auto mb-20 max-w-2xl text-center">
+          <div className="mb-4 inline-block rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-400">
             {t("home.process")}
           </div>
           <h2 className="mb-4 font-serif text-4xl font-bold md:text-5xl">{t("home.howItWorks")}</h2>
-          <p className="text-slate-400">{t("home.processCopy")}</p>
+          <p className="text-lg font-light text-slate-400">{t("home.processCopy")}</p>
         </div>
 
         <div className="relative grid grid-cols-1 gap-8 md:grid-cols-3">
-          <div className="absolute left-[15%] right-[15%] top-[40px] hidden h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent md:block" />
+          <div className="absolute left-[15%] right-[15%] top-[48px] hidden h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent md:block" />
 
           {steps.map((item, index) => (
             <motion.div
@@ -604,13 +726,15 @@ function HowItWorks() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.2 }}
-              className="group relative rounded-2xl border border-white/5 bg-slate-800/50 p-8 backdrop-blur transition-colors hover:border-blue-500/30"
+              className="group relative overflow-hidden rounded-3xl border border-white/5 bg-slate-900/50 p-10 backdrop-blur transition-all duration-500 hover:-translate-y-2 hover:border-blue-500/30 hover:bg-slate-800/80 hover:shadow-[0_20px_40px_rgba(37,99,235,0.1)]"
             >
-              <div className="relative z-10 mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-white/10 bg-slate-900 font-serif text-3xl font-bold text-white transition-all duration-500 group-hover:scale-110 group-hover:border-blue-500/50 md:mx-0">
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+              
+              <div className="relative z-10 mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-full border border-white/10 bg-slate-950 font-display text-4xl text-white shadow-inner transition-all duration-500 group-hover:border-blue-500/50 group-hover:text-blue-400 group-hover:shadow-[0_0_30px_rgba(37,99,235,0.2)] md:mx-0">
                 {item.num}
               </div>
-              <h3 className="mb-3 text-center text-2xl font-bold md:text-left">{item.title}</h3>
-              <p className="text-center leading-relaxed text-slate-400 md:text-left">{item.desc}</p>
+              <h3 className="mb-4 text-center font-serif text-2xl font-bold md:text-left">{item.title}</h3>
+              <p className="text-center font-light leading-relaxed text-slate-400 md:text-left">{item.desc}</p>
             </motion.div>
           ))}
         </div>
@@ -668,22 +792,22 @@ function AboutSection({ booksCount }) {
           transition={{ duration: 0.8 }}
           className="relative"
         >
-          <div className="relative aspect-square overflow-hidden rounded-3xl shadow-2xl md:aspect-[4/5]">
+          <div className="relative aspect-square overflow-hidden rounded-[2.5rem] shadow-2xl md:aspect-[4/5]">
             <img
               src="https://images.unsplash.com/photo-1521587760476-6c12a4b040da?q=80&w=800&auto=format&fit=crop"
               alt="Aivira Library"
               className="h-full w-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-tr from-slate-900/80 to-transparent" />
-            <div className="absolute bottom-8 left-8 right-8 flex items-center justify-around rounded-2xl border border-white/20 bg-white/10 p-6 text-center shadow-xl backdrop-blur-md">
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent" />
+            <div className="absolute bottom-8 left-8 right-8 flex items-center justify-around rounded-2xl border border-white/20 bg-white/10 p-6 text-center shadow-[0_8px_32px_rgba(0,0,0,0.3)] backdrop-blur-xl">
               <div>
-                <strong className="mb-1 block font-serif text-3xl text-white">12K+</strong>
-                <span className="text-xs font-bold uppercase tracking-widest text-slate-300">{t("home.readers")}</span>
+                <strong className="mb-1 block font-display text-4xl tracking-wide text-white">12K+</strong>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300">{t("home.readers")}</span>
               </div>
-              <div className="h-12 w-px bg-white/20" />
+              <div className="h-16 w-px bg-gradient-to-b from-transparent via-white/30 to-transparent" />
               <div>
-                <strong className="mb-1 block font-serif text-3xl text-white">{booksCount}+</strong>
-                <span className="text-xs font-bold uppercase tracking-widest text-slate-300">{t("home.titles")}</span>
+                <strong className="mb-1 block font-display text-4xl tracking-wide text-white">{booksCount}+</strong>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300">{t("home.titles")}</span>
               </div>
             </div>
           </div>
@@ -758,20 +882,44 @@ function LatestNews() {
 function SectionHead({ chip, title, link }) {
   const { t } = useTranslation();
   return (
-    <div className="flex flex-col justify-between gap-4 border-b border-slate-200 pb-6 md:flex-row md:items-end">
-      <div>
-        <div className="mb-2 inline-block rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-600">
-          {chip}
+    <div className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+      <div className="flex items-start gap-4">
+        {/* Accent bar */}
+        <div
+          className="mt-1 w-0.5 flex-shrink-0 self-stretch rounded-full"
+          style={{
+            background: "linear-gradient(180deg, #3b82f6 0%, #93c5fd 100%)",
+            minHeight: 36
+          }}
+        />
+        <div>
+          <div
+            className="mb-2 inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1"
+            style={{
+              fontSize: "0.68rem",
+              fontWeight: 800,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: "#2563eb"
+            }}
+          >
+            {chip}
+          </div>
+          <h2 className="font-serif text-3xl font-bold text-slate-900 md:text-4xl">{title}</h2>
         </div>
-        <h2 className="font-serif text-3xl font-bold text-slate-900 md:text-4xl">{title}</h2>
       </div>
 
       {link && (
         <Link
           to={link}
-          className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-500 transition-colors hover:text-blue-600"
+          className="group flex flex-shrink-0 items-center gap-1.5 text-sm font-bold uppercase tracking-wider text-slate-400 transition-colors hover:text-blue-600"
+          style={{ letterSpacing: "0.1em" }}
         >
-          {t("home.viewAll")} <span className="text-lg">-&gt;</span>
+          <span className="relative">
+            {t("home.viewAll")}
+            <span className="absolute -bottom-px left-0 h-px w-0 bg-blue-500 transition-all duration-300 group-hover:w-full" />
+          </span>
+          <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
         </Link>
       )}
     </div>

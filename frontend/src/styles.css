@@ -241,6 +241,7 @@ body.admin-route #btt {
 }
 
 @media (pointer: fine) and (min-width: 900px) {
+
   #cur,
   #cur-ring {
     display: flex;
@@ -250,6 +251,7 @@ body.admin-route #btt {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
