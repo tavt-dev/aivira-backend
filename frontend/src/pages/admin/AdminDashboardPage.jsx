@@ -85,7 +85,7 @@ export default function AdminDashboardPage() {
     return () => {
       ignore = true;
     };
-  }, [filters.fromDate, filters.toDate, filters.topLimit, filters.lowStockLimit, filters.lowStockThreshold, refreshKey]);
+  }, [filters, refreshKey]);
 
   function updateFilter(field, value) {
     setFilters((current) => ({ ...current, [field]: value }));

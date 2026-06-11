@@ -12,7 +12,7 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "quality": "npm run build && npm run test",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint . --fix",
     "format": "prettier \"README.md\" \"../README.md\" \"*.config.js\" \"*.{json,md}\" \"tests/**/*.{js,jsx}\" \"src/**/*.test.{js,jsx}\" \"src/test/**/*.{js,jsx}\" --write",
     "format:check": "prettier \"README.md\" \"../README.md\" \"*.config.js\" \"*.{json,md}\" \"tests/**/*.{js,jsx}\" \"src/**/*.test.{js,jsx}\" \"src/test/**/*.{js,jsx}\" --check",

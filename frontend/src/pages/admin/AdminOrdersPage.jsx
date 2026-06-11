@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 
@@ -27,7 +27,7 @@ import {
   Textarea,
 } from "../../components/ui/index.jsx";
 import { formatDateTime, formatVND } from "../../utils/formatters.js";
-import { normalizeOrder, pageRows } from "../../utils/mappers.js";
+import { normalizeOrder, pageMeta as readPageMeta, pageRows } from "../../utils/mappers.js";
 
 const ORDER_STATUSES = [
   "PENDING_CONFIRMATION",
@@ -43,7 +43,6 @@ const ORDER_STATUSES = [
   "REFUNDED",
 ];
 const PAGE_SIZES = [10, 20, 50];
-const CANCELABLE_STATUSES = new Set(["PENDING_CONFIRMATION", "CONFIRMED", "PACKING"]);
 const REFUNDABLE_STATUSES = new Set(["PAID", "CONFIRMED", "PACKING"]);
 const TERMINAL_STATUSES = new Set(["COMPLETED", "CANCELLED", "PAYMENT_FAILED", "EXPIRED", "REFUNDED"]);
 
@@ -74,31 +73,14 @@ export default function AdminOrdersPage() {
   const [refundTarget, setRefundTarget] = useState(null);
   const [refundForm, setRefundForm] = useState({ amount: "", reason: "", note: "" });
 
-  useEffect(() => {
-    refreshOrders(appliedFilters);
-  }, [appliedFilters]);
-
-  useEffect(() => {
-    const next = filtersFromSearch(searchParams);
-    setFilters(next);
-    setAppliedFilters(next);
-  }, [searchParams]);
-
-  async function refreshOrders(nextFilters = appliedFilters) {
+  const refreshOrders = useCallback(async (nextFilters = appliedFilters) => {
     setLoading(true);
     setMessage("");
     try {
       const page = await getAdminOrders(toQuery(nextFilters));
       const rows = pageRows(page).map(normalizeOrder);
       setOrders(rows);
-      setPageMeta({
-        currentPage: Number(page?.currentPage || nextFilters.page),
-        totalPages: Number(page?.totalPages || 0),
-        pageSize: Number(page?.pageSize || nextFilters.size),
-        totalElements: Number(page?.totalElements || rows.length),
-        hasNext: Boolean(page?.hasNext),
-        hasPrevious: Boolean(page?.hasPrevious),
-      });
+      setPageMeta(readPageMeta(page, { page: nextFilters.page, size: nextFilters.size }));
     } catch (error) {
       setOrders([]);
       setPageMeta(createEmptyMeta(nextFilters));
@@ -106,7 +88,17 @@ export default function AdminOrdersPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [appliedFilters, t]);
+
+  useEffect(() => {
+    refreshOrders(appliedFilters);
+  }, [appliedFilters, refreshOrders]);
+
+  useEffect(() => {
+    const next = filtersFromSearch(searchParams);
+    setFilters(next);
+    setAppliedFilters(next);
+  }, [searchParams]);
 
   function applyFilters(event) {
     event.preventDefault();
@@ -563,14 +555,7 @@ function positiveNumber(value, fallback) {
 }
 
 function createEmptyMeta(filters) {
-  return {
-    currentPage: Number(filters.page || 1),
-    totalPages: 0,
-    pageSize: Number(filters.size || 20),
-    totalElements: 0,
-    hasNext: false,
-    hasPrevious: false,
-  };
+  return readPageMeta([], { page: filters.page || 1, size: filters.size || 20, totalPages: 0 });
 }
 
 function StatusBadge({ status, t }) {
@@ -588,4 +573,3 @@ function BlockingLoader({ text }) {
     </div>
   );
 }
-

@@ -496,7 +496,7 @@ function QuoteSection() {
         transition={{ duration: 1 }}
         className="relative z-10 mx-auto max-w-4xl text-center"
       >
-        <div className="mb-8 inline-block h-10 overflow-hidden font-serif text-8xl leading-none text-blue-400/30">"</div>
+        <div className="mb-8 inline-block h-10 overflow-hidden font-serif text-8xl leading-none text-blue-400/30">&quot;</div>
         <p className="mb-8 font-serif text-3xl font-medium leading-tight md:text-5xl">
           {t("home.quote")}
         </p>

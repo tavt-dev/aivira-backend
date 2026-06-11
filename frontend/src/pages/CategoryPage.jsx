@@ -14,7 +14,7 @@ import {
   Pagination,
   Select,
 } from "../components/ui/index.jsx";
-import { normalizeBook, normalizeCategory, pageRows } from "../utils/mappers.js";
+import { normalizeBook, normalizeCategory, pageMeta as readPageMeta, pageRows } from "../utils/mappers.js";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_SIZE = 12;
@@ -26,7 +26,7 @@ export default function CategoryPage() {
   const { slug = "all" } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const searchKey = searchParams.toString();
-  const filters = useMemo(() => readFilters(searchParams), [searchKey]);
+  const filters = useMemo(() => readFilters(new URLSearchParams(searchKey)), [searchKey]);
   const [form, setForm] = useState(filters);
   const [books, setBooks] = useState([]);
   const [categories, setCategories] = useState([
@@ -45,7 +45,7 @@ export default function CategoryPage() {
 
   useEffect(() => {
     setForm(filters);
-  }, [searchParams]);
+  }, [filters]);
 
   useEffect(() => {
     getCategories()
@@ -84,14 +84,7 @@ export default function CategoryPage() {
         }
 
         setBooks(pageRows(page).map((row) => normalizeBook(row)));
-        setPageMeta({
-          currentPage: Number(page?.currentPage || filters.page),
-          totalPages: Number(page?.totalPages || 0),
-          pageSize: Number(page?.pageSize || filters.size),
-          totalElements: Number(page?.totalElements || 0),
-          hasNext: Boolean(page?.hasNext),
-          hasPrevious: Boolean(page?.hasPrevious),
-        });
+        setPageMeta(readPageMeta(page, { page: filters.page, size: filters.size }));
       })
       .catch((error) => {
         if (error.name === "AbortError") return;
@@ -400,14 +393,7 @@ function emptyFilters() {
 }
 
 function emptyPageMeta(filters) {
-  return {
-    currentPage: filters.page,
-    totalPages: 0,
-    pageSize: filters.size,
-    totalElements: 0,
-    hasNext: false,
-    hasPrevious: false,
-  };
+  return readPageMeta([], { page: filters.page, size: filters.size, totalPages: 0 });
 }
 
 function buildSearchParams(filters, overrides = {}) {

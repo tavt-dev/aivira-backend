@@ -39,10 +39,11 @@ export default function App() {
   const navigate = useNavigate();
   const isAdminRoute = location.pathname.startsWith("/admin");
   const searchParams = new URLSearchParams(location.search);
+  const authParam = searchParams.get("auth");
   const isAuthRequest = location.pathname === "/login"
     || location.pathname === "/register"
-    || searchParams.get("auth") === "login"
-    || searchParams.get("auth") === "register";
+    || authParam === "login"
+    || authParam === "register";
   const authNextPath = sanitizeNextPath(searchParams.get("next"));
 
   useEffect(() => {
@@ -86,13 +87,13 @@ export default function App() {
 
   useEffect(() => {
     if ((!introDone && !isAuthRequest) || isAdminRoute) return;
-    if (location.pathname === "/login" || searchParams.get("auth") === "login") {
+    if (location.pathname === "/login" || authParam === "login") {
       openAuth("login");
     }
-    if (location.pathname === "/register" || searchParams.get("auth") === "register") {
+    if (location.pathname === "/register" || authParam === "register") {
       openAuth("register");
     }
-  }, [introDone, isAuthRequest, isAdminRoute, location.pathname, location.search]);
+  }, [authParam, introDone, isAuthRequest, isAdminRoute, location.pathname]);
 
   function openAuth(mode = "login") {
     setAuthMode(mode);

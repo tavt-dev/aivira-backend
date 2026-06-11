@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -45,11 +45,7 @@ export default function AdminCategoriesPage() {
   const flatCategories = useMemo(() => categories.map(normalizeCategory).filter(Boolean), [categories]);
   const treeRows = useMemo(() => flattenTree(tree), [tree]);
 
-  useEffect(() => {
-    refreshCategories();
-  }, []);
-
-  async function refreshCategories() {
+  const refreshCategories = useCallback(async () => {
     setLoading(true);
     try {
       const [listRows, treePayload] = await Promise.all([getCategories(), getCategoryTree()]);
@@ -62,7 +58,11 @@ export default function AdminCategoriesPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [t]);
+
+  useEffect(() => {
+    refreshCategories();
+  }, [refreshCategories]);
 
   async function submit(event) {
     event.preventDefault();

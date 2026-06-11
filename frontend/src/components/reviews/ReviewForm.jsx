@@ -6,10 +6,22 @@ export default function ReviewForm({ title, onSubmit, onCancel, busy = false }) 
   const { t } = useTranslation();
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
+  const [error, setError] = useState("");
 
   function submit(event) {
     event.preventDefault();
-    onSubmit?.({ rating, comment: comment.trim(), images: [] });
+    const nextRating = Number(rating);
+    const nextComment = comment.trim();
+    if (nextRating < 1 || nextRating > 5) {
+      setError(t("product.reviewRatingInvalid"));
+      return;
+    }
+    if (!nextComment) {
+      setError(t("product.reviewCommentRequired"));
+      return;
+    }
+    setError("");
+    onSubmit?.({ rating: nextRating, comment: nextComment, images: [] });
   }
 
   return (
@@ -30,6 +42,7 @@ export default function ReviewForm({ title, onSubmit, onCancel, busy = false }) 
           placeholder={t("product.reviewCommentPlaceholder")}
         />
       </label>
+      {error && <p className="rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700">{error}</p>}
       <p className="text-sm font-semibold text-slate-500">{t("product.reviewModerationNotice")}</p>
       <div className="flex flex-wrap justify-end gap-3">
         {onCancel && (

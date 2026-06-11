@@ -7,7 +7,7 @@ import { getProduct } from "../api/catalogApi.js";
 import { getProductReviews } from "../api/reviewApi.js";
 import RatingStars from "../components/reviews/RatingStars.jsx";
 import { discount, formatSold, formatVND } from "../utils/formatters.js";
-import { normalizeBook, normalizeReview, pageRows } from "../utils/mappers.js";
+import { normalizeBook, normalizeReview, pageMeta as readPageMeta, pageRows } from "../utils/mappers.js";
 import { getAccessToken } from "../utils/storage.js";
 
 const REVIEW_SIZE = 5;
@@ -342,12 +342,7 @@ function ReviewList({ slug }) {
     getProductReviews(slug, { rating, sort, page, size: REVIEW_SIZE }, { signal: controller.signal })
       .then((payload) => {
         setReviews(pageRows(payload).map(normalizeReview));
-        setMeta({
-          currentPage: Number(payload?.currentPage || page),
-          totalPages: Number(payload?.totalPages || 0),
-          hasNext: Boolean(payload?.hasNext),
-          hasPrevious: Boolean(payload?.hasPrevious),
-        });
+        setMeta(readPageMeta(payload, { page, size: 5 }));
       })
       .catch((error) => {
         if (error.name === "AbortError") return;

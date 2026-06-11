@@ -9,6 +9,25 @@ export function pageRows(payload) {
   return [];
 }
 
+export function pageMeta(payload, defaults = {}) {
+  const rows = pageRows(payload);
+  const currentPage = Number(payload?.currentPage ?? payload?.page ?? defaults.page ?? 1);
+  const pageSize = Number(payload?.pageSize ?? payload?.size ?? defaults.size ?? 20);
+  const totalElements = Number(payload?.totalElements ?? payload?.total ?? defaults.totalElements ?? rows.length);
+  const totalPages = Number(
+    payload?.totalPages ?? defaults.totalPages ?? (totalElements > 0 ? Math.ceil(totalElements / Math.max(pageSize, 1)) : 1)
+  );
+
+  return {
+    currentPage,
+    totalPages,
+    pageSize,
+    totalElements,
+    hasNext: Boolean(payload?.hasNext ?? currentPage < totalPages),
+    hasPrevious: Boolean(payload?.hasPrevious ?? currentPage > 1)
+  };
+}
+
 export function normalizeCategory(row) {
   if (!row) return null;
   return {

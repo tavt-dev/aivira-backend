@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
@@ -63,14 +63,7 @@ export default function AccountPage({ onAuth }) {
   const [busy, setBusy] = useState("");
   const [deactivateConfirmation, setDeactivateConfirmation] = useState("");
 
-  useEffect(() => {
-    if (!getAccessToken()) return;
-    refreshProfile();
-    refreshAddresses();
-    refreshSessions();
-  }, []);
-
-  async function refreshProfile() {
+  const refreshProfile = useCallback(async () => {
     setBusy((current) => current || "profile");
     try {
       const data = await getProfile();
@@ -86,25 +79,32 @@ export default function AccountPage({ onAuth }) {
     } finally {
       setBusy((current) => (current === "profile" ? "" : current));
     }
-  }
+  }, [t]);
 
-  async function refreshAddresses() {
+  const refreshAddresses = useCallback(async () => {
     try {
       const rows = await getAddresses();
       setAddresses((rows || []).map(normalizeAddress).filter(Boolean));
     } catch (error) {
       setMessage(error.message || t("account.addressesLoadFailed"));
     }
-  }
+  }, [t]);
 
-  async function refreshSessions() {
+  const refreshSessions = useCallback(async () => {
     try {
       const rows = await getSessions();
       setSessions(rows || []);
     } catch {
       setSessions([]);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    if (!getAccessToken()) return;
+    refreshProfile();
+    refreshAddresses();
+    refreshSessions();
+  }, [refreshAddresses, refreshProfile, refreshSessions]);
 
   async function saveProfile(event) {
     event.preventDefault();

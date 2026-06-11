@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -28,7 +28,7 @@ import {
 import { getAdminProducts } from "../../api/adminProductsApi.js";
 import { getCategories } from "../../api/catalogApi.js";
 import { formatDateTime, formatVND } from "../../utils/formatters.js";
-import { normalizeBook, normalizeCategory, pageRows } from "../../utils/mappers.js";
+import { normalizeBook, normalizeCategory, pageMeta as readPageMeta, pageRows } from "../../utils/mappers.js";
 
 const DISCOUNT_TYPES = ["PERCENT", "FIXED"];
 const PROMOTION_SCOPES = ["PRODUCT", "CATEGORY"];
@@ -84,14 +84,6 @@ export default function AdminDiscountsPage() {
   const productOptions = useMemo(() => products.map(normalizeBook).filter(Boolean), [products]);
 
   useEffect(() => {
-    refreshCoupons(couponPage);
-  }, [couponPage]);
-
-  useEffect(() => {
-    refreshPromotions(promotionPage);
-  }, [promotionPage]);
-
-  useEffect(() => {
     getCategories()
       .then((rows) => setCategories(pageRows(rows)))
       .catch(() => setCategories([]));
@@ -107,14 +99,14 @@ export default function AdminDiscountsPage() {
     return () => window.clearTimeout(timer);
   }, [promotionForm.promotionScope, productKeyword]);
 
-  async function refreshCoupons(next = couponPage) {
+  const refreshCoupons = useCallback(async (next = couponPage) => {
     setLoading("coupons");
     setMessage("");
     try {
       const page = await getCoupons(next);
       const rows = pageRows(page);
       setCoupons(rows);
-      setCouponMeta(pageMeta(page, next, rows));
+      setCouponMeta(readPageMeta(page, next));
     } catch (error) {
       setCoupons([]);
       setCouponMeta(createEmptyMeta(next));
@@ -122,16 +114,16 @@ export default function AdminDiscountsPage() {
     } finally {
       setLoading("");
     }
-  }
+  }, [couponPage, t]);
 
-  async function refreshPromotions(next = promotionPage) {
+  const refreshPromotions = useCallback(async (next = promotionPage) => {
     setLoading("promotions");
     setMessage("");
     try {
       const page = await getPromotions(next);
       const rows = pageRows(page);
       setPromotions(rows);
-      setPromotionMeta(pageMeta(page, next, rows));
+      setPromotionMeta(readPageMeta(page, next));
     } catch (error) {
       setPromotions([]);
       setPromotionMeta(createEmptyMeta(next));
@@ -139,7 +131,15 @@ export default function AdminDiscountsPage() {
     } finally {
       setLoading("");
     }
-  }
+  }, [promotionPage, t]);
+
+  useEffect(() => {
+    refreshCoupons(couponPage);
+  }, [couponPage, refreshCoupons]);
+
+  useEffect(() => {
+    refreshPromotions(promotionPage);
+  }, [promotionPage, refreshPromotions]);
 
   async function submitCoupon(event) {
     event.preventDefault();
@@ -644,26 +644,8 @@ function resolveTarget(promotion, categories, products) {
   return products.find((product) => String(product.id) === String(promotion.targetId))?.title || "";
 }
 
-function pageMeta(page, fallback, rows) {
-  return {
-    currentPage: Number(page?.currentPage || fallback.page || 1),
-    totalPages: Number(page?.totalPages || 0),
-    pageSize: Number(page?.pageSize || fallback.size || 20),
-    totalElements: Number(page?.totalElements || rows.length),
-    hasNext: Boolean(page?.hasNext),
-    hasPrevious: Boolean(page?.hasPrevious),
-  };
-}
-
 function createEmptyMeta(fallback = { page: 1, size: 20 }) {
-  return {
-    currentPage: Number(fallback.page || 1),
-    totalPages: 0,
-    pageSize: Number(fallback.size || 20),
-    totalElements: 0,
-    hasNext: false,
-    hasPrevious: false,
-  };
+  return readPageMeta([], { page: fallback.page || 1, size: fallback.size || 20, totalPages: 0 });
 }
 
 function PageSize({ onChange, value }) {
@@ -681,5 +663,4 @@ function Status({ active, t }) {
 function TabButton({ active, children, onClick }) {
   return <button className={["rounded-full px-4 py-2 text-sm font-bold transition-colors", active ? "bg-slate-950 text-white" : "border border-slate-200 text-slate-600 hover:bg-slate-50"].join(" ")} type="button" onClick={onClick}>{children}</button>;
 }
-
 

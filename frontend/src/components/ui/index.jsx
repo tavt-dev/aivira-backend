@@ -346,7 +346,7 @@ export function Modal({ children, closeOnBackdrop = true, onClose, open = true, 
   const dialogRef = useOverlay({ onClose, open });
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-[70] grid place-items-center bg-slate-950/60 px-4 backdrop-blur-sm" onMouseDown={(event) => {
+    <div className="fixed inset-0 z-[70] grid place-items-center bg-slate-950/60 px-4 backdrop-blur-sm" role="presentation" onMouseDown={(event) => {
       if (closeOnBackdrop && event.target === event.currentTarget) onClose?.();
     }}>
       <section ref={dialogRef} aria-labelledby={titleId} aria-modal="true" className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl" role="dialog">

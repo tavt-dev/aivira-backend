@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 
@@ -70,14 +70,6 @@ export default function AdminPermissionsPage() {
       .catch(() => setRolePermissions([]));
   }, [selectedRole]);
 
-  useEffect(() => {
-    const queryUserId = searchParams.get("userId");
-    if (queryUserId) {
-      setUserId(queryUserId);
-      loadUserPermissionsById(queryUserId);
-    }
-  }, [searchParams]);
-
   async function saveRole(event) {
     event.preventDefault();
     setMessage("");
@@ -94,7 +86,7 @@ export default function AdminPermissionsPage() {
     await loadUserPermissionsById(userId);
   }
 
-  async function loadUserPermissionsById(nextUserId) {
+  const loadUserPermissionsById = useCallback(async (nextUserId) => {
     if (!nextUserId) return;
     setMessage("");
     try {
@@ -103,7 +95,15 @@ export default function AdminPermissionsPage() {
       setUserPermissions(null);
       setMessage(error.message || t("admin.errors.userPermissions"));
     }
-  }
+  }, [t]);
+
+  useEffect(() => {
+    const queryUserId = searchParams.get("userId");
+    if (queryUserId) {
+      setUserId(queryUserId);
+      loadUserPermissionsById(queryUserId);
+    }
+  }, [loadUserPermissionsById, searchParams]);
 
   async function grant(event) {
     event.preventDefault();
@@ -242,7 +242,7 @@ function PermissionChecklist({ checkedPermissions, onToggle, permissions }) {
         const checked = checkedPermissions.some((item) => permissionCode(item) === code);
         return (
           <label key={code} className="flex items-start gap-3 rounded-xl bg-white p-3 text-sm font-semibold text-slate-700">
-            <input type="checkbox" checked={checked} onChange={() => onToggle(permission)} />
+            <input type="checkbox" checked={checked} onChange={() => onToggle(permission)} aria-label={code} />
             <span>
               <span className="block font-bold text-slate-900">{code}</span>
               <span className="block text-xs text-slate-500">{permission.group || ""} {permission.description ? `- ${permission.description}` : ""}</span>
@@ -300,5 +300,3 @@ function directPermissionCode(permission) {
 function roleCode(role) {
   return String(role?.code || role?.roleCode || role || "");
 }
-
-

@@ -21,7 +21,7 @@ import {
   Skeleton,
 } from "../components/ui/index.jsx";
 import { formatDateTime, formatVND } from "../utils/formatters.js";
-import { normalizeOrder, normalizePaymentGroup, pageRows } from "../utils/mappers.js";
+import { normalizeOrder, normalizePaymentGroup, pageMeta as readPageMeta, pageRows } from "../utils/mappers.js";
 import { getAccessToken } from "../utils/storage.js";
 
 const ORDER_STATUSES = [
@@ -73,14 +73,7 @@ export default function OrdersPage({ onAuth }) {
     })
       .then((page) => {
         setOrders(pageRows(page).map(normalizeOrder));
-        setPageMeta({
-          currentPage: Number(page?.currentPage || filters.page),
-          totalPages: Number(page?.totalPages || 0),
-          pageSize: Number(page?.pageSize || filters.size),
-          totalElements: Number(page?.totalElements || 0),
-          hasNext: Boolean(page?.hasNext),
-          hasPrevious: Boolean(page?.hasPrevious),
-        });
+        setPageMeta(readPageMeta(page, { page: filters.page, size: filters.size }));
       })
       .catch((error) => setMessage(error.message || t("orders.loadFailed")))
       .finally(() => setLoading(false));
@@ -456,12 +449,5 @@ function positiveInt(value, fallback) {
 }
 
 function emptyMeta() {
-  return {
-    currentPage: 1,
-    totalPages: 0,
-    pageSize: 20,
-    totalElements: 0,
-    hasNext: false,
-    hasPrevious: false,
-  };
+  return readPageMeta([], { page: 1, size: 20, totalPages: 0 });
 }

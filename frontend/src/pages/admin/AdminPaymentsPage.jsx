@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 
@@ -33,13 +33,7 @@ export default function AdminPaymentsPage() {
   const [loading, setLoading] = useState(false);
   const [reconciling, setReconciling] = useState(false);
 
-  useEffect(() => {
-    const nextCode = searchParams.get("code") || "";
-    setCode(nextCode);
-    if (nextCode) lookup(nextCode, { silent: true });
-  }, [searchParams]);
-
-  async function lookup(rawCode = code, options = {}) {
+  const lookup = useCallback(async (rawCode = code, options = {}) => {
     const normalizedCode = rawCode.trim();
     if (!normalizedCode) {
       setMessage(t("admin.paymentCodeRequired"));
@@ -63,7 +57,13 @@ export default function AdminPaymentsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [code, searchParams, setSearchParams, t]);
+
+  useEffect(() => {
+    const nextCode = searchParams.get("code") || "";
+    setCode(nextCode);
+    if (nextCode) lookup(nextCode, { silent: true });
+  }, [lookup, searchParams]);
 
   async function reconcile() {
     const normalizedCode = code.trim();

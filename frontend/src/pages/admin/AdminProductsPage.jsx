@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -33,6 +33,7 @@ import {
   buildProductUpdatePayload,
   normalizeBook,
   normalizeCategory,
+  pageMeta as readPageMeta,
   pageRows,
 } from "../../utils/mappers.js";
 
@@ -125,38 +126,23 @@ export default function AdminProductsPage() {
 
   const categoryOptions = useMemo(() => categories.map(normalizeCategory).filter(Boolean), [categories]);
 
-  useEffect(() => {
-    refreshCategories();
-  }, []);
-
-  useEffect(() => {
-    refreshAdminProducts(appliedFilters);
-  }, [appliedFilters]);
-
-  async function refreshCategories() {
+  const refreshCategories = useCallback(async () => {
     try {
       const rows = await getCategories();
       setCategories(pageRows(rows));
     } catch {
       setCategories([]);
     }
-  }
+  }, []);
 
-  async function refreshAdminProducts(nextFilters = appliedFilters) {
+  const refreshAdminProducts = useCallback(async (nextFilters = appliedFilters) => {
     setLoading(true);
     setMessage("");
     try {
       const page = await getAdminProducts(toProductQuery(nextFilters));
       const rows = pageRows(page).map((row) => normalizeBook(row));
       setBooks(rows);
-      setPageMeta({
-        currentPage: Number(page?.currentPage || nextFilters.page),
-        totalPages: Number(page?.totalPages || 0),
-        pageSize: Number(page?.pageSize || nextFilters.size),
-        totalElements: Number(page?.totalElements || rows.length),
-        hasNext: Boolean(page?.hasNext),
-        hasPrevious: Boolean(page?.hasPrevious),
-      });
+      setPageMeta(readPageMeta(page, { page: nextFilters.page, size: nextFilters.size }));
     } catch (error) {
       setBooks([]);
       setPageMeta(createEmptyMeta(nextFilters));
@@ -164,7 +150,15 @@ export default function AdminProductsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [appliedFilters, t]);
+
+  useEffect(() => {
+    refreshCategories();
+  }, [refreshCategories]);
+
+  useEffect(() => {
+    refreshAdminProducts(appliedFilters);
+  }, [appliedFilters, refreshAdminProducts]);
 
   async function refreshSelectedProduct(productId = selectedProduct?.id) {
     if (!productId) return;
@@ -552,7 +546,7 @@ export default function AdminProductsPage() {
             <Input required={!editingProductId} value={bookForm.price} onChange={(e) => handleBookField("price", e.target.value)} placeholder={t("admin.price")} type="number" min="0" />
             <Input value={bookForm.originalPrice} onChange={(e) => handleBookField("originalPrice", e.target.value)} placeholder={t("admin.originalPrice")} type="number" min="0" />
             <Input value={bookForm.discountPercentage} onChange={(e) => handleBookField("discountPercentage", e.target.value)} placeholder={t("admin.discountPercentage")} type="number" min="0" />
-            <Input value={bookForm.brand} onChange={(e) => handleBookField("brand", e.target.value)} placeholder={t("admin.brand")} />
+            <Input value={bookForm.brand} onChange={(e) => handleBookField("brand", e.target.value)} placeholder={t("admin.productBrand")} />
             <Input value={bookForm.material} onChange={(e) => handleBookField("material", e.target.value)} placeholder={t("admin.material")} />
             <Input value={bookForm.weight} onChange={(e) => handleBookField("weight", e.target.value)} placeholder={t("admin.weight")} type="number" min="0" />
             <label className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700">
@@ -792,14 +786,7 @@ function formatLabel(value) {
 }
 
 function createEmptyMeta(filters) {
-  return {
-    currentPage: Number(filters.page || 1),
-    totalPages: 0,
-    pageSize: Number(filters.size || 20),
-    totalElements: 0,
-    hasNext: false,
-    hasPrevious: false,
-  };
+  return readPageMeta([], { page: filters.page || 1, size: filters.size || 20, totalPages: 0 });
 }
 
 function StatusBadge({ status, featured, t }) {

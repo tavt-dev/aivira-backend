@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 
@@ -19,7 +19,7 @@ import {
   useToast,
 } from "../../components/ui/index.jsx";
 import { formatDateTime } from "../../utils/formatters.js";
-import { normalizeReview, pageRows } from "../../utils/mappers.js";
+import { normalizeReview, pageMeta as readPageMeta, pageRows } from "../../utils/mappers.js";
 
 const PAGE_SIZES = [10, 20, 50];
 const RATINGS = [5, 4, 3, 2, 1];
@@ -52,26 +52,14 @@ export default function AdminReviewsPage() {
   const [moderationDraft, setModerationDraft] = useState({ approved: false, visible: true });
   const [imagePreview, setImagePreview] = useState(null);
 
-  useEffect(() => {
-    setFilters(appliedFilters);
-    refreshReviews(appliedFilters);
-  }, [appliedFilters]);
-
-  async function refreshReviews(nextFilters = appliedFilters) {
+  const refreshReviews = useCallback(async (nextFilters = appliedFilters) => {
     setLoading(true);
     setMessage("");
     try {
       const page = await getAdminReviews(toQuery(nextFilters));
       const rows = pageRows(page).map(normalizeReview);
       setReviews(rows);
-      setPageMeta({
-        currentPage: Number(page?.currentPage || nextFilters.page),
-        totalPages: Number(page?.totalPages || 0),
-        pageSize: Number(page?.pageSize || nextFilters.size),
-        totalElements: Number(page?.totalElements || rows.length),
-        hasNext: Boolean(page?.hasNext),
-        hasPrevious: Boolean(page?.hasPrevious),
-      });
+      setPageMeta(readPageMeta(page, { page: nextFilters.page, size: nextFilters.size }));
       if (selected) {
         const updatedSelected = rows.find((review) => review.id === selected.id);
         if (updatedSelected) syncSelected(updatedSelected);
@@ -83,7 +71,12 @@ export default function AdminReviewsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [appliedFilters, selected, t]);
+
+  useEffect(() => {
+    setFilters(appliedFilters);
+    refreshReviews(appliedFilters);
+  }, [appliedFilters, refreshReviews]);
 
   function applyFilters(event) {
     event.preventDefault();
@@ -502,8 +495,8 @@ function ImageGrid({ images = [], onPreview, t }) {
 
 function ImagePreview({ image, onClose, t }) {
   return (
-    <div className="fixed inset-0 z-[70] grid place-items-center bg-slate-950/80 p-4 backdrop-blur-sm" onClick={onClose}>
-      <section className="max-h-full w-full max-w-4xl" onClick={(event) => event.stopPropagation()}>
+    <div className="fixed inset-0 z-[70] grid place-items-center bg-slate-950/80 p-4 backdrop-blur-sm" role="presentation" onClick={onClose}>
+      <section className="max-h-full w-full max-w-4xl" role="presentation" onClick={(event) => event.stopPropagation()}>
         <div className="mb-3 flex justify-end">
           <button className="rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-700" type="button" onClick={onClose}>{t("common.close")}</button>
         </div>
@@ -592,18 +585,7 @@ function yesNo(value, t) {
 }
 
 function createEmptyMeta(filters) {
-  return {
-    currentPage: Number(filters.page || 1),
-    totalPages: 0,
-    pageSize: Number(filters.size || 20),
-    totalElements: 0,
-    hasNext: false,
-    hasPrevious: false,
-  };
-}
-
-function StatusBadge({ status, t }) {
-  return <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-bold text-slate-700">{status || "-"}</span>;
+  return readPageMeta([], { page: filters.page || 1, size: filters.size || 20, totalPages: 0 });
 }
 
 function Badge({ active = false, children }) {

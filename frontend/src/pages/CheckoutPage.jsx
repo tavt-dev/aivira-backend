@@ -6,7 +6,6 @@ import { getCart } from "../api/cartApi.js";
 import { createCheckout, previewCheckout } from "../api/checkoutApi.js";
 import { createAddress, getAddresses } from "../api/userApi.js";
 import {
-  Button,
   Input,
   MetaRow,
   Notice,
@@ -73,6 +72,9 @@ export default function CheckoutPage({ onAuth }) {
     const idSet = new Set(cartItemIds);
     return items.filter((item) => idSet.has(Number(item.cartItemId)));
   }, [items, cartItemIds]);
+  const previewPaymentMethod = form.paymentMethod;
+  const previewCouponCode = form.couponCode;
+  const previewNotes = form.notes;
   const canPreview = loggedIn && cartSource === "api" && selectedAddress && cartItemIds.length > 0;
   const canSubmit = loggedIn && cartSource === "api" && cartItemIds.length > 0 && !submitting && !previewLoading;
 
@@ -88,7 +90,11 @@ export default function CheckoutPage({ onAuth }) {
     const timer = window.setTimeout(() => {
       setPreviewLoading(true);
       setPreviewError("");
-      previewCheckout(buildCheckoutBody(selectedAddress, cartItemIds, form), {
+      previewCheckout(buildCheckoutBody(selectedAddress, cartItemIds, {
+        paymentMethod: previewPaymentMethod,
+        couponCode: previewCouponCode,
+        notes: previewNotes,
+      }), {
         signal: controller.signal,
       })
         .then((response) => {
@@ -109,7 +115,7 @@ export default function CheckoutPage({ onAuth }) {
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [canPreview, selectedAddress, cartItemIds, form.paymentMethod, form.couponCode, t]);
+  }, [canPreview, selectedAddress, cartItemIds, previewPaymentMethod, previewCouponCode, previewNotes, t]);
 
   async function ensureAddress() {
     if (selectedAddress) return selectedAddress;

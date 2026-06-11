@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
@@ -22,7 +22,7 @@ import {
   useConfirm,
 } from "../../components/ui/index.jsx";
 import { formatDateTime } from "../../utils/formatters.js";
-import { pageRows } from "../../utils/mappers.js";
+import { pageMeta as readPageMeta, pageRows } from "../../utils/mappers.js";
 import { getCurrentUser } from "../../utils/storage.js";
 
 const ROLES = ["USER", "ADMIN"];
@@ -53,25 +53,14 @@ export default function AdminUsersPage() {
   const [busy, setBusy] = useState("");
   const currentUser = getCurrentUser();
 
-  useEffect(() => {
-    refreshUsers(appliedFilters);
-  }, [appliedFilters]);
-
-  async function refreshUsers(nextFilters = appliedFilters) {
+  const refreshUsers = useCallback(async (nextFilters = appliedFilters) => {
     setLoading(true);
     setMessage("");
     try {
       const page = await getAdminUsers(toQuery(nextFilters));
       const rows = pageRows(page);
       setUsers(rows);
-      setPageMeta({
-        currentPage: Number(page?.currentPage || nextFilters.page),
-        totalPages: Number(page?.totalPages || 0),
-        pageSize: Number(page?.pageSize || nextFilters.size),
-        totalElements: Number(page?.totalElements || rows.length),
-        hasNext: Boolean(page?.hasNext),
-        hasPrevious: Boolean(page?.hasPrevious),
-      });
+      setPageMeta(readPageMeta(page, { page: nextFilters.page, size: nextFilters.size }));
     } catch (error) {
       setUsers([]);
       setPageMeta(createEmptyMeta(nextFilters));
@@ -79,7 +68,11 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [appliedFilters, t]);
+
+  useEffect(() => {
+    refreshUsers(appliedFilters);
+  }, [appliedFilters, refreshUsers]);
 
   function applyFilters(event) {
     event.preventDefault();
@@ -390,14 +383,7 @@ function yesNo(value, t) {
 }
 
 function createEmptyMeta(filters) {
-  return {
-    currentPage: Number(filters.page || 1),
-    totalPages: 0,
-    pageSize: Number(filters.size || 20),
-    totalElements: 0,
-    hasNext: false,
-    hasPrevious: false,
-  };
+  return readPageMeta([], { page: filters.page || 1, size: filters.size || 20, totalPages: 0 });
 }
 
 
