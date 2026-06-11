@@ -133,10 +133,7 @@ public class ProductSpecifications {
     }
 
     private Predicate containsIgnoreCase(
-            Root<Product> root,
-            jakarta.persistence.criteria.CriteriaBuilder cb,
-            String field,
-            String value) {
+            Root<Product> root, jakarta.persistence.criteria.CriteriaBuilder cb, String field, String value) {
         return cb.like(cb.lower(root.get(field)), "%" + value.trim().toLowerCase(Locale.ROOT) + "%");
     }
 }

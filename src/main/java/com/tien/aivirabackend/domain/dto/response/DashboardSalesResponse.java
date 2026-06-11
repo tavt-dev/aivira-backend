@@ -18,6 +18,7 @@ import lombok.experimental.FieldDefaults;
 public class DashboardSalesResponse {
     @Schema(example = "2026-05-06T00:00:00Z")
     Instant fromDate;
+
     @Schema(example = "2026-06-05T00:00:00Z")
     Instant toDate;
 

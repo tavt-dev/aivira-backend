@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 
 import com.tien.aivirabackend.config.properties.CloudinaryProperties;
 import com.tien.aivirabackend.config.properties.FileUploadProperties;
+import com.tien.aivirabackend.config.properties.GoogleOAuthProperties;
 import com.tien.aivirabackend.config.properties.MomoPaymentProperties;
 import com.tien.aivirabackend.config.properties.PaymentProperties;
 import com.tien.aivirabackend.config.properties.VnpayPaymentProperties;
@@ -14,6 +15,7 @@ import com.tien.aivirabackend.config.properties.VnpayPaymentProperties;
 @EnableConfigurationProperties({
     FileUploadProperties.class,
     CloudinaryProperties.class,
+    GoogleOAuthProperties.class,
     PaymentProperties.class,
     VnpayPaymentProperties.class,
     MomoPaymentProperties.class

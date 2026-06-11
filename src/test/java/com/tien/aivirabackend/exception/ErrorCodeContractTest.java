@@ -58,14 +58,22 @@ class ErrorCodeContractTest {
             for (Enum<?> constant : enumClass.getEnumConstants()) {
                 ErrorCode errorCode = (ErrorCode) constant;
 
-                assertThat(errorCode.getCode()).as(enumClass.getSimpleName() + "." + constant.name()).isNotBlank();
-                assertThat(errorCode.getMessage()).as(enumClass.getSimpleName() + "." + constant.name()).isNotBlank();
-                assertThat(errorCode.getHttpStatus()).as(enumClass.getSimpleName() + "." + constant.name()).isNotNull();
+                assertThat(errorCode.getCode())
+                        .as(enumClass.getSimpleName() + "." + constant.name())
+                        .isNotBlank();
+                assertThat(errorCode.getMessage())
+                        .as(enumClass.getSimpleName() + "." + constant.name())
+                        .isNotBlank();
+                assertThat(errorCode.getHttpStatus())
+                        .as(enumClass.getSimpleName() + "." + constant.name())
+                        .isNotNull();
 
-                String previous = seenCodes.putIfAbsent(errorCode.getCode(), enumClass.getSimpleName() + "." + constant.name());
+                String previous =
+                        seenCodes.putIfAbsent(errorCode.getCode(), enumClass.getSimpleName() + "." + constant.name());
                 assertThat(previous)
-                        .as("Duplicate error code %s used by %s and %s", errorCode.getCode(), previous,
-                                enumClass.getSimpleName() + "." + constant.name())
+                        .as(
+                                "Duplicate error code %s used by %s and %s",
+                                errorCode.getCode(), previous, enumClass.getSimpleName() + "." + constant.name())
                         .isNull();
             }
         }

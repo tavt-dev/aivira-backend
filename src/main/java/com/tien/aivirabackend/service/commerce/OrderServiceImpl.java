@@ -130,7 +130,8 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderResponse confirmOrder(Long orderId) {
-        return transitionAny(orderId, Set.of(OrderStatus.PENDING_CONFIRMATION, OrderStatus.PAID), OrderStatus.CONFIRMED);
+        return transitionAny(
+                orderId, Set.of(OrderStatus.PENDING_CONFIRMATION, OrderStatus.PAID), OrderStatus.CONFIRMED);
     }
 
     @Override

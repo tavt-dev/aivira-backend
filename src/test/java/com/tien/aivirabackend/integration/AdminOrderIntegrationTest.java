@@ -131,7 +131,10 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.data.orderStatus").value("CANCELLED"))
                 .andExpect(jsonPath("$.data.cancelReason").value("out of stock"));
 
-        assertThat(productVariationRepository.findById(variationId).orElseThrow().getStockQuantity())
+        assertThat(productVariationRepository
+                        .findById(variationId)
+                        .orElseThrow()
+                        .getStockQuantity())
                 .isEqualTo(5);
     }
 
@@ -157,12 +160,19 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
         Order refundedOrder = orderRepository.findDetailedById(order.getId()).orElseThrow();
         assertThat(refundedOrder.getOrderStatus()).isEqualTo(OrderStatus.REFUNDED);
         assertThat(refundedOrder.getPayments().getFirst().getStatus()).isEqualTo(PaymentStatus.REFUNDED);
-        assertThat(paymentGroupRepository.findById(
-                                refundedOrder.getPayments().getFirst().getPaymentGroup().getId())
+        assertThat(paymentGroupRepository
+                        .findById(refundedOrder
+                                .getPayments()
+                                .getFirst()
+                                .getPaymentGroup()
+                                .getId())
                         .orElseThrow()
                         .getStatus())
                 .isEqualTo(PaymentStatus.REFUNDED);
-        assertThat(productVariationRepository.findById(variationId).orElseThrow().getStockQuantity())
+        assertThat(productVariationRepository
+                        .findById(variationId)
+                        .orElseThrow()
+                        .getStockQuantity())
                 .isEqualTo(5);
         assertThat(refundRepository.existsByOrder_Id(order.getId())).isTrue();
 
@@ -246,7 +256,8 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
                 .build();
         product.getProductVariations().add(variation);
         Product savedProduct = productRepository.save(product);
-        ProductVariation savedVariation = savedProduct.getProductVariations().iterator().next();
+        ProductVariation savedVariation =
+                savedProduct.getProductVariations().iterator().next();
 
         PaymentGroup group = paymentGroupRepository.save(PaymentGroup.builder()
                 .paymentCode("PAY-" + orderStatus.name())

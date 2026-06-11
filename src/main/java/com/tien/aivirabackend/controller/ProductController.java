@@ -42,34 +42,54 @@ public class ProductController {
             description =
                     "Lists active bookstore products. Supports keyword, category, author, publisher, ISBN, price, availability, sorting, and pagination filters.")
     public ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> getPublicProducts(
-            @Parameter(description = "Keyword matched against title, SKU, description, brand, author, publisher, and ISBN", example = "clean code")
-            @RequestParam(required = false) String keyword,
-            @Parameter(description = "Book category slug", example = "programming")
-            @RequestParam(required = false) String categorySlug,
+            @Parameter(
+                            description =
+                                    "Keyword matched against title, SKU, description, brand, author, publisher, and ISBN",
+                            example = "clean code")
+                    @RequestParam(required = false)
+                    String keyword,
+            @Parameter(description = "Book category slug", example = "programming") @RequestParam(required = false)
+                    String categorySlug,
             @Parameter(description = "Legacy brand filter kept for API compatibility", example = "Aivira")
-            @RequestParam(required = false) String brand,
+                    @RequestParam(required = false)
+                    String brand,
             @Parameter(description = "Case-insensitive author filter", example = "Robert C. Martin")
-            @RequestParam(required = false) String author,
+                    @RequestParam(required = false)
+                    String author,
             @Parameter(description = "Case-insensitive publisher filter", example = "Prentice Hall")
-            @RequestParam(required = false) String publisher,
-            @Parameter(description = "ISBN contains filter", example = "9780132350884")
-            @RequestParam(required = false) String isbn,
-            @Parameter(description = "Minimum book price", example = "100000")
-            @RequestParam(required = false) BigDecimal minPrice,
-            @Parameter(description = "Maximum book price", example = "500000")
-            @RequestParam(required = false) BigDecimal maxPrice,
+                    @RequestParam(required = false)
+                    String publisher,
+            @Parameter(description = "ISBN contains filter", example = "9780132350884") @RequestParam(required = false)
+                    String isbn,
+            @Parameter(description = "Minimum book price", example = "100000") @RequestParam(required = false)
+                    BigDecimal minPrice,
+            @Parameter(description = "Maximum book price", example = "500000") @RequestParam(required = false)
+                    BigDecimal maxPrice,
             @Parameter(description = "When true, only books with available stock are returned", example = "true")
-            @RequestParam(required = false) Boolean available,
-            @Parameter(description = "Sort value: newest, price_asc, price_desc, best_selling, name_asc", example = "name_asc")
-            @RequestParam(required = false) String sort,
-            @Parameter(description = "1-based page number", example = "1")
-            @RequestParam(defaultValue = "1") int page,
-            @Parameter(description = "Page size", example = "20")
-            @RequestParam(defaultValue = "20") int size) {
+                    @RequestParam(required = false)
+                    Boolean available,
+            @Parameter(
+                            description = "Sort value: newest, price_asc, price_desc, best_selling, name_asc",
+                            example = "name_asc")
+                    @RequestParam(required = false)
+                    String sort,
+            @Parameter(description = "1-based page number", example = "1") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(ApiResponse.success(
                 "Get products successful",
                 productService.getPublicProducts(
-                        keyword, categorySlug, brand, author, publisher, isbn, minPrice, maxPrice, available, sort, page, size)));
+                        keyword,
+                        categorySlug,
+                        brand,
+                        author,
+                        publisher,
+                        isbn,
+                        minPrice,
+                        maxPrice,
+                        available,
+                        sort,
+                        page,
+                        size)));
     }
 
     @GetMapping("/products/{slug}")
@@ -84,7 +104,8 @@ public class ProductController {
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
             summary = "List products for admin",
-            description = "Lists all books for catalog administration, including inactive and draft records when matched by filters.")
+            description =
+                    "Lists all books for catalog administration, including inactive and draft records when matched by filters.")
     @PreAuthorize("@authorizationService.hasAnyPermission('PRODUCT_MANAGE_ALL', 'PRODUCT_READ')")
     public ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> getAdminProducts(
             @RequestParam(required = false) ProductStatus status,
@@ -110,7 +131,9 @@ public class ProductController {
     @PostMapping("/admin/products")
     @Tag(name = "Admin Products")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "Create admin book", description = "Creates a bookstore product with required book metadata and at least one variation.")
+    @Operation(
+            summary = "Create admin book",
+            description = "Creates a bookstore product with required book metadata and at least one variation.")
     @PreAuthorize("@authorizationService.hasPermission('PRODUCT_MANAGE_ALL')")
     public ResponseEntity<ApiResponse<ProductResponse>> createAdminProduct(
             @Valid @RequestBody ProductCreateRequest request) {
@@ -121,7 +144,9 @@ public class ProductController {
     @PutMapping("/admin/products/{productId}")
     @Tag(name = "Admin Products")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "Update admin book", description = "Updates catalog, pricing, inventory flag, and bookstore metadata for a product.")
+    @Operation(
+            summary = "Update admin book",
+            description = "Updates catalog, pricing, inventory flag, and bookstore metadata for a product.")
     @PreAuthorize("@authorizationService.hasPermission('PRODUCT_MANAGE_ALL')")
     public ResponseEntity<ApiResponse<ProductResponse>> updateAdminProduct(
             @PathVariable Long productId, @Valid @RequestBody ProductUpdateRequest request) {

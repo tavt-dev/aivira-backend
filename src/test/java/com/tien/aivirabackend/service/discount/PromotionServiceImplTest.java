@@ -83,7 +83,8 @@ class PromotionServiceImplTest {
 
     @Test
     void deletePromotion_shouldDeactivateInsteadOfDeleting() {
-        Promotion promotion = Promotion.builder().promotionName("Book Deal").active(true).build();
+        Promotion promotion =
+                Promotion.builder().promotionName("Book Deal").active(true).build();
         when(promotionRepository.findById(1L)).thenReturn(Optional.of(promotion));
 
         promotionService.deletePromotion(1L);

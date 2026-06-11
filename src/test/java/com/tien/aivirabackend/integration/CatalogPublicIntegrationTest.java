@@ -61,14 +61,14 @@ class CatalogPublicIntegrationTest extends AbstractIntegrationTest {
 				WHERE table_schema = DATABASE()
 				AND table_name = 'products'
 				AND column_name IN (
-				    'book_author',
-				    'isbn',
-				    'publisher',
-				    'publication_year',
-				    'book_language',
-				    'page_count',
-				    'book_format',
-				    'dimensions'
+					'book_author',
+					'isbn',
+					'publisher',
+					'publication_year',
+					'book_language',
+					'page_count',
+					'book_format',
+					'dimensions'
 				)
 				""",
                 Integer.class);

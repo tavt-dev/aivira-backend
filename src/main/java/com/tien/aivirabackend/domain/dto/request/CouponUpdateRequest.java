@@ -25,18 +25,25 @@ public class CouponUpdateRequest {
 
     @Schema(example = "PERCENT")
     CouponType type;
+
     @Schema(example = "10")
     BigDecimal value;
+
     @Schema(example = "50000")
     BigDecimal maxDiscountAmount;
+
     @Schema(example = "300000")
     BigDecimal minOrderAmount;
+
     Integer usageLimit;
     Integer usageLimitPerUser;
+
     @Schema(example = "2026-06-01T00:00:00")
     LocalDateTime startAt;
+
     @Schema(example = "2026-06-30T23:59:59")
     LocalDateTime endAt;
+
     @Schema(example = "true")
     Boolean active;
 }

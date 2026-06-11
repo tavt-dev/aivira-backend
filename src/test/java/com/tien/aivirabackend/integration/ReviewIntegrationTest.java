@@ -75,16 +75,20 @@ class ReviewIntegrationTest extends AbstractIntegrationTest {
         Order order = saveCompletedOrder("buyer");
         Long orderItemId = order.getItems().getFirst().getId();
 
-        MvcResult create = mockMvc.perform(post("/orders/{orderId}/items/{orderItemId}/review", order.getId(), orderItemId)
-                        .header("Authorization", "Bearer " + customerToken)
-                        .contentType(APPLICATION_JSON)
-                        .content(json(Map.of(
-                                "rating", 5,
-                                "comment", "Great book",
-                                "images", java.util.List.of(Map.of(
-                                        "imageUrl", "https://cdn.example.com/review.jpg",
-                                        "imagePublicId", "review-img",
-                                        "sortOrder", 0))))))
+        MvcResult create = mockMvc.perform(
+                        post("/orders/{orderId}/items/{orderItemId}/review", order.getId(), orderItemId)
+                                .header("Authorization", "Bearer " + customerToken)
+                                .contentType(APPLICATION_JSON)
+                                .content(json(Map.of(
+                                        "rating",
+                                        5,
+                                        "comment",
+                                        "Great book",
+                                        "images",
+                                        java.util.List.of(Map.of(
+                                                "imageUrl", "https://cdn.example.com/review.jpg",
+                                                "imagePublicId", "review-img",
+                                                "sortOrder", 0))))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.approved").value(false))
                 .andReturn();
@@ -118,14 +122,14 @@ class ReviewIntegrationTest extends AbstractIntegrationTest {
                         .content(json(Map.of("rating", 4, "comment", "duplicate"))))
                 .andExpect(status().isConflict());
 
-        mockMvc.perform(delete("/reviews/{reviewId}", reviewId)
-                        .header("Authorization", "Bearer " + customerToken))
+        mockMvc.perform(delete("/reviews/{reviewId}", reviewId).header("Authorization", "Bearer " + customerToken))
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/products/aivira-book/reviews"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalElements").value(0));
-        assertThat(reviewRepository.findById(reviewId).orElseThrow().getDeletedAt()).isNotNull();
+        assertThat(reviewRepository.findById(reviewId).orElseThrow().getDeletedAt())
+                .isNotNull();
     }
 
     private String userToken(String username, String email, PredefinedRole roleCode) throws Exception {
@@ -186,7 +190,8 @@ class ReviewIntegrationTest extends AbstractIntegrationTest {
                 .build();
         product.getProductVariations().add(variation);
         Product savedProduct = productRepository.save(product);
-        ProductVariation savedVariation = savedProduct.getProductVariations().iterator().next();
+        ProductVariation savedVariation =
+                savedProduct.getProductVariations().iterator().next();
 
         PaymentGroup group = paymentGroupRepository.save(PaymentGroup.builder()
                 .paymentCode("PAY-REVIEW")

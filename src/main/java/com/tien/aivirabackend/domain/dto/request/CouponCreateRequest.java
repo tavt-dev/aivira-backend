@@ -19,7 +19,9 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Schema(description = "Admin request to create an order-level coupon. Promotions apply first; coupons apply after promotions.")
+@Schema(
+        description =
+                "Admin request to create an order-level coupon. Promotions apply first; coupons apply after promotions.")
 public class CouponCreateRequest {
     @Schema(description = "Coupon code is normalized to uppercase.", example = "AIVIRA10")
     @NotBlank
@@ -36,10 +38,13 @@ public class CouponCreateRequest {
 
     @Schema(example = "50000")
     BigDecimal maxDiscountAmount;
+
     @Schema(example = "300000")
     BigDecimal minOrderAmount;
+
     @Schema(example = "100")
     Integer usageLimit;
+
     @Schema(example = "1")
     Integer usageLimitPerUser;
 

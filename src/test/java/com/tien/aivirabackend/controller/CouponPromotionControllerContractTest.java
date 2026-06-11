@@ -49,7 +49,8 @@ class CouponPromotionControllerContractTest {
 
     @Test
     void couponEndpoints_shouldDeclareExpectedPermissions() throws Exception {
-        assertPreAuthorize(AdminCouponController.class.getMethod("getCoupons", int.class, int.class), "COUPON_MANAGE_ALL");
+        assertPreAuthorize(
+                AdminCouponController.class.getMethod("getCoupons", int.class, int.class), "COUPON_MANAGE_ALL");
         assertPreAuthorize(AdminCouponController.class.getMethod("getCoupon", Long.class), "COUPON_MANAGE_ALL");
         assertPreAuthorize(
                 AdminCouponController.class.getMethod("createCoupon", CouponCreateRequest.class),
@@ -91,22 +92,27 @@ class CouponPromotionControllerContractTest {
 
     @Test
     void couponEndpoints_shouldDelegateToService() throws Exception {
-        couponMvc.perform(get("/admin/coupons").param("page", "2").param("size", "10"))
+        couponMvc
+                .perform(get("/admin/coupons").param("page", "2").param("size", "10"))
                 .andExpect(status().isOk());
         couponMvc.perform(get("/admin/coupons/7")).andExpect(status().isOk());
-        couponMvc.perform(post("/admin/coupons")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "code":"SAVE10",
-                                  "type":"PERCENT",
-                                  "value":10,
-                                  "startAt":"2026-01-01T00:00:00",
-                                  "endAt":"2026-12-31T23:59:59"
-                                }
-                                """))
+        couponMvc
+                .perform(
+                        post("/admin/coupons")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+								{
+								"code":"SAVE10",
+								"type":"PERCENT",
+								"value":10,
+								"startAt":"2026-01-01T00:00:00",
+								"endAt":"2026-12-31T23:59:59"
+								}
+								"""))
                 .andExpect(status().isOk());
-        couponMvc.perform(put("/admin/coupons/7")
+        couponMvc
+                .perform(put("/admin/coupons/7")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"active\":false}"))
                 .andExpect(status().isOk());
@@ -121,25 +127,30 @@ class CouponPromotionControllerContractTest {
 
     @Test
     void promotionEndpoints_shouldDelegateToService() throws Exception {
-        promotionMvc.perform(get("/admin/promotions").param("page", "2").param("size", "10"))
+        promotionMvc
+                .perform(get("/admin/promotions").param("page", "2").param("size", "10"))
                 .andExpect(status().isOk());
         promotionMvc.perform(get("/admin/promotions/9")).andExpect(status().isOk());
-        promotionMvc.perform(post("/admin/promotions")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "promotionName":"Book Deal",
-                                  "description":"Selected books",
-                                  "promotionType":"PERCENT",
-                                  "value":10,
-                                  "promotionScope":"PRODUCT",
-                                  "targetId":1,
-                                  "startAt":"2026-01-01T00:00:00",
-                                  "endAt":"2026-12-31T23:59:59"
-                                }
-                                """))
+        promotionMvc
+                .perform(
+                        post("/admin/promotions")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+								{
+								"promotionName":"Book Deal",
+								"description":"Selected books",
+								"promotionType":"PERCENT",
+								"value":10,
+								"promotionScope":"PRODUCT",
+								"targetId":1,
+								"startAt":"2026-01-01T00:00:00",
+								"endAt":"2026-12-31T23:59:59"
+								}
+								"""))
                 .andExpect(status().isOk());
-        promotionMvc.perform(put("/admin/promotions/9")
+        promotionMvc
+                .perform(put("/admin/promotions/9")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"active\":false}"))
                 .andExpect(status().isOk());
