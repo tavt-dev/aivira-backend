@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
@@ -429,20 +429,246 @@ function Ticker() {
   const text = t("home.ticker");
 
   return (
-    <div className="flex overflow-hidden whitespace-nowrap border-y border-white/5 bg-slate-950 py-4">
+    <div
+      className="relative flex overflow-hidden whitespace-nowrap border-y border-white/5 bg-slate-950 py-4"
+      style={{
+        maskImage: "linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)",
+        WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)",
+      }}
+    >
       <motion.div
         animate={{ x: ["0%", "-50%"] }}
-        transition={{ ease: "linear", duration: 25, repeat: Infinity }}
-        className="flex items-center space-x-16 text-sm font-bold uppercase tracking-[0.3em] text-blue-500/80"
+        transition={{ ease: "linear", duration: 28, repeat: Infinity }}
+        className="flex items-center text-sm font-bold uppercase tracking-[0.3em] text-blue-500/70"
       >
-        {Array.from({ length: 4 }).map((_, index) => (
-          <span key={index} className="flex items-center gap-16">
+        {Array.from({ length: 8 }).map((_, index) => (
+          <span key={index} className="flex items-center gap-12 px-12">
             <span>{text}</span>
-            <span className="h-1.5 w-1.5 rotate-45 bg-blue-500/40" />
+            <span className="h-1 w-1 rotate-45 bg-blue-400/50" />
           </span>
         ))}
       </motion.div>
     </div>
+  );
+}
+
+// Individual card component so we can use hooks per card
+function CategoryCard({ category, index, getGridClass, getAspect, t }) {
+  const accent = CAT_ACCENTS[index % CAT_ACCENTS.length];
+  const cardRef = React.useRef(null);
+  const [mousePos, setMousePos] = React.useState({ x: 50, y: 50 });
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  function handleMouseMove(e) {
+    const rect = cardRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setMousePos({ x, y });
+  }
+
+  // Parallax transform values
+  const offsetX = isHovered ? (mousePos.x - 50) * 0.018 : 0;
+  const offsetY = isHovered ? (mousePos.y - 50) * 0.018 : 0;
+  const rotateX = isHovered ? (mousePos.y - 50) * -0.12 : 0;
+  const rotateY = isHovered ? (mousePos.x - 50) * 0.12 : 0;
+
+  return (
+    <motion.div
+      className={getGridClass(index)}
+      initial={{ opacity: 0, y: 40, filter: "blur(12px)" }}
+      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      viewport={{ once: true, margin: "-30px" }}
+      transition={{
+        duration: 0.7,
+        delay: index * 0.1,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      style={{ perspective: "1000px" }}
+    >
+      <Link
+        ref={cardRef}
+        to={`/category/${category.slug}`}
+        className={[
+          "group relative block w-full overflow-hidden rounded-2xl bg-slate-900",
+          getAspect(index),
+        ].join(" ")}
+        style={{
+          boxShadow: isHovered
+            ? `0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px ${accent.color}40, 0 0 60px ${accent.glow}`
+            : "0 8px 32px rgba(0,0,0,0.2)",
+          transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${isHovered ? 1.012 : 1})`,
+          transition: "box-shadow 0.5s ease, transform 0.35s cubic-bezier(0.22,1,0.36,1)",
+        }}
+        onMouseMove={handleMouseMove}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => {
+          setIsHovered(false);
+          setMousePos({ x: 50, y: 50 });
+        }}
+      >
+        {/* ── Background image with parallax ── */}
+        <div
+          className="absolute inset-0 overflow-hidden"
+          style={{ borderRadius: "inherit" }}
+        >
+          <img
+            src={category.imageUrl || CATEGORY_FALLBACK_IMAGES[index % CATEGORY_FALLBACK_IMAGES.length]}
+            alt={category.categoryName}
+            className="absolute inset-[-6%] h-[112%] w-[112%] object-cover"
+            style={{
+              transform: `translate(${-offsetX * 3}%, ${-offsetY * 3}%) scale(1)`,
+              transition: isHovered ? "transform 0.1s linear" : "transform 0.6s cubic-bezier(0.22,1,0.36,1)",
+            }}
+          />
+        </div>
+
+        {/* ── Mouse spotlight layer ── */}
+        <div
+          className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          style={{
+            background: `radial-gradient(320px circle at ${mousePos.x}% ${mousePos.y}%, ${accent.color}22 0%, transparent 70%)`,
+            pointerEvents: "none",
+          }}
+        />
+
+        {/* ── Gradient overlays ── */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-black/20 to-black/90" />
+        <div
+          className="absolute inset-0 opacity-0 transition-opacity duration-700 group-hover:opacity-100"
+          style={{
+            background: `linear-gradient(135deg, ${accent.color}10 0%, transparent 50%, ${accent.glow} 100%)`,
+          }}
+        />
+
+        {/* ── Noise texture overlay ── */}
+        <div
+          className="absolute inset-0 opacity-[0.04] mix-blend-overlay"
+          style={{
+            backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")",
+          }}
+        />
+
+        {/* ── Watermark number ── */}
+        <div
+          className="pointer-events-none absolute -right-4 -top-6 select-none leading-none text-white/[0.07] transition-all duration-700 group-hover:text-white/[0.13] group-hover:-right-2 group-hover:-top-4"
+          style={{
+            fontFamily: "var(--f-display, 'Bebas Neue', sans-serif)",
+            fontSize: "clamp(7rem, 14vw, 11rem)",
+            letterSpacing: "-0.02em",
+          }}
+        >
+          {String(index + 1).padStart(2, "0")}
+        </div>
+
+        {/* ── Accent color stripe top ── */}
+        <div
+          className="absolute left-0 right-0 top-0 h-[2px] opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+          style={{ background: `linear-gradient(to right, transparent, ${accent.color}, transparent)` }}
+        />
+
+        {/* ── Small accent badge top-left ── */}
+        <motion.div
+          className="absolute left-4 top-4 z-20 flex h-7 items-center rounded-full px-2.5"
+          animate={{ y: isHovered ? -2 : 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          style={{
+            background: `${accent.color}dd`,
+            backdropFilter: "blur(10px)",
+            fontFamily: "var(--f-display, 'Bebas Neue', sans-serif)",
+            fontSize: "0.8rem",
+            letterSpacing: "0.1em",
+            color: "#fff",
+            boxShadow: `0 0 20px ${accent.glow}, inset 0 1px 0 rgba(255,255,255,0.25)`,
+          }}
+        >
+          {String(index + 1).padStart(2, "0")}
+        </motion.div>
+
+        {/* ── Bottom content: slide up on hover ── */}
+        <div className="absolute bottom-0 left-0 right-0 z-10 p-4">
+          {/* Content panel */}
+          <motion.div
+            animate={{ y: isHovered ? -4 : 0 }}
+            transition={{ type: "spring", stiffness: 260, damping: 22 }}
+            className="overflow-hidden rounded-xl"
+            style={{
+              background: "rgba(2,6,23,0.72)",
+              backdropFilter: "blur(20px)",
+              borderTop: `1.5px solid ${accent.color}55`,
+              borderLeft: "1px solid rgba(255,255,255,0.05)",
+              borderRight: "1px solid rgba(255,255,255,0.05)",
+              boxShadow: `inset 0 1px 0 rgba(255,255,255,0.07), 0 -8px 32px ${accent.glow}`,
+            }}
+          >
+            {/* Category name row */}
+            <div className="p-4 pb-0">
+              <h3 className="font-serif text-base font-bold leading-tight text-white/95 md:text-lg">
+                {category.categoryName}
+              </h3>
+            </div>
+
+            {/* Detail row */}
+            <div className="flex items-center justify-between gap-3 p-3 pt-2">
+              {/* Book count */}
+              <motion.div
+                animate={{ x: isHovered ? 2 : 0, opacity: isHovered ? 1 : 0.8 }}
+                transition={{ duration: 0.25 }}
+              >
+                {category.bookCount ? (
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[0.65rem] font-bold tracking-wide"
+                    style={{
+                      background: "rgba(255,255,255,0.08)",
+                      border: "1px solid rgba(255,255,255,0.14)",
+                      color: "rgba(255,255,255,0.8)",
+                    }}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: accent.color }} />
+                    {t("home.categoryBookCount", { count: category.bookCount })}
+                  </span>
+                ) : (
+                  <span className="text-xs text-white/40">{category.description}</span>
+                )}
+              </motion.div>
+
+              {/* Magnetic arrow button */}
+              <motion.div
+                className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full"
+                animate={{
+                  scale: isHovered ? 1.15 : 1,
+                  x: isHovered ? 1 : 0,
+                }}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                style={{
+                  background: `linear-gradient(135deg, ${accent.color}, ${accent.color}bb)`,
+                  boxShadow: isHovered ? `0 0 20px ${accent.glow}, 0 4px 12px rgba(0,0,0,0.4)` : `0 2px 8px ${accent.glow}`,
+                }}
+              >
+                <ArrowRight size={13} color="#fff" strokeWidth={2.5} />
+              </motion.div>
+            </div>
+
+            {/* Progress bar */}
+            <motion.div
+              className="h-[2px] origin-left"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: isHovered ? 1 : 0 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              style={{ background: `linear-gradient(to right, ${accent.color}, transparent)` }}
+            />
+          </motion.div>
+        </div>
+
+        {/* ── Corner shimmer effect ── */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+          style={{
+            background: `linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 50%)`,
+          }}
+        />
+      </Link>
+    </motion.div>
   );
 }
 
@@ -470,115 +696,16 @@ function CategoryShowcase({ categories, loading }) {
         <CategorySkeleton />
       ) : cats.length ? (
         <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {cats.map((category, index) => {
-            const accent = CAT_ACCENTS[index % CAT_ACCENTS.length];
-            return (
-              <motion.div
-                key={category.id || category.slug}
-                className={getGridClass(index)}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ duration: 0.55, delay: index * 0.08 }}
-              >
-                <Link
-                  to={`/category/${category.slug}`}
-                  className={["group relative block w-full overflow-hidden rounded-2xl bg-slate-800", getAspect(index)].join(" ")}
-                  style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.10)" }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow = `0 20px 60px rgba(0,0,0,0.22), 0 0 0 1px ${accent.color}30`;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = "0 4px 24px rgba(0,0,0,0.10)";
-                  }}
-                >
-                  {/* Background image */}
-                  <img
-                    src={category.imageUrl || CATEGORY_FALLBACK_IMAGES[index % CATEGORY_FALLBACK_IMAGES.length]}
-                    alt={category.categoryName}
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.07]"
-                  />
-
-                  {/* Gradient overlay — heavier at bottom */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/25 to-black/88" />
-
-                  {/* Accent bottom glow */}
-                  <div
-                    className="absolute bottom-0 left-0 right-0 h-32 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-                    style={{ background: `linear-gradient(to top, ${accent.glow}, transparent)` }}
-                  />
-
-                  {/* Index badge — top left */}
-                  <div
-                    className="absolute left-4 top-4 z-10 flex h-8 items-center rounded-full px-2.5"
-                    style={{
-                      background: `${accent.color}cc`,
-                      backdropFilter: "blur(8px)",
-                      fontFamily: "var(--f-display, 'Bebas Neue', sans-serif)",
-                      fontSize: "0.95rem",
-                      letterSpacing: "0.08em",
-                      color: "#fff",
-                      boxShadow: `0 2px 12px ${accent.glow}`
-                    }}
-                  >
-                    {String(index + 1).padStart(2, "0")}
-                  </div>
-
-                  {/* Bottom content */}
-                  <div className="absolute bottom-0 left-0 right-0 z-10 p-5 transition-transform duration-400 group-hover:-translate-y-1">
-                    {/* Glassmorphism info bar */}
-                    <div
-                      className="rounded-xl p-4"
-                      style={{
-                        background: "rgba(2,6,23,0.62)",
-                        backdropFilter: "blur(14px)",
-                        borderTop: `2px solid ${accent.color}60`,
-                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)"
-                      }}
-                    >
-                      {/* Category name */}
-                      <h3 className="mb-2 font-serif text-lg font-bold leading-tight text-white">
-                        {category.categoryName}
-                      </h3>
-
-                      <div className="flex items-center justify-between gap-2">
-                        {/* Book count chip */}
-                        {category.bookCount ? (
-                          <span
-                            className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[0.68rem] font-bold"
-                            style={{
-                              background: "rgba(255,255,255,0.1)",
-                              border: "1px solid rgba(255,255,255,0.18)",
-                              color: "rgba(255,255,255,0.85)"
-                            }}
-                          >
-                            <span
-                              className="h-1.5 w-1.5 rounded-full flex-shrink-0"
-                              style={{ background: accent.color }}
-                            />
-                            {t("home.categoryBookCount", { count: category.bookCount })}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-white/50">{category.description}</span>
-                        )}
-
-                        {/* Arrow */}
-                        <span
-                          className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full transition-all duration-300 group-hover:translate-x-0.5"
-                          style={{
-                            background: accent.color,
-                            boxShadow: `0 2px 10px ${accent.glow}`
-                          }}
-                        >
-                          <ArrowRight size={13} color="#fff" strokeWidth={2.5} />
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            );
-          })}
+          {cats.map((category, index) => (
+            <CategoryCard
+              key={category.id || category.slug}
+              category={category}
+              index={index}
+              getGridClass={getGridClass}
+              getAspect={getAspect}
+              t={t}
+            />
+          ))}
         </div>
       ) : (
         <HomeEmptyState title={t("home.noCategoryHighlights")} />
