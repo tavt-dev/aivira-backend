@@ -4,10 +4,11 @@ import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import { ArrowRight } from "lucide-react";
 
+import { getCategories, getProducts } from "../api/catalogApi.js";
 import { getStorefrontHome } from "../api/storefrontApi.js";
 import BookCard from "../components/BookCard.jsx";
 import WeeklyPicksShowcase from "../components/WeeklyPicksShowcase.jsx";
-import { normalizeBook, normalizeCategoryHighlight } from "../utils/mappers.js";
+import { normalizeBook, normalizeCategoryHighlight, pageRows } from "../utils/mappers.js";
 
 const CATEGORY_FALLBACK_IMAGES = [
   "https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=800&auto=format&fit=crop",
@@ -208,37 +209,33 @@ function useStorefrontHome() {
     setLoading(true);
     setMessage("");
 
-    getStorefrontHome({ signal: controller.signal })
-      .then((payload) => {
-        const featured = (payload?.featuredBooks || []).map((row) => normalizeBook(row));
-        const newArrivals = (payload?.newArrivals || []).map((row) => normalizeBook(row));
-        const bestselling = (payload?.bestsellingBooks || []).map((row) => normalizeBook(row));
-        const categoryHighlights = (payload?.categoryHighlights || [])
-          .map((row) => normalizeCategoryHighlight(row))
-          .filter(Boolean);
-
-        setState({
-          featured,
-          newArrivals,
-          bestselling,
-          categoryHighlights,
-          books: uniqueBooks([...featured, ...newArrivals, ...bestselling])
-        });
-      })
-      .catch((error) => {
+    async function loadHome() {
+      try {
+        const payload = await getStorefrontHome({ signal: controller.signal });
+        setState(toHomeState(payload));
+      } catch (error) {
         if (error.name === "AbortError") return;
-        setState({
-          featured: [],
-          newArrivals: [],
-          bestselling: [],
-          categoryHighlights: [],
-          books: []
-        });
-        setMessage(error.message || t("home.storefrontFailed"));
-      })
-      .finally(() => {
+
+        try {
+          const fallbackPayload = await getStorefrontFallback(controller.signal);
+          setState(toHomeState(fallbackPayload));
+        } catch (fallbackError) {
+          if (fallbackError.name === "AbortError") return;
+          setState({
+            featured: [],
+            newArrivals: [],
+            bestselling: [],
+            categoryHighlights: [],
+            books: []
+          });
+          setMessage(fallbackError.message || error.message || t("home.storefrontFailed"));
+        }
+      } finally {
         if (!controller.signal.aborted) setLoading(false);
-      });
+      }
+    }
+
+    loadHome();
 
     return () => {
       controller.abort();
@@ -246,6 +243,64 @@ function useStorefrontHome() {
   }, [t]);
 
   return { ...state, loading, message };
+}
+
+function toHomeState(payload) {
+  const featured = (payload?.featuredBooks || []).map((row) => normalizeBook(row));
+  const newArrivals = (payload?.newArrivals || []).map((row) => normalizeBook(row));
+  const bestselling = (payload?.bestsellingBooks || []).map((row) => normalizeBook(row));
+  const categoryHighlights = (payload?.categoryHighlights || [])
+    .map((row) => normalizeCategoryHighlight(row))
+    .filter(Boolean);
+
+  return {
+    featured,
+    newArrivals,
+    bestselling,
+    categoryHighlights,
+    books: uniqueBooks([...featured, ...newArrivals, ...bestselling])
+  };
+}
+
+async function getStorefrontFallback(signal) {
+  const [newestResult, bestsellingResult, categoriesResult] = await Promise.allSettled([
+    getProducts({ page: 1, size: 8, sort: "newest" }, { signal }),
+    getProducts({ page: 1, size: 8, sort: "best_selling" }, { signal }),
+    getCategories({ signal })
+  ]);
+
+  throwIfAborted(signal);
+
+  const newestRows = newestResult.status === "fulfilled" ? pageRows(newestResult.value) : [];
+  const bestsellingRows = bestsellingResult.status === "fulfilled" ? pageRows(bestsellingResult.value) : [];
+  const categoryRows = categoriesResult.status === "fulfilled" ? categoriesResult.value || [] : [];
+  const featuredBooks = newestRows.filter((row) => row?.featured);
+  const fallbackFeatured = featuredBooks.length ? featuredBooks : newestRows.slice(0, 4);
+
+  if (!newestRows.length && !bestsellingRows.length && !categoryRows.length) {
+    throw (
+      newestResult.reason ||
+      bestsellingResult.reason ||
+      categoriesResult.reason ||
+      new Error("Could not load storefront data")
+    );
+  }
+
+  return {
+    featuredBooks: fallbackFeatured,
+    newArrivals: newestRows,
+    bestsellingBooks: bestsellingRows.length ? bestsellingRows : newestRows,
+    categoryHighlights: categoryRows.map((category) => ({
+      ...category,
+      categoryId: category.categoryId ?? category.id
+    }))
+  };
+}
+
+function throwIfAborted(signal) {
+  if (signal?.aborted) {
+    throw new DOMException("The operation was aborted.", "AbortError");
+  }
 }
 
 function uniqueBooks(items) {
