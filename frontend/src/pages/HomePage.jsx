@@ -6,6 +6,7 @@ import { ArrowRight } from "lucide-react";
 
 import { getStorefrontHome } from "../api/storefrontApi.js";
 import BookCard from "../components/BookCard.jsx";
+import WeeklyPicksShowcase from "../components/WeeklyPicksShowcase.jsx";
 import { normalizeBook, normalizeCategoryHighlight } from "../utils/mappers.js";
 
 const CATEGORY_FALLBACK_IMAGES = [
@@ -154,16 +155,13 @@ export default function HomePage() {
 
       <CategoryShowcase categories={categoryHighlights} loading={loading} />
 
-      {/* ── Weekly Picks — white bg ── */}
-      <section className="bg-white px-4 py-24 md:px-8">
-        <div className="mx-auto max-w-7xl">
-          <SectionHead chip={t("home.weeklyPicksChip")} title={t("home.weeklyPicks")} link="/category/all" />
+      {/* ── Weekly Picks — Dark Editorial Mode ── */}
+      <section className="relative overflow-hidden bg-[#0a1128] px-4 py-24 md:px-8">
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
+        <div className="mx-auto max-w-7xl relative z-10">
+          <SectionHead chip={t("home.weeklyPicksChip")} title={t("home.weeklyPicks")} link="/category/all" dark={true} />
           {message && <div className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-700">{message}</div>}
-          {loading ? (
-            <BookGridSkeleton count={4} />
-          ) : (
-            <BookGrid books={featured.slice(0, 4)} emptyMessage={t("home.noFeaturedBooks")} />
-          )}
+          <WeeklyPicksShowcase books={featured} loading={loading} emptyMessage={t("home.noFeaturedBooks")} />
         </div>
       </section>
 
@@ -583,7 +581,10 @@ function CategoryCard({ category, index, getGridClass, getAspect, t }) {
           >
             {/* Category name row */}
             <div className="p-4 pb-0">
-              <h3 className="font-serif text-base font-bold leading-tight text-white/95 md:text-lg">
+              <h3 
+                className="text-xl font-bold leading-tight tracking-tight text-white/95 md:text-2xl"
+                style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+              >
                 {category.categoryName}
               </h3>
             </div>
@@ -1228,7 +1229,12 @@ function SectionHead({ chip, title, link, dark = false }) {
           >
             {chip}
           </div>
-          <h2 className={`font-serif text-3xl font-bold md:text-4xl ${titleClass}`}>{title}</h2>
+          <h2 
+            className={`text-3xl font-extrabold tracking-tight md:text-4xl ${titleClass}`}
+            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+          >
+            {title}
+          </h2>
         </div>
       </div>
 
