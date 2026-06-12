@@ -167,6 +167,7 @@ const en = {
     explore: "Explore",
     curatedCollections: "Curated Collections",
     backendCatalog: "Backend Catalog",
+    weeklyPicksChip: "Picks",
     featuredBooks: "Featured Books",
     weeklyPicks: "This Week's Picks",
     newArrivals: "New Arrivals",

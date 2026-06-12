@@ -98,9 +98,9 @@ export default function App() {
     }
   }, [authParam, introDone, isAuthRequest, isAdminRoute, location.pathname]);
 
-  // PageLoader: auto-dismiss after 900ms (PageLoader itself fades out at 880ms)
+  // PageLoader fallback dismiss (PageLoader handles its own onDone)
   useEffect(() => {
-    const timer = setTimeout(() => setPageLoaderDone(true), 950);
+    const timer = setTimeout(() => setPageLoaderDone(true), 3000);
     return () => clearTimeout(timer);
   }, []);
 

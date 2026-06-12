@@ -153,27 +153,16 @@ export default function Navbar({ solid, user, onAuth }) {
       ].join(" ")}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 md:px-8">
-        <Link to="/" onClick={closePanels} className="group flex flex-shrink-0 items-center gap-2.5">
-          {/* Book icon mark */}
-          <div
-            className={[
-              "flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-500 group-hover:scale-105",
-              isSolid
-                ? "bg-slate-900 shadow-[0_4px_14px_rgba(0,0,0,0.18)]"
-                : "bg-white/12 shadow-[0_4px_14px_rgba(255,255,255,0.08)] backdrop-blur-sm"
-            ].join(" ")}
-            style={{ filter: isSolid ? "none" : "drop-shadow(0 0 8px rgba(96,165,250,0.35))" }}
-          >
-            <svg
-              width="20" height="20" viewBox="0 0 24 24" fill="none"
-              stroke={isSolid ? "white" : "rgba(255,255,255,0.95)"}
-              strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-            </svg>
-          </div>
+        <Link to="/" onClick={closePanels} className="group flex flex-shrink-0 items-center gap-3">
+          {/* Premium Logo Badge */}
+          <img 
+             src="/logo.png" 
+             alt="Aivira Premium Logo" 
+             className={[
+                "h-10 w-auto rounded-lg object-contain transition-transform duration-500 group-hover:scale-105",
+                isSolid ? "shadow-[0_4px_14px_rgba(0,0,0,0.18)]" : "shadow-[0_4px_14px_rgba(0,0,0,0.4)] border border-white/10"
+             ].join(" ")}
+          />
           {/* Brand wordmark */}
           <span
             className={[

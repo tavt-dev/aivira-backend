@@ -154,9 +154,10 @@ export default function HomePage() {
 
       <CategoryShowcase categories={categoryHighlights} loading={loading} />
 
+      {/* ── Weekly Picks — white bg ── */}
       <section className="bg-white px-4 py-24 md:px-8">
         <div className="mx-auto max-w-7xl">
-          <SectionHead chip={t("home.backendCatalog")} title={t("home.weeklyPicks")} link="/category/all" />
+          <SectionHead chip={t("home.weeklyPicksChip")} title={t("home.weeklyPicks")} link="/category/all" />
           {message && <div className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-700">{message}</div>}
           {loading ? (
             <BookGridSkeleton count={4} />
@@ -166,39 +167,22 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-24 md:px-8">
-        <SectionHead chip={t("home.collection")} title={t("home.newArrivals")} link="/category/all?sort=newest" />
-        {loading ? (
-          <BookGridSkeleton />
-        ) : (
-          <BookGrid books={newArrivals.slice(0, 8)} emptyMessage={t("home.noNewArrivals")} />
-        )}
-      </section>
-
-      <section className="bg-white px-4 py-24 md:px-8">
+      {/* ── New Arrivals — slate-50 bg ── */}
+      <section className="border-t border-slate-100 bg-slate-50 px-4 py-24 md:px-8">
         <div className="mx-auto max-w-7xl">
-          <SectionHead chip={t("home.featuredBooks")} title={t("home.bestsellingBooks")} link="/category/all?sort=popular" />
+          <SectionHead chip={t("home.collection")} title={t("home.newArrivals")} link="/category/all?sort=newest" />
           {loading ? (
             <BookGridSkeleton />
           ) : (
-            <BookGrid
-              books={bestselling.slice(0, 8).map((book) => ({ ...book, badge: t("home.bestsellerBadge") }))}
-              emptyMessage={t("home.noBestsellers")}
-            />
+            <BookGrid books={newArrivals.slice(0, 8)} emptyMessage={t("home.noNewArrivals")} />
           )}
         </div>
       </section>
 
-      <QuoteSection />
+      {/* ── Bestselling — dark premium bg ── */}
+      <BestsellingRanking books={bestselling} loading={loading} t={t} />
 
-      <section className="mx-auto max-w-7xl px-4 py-24 md:px-8">
-        <SectionHead chip={t("home.collection")} title={t("home.allBooks")} link="/category/all" />
-        {loading ? (
-          <BookGridSkeleton />
-        ) : (
-          <BookGrid books={books.slice(0, 12)} emptyMessage={t("home.noBooks")} />
-        )}
-      </section>
+      <QuoteSection />
 
       <HowItWorks />
 
@@ -430,16 +414,12 @@ function Ticker() {
 
   return (
     <div
-      className="relative flex overflow-hidden whitespace-nowrap border-y border-white/5 bg-slate-950 py-4"
-      style={{
-        maskImage: "linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)",
-        WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)",
-      }}
+      className="relative flex overflow-hidden whitespace-nowrap border-y border-blue-900/50 bg-[#0a1128] py-4"
     >
       <motion.div
         animate={{ x: ["0%", "-50%"] }}
-        transition={{ ease: "linear", duration: 28, repeat: Infinity }}
-        className="flex items-center text-sm font-bold uppercase tracking-[0.3em] text-blue-500/70"
+        transition={{ ease: "linear", duration: 35, repeat: Infinity }}
+        className="flex items-center text-sm font-semibold uppercase tracking-[0.25em] text-blue-200/80"
       >
         {Array.from({ length: 8 }).map((_, index) => (
           <span key={index} className="flex items-center gap-12 px-12">
@@ -812,29 +792,150 @@ function HomeEmptyState({ title }) {
   );
 }
 
+function BestsellingRanking({ books, loading, t }) {
+  const items = books.slice(0, 5);
+  const RANK_COLORS = ["#f59e0b", "#94a3b8", "#b45309", "#64748b", "#64748b"];
+
+  return (
+    <section className="relative overflow-hidden bg-slate-950 px-4 py-24 text-white md:px-8">
+      {/* Background decoration */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -right-32 top-0 h-[500px] w-[500px] rounded-full bg-blue-600/10 blur-[100px]" />
+        <div className="absolute -left-32 bottom-0 h-[400px] w-[400px] rounded-full bg-amber-500/5 blur-[80px]" />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.06] mix-blend-overlay" />
+      </div>
+
+      <div className="relative mx-auto max-w-7xl">
+        <SectionHead
+          chip={t("home.featuredBooks")}
+          title={t("home.bestsellingBooks")}
+          link="/category/all?sort=popular"
+          dark
+        />
+
+        {loading ? (
+          <div className="mt-10 space-y-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-6 rounded-2xl border border-white/5 bg-white/5 p-5">
+                <div className="h-12 w-12 animate-pulse rounded-full bg-white/10" />
+                <div className="h-16 w-12 animate-pulse rounded-lg bg-white/10" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-1/2 animate-pulse rounded bg-white/10" />
+                  <div className="h-3 w-1/4 animate-pulse rounded bg-white/10" />
+                </div>
+                <div className="h-6 w-20 animate-pulse rounded bg-white/10" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-10 space-y-3">
+            {items.map((book, index) => (
+              <motion.div
+                key={book.id}
+                initial={{ opacity: 0, x: -24 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.09 }}
+              >
+                <Link
+                  to={`/product/${book.slug}`}
+                  className="group flex items-center gap-5 rounded-2xl border border-white/5 bg-white/[0.03] p-4 backdrop-blur transition-all duration-300 hover:border-white/15 hover:bg-white/[0.07] hover:shadow-[0_4px_24px_rgba(0,0,0,0.3)] md:p-5"
+                >
+                  {/* Rank badge */}
+                  <div
+                    className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full font-display text-2xl leading-none transition-transform duration-300 group-hover:scale-110"
+                    style={{
+                      color: RANK_COLORS[index],
+                      border: `1.5px solid ${RANK_COLORS[index]}40`,
+                      background: `${RANK_COLORS[index]}15`,
+                    }}
+                  >
+                    {String(index + 1).padStart(2, "0")}
+                  </div>
+
+                  {/* Book cover */}
+                  <div className="h-16 w-11 flex-shrink-0 overflow-hidden rounded-lg shadow-lg">
+                    <img
+                      src={book.image || book.cover}
+                      alt={book.title}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <h3 className="line-clamp-1 font-serif text-base font-bold text-white/95 transition-colors group-hover:text-blue-300 md:text-lg">
+                      {book.title}
+                    </h3>
+                    <p className="mt-0.5 line-clamp-1 text-sm text-slate-500">{book.author}</p>
+                  </div>
+
+                  {/* Price + arrow */}
+                  <div className="flex flex-shrink-0 items-center gap-4">
+                    <span className="font-display text-xl tracking-wide text-white">
+                      {book.price ? `${Number(book.price).toLocaleString("vi-VN")}đ` : "—"}
+                    </span>
+                    <ArrowRight
+                      size={16}
+                      className="text-slate-600 transition-all duration-300 group-hover:translate-x-1 group-hover:text-blue-400"
+                    />
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        )}
+
+        {/* CTA */}
+        <div className="mt-10 text-center">
+          <Link
+            to="/category/all?sort=popular"
+            className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-8 py-3 text-sm font-bold uppercase tracking-widest text-white/70 backdrop-blur transition-all duration-300 hover:border-blue-500/40 hover:bg-blue-500/10 hover:text-blue-400"
+          >
+            {t("home.viewAll")}
+            <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function HowItWorks() {
   const { t } = useTranslation();
+  // Step icon SVGs
+  const STEP_ICONS = [
+    // Compass / discover
+    <svg key="discover" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-8 w-8">
+      <circle cx="12" cy="12" r="10" />
+      <path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z" />
+    </svg>,
+    // Book open / choose
+    <svg key="choose" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-8 w-8">
+      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+    </svg>,
+    // Check badge / order
+    <svg key="track" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-8 w-8">
+      <path d="M9 12l2 2 4-4" />
+      <path d="M7.86 2.07A2 2 0 0 1 9 2h6a2 2 0 0 1 1.14.07L21 4.93A2 2 0 0 1 22 6.7V12c0 5.5-4.6 8.3-10 10-5.4-1.7-10-4.5-10-10V6.7a2 2 0 0 1 1-1.77z" />
+    </svg>,
+  ];
+  const STEP_ACCENTS = ["#3b82f6", "#8b5cf6", "#10b981"];
+
   const steps = [
-    {
-      num: "01",
-      title: t("home.steps.discoverTitle"),
-      desc: t("home.steps.discoverDesc"),
-    },
-    {
-      num: "02",
-      title: t("home.steps.chooseTitle"),
-      desc: t("home.steps.chooseDesc"),
-    },
-    {
-      num: "03",
-      title: t("home.steps.trackTitle"),
-      desc: t("home.steps.trackDesc"),
-    },
+    { num: "01", title: t("home.steps.discoverTitle"), desc: t("home.steps.discoverDesc") },
+    { num: "02", title: t("home.steps.chooseTitle"), desc: t("home.steps.chooseDesc") },
+    { num: "03", title: t("home.steps.trackTitle"), desc: t("home.steps.trackDesc") },
   ];
 
   return (
-    <section className="mt-12 rounded-t-[3rem] bg-slate-950 px-4 py-24 text-white shadow-[0_-20px_40px_rgba(0,0,0,0.1)] md:px-8">
-      <div className="mx-auto max-w-7xl">
+    <section className="relative overflow-hidden bg-slate-950 px-4 py-24 text-white md:px-8">
+      {/* Subtle gradient top border */}
+      <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(59,130,246,0.08),transparent)]" />
+
+      <div className="relative mx-auto max-w-7xl">
         <div className="mx-auto mb-20 max-w-2xl text-center">
           <div className="mb-4 inline-block rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-400">
             {t("home.process")}
@@ -843,28 +944,73 @@ function HowItWorks() {
           <p className="text-lg font-light text-slate-400">{t("home.processCopy")}</p>
         </div>
 
-        <div className="relative grid grid-cols-1 gap-8 md:grid-cols-3">
-          <div className="absolute left-[15%] right-[15%] top-[48px] hidden h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent md:block" />
+        <div className="relative grid grid-cols-1 gap-6 md:grid-cols-3">
+          {/* Connector dashed line */}
+          <div className="absolute left-[16.5%] right-[16.5%] top-[52px] hidden items-center md:flex">
+            <div className="h-px flex-1 border-t border-dashed border-blue-500/20" />
+            <div className="mx-4 h-1.5 w-1.5 rotate-45 bg-blue-500/40" />
+            <div className="h-px flex-1 border-t border-dashed border-blue-500/20" />
+          </div>
 
           {steps.map((item, index) => (
             <motion.div
               key={item.num}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 28, filter: "blur(8px)" }}
+              whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: index * 0.2 }}
-              className="group relative overflow-hidden rounded-3xl border border-white/5 bg-slate-900/50 p-10 backdrop-blur transition-all duration-500 hover:-translate-y-2 hover:border-blue-500/30 hover:bg-slate-800/80 hover:shadow-[0_20px_40px_rgba(37,99,235,0.1)]"
+              transition={{ duration: 0.65, delay: index * 0.18, ease: [0.22, 1, 0.36, 1] }}
+              className="group relative overflow-hidden rounded-3xl border border-white/[0.06] bg-gradient-to-b from-slate-900/80 to-slate-900/40 p-10 backdrop-blur-sm transition-all duration-500 hover:-translate-y-2 hover:border-white/10 hover:shadow-[0_24px_48px_rgba(0,0,0,0.4)]"
+              style={{ "--accent": STEP_ACCENTS[index] }}
             >
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-              
-              <div className="relative z-10 mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-full border border-white/10 bg-slate-950 font-display text-4xl text-white shadow-inner transition-all duration-500 group-hover:border-blue-500/50 group-hover:text-blue-400 group-hover:shadow-[0_0_30px_rgba(37,99,235,0.2)] md:mx-0">
-                {item.num}
+              {/* Hover glow */}
+              <div
+                className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                style={{ background: `radial-gradient(circle at 30% 30%, ${STEP_ACCENTS[index]}12, transparent 60%)` }}
+              />
+
+              {/* Icon + number row */}
+              <div className="mb-7 flex items-center gap-4 md:flex-col md:items-start md:gap-3">
+                <div
+                  className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl transition-all duration-500 group-hover:scale-110"
+                  style={{
+                    background: `${STEP_ACCENTS[index]}18`,
+                    border: `1px solid ${STEP_ACCENTS[index]}35`,
+                    color: STEP_ACCENTS[index],
+                    boxShadow: `0 0 0 0 ${STEP_ACCENTS[index]}`,
+                  }}
+                >
+                  {STEP_ICONS[index]}
+                </div>
+                <span
+                  className="font-display text-5xl leading-none opacity-20 transition-opacity duration-500 group-hover:opacity-40"
+                  style={{ color: STEP_ACCENTS[index] }}
+                >
+                  {item.num}
+                </span>
               </div>
-              <h3 className="mb-4 text-center font-serif text-2xl font-bold md:text-left">{item.title}</h3>
-              <p className="text-center font-light leading-relaxed text-slate-400 md:text-left">{item.desc}</p>
+
+              <h3 className="mb-3 font-serif text-xl font-bold text-white md:text-2xl">{item.title}</h3>
+              <p className="font-light leading-relaxed text-slate-400">{item.desc}</p>
             </motion.div>
           ))}
         </div>
+
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="mt-14 text-center"
+        >
+          <Link
+            to="/category/all"
+            className="group inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-blue-600 to-blue-500 px-10 py-4 font-bold tracking-wide text-white shadow-[0_0_40px_rgba(37,99,235,0.35)] transition-all duration-300 hover:scale-105 hover:shadow-[0_0_60px_rgba(37,99,235,0.5)]"
+          >
+            {t("home.exploreLibrary")}
+            <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+          </Link>
+        </motion.div>
       </div>
     </section>
   );
@@ -951,95 +1097,145 @@ function LatestNews() {
       title: t("home.posts.one"),
       category: t("home.categories.business"),
       date: "02 Jun, 2026",
-      image: "https://images.unsplash.com/photo-1542361345-89e58247f2d5?q=80&w=600&auto=format&fit=crop",
+      image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?q=80&w=900&auto=format&fit=crop",
+      featured: true,
     },
     {
       title: t("home.posts.two"),
       category: t("home.categories.wellness"),
       date: "28 May, 2026",
-      image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=600&auto=format&fit=crop",
+      image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=600&auto=format&fit=crop",
     },
     {
       title: t("home.posts.three"),
       category: t("home.categories.literature"),
       date: "20 May, 2026",
-      image: "https://images.unsplash.com/photo-1474932430478-367d16b99031?q=80&w=600&auto=format&fit=crop",
+      image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=600&auto=format&fit=crop",
     },
   ];
 
+  const featured = posts[0];
+  const secondary = posts.slice(1);
+
   return (
-    <section className="border-t border-slate-200 bg-slate-50 px-4 py-24 md:px-8">
+    <section className="border-t border-slate-100 bg-white px-4 py-24 md:px-8">
       <div className="mx-auto max-w-7xl">
         <SectionHead chip={t("home.insights")} title={t("home.blog")} link="/blog" />
-        <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
-          {posts.map((post, index) => (
-            <motion.article
-              key={post.title}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: index * 0.15 }}
-              className="group flex h-full cursor-pointer flex-col rounded-2xl border border-slate-100 bg-white p-4 transition-all duration-300 hover:shadow-xl"
-            >
-              <div className="mb-5 aspect-[16/10] w-full overflow-hidden rounded-xl">
-                <img
-                  src={post.image}
-                  alt={post.title}
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-              </div>
-              <div className="mb-3 flex items-center gap-3 text-xs font-medium text-slate-500">
-                <span className="rounded bg-blue-50 px-2 py-1 font-bold uppercase tracking-wider text-blue-600">
-                  {post.category}
+
+        {/* Editorial layout: 60/40 split */}
+        <div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-5">
+
+          {/* Featured article — 3/5 width */}
+          <motion.article
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            className="group relative col-span-1 cursor-pointer overflow-hidden rounded-3xl lg:col-span-3"
+          >
+            <div className="aspect-[4/3] overflow-hidden lg:aspect-[16/11]">
+              <img
+                src={featured.image}
+                alt={featured.title}
+                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+            </div>
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/40 to-transparent" />
+            {/* Content */}
+            <div className="absolute bottom-0 left-0 right-0 p-8">
+              <div className="mb-3 flex items-center gap-3">
+                <span className="rounded-full bg-blue-500/90 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-widest text-white backdrop-blur">
+                  {featured.category}
                 </span>
-                <span className="h-1 w-1 rounded-full bg-slate-300" />
-                <span>{post.date}</span>
+                <span className="text-xs text-white/50">{featured.date}</span>
               </div>
-              <h3 className="line-clamp-2 font-serif text-lg font-bold leading-snug text-slate-900 transition-colors group-hover:text-blue-600">
-                {post.title}
+              <h3 className="font-serif text-2xl font-bold leading-snug text-white transition-colors group-hover:text-blue-300 md:text-3xl">
+                {featured.title}
               </h3>
-            </motion.article>
-          ))}
+              <div className="mt-4 flex items-center gap-2 text-sm font-semibold text-blue-400 opacity-0 transition-all duration-300 group-hover:opacity-100">
+                {t("home.readMore") || "Đọc thêm"}
+                <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+              </div>
+            </div>
+          </motion.article>
+
+          {/* Secondary articles stacked — 2/5 width */}
+          <div className="col-span-1 flex flex-col gap-6 lg:col-span-2">
+            {secondary.map((post, index) => (
+              <motion.article
+                key={post.title}
+                initial={{ opacity: 0, x: 24 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.12, ease: [0.22, 1, 0.36, 1] }}
+                className="group flex flex-1 cursor-pointer gap-5 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 p-4 transition-all duration-300 hover:border-blue-100 hover:bg-white hover:shadow-[0_8px_32px_rgba(37,99,235,0.08)]"
+              >
+                {/* Thumbnail */}
+                <div className="h-24 w-20 flex-shrink-0 overflow-hidden rounded-xl">
+                  <img
+                    src={post.image}
+                    alt={post.title}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+                {/* Text */}
+                <div className="flex min-w-0 flex-col justify-center">
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="rounded bg-blue-50 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-blue-600">
+                      {post.category}
+                    </span>
+                    <span className="text-[0.65rem] text-slate-400">{post.date}</span>
+                  </div>
+                  <h3 className="line-clamp-2 font-serif text-sm font-bold leading-snug text-slate-900 transition-colors group-hover:text-blue-600 md:text-base">
+                    {post.title}
+                  </h3>
+                </div>
+              </motion.article>
+            ))}
+          </div>
         </div>
       </div>
     </section>
   );
 }
 
-function SectionHead({ chip, title, link }) {
+function SectionHead({ chip, title, link, dark = false }) {
   const { t } = useTranslation();
+  const chipClass = dark
+    ? "border-white/10 bg-white/5 text-blue-300"
+    : "border-blue-200 bg-blue-50 text-blue-700";
+  const titleClass = dark ? "text-white" : "text-slate-900";
+  const linkClass = dark
+    ? "text-white/30 hover:text-blue-300"
+    : "text-slate-400 hover:text-blue-600";
+  const accentGrad = dark
+    ? "linear-gradient(180deg, #60a5fa 0%, #1e40af 100%)"
+    : "linear-gradient(180deg, #3b82f6 0%, #93c5fd 100%)";
+
   return (
     <div className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
       <div className="flex items-start gap-4">
         {/* Accent bar */}
         <div
           className="mt-1 w-0.5 flex-shrink-0 self-stretch rounded-full"
-          style={{
-            background: "linear-gradient(180deg, #3b82f6 0%, #93c5fd 100%)",
-            minHeight: 36
-          }}
+          style={{ background: accentGrad, minHeight: 36 }}
         />
         <div>
           <div
-            className="mb-2 inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1"
-            style={{
-              fontSize: "0.68rem",
-              fontWeight: 800,
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: "#2563eb"
-            }}
+            className={`mb-2 inline-flex items-center rounded-full border px-3 py-1 ${chipClass}`}
+            style={{ fontSize: "0.68rem", fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" }}
           >
             {chip}
           </div>
-          <h2 className="font-serif text-3xl font-bold text-slate-900 md:text-4xl">{title}</h2>
+          <h2 className={`font-serif text-3xl font-bold md:text-4xl ${titleClass}`}>{title}</h2>
         </div>
       </div>
 
       {link && (
         <Link
           to={link}
-          className="group flex flex-shrink-0 items-center gap-1.5 text-sm font-bold uppercase tracking-wider text-slate-400 transition-colors hover:text-blue-600"
+          className={`group flex flex-shrink-0 items-center gap-1.5 text-sm font-bold uppercase tracking-wider transition-colors ${linkClass}`}
           style={{ letterSpacing: "0.1em" }}
         >
           <span className="relative">

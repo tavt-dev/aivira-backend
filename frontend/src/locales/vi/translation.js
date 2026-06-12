@@ -167,6 +167,7 @@ const vi = {
     explore: "Khám phá",
     curatedCollections: "Bộ sưu tập tuyển chọn",
     backendCatalog: "Danh mục backend",
+    weeklyPicksChip: "Gợi ý",
     featuredBooks: "Sách nổi bật",
     weeklyPicks: "Gợi ý tuần này",
     newArrivals: "Sách mới về",
