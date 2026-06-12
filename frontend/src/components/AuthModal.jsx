@@ -989,36 +989,6 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
   );
 }
 
-// ── Progress steps helper (render correctly) ──
-function StepDot({ active }) {
-  return (
-    <span
-      style={{
-        width: 34,
-        height: 34,
-        borderRadius: "50%",
-        display: "grid",
-        placeItems: "center",
-        fontSize: "0.85rem",
-        fontWeight: 800,
-        transition: "all 0.25s ease",
-        ...(active
-          ? {
-              background: "linear-gradient(135deg, #2563eb, #60a5fa)",
-              border: "none",
-              color: "#fff",
-              boxShadow: "0 0 22px rgba(37,99,235,0.5)"
-            }
-          : {
-              background: "transparent",
-              border: "1px solid rgba(255,255,255,0.14)",
-              color: "rgba(255,255,255,0.4)"
-            })
-      }}
-    />
-  );
-}
-
 // ── Field component ──
 function Field({
   label,
