@@ -46,7 +46,7 @@ export default function HomePage() {
   }, [orbitBooks.length]);
 
   return (
-    <div className="tw-home w-full overflow-hidden bg-slate-50">
+    <div className="tw-home w-full overflow-hidden" style={{ background: "var(--cream-50)" }}>
       <section className="relative flex min-h-screen items-center overflow-hidden bg-slate-950 px-4 pb-16 pt-28 text-white md:px-8">
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -right-1/4 top-1/4 h-[800px] w-[800px] rounded-full bg-blue-600/20 blur-[120px] mix-blend-screen" />
@@ -77,7 +77,8 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="font-serif text-5xl font-bold leading-[1.1] tracking-tight md:text-7xl"
+              className="text-5xl font-bold leading-[1.08] tracking-tight md:text-7xl"
+              style={{ fontFamily: "var(--f-serif)", letterSpacing: "-0.02em" }}
             >
               {t("home.title1")} <br />
               {t("home.title2")}{" "}
@@ -85,7 +86,7 @@ export default function HomePage() {
                 {t("home.titleWorld")}
               </span>
               <br />
-              <em className="mt-2 block font-serif text-3xl font-light italic text-slate-400 md:text-5xl">
+              <em className="mt-2 block text-3xl font-light italic text-slate-400 md:text-5xl" style={{ fontFamily: "var(--f-serif)" }}>
                 {t("home.subtitle")}
               </em>
             </motion.h1>
@@ -107,14 +108,25 @@ export default function HomePage() {
             >
               <Link
                 to="/category/all"
-                className="group relative overflow-hidden rounded-full px-8 py-4 font-bold tracking-wide shadow-[0_0_40px_rgba(37,99,235,0.4)] transition-all duration-300 hover:scale-105 hover:shadow-[0_0_60px_rgba(56,189,248,0.6)]"
+                className="group relative overflow-hidden px-8 py-4 font-bold tracking-wide text-white transition-all duration-300 hover:scale-105"
+                style={{
+                  borderRadius: "var(--r-pill)",
+                  background: "linear-gradient(135deg, #1d4ed8, #2563eb, #3b82f6)",
+                  boxShadow: "0 0 40px rgba(37,99,235,0.4), 0 4px 16px rgba(0,0,0,0.25)",
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.boxShadow="0 0 60px rgba(56,189,248,0.6), 0 8px 24px rgba(0,0,0,0.3)"}
+                onMouseLeave={(e) => e.currentTarget.style.boxShadow="0 0 40px rgba(37,99,235,0.4), 0 4px 16px rgba(0,0,0,0.25)"}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-400 transition-transform duration-500 group-hover:scale-110" />
-                <span className="relative text-white">{t("home.exploreLibrary")}</span>
+                {t("home.exploreLibrary")}
               </Link>
               <Link
                 to="/cart"
-                className="rounded-full border border-white/20 bg-white/5 px-8 py-4 font-bold tracking-wide text-white backdrop-blur transition-all duration-300 hover:bg-white/10"
+                className="px-8 py-4 font-bold tracking-wide text-white backdrop-blur transition-all duration-300 hover:bg-white/15"
+                style={{
+                  borderRadius: "var(--r-pill)",
+                  border: "1.5px solid rgba(255,255,255,0.2)",
+                  background: "rgba(255,255,255,0.06)",
+                }}
               >
                 {t("home.viewCart")}
               </Link>
@@ -166,9 +178,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── New Arrivals — slate-50 bg ── */}
-      <section className="border-t border-slate-100 bg-slate-50 px-4 py-24 md:px-8">
-        <div className="mx-auto max-w-7xl">
+      {/* ── New Arrivals — warm cream bg, high contrast with dark above ── */}
+      <section className="relative overflow-hidden bg-[#f8f6f1] px-4 py-24 md:px-8">
+        {/* Subtle top wave separator */}
+        <div className="absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-transparent via-blue-400/30 to-transparent" />
+        {/* Corner decorations */}
+        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-blue-500/5 blur-3xl" />
+        <div className="pointer-events-none absolute -left-20 bottom-0 h-48 w-48 rounded-full bg-amber-400/8 blur-3xl" />
+        <div className="mx-auto max-w-7xl relative z-10">
           <SectionHead chip={t("home.collection")} title={t("home.newArrivals")} link="/category/all?sort=newest" />
           {loading ? (
             <BookGridSkeleton />
@@ -178,15 +195,19 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Bestselling — dark premium bg ── */}
+      {/* ── Bestselling — light ── */}
       <BestsellingRanking books={bestselling} loading={loading} t={t} />
 
+      {/* ── Quote — dark blue ── */}
       <QuoteSection />
 
-      <HowItWorks />
-
+      {/* ── About — light ── */}
       <AboutSection booksCount={books.length} />
 
+      {/* ── How It Works — dark navy ── */}
+      <HowItWorks />
+
+      {/* ── Latest News — light cream ── */}
       <LatestNews />
     </div>
   );
@@ -752,27 +773,72 @@ function CategoryShowcase({ categories, loading }) {
 
 function QuoteSection() {
   const { t } = useTranslation();
+  const quote = t("home.quote");
+  const words = quote.split(" ");
+
   return (
-    <section className="relative flex items-center justify-center overflow-hidden bg-slate-950 px-4 py-32 text-white">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/40 via-slate-950 to-slate-950" />
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        whileInView={{ opacity: 1, scale: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 1 }}
-        className="relative z-10 mx-auto max-w-4xl text-center"
-      >
-        <div className="mb-4 inline-block font-serif text-8xl leading-none text-blue-500/30">&quot;</div>
-        <p className="mb-10 font-serif text-4xl font-light italic leading-relaxed md:text-5xl">
-          {t("home.quote")}
+    <section className="relative flex items-center justify-center overflow-hidden px-4 py-32 text-white" style={{ background: "linear-gradient(180deg, #050818 0%, #040d24 100%)" }}>
+      {/* Animated star particles */}
+      {[...Array(12)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="pointer-events-none absolute h-0.5 w-0.5 rounded-full bg-blue-300/40"
+          style={{
+            left: `${8 + (i * 7.7) % 84}%`,
+            top: `${10 + (i * 13) % 80}%`,
+          }}
+          animate={{ opacity: [0.2, 0.8, 0.2], scale: [1, 1.8, 1] }}
+          transition={{ duration: 2.5 + (i % 4) * 0.7, repeat: Infinity, delay: i * 0.3 }}
+        />
+      ))}
+      {/* Soft dark vignette glow */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(37,99,235,0.07)_0%,transparent_70%)]" />
+
+      <div className="relative z-10 mx-auto max-w-3xl text-center">
+        {/* Decorative quote mark */}
+        <motion.div
+          initial={{ opacity: 0, y: -20, scale: 0.6 }}
+          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-2 inline-block select-none text-[7rem] leading-none text-blue-500/25"
+          style={{ fontFamily: "Georgia, serif", lineHeight: 0.8 }}
+        >
+          &ldquo;
+        </motion.div>
+
+        {/* Word-by-word stagger reveal */}
+        <p
+          className="mb-10 text-3xl font-light italic leading-relaxed text-blue-50/95 md:text-4xl lg:text-[2.8rem]"
+          style={{ fontFamily: "var(--f-serif)", lineHeight: 1.45 }}
+        >
+          {words.map((word, i) => (
+            <motion.span
+              key={i}
+              className="inline-block"
+              style={{ marginRight: "0.28em" }}
+              initial={{ opacity: 0, y: 20, filter: "blur(4px)" }}
+              whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, delay: 0.1 + i * 0.04, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {word}
+            </motion.span>
+          ))}
         </p>
-        <div className="inline-flex items-center gap-4 text-xs font-bold uppercase tracking-[0.3em] text-blue-400">
-          <span className="h-px w-8 bg-blue-400/50" />
+
+        <motion.div
+          className="inline-flex items-center gap-4 text-xs font-bold uppercase tracking-[0.3em] text-blue-400/70"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, delay: 0.4 + words.length * 0.04 }}
+        >
+          <span className="h-px w-12 bg-gradient-to-r from-transparent to-blue-500/50" />
           {t("home.philosophy")}
-          <span className="h-px w-8 bg-blue-400/50" />
-        </div>
-      </motion.div>
+          <span className="h-px w-12 bg-gradient-to-l from-transparent to-blue-500/50" />
+        </motion.div>
+      </div>
     </section>
   );
 }
@@ -783,14 +849,14 @@ function BookGrid({ books, emptyMessage }) {
   }
 
   return (
-    <div className="mt-12 grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-3 lg:grid-cols-4">
+    <div className="mt-10 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
       {books.map((book, index) => (
         <motion.div
           key={book.id}
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "0px 0px -50px 0px" }}
-          transition={{ duration: 0.5, delay: (index % 4) * 0.1 }}
+          viewport={{ once: true, margin: "0px 0px -40px 0px" }}
+          transition={{ duration: 0.45, delay: (index % 5) * 0.07, ease: [0.22, 1, 0.36, 1] }}
         >
           <BookCard book={book} />
         </motion.div>
@@ -801,16 +867,34 @@ function BookGrid({ books, emptyMessage }) {
 
 function BookGridSkeleton({ count = 8 }) {
   return (
-    <div className="mt-12 grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-3 lg:grid-cols-4">
-      {Array.from({ length: count }).map((_, index) => (
-        <div key={index} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-          <div className="aspect-[2/3] animate-pulse rounded-xl bg-slate-100" />
-          <div className="mt-5 h-3 w-20 animate-pulse rounded bg-slate-100" />
-          <div className="mt-3 h-5 w-full animate-pulse rounded bg-slate-100" />
-          <div className="mt-2 h-4 w-2/3 animate-pulse rounded bg-slate-100" />
-        </div>
-      ))}
-    </div>
+    <>
+      <style>{`
+        @keyframes book-shimmer {
+          0% { background-position: -800px 0; }
+          100% { background-position: 800px 0; }
+        }
+        .bk-skel {
+          background: linear-gradient(105deg, #f1f5f9 25%, #f8fafc 50%, #f1f5f9 75%);
+          background-size: 1600px 100%;
+          animation: book-shimmer 1.6s ease-in-out infinite;
+          border-radius: 10px;
+        }
+      `}</style>
+      <div className="mt-10 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
+        {Array.from({ length: count }).map((_, index) => (
+          <div key={index} className="overflow-hidden bg-white" style={{ borderRadius: "var(--r-lg)", border: "1px solid rgba(226,232,240,0.8)" }}>
+            <div className="bk-skel" style={{ aspectRatio: "2/3" }} />
+            <div className="p-4">
+              <div className="bk-skel mt-1 h-2.5 w-16" />
+              <div className="bk-skel mt-3 h-4 w-full" />
+              <div className="bk-skel mt-1.5 h-4 w-4/5" />
+              <div className="bk-skel mt-2 h-3 w-24" />
+              <div className="bk-skel mt-4 h-6 w-28" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
   );
 }
 
@@ -850,116 +934,170 @@ function HomeEmptyState({ title }) {
 
 function BestsellingRanking({ books, loading, t }) {
   const items = books.slice(0, 5);
-  const RANK_COLORS = ["#f59e0b", "#94a3b8", "#b45309", "#64748b", "#64748b"];
+  // Gold, Silver, Bronze, then muted
+  const RANK_META = [
+    { color: "#f59e0b", label: "🥇", glow: "rgba(245,158,11,0.3)" },
+    { color: "#94a3b8", label: "🥈", glow: "rgba(148,163,184,0.2)" },
+    { color: "#cd7f32", label: "🥉", glow: "rgba(205,127,50,0.2)" },
+    { color: "#475569", label: "04", glow: "rgba(71,85,105,0.1)" },
+    { color: "#475569", label: "05", glow: "rgba(71,85,105,0.1)" },
+  ];
 
   return (
-    <section className="relative overflow-hidden bg-slate-950 px-4 py-24 text-white md:px-8">
-      {/* Background decoration */}
+    <section className="relative overflow-hidden bg-white px-4 py-28 text-slate-900 md:px-8">
+      {/* Light blue accents intertwining */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -right-32 top-0 h-[500px] w-[500px] rounded-full bg-blue-600/10 blur-[100px]" />
-        <div className="absolute -left-32 bottom-0 h-[400px] w-[400px] rounded-full bg-amber-500/5 blur-[80px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.06] mix-blend-overlay" />
+        <div className="absolute -left-1/4 top-0 h-[800px] w-[800px] rounded-full bg-blue-50/80 blur-[120px]" />
+        <div className="absolute -right-1/4 bottom-0 h-[600px] w-[600px] rounded-full bg-indigo-50/60 blur-[100px]" />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay" />
       </div>
+      {/* Top separator line */}
+      <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
 
       <div className="relative mx-auto max-w-7xl">
         <SectionHead
           chip={t("home.featuredBooks")}
           title={t("home.bestsellingBooks")}
           link="/category/all?sort=popular"
-          dark
         />
 
         {loading ? (
           <div className="mt-10 space-y-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-6 rounded-2xl border border-white/5 bg-white/5 p-5">
-                <div className="h-12 w-12 animate-pulse rounded-full bg-white/10" />
-                <div className="h-16 w-12 animate-pulse rounded-lg bg-white/10" />
+              <div key={i} className="flex items-center gap-6 rounded-2xl border border-slate-100 bg-slate-50 p-5">
+                <div className="h-12 w-12 animate-pulse rounded-full bg-slate-200" />
+                <div className="h-20 w-14 animate-pulse rounded-lg bg-slate-200" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 w-1/2 animate-pulse rounded bg-white/10" />
-                  <div className="h-3 w-1/4 animate-pulse rounded bg-white/10" />
+                  <div className="h-4 w-1/2 animate-pulse rounded bg-slate-200" />
+                  <div className="h-3 w-1/4 animate-pulse rounded bg-slate-200" />
                 </div>
-                <div className="h-6 w-20 animate-pulse rounded bg-white/10" />
+                <div className="h-6 w-20 animate-pulse rounded bg-slate-200" />
               </div>
             ))}
           </div>
         ) : (
-          <div className="mt-10 space-y-3">
-            {items.map((book, index) => (
-              <motion.div
-                key={book.id}
-                initial={{ opacity: 0, x: -24 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.09 }}
-              >
-                <Link
-                  to={`/product/${book.slug}`}
-                  className="group flex items-center gap-5 rounded-2xl border border-white/5 bg-white/[0.03] p-4 backdrop-blur transition-all duration-300 hover:border-white/15 hover:bg-white/[0.07] hover:shadow-[0_4px_24px_rgba(0,0,0,0.3)] md:p-5"
+          <div className="mx-auto mt-12 max-w-4xl space-y-4">
+            {items.map((book, index) => {
+              const meta = RANK_META[index];
+              // Compute discount: API first, then priceOld diff
+              const bPrice = Number(book.price || 0);
+              const bOldPrice = Number(book.priceOld || 0);
+              const bDiscount = bOldPrice > bPrice && bOldPrice > 0
+                ? Math.round(((bOldPrice - bPrice) / bOldPrice) * 100)
+                : 0;
+              return (
+                <motion.div
+                  key={book.id}
+                  initial={{ opacity: 0, x: -30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.55, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  {/* Rank badge */}
-                  <div
-                    className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full font-display text-2xl leading-none transition-transform duration-300 group-hover:scale-110"
-                    style={{
-                      color: RANK_COLORS[index],
-                      border: `1.5px solid ${RANK_COLORS[index]}40`,
-                      background: `${RANK_COLORS[index]}15`,
-                    }}
+                  <Link
+                    to={`/product/${book.slug}`}
+                    className="group relative flex items-center gap-5 overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-400 hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_12px_40px_rgba(37,99,235,0.08)] md:p-5"
                   >
-                    {String(index + 1).padStart(2, "0")}
-                  </div>
-
-                  {/* Book cover */}
-                  <div className="h-16 w-11 flex-shrink-0 overflow-hidden rounded-lg shadow-lg">
-                    <img
-                      src={book.image || book.cover}
-                      alt={book.title}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    {/* Hover glow sweep */}
+                    <div
+                      className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                      style={{ background: `radial-gradient(600px circle at 0% 50%, rgba(37,99,235,0.03), transparent 60%)` }}
                     />
-                  </div>
 
-                  {/* Info */}
-                  <div className="flex min-w-0 flex-1 flex-col">
-                    <h3 className="line-clamp-1 font-serif text-base font-bold text-white/95 transition-colors group-hover:text-blue-300 md:text-lg">
-                      {book.title}
-                    </h3>
-                    <p className="mt-0.5 line-clamp-1 text-sm text-slate-500">{book.author}</p>
-                  </div>
+                    {/* Rank badge */}
+                    <div
+                      className="relative flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl text-2xl font-black transition-all duration-300 group-hover:scale-110 group-hover:shadow-md"
+                      style={{
+                        background: `linear-gradient(135deg, ${meta.color}15, white)`,
+                        border: `1.5px solid ${meta.color}30`,
+                        color: meta.color,
+                        fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      }}
+                    >
+                      {index < 3 ? meta.label : <span className="text-xl">{meta.label}</span>}
+                    </div>
 
-                  {/* Price + arrow */}
-                  <div className="flex flex-shrink-0 items-center gap-4">
-                    <span className="font-display text-xl tracking-wide text-white">
-                      {book.price ? `${Number(book.price).toLocaleString("vi-VN")}đ` : "—"}
-                    </span>
-                    <ArrowRight
-                      size={16}
-                      className="text-slate-600 transition-all duration-300 group-hover:translate-x-1 group-hover:text-blue-400"
-                    />
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
+                    {/* Book cover */}
+                    <div className="relative h-28 w-20 flex-shrink-0 overflow-hidden rounded-xl shadow-md transition-shadow duration-500 group-hover:shadow-lg">
+                      <img
+                        src={book.image || book.cover}
+                        alt={book.title}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                      <div className="absolute inset-y-0 left-0 w-2 bg-gradient-to-r from-black/20 to-transparent" />
+                      {/* Discount badge on cover */}
+                      {bDiscount > 0 && (
+                        <div className="absolute right-1 top-1 rounded-full bg-rose-500 px-1.5 py-0.5 text-[9px] font-black leading-none text-white shadow">
+                          -{bDiscount}%
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <span className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-blue-600">
+                        {book.catLabel || "Best Seller"}
+                      </span>
+                      <h3
+                        className="line-clamp-2 text-lg font-bold leading-snug text-slate-900 transition-colors group-hover:text-blue-700 md:text-xl"
+                        style={{ fontFamily: "var(--f-body)" }}
+                      >
+                        {book.title}
+                      </h3>
+                      <p className="mt-1 line-clamp-1 text-sm text-slate-500">{book.author}</p>
+                      {/* mini accent bar */}
+                      <div className="mt-2 h-0.5 w-0 rounded-full bg-blue-500 transition-all duration-500 group-hover:w-16" />
+                    </div>
+
+                    {/* Price + arrow */}
+                    <div className="flex flex-shrink-0 items-center gap-4">
+                      <div className="flex flex-col items-end">
+                        <span className="text-xl font-extrabold text-blue-900" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                          {bPrice ? `${Number(bPrice).toLocaleString("vi-VN")}đ` : "—"}
+                        </span>
+                        {bDiscount > 0 && bOldPrice > 0 && (
+                          <span className="text-xs text-slate-400 line-through">
+                            {Number(bOldPrice).toLocaleString("vi-VN")}đ
+                          </span>
+                        )}
+                      </div>
+                      <div
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-blue-100 bg-blue-50 transition-all duration-300 group-hover:border-blue-600 group-hover:bg-blue-600 group-hover:shadow-[0_4px_12px_rgba(37,99,235,0.3)]"
+                      >
+                        <ArrowRight size={15} className="text-blue-600 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-white" />
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              );
+            })}
           </div>
         )}
 
         {/* CTA */}
-        <div className="mt-10 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="mt-12 text-center"
+        >
           <Link
             to="/category/all?sort=popular"
-            className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-8 py-3 text-sm font-bold uppercase tracking-widest text-white/70 backdrop-blur transition-all duration-300 hover:border-blue-500/40 hover:bg-blue-500/10 hover:text-blue-400"
+            className="group inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-8 py-3.5 text-sm font-bold uppercase tracking-widest text-slate-600 shadow-sm transition-all duration-300 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 hover:shadow-md"
           >
             {t("home.viewAll")}
             <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
           </Link>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
 }
 
+
+
 function HowItWorks() {
   const { t } = useTranslation();
-  // Step icon SVGs
   const STEP_ICONS = [
     // Compass / discover
     <svg key="discover" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-8 w-8">
@@ -986,66 +1124,111 @@ function HowItWorks() {
   ];
 
   return (
-    <section className="relative overflow-hidden bg-slate-950 px-4 py-24 text-white md:px-8">
-      {/* Subtle gradient top border */}
+    <section className="relative overflow-hidden px-4 py-28 text-white md:px-8" style={{ background: "linear-gradient(180deg, #040d24 0%, #071035 50%, #040d24 100%)" }}>
+      {/* Top border from QuoteSection */}
       <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(59,130,246,0.08),transparent)]" />
+      {/* Mesh radial glows */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute left-1/6 top-1/4 h-72 w-72 rounded-full bg-blue-600/10 blur-[80px]" />
+        <div className="absolute right-1/6 bottom-1/4 h-72 w-72 rounded-full bg-violet-600/8 blur-[80px]" />
+        <div className="absolute left-1/2 top-0 h-40 w-40 -translate-x-1/2 rounded-full bg-blue-400/8 blur-[60px]" />
+      </div>
 
       <div className="relative mx-auto max-w-7xl">
         <div className="mx-auto mb-20 max-w-2xl text-center">
-          <div className="mb-4 inline-block rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-400">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="mb-4 inline-block rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-400"
+          >
             {t("home.process")}
-          </div>
-          <h2 className="mb-4 font-serif text-4xl font-bold md:text-5xl">{t("home.howItWorks")}</h2>
-          <p className="text-lg font-light text-slate-400">{t("home.processCopy")}</p>
+          </motion.div>
+          <motion.h2
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="mb-4 text-4xl font-bold leading-tight text-white md:text-5xl"
+            style={{ fontFamily: "var(--f-serif)", letterSpacing: "-0.01em" }}
+          >
+            {t("home.howItWorks")}
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-lg font-light text-slate-400"
+          >
+            {t("home.processCopy")}
+          </motion.p>
         </div>
 
         <div className="relative grid grid-cols-1 gap-6 md:grid-cols-3">
-          {/* Connector dashed line */}
-          <div className="absolute left-[16.5%] right-[16.5%] top-[52px] hidden items-center md:flex">
-            <div className="h-px flex-1 border-t border-dashed border-blue-500/20" />
-            <div className="mx-4 h-1.5 w-1.5 rotate-45 bg-blue-500/40" />
-            <div className="h-px flex-1 border-t border-dashed border-blue-500/20" />
+          {/* Animated connector line */}
+          <div className="absolute left-[16.5%] right-[16.5%] top-[56px] hidden md:flex">
+            <motion.div
+              initial={{ scaleX: 0, opacity: 0 }}
+              whileInView={{ scaleX: 1, opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1.2, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              className="h-px flex-1 origin-left bg-gradient-to-r from-blue-600/60 via-violet-500/40 to-emerald-500/60"
+            />
           </div>
 
           {steps.map((item, index) => (
             <motion.div
               key={item.num}
-              initial={{ opacity: 0, y: 28, filter: "blur(8px)" }}
-              whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.65, delay: index * 0.18, ease: [0.22, 1, 0.36, 1] }}
-              className="group relative overflow-hidden rounded-3xl border border-white/[0.06] bg-gradient-to-b from-slate-900/80 to-slate-900/40 p-10 backdrop-blur-sm transition-all duration-500 hover:-translate-y-2 hover:border-white/10 hover:shadow-[0_24px_48px_rgba(0,0,0,0.4)]"
-              style={{ "--accent": STEP_ACCENTS[index] }}
+              transition={{ duration: 0.7, delay: index * 0.18, ease: [0.22, 1, 0.36, 1] }}
+              className="group relative overflow-hidden rounded-3xl border border-white/[0.07] p-10 backdrop-blur-md transition-all duration-500 hover:-translate-y-3 hover:border-white/15 hover:shadow-[0_32px_64px_rgba(0,0,0,0.5)]"
+              style={{ background: "linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)" }}
             >
-              {/* Hover glow */}
+              {/* Ambient glow on hover */}
               <div
-                className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-                style={{ background: `radial-gradient(circle at 30% 30%, ${STEP_ACCENTS[index]}12, transparent 60%)` }}
+                className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-700 group-hover:opacity-100"
+                style={{ background: `radial-gradient(circle at 40% 40%, ${STEP_ACCENTS[index]}18, transparent 65%)` }}
               />
+              {/* Top accent border */}
+              <div className="absolute left-0 right-0 top-0 h-[2px] rounded-t-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-100" style={{ background: `linear-gradient(to right, transparent, ${STEP_ACCENTS[index]}, transparent)` }} />
 
-              {/* Icon + number row */}
-              <div className="mb-7 flex items-center gap-4 md:flex-col md:items-start md:gap-3">
+              {/* Floating icon */}
+              <motion.div
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 3.5 + index * 0.4, ease: "easeInOut", repeat: Infinity }}
+                className="mb-8 inline-flex"
+              >
                 <div
-                  className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl transition-all duration-500 group-hover:scale-110"
+                  className="flex h-16 w-16 items-center justify-center rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:shadow-[0_0_30px_currentColor]"
                   style={{
-                    background: `${STEP_ACCENTS[index]}18`,
-                    border: `1px solid ${STEP_ACCENTS[index]}35`,
+                    background: `linear-gradient(135deg, ${STEP_ACCENTS[index]}25, ${STEP_ACCENTS[index]}10)`,
+                    border: `1.5px solid ${STEP_ACCENTS[index]}50`,
                     color: STEP_ACCENTS[index],
-                    boxShadow: `0 0 0 0 ${STEP_ACCENTS[index]}`,
+                    boxShadow: `0 8px 24px ${STEP_ACCENTS[index]}25`,
                   }}
                 >
                   {STEP_ICONS[index]}
                 </div>
-                <span
-                  className="font-display text-5xl leading-none opacity-20 transition-opacity duration-500 group-hover:opacity-40"
-                  style={{ color: STEP_ACCENTS[index] }}
-                >
-                  {item.num}
-                </span>
+              </motion.div>
+
+              {/* Number watermark */}
+              <div
+                className="pointer-events-none absolute -right-3 -top-4 select-none text-[6rem] font-black leading-none opacity-[0.06] transition-opacity duration-500 group-hover:opacity-[0.12]"
+                style={{ color: STEP_ACCENTS[index], fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+              >
+                {item.num}
               </div>
 
-              <h3 className="mb-3 font-serif text-xl font-bold text-white md:text-2xl">{item.title}</h3>
+              <h3
+                className="mb-3 text-xl font-bold text-white md:text-2xl"
+                style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+              >
+                {item.title}
+              </h3>
               <p className="font-light leading-relaxed text-slate-400">{item.desc}</p>
             </motion.div>
           ))}
@@ -1056,12 +1239,12 @@ function HowItWorks() {
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-          className="mt-14 text-center"
+          transition={{ duration: 0.5, delay: 0.7 }}
+          className="mt-16 text-center"
         >
           <Link
             to="/category/all"
-            className="group inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-blue-600 to-blue-500 px-10 py-4 font-bold tracking-wide text-white shadow-[0_0_40px_rgba(37,99,235,0.35)] transition-all duration-300 hover:scale-105 hover:shadow-[0_0_60px_rgba(37,99,235,0.5)]"
+            className="group inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-10 py-4 font-bold tracking-wide text-white shadow-[0_0_40px_rgba(37,99,235,0.35)] transition-all duration-300 hover:scale-105 hover:shadow-[0_0_60px_rgba(37,99,235,0.55)]"
           >
             {t("home.exploreLibrary")}
             <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
@@ -1074,80 +1257,203 @@ function HowItWorks() {
 
 function AboutSection({ booksCount }) {
   const { t } = useTranslation();
+
+  const collageImages = [
+    { src: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?q=80&w=800&auto=format&fit=crop", cls: "absolute -top-4 left-0 h-64 w-48 rotate-[-3deg]", zIndex: 3 },
+    { src: "https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=800&auto=format&fit=crop", cls: "absolute top-24 right-0 h-72 w-52 rotate-[4deg]", zIndex: 2 },
+    { src: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?q=80&w=800&auto=format&fit=crop", cls: "absolute bottom-0 left-12 h-60 w-44 rotate-[1.5deg]", zIndex: 4 },
+  ];
+
+  const bullets = t("home.aboutBullets", { returnObjects: true });
+
   return (
-    <section className="relative overflow-hidden border-t border-slate-800 bg-slate-900 px-4 py-24 text-white md:px-8">
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay" />
-      <div className="pointer-events-none absolute right-0 top-0 h-full w-1/2 bg-gradient-to-l from-blue-900/20 to-transparent" />
+    <section className="relative overflow-hidden bg-white px-4 py-28 md:px-8">
+      {/* Top border */}
+      <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+      {/* Decorative corner glows */}
+      <div className="pointer-events-none absolute -right-40 -top-40 h-[600px] w-[600px] rounded-full bg-blue-50/60 blur-[120px]" />
+      <div className="pointer-events-none absolute -bottom-20 -left-20 h-80 w-80 rounded-full bg-indigo-50/80 blur-[80px]" />
 
-      <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-16 md:grid-cols-2">
-        <motion.div
-          initial={{ opacity: 0, x: -40 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="relative z-10"
-        >
-          <div className="mb-6 inline-block rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-20 lg:grid-cols-2">
+        {/* Left — Text */}
+        <div className="relative z-10">
+          <motion.div
+            initial={{ opacity: 0, x: -8 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3.5 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-blue-600"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
             {t("home.whyUs")}
-          </div>
-          <h2 className="mb-6 font-serif text-4xl font-bold md:text-5xl">{t("home.aboutTitle")}</h2>
-          <p className="mb-8 text-lg font-light leading-relaxed text-slate-300">
-            {t("home.aboutCopy")}
-          </p>
+          </motion.div>
 
-          <ul className="mb-8 space-y-4">
-            {t("home.aboutBullets", { returnObjects: true }).map((item) => (
-              <li key={item} className="flex items-center gap-3 font-medium text-slate-300">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full border border-blue-500/30 bg-blue-500/20 text-blue-400">
-                  <span className="text-xs font-bold leading-none">OK</span>
-                </div>
-                {item}
-              </li>
+          {/* Staggered title lines */}
+          {t("home.aboutTitle").split("\n").length > 0 && (
+            <div className="mb-8 overflow-hidden">
+              {t("home.aboutTitle").split(" ").reduce((acc, word, i) => {
+                // Group into lines of 3 words
+                const lineIdx = Math.floor(i / 3);
+                if (!acc[lineIdx]) acc[lineIdx] = [];
+                acc[lineIdx].push(word);
+                return acc;
+              }, []).map((lineWords, lineIdx) => (
+                <motion.div
+                  key={lineIdx}
+                  className="block overflow-hidden"
+                  initial={{ opacity: 0, y: 40 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.7, delay: lineIdx * 0.12, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <span
+                    className="block text-4xl font-bold leading-tight text-slate-900 md:text-5xl"
+                    style={{ fontFamily: "var(--f-serif)", letterSpacing: "-0.01em" }}
+                  >
+                    {lineWords.join(" ")}
+                  </span>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          <motion.p
+            className="mb-8 text-lg font-light leading-relaxed text-slate-500"
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
+            {t("home.aboutCopy")}
+          </motion.p>
+
+          <ul className="mb-10 space-y-3">
+            {(Array.isArray(bullets) ? bullets : []).map((item, i) => (
+              <motion.li
+                key={item}
+                className="flex items-center gap-3 text-slate-700"
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.35 + i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <motion.div
+                  className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-600"
+                  whileInView={{ boxShadow: ["0 0 0px rgba(37,99,235,0)", "0 0 16px rgba(37,99,235,0.5)", "0 0 8px rgba(37,99,235,0.3)"] }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.8, delay: 0.5 + i * 0.1 }}
+                >
+                  <svg viewBox="0 0 12 10" fill="none" className="h-3 w-3">
+                    <path d="M1 5l3 3 7-7" stroke="#fff" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </motion.div>
+                <span className="font-medium">{item}</span>
+              </motion.li>
             ))}
           </ul>
 
-          <Link
-            to="/about"
-            className="inline-block rounded-full bg-blue-600 px-8 py-4 font-bold tracking-wide text-white shadow-lg shadow-blue-500/25 transition-colors hover:bg-blue-500"
+          {/* Animated stat counters */}
+          <motion.div
+            className="mb-10 grid grid-cols-3 gap-6 border-t border-slate-100 pt-8"
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.5 }}
           >
-            {t("home.learnMore")}
-          </Link>
-        </motion.div>
+            {[
+              { num: "12K+", label: t("home.readers") },
+              { num: `${booksCount || 500}+`, label: t("home.titles") },
+              { num: "99%", label: "Hài Lòng" },
+            ].map(({ num, label }) => (
+              <div key={label} className="text-center">
+                <div
+                  className="text-3xl font-black text-blue-700"
+                  style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "-0.03em" }}
+                >
+                  {num}
+                </div>
+                <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">{label}</div>
+              </div>
+            ))}
+          </motion.div>
 
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+          >
+            <Link
+              to="/about"
+              className="group inline-flex items-center gap-3 rounded-full bg-slate-900 px-8 py-4 font-bold tracking-wide text-white shadow-xl transition-all duration-300 hover:bg-blue-700 hover:shadow-[0_0_40px_rgba(37,99,235,0.4)]"
+            >
+              {t("home.learnMore")}
+              <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+            </Link>
+          </motion.div>
+        </div>
+
+        {/* Right — Photo collage */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          whileInView={{ opacity: 1, scale: 1 }}
+          className="relative hidden h-[540px] lg:block"
+          initial={{ opacity: 0, x: 40 }}
+          whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="relative"
+          transition={{ duration: 0.9, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div className="relative aspect-square overflow-hidden rounded-[2.5rem] shadow-2xl md:aspect-[4/5]">
-            <img
-              src="https://images.unsplash.com/photo-1521587760476-6c12a4b040da?q=80&w=800&auto=format&fit=crop"
-              alt="Aivira Library"
-              className="h-full w-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent" />
-            <div className="absolute bottom-8 left-8 right-8 flex items-center justify-around rounded-2xl border border-white/20 bg-white/10 p-6 text-center shadow-[0_8px_32px_rgba(0,0,0,0.3)] backdrop-blur-xl">
-              <div>
-                <strong className="mb-1 block font-display text-4xl tracking-wide text-white">12K+</strong>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300">{t("home.readers")}</span>
-              </div>
-              <div className="h-16 w-px bg-gradient-to-b from-transparent via-white/30 to-transparent" />
-              <div>
-                <strong className="mb-1 block font-display text-4xl tracking-wide text-white">{booksCount}+</strong>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300">{t("home.titles")}</span>
-              </div>
+          {collageImages.map((img, i) => (
+            <motion.div
+              key={i}
+              className={`overflow-hidden rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.18)] ${img.cls}`}
+              style={{ zIndex: img.zIndex }}
+              initial={{ opacity: 0, y: 30 + i * 10, rotate: img.cls.includes("-3") ? -5 : img.cls.includes("4") ? 6 : 2 }}
+              whileInView={{ opacity: 1, y: 0, rotate: img.cls.includes("-3") ? -3 : img.cls.includes("4") ? 4 : 1.5 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.9, delay: 0.3 + i * 0.18, ease: [0.22, 1, 0.36, 1] }}
+              whileHover={{ scale: 1.04, zIndex: 10, boxShadow: "0 24px 60px rgba(0,0,0,0.25)" }}
+            >
+              <img
+                src={img.src}
+                alt="Aivira"
+                className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
+            </motion.div>
+          ))}
+
+          {/* Floating badge */}
+          <motion.div
+            className="absolute bottom-8 right-4 z-20 rounded-2xl border border-blue-200 bg-white/90 px-5 py-3 shadow-xl backdrop-blur-md"
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.7, type: "spring", stiffness: 300, damping: 20 }}
+            animate={{ y: [0, -6, 0] }}
+          >
+            <div className="text-center">
+              <div className="text-2xl font-black text-blue-700" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>✦ Aivira</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Knowledge On Every Page</div>
             </div>
-          </div>
+          </motion.div>
         </motion.div>
       </div>
     </section>
   );
 }
 
+
 function LatestNews() {
   const { t } = useTranslation();
+  const [cursorPos, setCursorPos] = React.useState({ x: 0, y: 0 });
+  const [cursorVisible, setCursorVisible] = React.useState(false);
+  const featuredRef = React.useRef(null);
+
+  function handleFeaturedMouseMove(e) {
+    const rect = featuredRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setCursorPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  }
+
   const posts = [
     {
       title: t("home.posts.one"),
@@ -1174,81 +1480,148 @@ function LatestNews() {
   const secondary = posts.slice(1);
 
   return (
-    <section className="border-t border-slate-100 bg-white px-4 py-24 md:px-8">
+    <section className="relative overflow-hidden bg-[#fafaf8] px-4 py-24 md:px-8">
+      {/* Top separator */}
+      <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+      <div className="pointer-events-none absolute right-0 top-0 h-96 w-96 rounded-full bg-blue-50/80 blur-3xl" />
+      <div className="pointer-events-none absolute -left-20 bottom-0 h-64 w-64 rounded-full bg-indigo-50/60 blur-3xl" />
+
       <div className="mx-auto max-w-7xl">
         <SectionHead chip={t("home.insights")} title={t("home.blog")} link="/blog" />
 
-        {/* Editorial layout: 60/40 split */}
+        {/* Editorial layout: 60/40 */}
         <div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-5">
 
-          {/* Featured article — 3/5 width */}
+          {/* Featured article — custom cursor */}
           <motion.article
+            ref={featuredRef}
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="group relative col-span-1 cursor-pointer overflow-hidden rounded-3xl lg:col-span-3"
+            className="group relative col-span-1 cursor-none overflow-hidden rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.1)] transition-shadow duration-500 hover:shadow-[0_24px_64px_rgba(0,0,0,0.2)] lg:col-span-3"
+            onMouseMove={handleFeaturedMouseMove}
+            onMouseEnter={() => setCursorVisible(true)}
+            onMouseLeave={() => setCursorVisible(false)}
           >
+            {/* Custom cursor orb */}
+            <motion.div
+              className="pointer-events-none absolute z-30 flex items-center justify-center rounded-full bg-white/90 text-[11px] font-black uppercase tracking-widest text-slate-900 shadow-xl"
+              style={{ width: 72, height: 72, left: cursorPos.x - 36, top: cursorPos.y - 36, backdropFilter: "blur(8px)" }}
+              animate={{ opacity: cursorVisible ? 1 : 0, scale: cursorVisible ? 1 : 0.3 }}
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            >
+              Đọc
+            </motion.div>
+
+            {/* Image with inner-parallax zoom */}
             <div className="aspect-[4/3] overflow-hidden lg:aspect-[16/11]">
-              <img
+              <motion.img
                 src={featured.image}
                 alt={featured.title}
-                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                className="h-full w-full object-cover"
+                style={{ transformOrigin: "center" }}
+                whileHover={{ scale: 1.08 }}
+                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
               />
             </div>
-            {/* Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/40 to-transparent" />
+
+            {/* Gradient overlays */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/30 to-transparent" />
+            <div className="absolute inset-0 bg-blue-900/0 transition-colors duration-500 group-hover:bg-blue-900/15" />
+
             {/* Content */}
             <div className="absolute bottom-0 left-0 right-0 p-8">
               <div className="mb-3 flex items-center gap-3">
-                <span className="rounded-full bg-blue-500/90 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-widest text-white backdrop-blur">
+                <span className="rounded-full bg-blue-600 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-widest text-white shadow-[0_0_12px_rgba(37,99,235,0.5)]">
                   {featured.category}
                 </span>
                 <span className="text-xs text-white/50">{featured.date}</span>
               </div>
-              <h3 className="font-serif text-2xl font-bold leading-snug text-white transition-colors group-hover:text-blue-300 md:text-3xl">
+              <h3
+                className="text-2xl font-bold leading-snug text-white transition-colors group-hover:text-blue-200 md:text-3xl"
+                style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+              >
                 {featured.title}
               </h3>
-              <div className="mt-4 flex items-center gap-2 text-sm font-semibold text-blue-400 opacity-0 transition-all duration-300 group-hover:opacity-100">
+              <motion.div
+                className="mt-5 flex items-center gap-2 text-sm font-bold text-blue-400"
+                initial={{ opacity: 0, y: 8 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+              >
+                <span className="h-px w-8 bg-blue-400/60" />
                 {t("home.readMore") || "Đọc thêm"}
-                <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
-              </div>
+              </motion.div>
             </div>
           </motion.article>
 
-          {/* Secondary articles stacked — 2/5 width */}
-          <div className="col-span-1 flex flex-col gap-6 lg:col-span-2">
+          {/* Secondary articles */}
+          <div className="col-span-1 flex flex-col gap-4 lg:col-span-2">
             {secondary.map((post, index) => (
               <motion.article
                 key={post.title}
                 initial={{ opacity: 0, x: 24 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.12, ease: [0.22, 1, 0.36, 1] }}
-                className="group flex flex-1 cursor-pointer gap-5 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 p-4 transition-all duration-300 hover:border-blue-100 hover:bg-white hover:shadow-[0_8px_32px_rgba(37,99,235,0.08)]"
+                transition={{ duration: 0.6, delay: 0.1 + index * 0.14, ease: [0.22, 1, 0.36, 1] }}
+                className="group flex flex-1 cursor-pointer gap-5 overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm transition-all duration-350 hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_12px_40px_rgba(37,99,235,0.1)]"
+                whileHover={{ x: 2 }}
               >
-                {/* Thumbnail */}
-                <div className="h-24 w-20 flex-shrink-0 overflow-hidden rounded-xl">
-                  <img
+                {/* Thumbnail with inner zoom */}
+                <div className="relative h-28 w-24 flex-shrink-0 overflow-hidden rounded-xl shadow-md">
+                  <motion.img
                     src={post.image}
                     alt={post.title}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="h-full w-full object-cover"
+                    whileHover={{ scale: 1.12 }}
+                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                   />
+                  {/* Category color stripe on image */}
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 to-indigo-500 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                 </div>
+
                 {/* Text */}
-                <div className="flex min-w-0 flex-col justify-center">
-                  <div className="mb-2 flex items-center gap-2">
-                    <span className="rounded bg-blue-50 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-blue-600">
+                <div className="flex min-w-0 flex-col justify-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-blue-700 transition-colors duration-300 group-hover:bg-blue-100">
                       {post.category}
                     </span>
                     <span className="text-[0.65rem] text-slate-400">{post.date}</span>
                   </div>
-                  <h3 className="line-clamp-2 font-serif text-sm font-bold leading-snug text-slate-900 transition-colors group-hover:text-blue-600 md:text-base">
+                  <h3
+                    className="line-clamp-2 text-sm font-bold leading-snug text-slate-900 transition-colors duration-300 group-hover:text-blue-700 md:text-base"
+                    style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                  >
                     {post.title}
                   </h3>
+                  <motion.span
+                    className="inline-flex w-fit items-center gap-1 text-xs font-bold text-blue-500"
+                    initial={{ opacity: 0, x: -8 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.4 + index * 0.1 }}
+                  >
+                    <span className="opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                      Đọc thêm <ArrowRight size={11} className="inline" />
+                    </span>
+                  </motion.span>
                 </div>
               </motion.article>
             ))}
+
+            {/* View all blog link card */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="group flex flex-1 cursor-pointer items-center justify-between rounded-2xl border border-dashed border-blue-200 bg-blue-50/50 p-5 transition-all duration-300 hover:border-blue-300 hover:bg-blue-50"
+            >
+              <span className="text-sm font-bold text-blue-700">Xem tất cả bài viết</span>
+              <ArrowRight size={16} className="text-blue-500 transition-transform group-hover:translate-x-1" />
+            </motion.div>
           </div>
         </div>
       </div>
@@ -1256,54 +1629,51 @@ function LatestNews() {
   );
 }
 
+
 function SectionHead({ chip, title, link, dark = false }) {
   const { t } = useTranslation();
-  const chipClass = dark
-    ? "border-white/10 bg-white/5 text-blue-300"
-    : "border-blue-200 bg-blue-50 text-blue-700";
-  const titleClass = dark ? "text-white" : "text-slate-900";
-  const linkClass = dark
-    ? "text-white/30 hover:text-blue-300"
-    : "text-slate-400 hover:text-blue-600";
-  const accentGrad = dark
-    ? "linear-gradient(180deg, #60a5fa 0%, #1e40af 100%)"
-    : "linear-gradient(180deg, #3b82f6 0%, #93c5fd 100%)";
 
   return (
-    <div className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-      <div className="flex items-start gap-4">
-        {/* Accent bar */}
+    <div className="mb-12 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+      <div>
+        {/* Chip */}
         <div
-          className="mt-1 w-0.5 flex-shrink-0 self-stretch rounded-full"
-          style={{ background: accentGrad, minHeight: 36 }}
-        />
-        <div>
-          <div
-            className={`mb-2 inline-flex items-center rounded-full border px-3 py-1 ${chipClass}`}
-            style={{ fontSize: "0.68rem", fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" }}
-          >
-            {chip}
-          </div>
-          <h2 
-            className={`text-3xl font-extrabold tracking-tight md:text-4xl ${titleClass}`}
-            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-          >
-            {title}
-          </h2>
+          className="mb-3 inline-flex items-center gap-1.5"
+          style={{
+            fontSize: "0.65rem",
+            fontWeight: 800,
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
+            color: dark ? "rgba(147,197,253,0.9)" : "#2563eb",
+          }}
+        >
+          <span
+            className="inline-block h-[6px] w-[6px] rounded-full"
+            style={{ background: dark ? "#60a5fa" : "#2563eb" }}
+          />
+          {chip}
         </div>
+        {/* Title */}
+        <h2
+          className={`text-4xl font-bold leading-tight md:text-5xl ${dark ? "text-white" : "text-slate-900"}`}
+          style={{ fontFamily: "var(--f-serif)", letterSpacing: "-0.01em" }}
+        >
+          {title}
+        </h2>
       </div>
 
       {link && (
         <Link
           to={link}
-          className={`group flex flex-shrink-0 items-center gap-1.5 text-sm font-bold uppercase tracking-wider transition-colors ${linkClass}`}
-          style={{ letterSpacing: "0.1em" }}
+          className={`group flex flex-shrink-0 items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] transition-colors ${
+            dark ? "text-white/40 hover:text-blue-300" : "text-slate-400 hover:text-blue-600"
+          }`}
         >
           <span className="relative">
             {t("home.viewAll")}
             <span className="absolute -bottom-px left-0 h-px w-0 bg-blue-500 transition-all duration-300 group-hover:w-full" />
           </span>
-          <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+          <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" />
         </Link>
       )}
     </div>
