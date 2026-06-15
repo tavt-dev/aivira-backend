@@ -2,12 +2,12 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, BookOpen, CheckCircle2, Clock3, PackageCheck, Sparkles } from "lucide-react";
 
 import { getCategories, getProducts } from "../api/catalogApi.js";
 import { getStorefrontHome } from "../api/storefrontApi.js";
-import BookCard from "../components/BookCard.jsx";
 import WeeklyPicksShowcase from "../components/WeeklyPicksShowcase.jsx";
+import { formatVND } from "../utils/formatters.js";
 import { normalizeBook, normalizeCategoryHighlight, pageRows } from "../utils/mappers.js";
 
 const CATEGORY_FALLBACK_IMAGES = [
@@ -185,14 +185,8 @@ export default function HomePage() {
         {/* Corner decorations */}
         <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-blue-500/5 blur-3xl" />
         <div className="pointer-events-none absolute -left-20 bottom-0 h-48 w-48 rounded-full bg-amber-400/8 blur-3xl" />
-        <div className="mx-auto max-w-7xl relative z-10">
-          <SectionHead chip={t("home.collection")} title={t("home.newArrivals")} link="/category/all?sort=newest" />
-          {loading ? (
-            <BookGridSkeleton />
-          ) : (
-            <BookGrid books={newArrivals.slice(0, 8)} emptyMessage={t("home.noNewArrivals")} />
-          )}
-        </div>
+        <div className="pointer-events-none absolute inset-0 new-arrivals-paper-texture" />
+        <NewArrivalsEditorial books={newArrivals} loading={loading} emptyMessage={t("home.noNewArrivals")} />
       </section>
 
       {/* ── Bestselling — light ── */}
@@ -843,59 +837,403 @@ function QuoteSection() {
   );
 }
 
-function BookGrid({ books, emptyMessage }) {
-  if (!books.length) {
-    return <HomeEmptyState title={emptyMessage} />;
-  }
+function NewArrivalsEditorial({ books, loading, emptyMessage }) {
+  const { t } = useTranslation();
+  const items = books.slice(0, 8);
+  const spotlight = items[0];
+  const shelf = items.slice(1);
 
   return (
-    <div className="mt-10 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
-      {books.map((book, index) => (
+    <div className="relative z-10 mx-auto max-w-7xl">
+      <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <motion.div
-          key={book.id}
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 18 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "0px 0px -40px 0px" }}
-          transition={{ duration: 0.45, delay: (index % 5) * 0.07, ease: [0.22, 1, 0.36, 1] }}
+          viewport={{ once: true, margin: "0px 0px -80px 0px" }}
+          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+          className="max-w-3xl"
         >
-          <BookCard book={book} />
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-200/80 bg-white/75 px-4 py-2 text-[0.68rem] font-black uppercase tracking-[0.18em] text-blue-700 shadow-sm backdrop-blur">
+            <Sparkles size={13} className="text-amber-500" />
+            {t("home.collection")}
+          </div>
+          <h2
+            className="text-4xl font-bold leading-tight text-slate-950 md:text-6xl"
+            style={{ fontFamily: "var(--f-serif)", letterSpacing: "-0.01em" }}
+          >
+            {t("home.newArrivals")}
+          </h2>
+          <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-500 md:text-lg">
+            {t("home.newArrivalsSubtitle")}
+          </p>
         </motion.div>
-      ))}
+
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+        >
+          <Link
+            to="/category/all?sort=newest"
+            className="group inline-flex items-center gap-3 rounded-full border border-slate-200 bg-slate-950 px-6 py-3 text-xs font-black uppercase tracking-[0.16em] text-white shadow-[0_16px_40px_rgba(15,23,42,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-[0_20px_46px_rgba(37,99,235,0.26)]"
+          >
+            {t("home.viewNewBooks")}
+            <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
+          </Link>
+        </motion.div>
+      </div>
+
+      {loading ? (
+        <NewArrivalsSkeleton />
+      ) : items.length ? (
+        <div className="mt-12 space-y-8">
+          <NewArrivalSpotlight book={spotlight} />
+
+          <div className="flex min-w-0 flex-col">
+            <motion.div
+              initial={{ opacity: 0, x: 18 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, delay: 0.1 }}
+              className="mb-4 flex items-center justify-between gap-4 border-b border-slate-200/80 pb-4"
+            >
+              <div className="inline-flex items-center gap-2 text-[0.68rem] font-black uppercase tracking-[0.2em] text-slate-500">
+                <BookOpen size={14} className="text-blue-600" />
+                {t("home.releaseShelf")}
+              </div>
+              <span className="hidden text-xs font-semibold text-slate-400 sm:inline">
+                {items.length} {t("home.allBooks").toLowerCase()}
+              </span>
+            </motion.div>
+
+            {shelf.length ? (
+              <div className="grid flex-1 grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {shelf.map((book, index) => (
+                  <NewArrivalShelfCard key={book.id || book.slug} book={book} index={index} />
+                ))}
+              </div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.55, delay: 0.15 }}
+                className="flex min-h-[260px] items-center justify-center rounded-2xl border border-dashed border-blue-200 bg-white/70 p-8 text-center shadow-sm backdrop-blur"
+              >
+                <p className="max-w-sm text-sm font-semibold leading-6 text-slate-500">
+                  {t("home.newArrivalsSubtitle")}
+                </p>
+              </motion.div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <HomeEmptyState title={emptyMessage} />
+      )}
     </div>
   );
 }
 
-function BookGridSkeleton({ count = 8 }) {
+function NewArrivalSpotlight({ book }) {
+  const { t } = useTranslation();
+  const [isHovered, setIsHovered] = React.useState(false);
+  const [mousePos, setMousePos] = React.useState({ x: 50, y: 50 });
+  const discountPct = getDiscountPercent(book);
+  const stockQuantity = Number(book.stockQuantity || 0);
+  const rotateX = isHovered ? (mousePos.y - 50) * -0.12 : 0;
+  const rotateY = isHovered ? (mousePos.x - 50) * 0.12 : 0;
+
+  function handleMouseMove(event) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+    setMousePos({ x, y });
+  }
+
   return (
-    <>
-      <style>{`
-        @keyframes book-shimmer {
-          0% { background-position: -800px 0; }
-          100% { background-position: 800px 0; }
-        }
-        .bk-skel {
-          background: linear-gradient(105deg, #f1f5f9 25%, #f8fafc 50%, #f1f5f9 75%);
-          background-size: 1600px 100%;
-          animation: book-shimmer 1.6s ease-in-out infinite;
-          border-radius: 10px;
-        }
-      `}</style>
-      <div className="mt-10 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
-        {Array.from({ length: count }).map((_, index) => (
-          <div key={index} className="overflow-hidden bg-white" style={{ borderRadius: "var(--r-lg)", border: "1px solid rgba(226,232,240,0.8)" }}>
-            <div className="bk-skel" style={{ aspectRatio: "2/3" }} />
-            <div className="p-4">
-              <div className="bk-skel mt-1 h-2.5 w-16" />
-              <div className="bk-skel mt-3 h-4 w-full" />
-              <div className="bk-skel mt-1.5 h-4 w-4/5" />
-              <div className="bk-skel mt-2 h-3 w-24" />
-              <div className="bk-skel mt-4 h-6 w-28" />
-            </div>
+    <motion.article
+      initial={{ opacity: 0, y: 34, filter: "blur(10px)" }}
+      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      viewport={{ once: true, margin: "0px 0px -80px 0px" }}
+      transition={{ duration: 0.78, ease: [0.22, 1, 0.36, 1] }}
+      className="relative self-start overflow-hidden rounded-[28px] border border-white/80 bg-white/[0.78] p-5 shadow-[0_28px_90px_rgba(15,23,42,0.13)] backdrop-blur-xl md:p-7"
+    >
+      <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-blue-500/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-20 left-8 h-52 w-52 rounded-full bg-amber-400/[0.14] blur-3xl" />
+      <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/70 to-transparent" />
+
+      <div className="relative grid items-center gap-8 md:grid-cols-[minmax(210px,0.62fr)_minmax(0,1.38fr)]">
+        <Link
+          to={`/product/${book.slug}`}
+          className="group relative mx-auto block w-full max-w-[240px] md:max-w-[260px]"
+          style={{ perspective: "1200px" }}
+          onMouseMove={handleMouseMove}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => {
+            setIsHovered(false);
+            setMousePos({ x: 50, y: 50 });
+          }}
+        >
+          <motion.div
+            className="relative aspect-[2/3] overflow-hidden rounded-l-lg rounded-r-[28px] bg-slate-900 shadow-[24px_34px_70px_rgba(15,23,42,0.36)]"
+            animate={{
+              y: isHovered ? -8 : 0,
+              scale: isHovered ? 1.025 : 1,
+              rotateX,
+              rotateY,
+            }}
+            transition={{ type: "spring", stiffness: 190, damping: 20 }}
+            style={{
+              transformStyle: "preserve-3d",
+            }}
+          >
+            <img
+              src={book.image || book.cover}
+              alt={book.title}
+              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-black/[0.65] via-black/[0.26] to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-slate-950/[0.38] via-transparent to-white/[0.28]" />
+            <div
+              className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+              style={{
+                background: `radial-gradient(circle at ${mousePos.x}% ${mousePos.y}%, rgba(255,255,255,0.6), rgba(255,255,255,0.14) 34%, transparent 66%)`,
+                mixBlendMode: "overlay",
+              }}
+            />
+            <div className="absolute inset-0 rounded-l-lg rounded-r-[28px] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14),inset_18px_0_26px_rgba(2,6,23,0.24)]" />
+          </motion.div>
+
+          <div className="pointer-events-none absolute -bottom-7 left-1/2 h-10 w-[78%] -translate-x-1/2 rounded-full bg-slate-950/[0.22] blur-xl transition-opacity duration-300 group-hover:opacity-80" />
+
+          {discountPct > 0 && (
+            <motion.span
+              initial={{ opacity: 0, scale: 0.7, rotate: -10 }}
+              whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+              viewport={{ once: true }}
+              transition={{ type: "spring", stiffness: 330, damping: 18, delay: 0.2 }}
+              className="absolute -right-3 top-4 z-10 rounded-full bg-rose-500 px-3 py-1.5 text-[0.68rem] font-black uppercase tracking-wider text-white shadow-[0_10px_28px_rgba(244,63,94,0.28)]"
+            >
+              -{discountPct}%
+            </motion.span>
+          )}
+        </Link>
+
+        <div className="flex min-w-0 flex-col justify-center">
+          <motion.div
+            initial={{ opacity: 0, x: -12 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.52, delay: 0.15 }}
+            className="mb-4 flex flex-wrap items-center gap-2"
+          >
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1.5 text-[0.66rem] font-black uppercase tracking-[0.16em] text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)]">
+              <Clock3 size={12} />
+              {t("home.newArrivalSpotlight")}
+            </span>
+            {book.publicationYear && (
+              <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-[0.66rem] font-black uppercase tracking-[0.14em] text-amber-700">
+                {book.publicationYear}
+              </span>
+            )}
+          </motion.div>
+
+          <Link to={`/product/${book.slug}`} className="group/title block">
+            <h3
+              className="line-clamp-3 text-3xl font-bold leading-[1.05] text-slate-950 transition-colors duration-300 group-hover/title:text-blue-700 md:text-4xl"
+              style={{ fontFamily: "var(--f-serif)", letterSpacing: "-0.01em" }}
+            >
+              {book.title}
+            </h3>
+          </Link>
+          <p className="mt-3 line-clamp-1 text-sm font-bold uppercase tracking-[0.16em] text-slate-400">
+            {book.author}
+          </p>
+          <p className="mt-5 line-clamp-3 text-sm leading-6 text-slate-500">
+            {book.desc || t("home.newArrivalsSubtitle")}
+          </p>
+
+          <div className="mt-6 flex flex-wrap gap-2">
+            <NewArrivalMetaPill icon={<BookOpen size={13} />} label={book.catLabel || book.categoryName || t("common.books")} />
+            <NewArrivalMetaPill
+              icon={stockQuantity > 0 ? <CheckCircle2 size={13} /> : <PackageCheck size={13} />}
+              label={stockQuantity > 0 ? t("home.inStock", { count: stockQuantity }) : t("home.outOfStock")}
+              tone={stockQuantity > 0 ? "green" : "red"}
+            />
           </div>
-        ))}
+
+          <div className="mt-8 flex flex-wrap items-end justify-between gap-5 border-t border-slate-200 pt-6">
+            <div>
+              {discountPct > 0 && (
+                <div className="mb-1 text-sm font-semibold text-slate-400 line-through">
+                  {formatVND(book.priceOld)}
+                </div>
+              )}
+              <div className="text-3xl font-black text-slate-950" style={{ letterSpacing: "-0.02em" }}>
+                {formatVND(book.price)}
+              </div>
+            </div>
+
+            <Link
+              to={`/product/${book.slug}`}
+              className="group inline-flex items-center gap-2.5 rounded-full bg-gradient-to-r from-slate-950 to-blue-800 px-6 py-3 text-xs font-black uppercase tracking-[0.14em] text-white shadow-[0_16px_34px_rgba(15,23,42,0.2)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(37,99,235,0.28)]"
+            >
+              {t("common.viewDetails")}
+              <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
+            </Link>
+          </div>
+        </div>
       </div>
-    </>
+    </motion.article>
   );
+}
+
+function NewArrivalShelfCard({ book, index }) {
+  const { t } = useTranslation();
+  const [isHovered, setIsHovered] = React.useState(false);
+  const discountPct = getDiscountPercent(book);
+  const stockQuantity = Number(book.stockQuantity || 0);
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 28, filter: "blur(8px)" }}
+      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      viewport={{ once: true, margin: "0px 0px -60px 0px" }}
+      transition={{ duration: 0.56, delay: index * 0.07, ease: [0.22, 1, 0.36, 1] }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+    >
+      <Link
+        to={`/product/${book.slug}`}
+        className="group relative flex h-full min-h-[214px] overflow-hidden rounded-2xl border border-white/80 bg-white/[0.82] p-3 shadow-[0_12px_44px_rgba(15,23,42,0.08)] backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_24px_58px_rgba(37,99,235,0.13)]"
+      >
+        <div className="relative h-[188px] w-[126px] flex-shrink-0 overflow-hidden rounded-l-md rounded-r-2xl bg-slate-100 shadow-[10px_14px_28px_rgba(15,23,42,0.18)]">
+          <img
+            src={book.image || book.cover}
+            alt={book.title}
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+          />
+          <div className="absolute inset-y-0 left-0 w-5 bg-gradient-to-r from-black/45 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-tr from-slate-950/[0.28] via-transparent to-white/20 opacity-80" />
+          <div className="absolute inset-0 translate-x-[-120%] bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover:translate-x-[120%]" />
+          {discountPct > 0 && (
+            <span className="absolute left-2 top-2 rounded-full bg-rose-500 px-2 py-1 text-[0.62rem] font-black leading-none text-white">
+              -{discountPct}%
+            </span>
+          )}
+        </div>
+
+        <div className="flex min-w-0 flex-1 flex-col px-4 py-2">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[0.62rem] font-black uppercase tracking-[0.14em] text-blue-700">
+              {t("home.justArrived")}
+            </span>
+            {book.publicationYear && (
+              <span className="text-[0.68rem] font-bold text-slate-400">{book.publicationYear}</span>
+            )}
+          </div>
+
+          <h3
+            className="line-clamp-2 text-lg font-bold leading-snug text-slate-950 transition-colors duration-300 group-hover:text-blue-700"
+            style={{ fontFamily: "var(--f-body)" }}
+          >
+            {book.title}
+          </h3>
+          <p className="mt-1 line-clamp-1 text-xs font-semibold text-slate-400">{book.author}</p>
+          <p className="mt-3 line-clamp-2 text-xs leading-5 text-slate-500">
+            {book.catLabel || book.categoryName || t("common.books")}
+          </p>
+
+          <div className="mt-auto flex items-end justify-between gap-3 pt-4">
+            <div className="min-w-0">
+              {discountPct > 0 && (
+                <div className="mb-0.5 text-[0.72rem] font-semibold text-slate-400 line-through">
+                  {formatVND(book.priceOld)}
+                </div>
+              )}
+              <div className="text-lg font-black text-slate-950">{formatVND(book.price)}</div>
+              <div className={`mt-1 text-[0.68rem] font-bold ${stockQuantity > 0 ? "text-emerald-600" : "text-rose-500"}`}>
+                {stockQuantity > 0 ? t("home.inStock", { count: stockQuantity }) : t("home.outOfStock")}
+              </div>
+            </div>
+            <motion.span
+              animate={{ x: isHovered ? 0 : -4, opacity: isHovered ? 1 : 0.55 }}
+              transition={{ duration: 0.25 }}
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-950 text-white shadow-[0_10px_24px_rgba(15,23,42,0.18)] transition-colors duration-300 group-hover:bg-blue-700"
+            >
+              <ArrowRight size={15} />
+            </motion.span>
+          </div>
+        </div>
+
+        <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-gradient-to-r from-blue-600 via-amber-400 to-transparent transition-all duration-500 group-hover:w-full" />
+      </Link>
+    </motion.article>
+  );
+}
+
+function NewArrivalMetaPill({ icon, label, tone = "blue" }) {
+  const toneClass = {
+    blue: "border-blue-100 bg-blue-50 text-blue-700",
+    green: "border-emerald-100 bg-emerald-50 text-emerald-700",
+    red: "border-rose-100 bg-rose-50 text-rose-600",
+  }[tone];
+
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold ${toneClass}`}>
+      {icon}
+      <span className="line-clamp-1">{label}</span>
+    </span>
+  );
+}
+
+function NewArrivalsSkeleton() {
+  return (
+    <div className="mt-12 grid gap-7 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.25fr)]">
+      <div className="rounded-[28px] border border-white/80 bg-white/70 p-6 shadow-sm">
+        <div className="grid items-center gap-8 md:grid-cols-[minmax(210px,0.62fr)_minmax(0,1.38fr)]">
+          <div className="new-arrivals-skeleton aspect-[2/3] w-full max-w-[240px] rounded-l-lg rounded-r-[28px]" />
+          <div className="flex flex-col justify-center">
+            <div className="new-arrivals-skeleton h-8 w-32 rounded-full" />
+            <div className="new-arrivals-skeleton mt-6 h-10 w-4/5" />
+            <div className="new-arrivals-skeleton mt-3 h-10 w-3/5" />
+            <div className="new-arrivals-skeleton mt-6 h-4 w-full" />
+            <div className="new-arrivals-skeleton mt-2 h-4 w-5/6" />
+            <div className="new-arrivals-skeleton mt-8 h-9 w-40 rounded-full" />
+          </div>
+        </div>
+      </div>
+      <div>
+        <div className="new-arrivals-skeleton mb-4 h-6 w-44 rounded-full" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div key={index} className="flex min-h-[214px] rounded-2xl border border-white/80 bg-white/70 p-3">
+              <div className="new-arrivals-skeleton h-[188px] w-[126px] flex-shrink-0 rounded-l-md rounded-r-2xl" />
+              <div className="flex flex-1 flex-col px-4 py-2">
+                <div className="new-arrivals-skeleton h-6 w-24 rounded-full" />
+                <div className="new-arrivals-skeleton mt-4 h-5 w-full" />
+                <div className="new-arrivals-skeleton mt-2 h-5 w-3/4" />
+                <div className="new-arrivals-skeleton mt-4 h-3 w-28" />
+                <div className="new-arrivals-skeleton mt-auto h-6 w-32" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function getDiscountPercent(book) {
+  const currentPrice = Number(book?.price || 0);
+  const oldPrice = Number(book?.priceOld || 0);
+
+  if (oldPrice > currentPrice && currentPrice > 0) {
+    return Math.round((1 - currentPrice / oldPrice) * 100);
+  }
+
+  return Number(book?.discountPercentage || 0);
 }
 
 function CategorySkeleton() {
