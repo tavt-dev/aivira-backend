@@ -285,6 +285,33 @@ section:where([class]) {
   animation: new-arrivals-shimmer 1.55s ease-in-out infinite;
 }
 
+.catalog-paper-texture {
+  background-image:
+    radial-gradient(circle at 12% 12%, rgba(37, 99, 235, 0.08), transparent 24%),
+    radial-gradient(circle at 88% 8%, rgba(245, 158, 11, 0.08), transparent 22%),
+    radial-gradient(circle at 76% 76%, rgba(14, 165, 233, 0.055), transparent 28%),
+    linear-gradient(rgba(15, 23, 42, 0.026) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.018) 1px, transparent 1px);
+  background-size: auto, auto, auto, 58px 58px, 58px 58px;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
+}
+
+@keyframes catalog-shimmer {
+  0% {
+    background-position: -780px 0;
+  }
+
+  100% {
+    background-position: 780px 0;
+  }
+}
+
+.catalog-skeleton {
+  background: linear-gradient(105deg, rgba(226, 232, 240, 0.78) 24%, rgba(255, 255, 255, 0.98) 48%, rgba(219, 234, 254, 0.82) 72%);
+  background-size: 1560px 100%;
+  animation: catalog-shimmer 1.5s ease-in-out infinite;
+}
+
 body.admin-route #sprog,
 body.admin-route #cur,
 body.admin-route #cur-ring,
