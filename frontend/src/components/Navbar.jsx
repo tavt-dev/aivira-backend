@@ -154,29 +154,32 @@ export default function Navbar({ solid, user, onAuth }) {
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 md:px-8">
         <Link to="/" onClick={closePanels} className="group flex flex-shrink-0 items-center gap-3">
-          {/* Premium Logo Badge */}
           <img 
              src="/logo.png" 
-             alt="Aivira Premium Logo" 
+             alt="Aivira Bookstore" 
              className={[
                 "h-10 w-auto rounded-lg object-contain transition-transform duration-500 group-hover:scale-105",
-                isSolid ? "shadow-[0_4px_14px_rgba(0,0,0,0.18)]" : "shadow-[0_4px_14px_rgba(0,0,0,0.4)] border border-white/10"
+                isSolid ? "shadow-[0_4px_14px_rgba(0,0,0,0.18)]" : "border border-white/10 shadow-[0_4px_14px_rgba(0,0,0,0.4)]"
              ].join(" ")}
           />
-          {/* Brand wordmark */}
-          <span
-            className={[
-              "transition-all duration-500 group-hover:opacity-90",
-              isSolid ? "text-slate-900" : "text-white"
-            ].join(" ")}
-            style={{
-              fontFamily: "var(--f-display, 'Bebas Neue', sans-serif)",
-              fontSize: "1.45rem",
-              letterSpacing: "0.2em",
-              lineHeight: 1
-            }}
-          >
-            AIVIRA
+          <span className="flex flex-col leading-none">
+            <span
+              className={[
+                "text-[1.35rem] font-black transition-colors duration-500",
+                isSolid ? "text-slate-950" : "text-white"
+              ].join(" ")}
+              style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+            >
+              Aivira
+            </span>
+            <span
+              className={[
+                "hidden text-[0.68rem] font-bold uppercase transition-colors duration-500 sm:block",
+                isSolid ? "text-blue-600" : "text-blue-100"
+              ].join(" ")}
+            >
+              Bookstore
+            </span>
           </span>
         </Link>
 

@@ -56,15 +56,17 @@ export default function Footer() {
           <Link to="/" className="group mb-6 inline-flex items-center gap-4">
              <img 
                src="/logo.png" 
-               alt="Aivira Premium Bookstore" 
+               alt="Aivira Bookstore" 
                className="h-16 w-auto rounded-xl object-contain shadow-2xl transition-transform duration-500 group-hover:scale-105"
                style={{ boxShadow: '0 10px 30px -10px rgba(0,0,0,0.5)' }}
              />
-             <span 
-               className="text-3xl text-white transition-opacity duration-500 group-hover:opacity-90"
-               style={{ fontFamily: "'Cormorant Garamond', serif", letterSpacing: "0.1em" }}
-             >
-               AIVIRA
+             <span className="flex flex-col leading-none text-white transition-opacity duration-500 group-hover:opacity-90">
+               <span className="text-3xl font-black" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                 Aivira
+               </span>
+               <span className="mt-1 text-xs font-bold uppercase text-blue-200">
+                 Bookstore
+               </span>
              </span>
           </Link>
           <p className="mb-8 max-w-sm text-sm leading-relaxed text-blue-100/60 font-light">
