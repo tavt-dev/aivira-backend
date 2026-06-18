@@ -5,13 +5,12 @@ import { useTranslation } from "react-i18next";
 import { formatVND } from "../utils/formatters.js";
 import { ShoppingBag, Star } from "lucide-react";
 
-export default function BookCard({ book }) {
+export default function BookCard({ book, dark = false }) {
   const { t } = useTranslation();
   const [hovered, setHovered] = React.useState(false);
   const hasOldPrice = Number(book.priceOld || 0) > Number(book.price || 0);
   const rating = Number(book.rating || 0);
   const stockQuantity = Number(book.stockQuantity || 0);
-  // Tính % giảm từ 2 giá gốc/bán của backend
   const discountPct = hasOldPrice
     ? Math.round((1 - Number(book.price) / Number(book.priceOld)) * 100)
     : 0;
@@ -31,9 +30,18 @@ export default function BookCard({ book }) {
     >
       <Link
         to={`/product/${book.slug}`}
-        className="group relative flex h-full min-w-0 flex-col overflow-hidden bg-white"
-        style={{
+        className="group relative flex h-full min-w-0 flex-col overflow-hidden"
+        style={dark ? {
           borderRadius: "var(--r-lg)",
+          background: hovered ? "rgba(18,24,64,0.95)" : "rgba(12,17,48,0.88)",
+          boxShadow: hovered
+            ? "0 20px 50px rgba(79,110,247,0.2), 0 6px 20px rgba(0,0,0,0.3)"
+            : "0 4px 20px rgba(0,0,0,0.25)",
+          border: hovered ? "1px solid rgba(79,110,247,0.4)" : "1px solid rgba(255,255,255,0.065)",
+          transition: "all 0.4s cubic-bezier(0.22,1,0.36,1)",
+        } : {
+          borderRadius: "var(--r-lg)",
+          background: "#fff",
           boxShadow: hovered
             ? "0 20px 50px rgba(37,99,235,0.12), 0 6px 20px rgba(0,0,0,0.08)"
             : "0 2px 12px rgba(0,0,0,0.06)",
@@ -112,21 +120,24 @@ export default function BookCard({ book }) {
         <div className="flex flex-grow flex-col p-4">
           {/* Category label */}
           {book.catLabel && (
-            <span className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-blue-500">
+            <span
+              className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.15em]"
+              style={{ color: dark ? "#4f6ef7" : "#3b82f6", fontFamily:"var(--f-body)" }}
+            >
               {book.catLabel}
             </span>
           )}
 
           {/* Title */}
           <h3
-            className="mb-1 line-clamp-2 text-[15px] font-bold leading-snug text-slate-900 transition-colors duration-300 group-hover:text-blue-700"
-            style={{ fontFamily: "var(--f-body)" }}
+            className="mb-1 line-clamp-2 text-[15px] font-bold leading-snug transition-colors duration-300"
+            style={{ fontFamily:"var(--f-body)", color: dark ? (hovered ? "#93a8ff" : "#e8eeff") : (hovered ? "#1d4ed8" : "#0f172a") }}
           >
             {book.title}
           </h3>
 
           {/* Author */}
-          <p className="mb-3 line-clamp-1 text-xs font-medium text-slate-400">
+          <p className="mb-3 line-clamp-1 text-xs font-medium" style={{ color: dark ? "#4a5578" : "#94a3b8" }}>
             {book.author}
           </p>
 
@@ -140,7 +151,10 @@ export default function BookCard({ book }) {
                 className={`relative inline-flex h-1.5 w-1.5 rounded-full ${stockQuantity > 0 ? "bg-emerald-500" : "bg-red-400"}`}
               />
             </span>
-            <span className="text-[10px] font-semibold text-slate-500">
+            <span
+              className="text-[10px] font-semibold"
+              style={{ color: dark ? "#4a5578" : "#64748b" }}
+            >
               {stockQuantity > 0 ? t("home.inStock", { count: stockQuantity }) : t("home.outOfStock")}
             </span>
           </div>
@@ -149,13 +163,13 @@ export default function BookCard({ book }) {
           <div className="mt-auto flex items-end justify-between gap-2 pt-1">
             <div className="flex flex-col">
               <span
-                className="text-xl font-black text-slate-900"
-                style={{ fontFamily: "var(--f-body)", letterSpacing: "-0.02em" }}
+                className="text-xl font-black"
+                style={{ fontFamily:"var(--f-body)", letterSpacing:"-0.02em", color: dark ? "#e8eeff" : "#0f172a" }}
               >
                 {formatVND(book.price)}
               </span>
               {hasOldPrice && (
-                <span className="text-[11px] font-medium text-slate-400 line-through">
+                <span className="text-[11px] font-medium line-through" style={{ color: dark ? "#4a5578" : "#94a3b8" }}>
                   {formatVND(book.priceOld)}
                 </span>
               )}
@@ -164,14 +178,18 @@ export default function BookCard({ book }) {
             {rating > 0 && (
               <div
                 className="flex flex-shrink-0 items-center gap-1 px-2 py-0.5"
-                style={{
-                  borderRadius: "var(--r-sm)",
-                  background: "#fffbeb",
-                  border: "1px solid #fde68a",
+                style={dark ? {
+                  borderRadius:"var(--r-sm)",
+                  background:"rgba(240,165,0,0.14)",
+                  border:"1px solid rgba(240,165,0,0.35)",
+                } : {
+                  borderRadius:"var(--r-sm)",
+                  background:"#fffbeb",
+                  border:"1px solid #fde68a",
                 }}
               >
                 <Star size={9} className="text-amber-500" fill="currentColor" />
-                <span className="text-[10px] font-bold text-amber-700">{rating.toFixed(1)}</span>
+                <span className="text-[10px] font-bold" style={{ color: dark ? "#fbbf24" : "#92400e" }}>{rating.toFixed(1)}</span>
               </div>
             )}
           </div>
@@ -181,7 +199,9 @@ export default function BookCard({ book }) {
         <div
           className="absolute bottom-0 left-0 h-[2px] rounded-b"
           style={{
-            background: "linear-gradient(to right, #2563eb, #60a5fa)",
+            background: dark
+              ? "linear-gradient(to right, #4f6ef7, #a78bfa)"
+              : "linear-gradient(to right, #2563eb, #60a5fa)",
             width: hovered ? "100%" : "0%",
             transition: "width 0.4s cubic-bezier(0.22,1,0.36,1)",
           }}

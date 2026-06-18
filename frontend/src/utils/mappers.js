@@ -11,12 +11,15 @@ export function pageRows(payload) {
 
 export function pageMeta(payload, defaults = {}) {
   const rows = pageRows(payload);
-  const currentPage = Number(payload?.currentPage ?? payload?.page ?? defaults.page ?? 1);
-  const pageSize = Number(payload?.pageSize ?? payload?.size ?? defaults.size ?? 20);
-  const totalElements = Number(payload?.totalElements ?? payload?.total ?? defaults.totalElements ?? rows.length);
-  const totalPages = Number(
-    payload?.totalPages ?? defaults.totalPages ?? (totalElements > 0 ? Math.ceil(totalElements / Math.max(pageSize, 1)) : 1)
+  const pageSize = positiveInt(payload?.pageSize ?? payload?.size ?? defaults.size, 20);
+  const totalElements = nonNegativeInt(payload?.totalElements ?? payload?.total ?? defaults.totalElements, rows.length);
+  const rawTotalPages = nonNegativeInt(
+    payload?.totalPages ?? defaults.totalPages,
+    totalElements > 0 ? Math.ceil(totalElements / Math.max(pageSize, 1)) : 1
   );
+  const totalPages = totalElements > 0 ? Math.max(rawTotalPages, 1) : rawTotalPages;
+  const rawCurrentPage = payload?.currentPage ?? (payload?.number != null ? Number(payload.number) + 1 : payload?.page) ?? defaults.page ?? 1;
+  const currentPage = clamp(positiveInt(rawCurrentPage, 1), 1, Math.max(totalPages, 1));
 
   return {
     currentPage,
@@ -26,6 +29,20 @@ export function pageMeta(payload, defaults = {}) {
     hasNext: Boolean(payload?.hasNext ?? currentPage < totalPages),
     hasPrevious: Boolean(payload?.hasPrevious ?? currentPage > 1)
   };
+}
+
+function positiveInt(value, fallback) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function nonNegativeInt(value, fallback) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : fallback;
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
 }
 
 export function normalizeCategory(row) {

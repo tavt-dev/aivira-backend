@@ -286,12 +286,12 @@ const vi = {
     sortBestSelling: "Bán chạy",
     sortNameAsc: "Tên A-Z",
     pageSize: "Số lượng mỗi trang",
-    perPage: "{{count}} / trang",
+    perPage: "{{count}} sách/trang",
     firstPage: "Đầu",
     previousPage: "Trước",
     nextPage: "Sau",
     lastPage: "Cuối",
-    pageIndicator: "Trang {{page}} / {{total}}"
+    pageIndicator: "Trang {{page}}/{{total}}"
   },
   product: {
     notFound: "Không tìm thấy sản phẩm hoặc backend chưa sẵn sàng.",

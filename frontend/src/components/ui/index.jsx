@@ -237,20 +237,28 @@ export function Table({ children, empty, loading, minWidth = "900px" }) {
 }
 
 export function Pagination({ loading, meta, onPage, t }) {
-  if (!meta?.totalPages || meta.totalPages <= 1) return null;
+  const totalPages = Number.isInteger(Number(meta?.totalPages)) ? Math.max(Number(meta.totalPages), 0) : 0;
+  const currentPage = clampPage(meta?.currentPage, totalPages);
+  if (totalPages <= 1) return null;
   return (
     <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm">
       <span className="font-semibold text-slate-500">
-        {t("catalog.pageIndicator", { page: meta.currentPage, total: meta.totalPages })} - {meta.totalElements}
+        {t("catalog.pageIndicator", { page: currentPage, total: totalPages })} - {Number(meta.totalElements) || 0}
       </span>
       <div className="flex flex-wrap gap-2">
         <Button disabled={loading || !meta.hasPrevious} size="sm" variant="secondary" onClick={() => onPage(1)}>{t("catalog.firstPage")}</Button>
-        <Button disabled={loading || !meta.hasPrevious} size="sm" variant="secondary" onClick={() => onPage(meta.currentPage - 1)}>{t("catalog.previousPage")}</Button>
-        <Button disabled={loading || !meta.hasNext} size="sm" variant="secondary" onClick={() => onPage(meta.currentPage + 1)}>{t("catalog.nextPage")}</Button>
-        <Button disabled={loading || !meta.hasNext} size="sm" variant="secondary" onClick={() => onPage(meta.totalPages)}>{t("catalog.lastPage")}</Button>
+        <Button disabled={loading || !meta.hasPrevious} size="sm" variant="secondary" onClick={() => onPage(currentPage - 1)}>{t("catalog.previousPage")}</Button>
+        <Button disabled={loading || !meta.hasNext} size="sm" variant="secondary" onClick={() => onPage(currentPage + 1)}>{t("catalog.nextPage")}</Button>
+        <Button disabled={loading || !meta.hasNext} size="sm" variant="secondary" onClick={() => onPage(totalPages)}>{t("catalog.lastPage")}</Button>
       </div>
     </div>
   );
+}
+
+function clampPage(value, totalPages) {
+  const parsed = Number(value);
+  const page = Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+  return Math.min(Math.max(page, 1), Math.max(totalPages, 1));
 }
 
 export function Tabs({ items, onChange, value }) {

@@ -285,12 +285,12 @@ const en = {
     sortBestSelling: "Best selling",
     sortNameAsc: "Name A-Z",
     pageSize: "Page size",
-    perPage: "{{count}} / page",
+    perPage: "{{count}}/page",
     firstPage: "First",
     previousPage: "Previous",
     nextPage: "Next",
     lastPage: "Last",
-    pageIndicator: "Page {{page}} / {{total}}"
+    pageIndicator: "Page {{page}}/{{total}}"
   },
   product: {
     notFound: "Product not found or backend unavailable.",
