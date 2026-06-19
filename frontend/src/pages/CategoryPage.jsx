@@ -753,7 +753,7 @@ function CatalogEmptyState({ tk, isDark, hasActiveFilters, onClear, t }) {
         </motion.div>
       </div>
       <h2 className="text-3xl font-black"
-        style={{ background:`linear-gradient(135deg,${tk.text1},${tk.accent})`, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>
+        style={{ background:`linear-gradient(135deg,${tk.text1},${tk.accent})`, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", fontFamily:"var(--f-serif)", letterSpacing:"-0.01em" }}>
         {t("catalog.noBooks")}
       </h2>
       <p className="mx-auto mt-3 max-w-md text-sm leading-6" style={{ color:tk.text3 }}>{t("catalog.emptyCopy")}</p>

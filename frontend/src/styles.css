@@ -5,7 +5,7 @@
 :root {
   --f-display: "Bebas Neue", sans-serif;
   --f-serif: "Cormorant Garamond", serif;
-  --f-body: "Plus Jakarta Sans", sans-serif;
+  --f-body: "Inter", sans-serif;
 
   /* ── Palette ── */
   --navy-950: #020c1b;
@@ -586,4 +586,43 @@ html.dark .catalog-category-active {
   background-size: 2800px 100%;
   animation: catalog-dynamic-shimmer 2s ease-in-out infinite;
   border-radius: 12px;
+}
+
+/* ═══════════════════════════════════════════
+   ProductPage — premium animations
+═══════════════════════════════════════════ */
+
+/* CTA button shine sweep */
+@keyframes shimmer {
+  0%   { transform: translateX(-100%) skewX(-15deg); }
+  100% { transform: translateX(260%)  skewX(-15deg); }
+}
+
+/* Product gallery thumbnail active glow pulse */
+@keyframes product-thumb-glow {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(79,110,247,0.25), 0 4px 16px rgba(79,110,247,0.25); }
+  50%       { box-shadow: 0 0 0 4px rgba(79,110,247,0.45), 0 6px 24px rgba(79,110,247,0.40); }
+}
+
+/* Review card left accent bar */
+.product-review-accent {
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Hide number input spin buttons */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] { -moz-appearance: textfield; }
+
+/* select element — reset for dark/light theming */
+select.themed-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238892b0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px !important;
 }
