@@ -626,3 +626,35 @@ select.themed-select {
   background-position: right 12px center;
   padding-right: 36px !important;
 }
+
+/* ── Orders / Hero floating particles ── */
+.catalog-particle-v2 {
+  position: absolute;
+  border-radius: 50%;
+  opacity: var(--op, 0.4);
+  animation: particle-float var(--dur, 5s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+  pointer-events: none;
+}
+
+@keyframes particle-float {
+  0%, 100% { transform: translateY(0) scale(1); opacity: var(--op, 0.4); }
+  50%       { transform: translateY(-14px) scale(1.15); opacity: calc(var(--op, 0.4) * 0.6); }
+}
+
+/* ── Cart checkout CTA shine sweep ── */
+.cart-checkout-shine {
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255,255,255,0.22) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  background-position: -100% 0;
+  transition: background-position 0s;
+}
+button:hover .cart-checkout-shine {
+  background-position: 200% 0;
+  transition: background-position 0.65s ease;
+}
