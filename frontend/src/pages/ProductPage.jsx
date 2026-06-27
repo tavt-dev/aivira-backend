@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
@@ -12,7 +12,6 @@ import {
 import { addCartItem } from "../api/cartApi.js";
 import { getProduct } from "../api/catalogApi.js";
 import { getProductReviews } from "../api/reviewApi.js";
-import RatingStars from "../components/reviews/RatingStars.jsx";
 import { discount, formatSold, formatVND } from "../utils/formatters.js";
 import {
   normalizeBook, normalizeReview,
@@ -331,7 +330,7 @@ export default function ProductPage({ onAuth }) {
 /* ═══════════════════════════════════════════════
    HERO BAR — Breadcrumb + ambient
 ═══════════════════════════════════════════════ */
-function ProductHeroBar({ tk, isDark, book, catSlug, t }) {
+function ProductHeroBar({ tk, book, catSlug, t }) {
   return (
     <motion.div
       initial={{opacity:0,y:-20}} animate={{opacity:1,y:0}}
@@ -377,15 +376,17 @@ function ProductHeroBar({ tk, isDark, book, catSlug, t }) {
 /* ═══════════════════════════════════════════════
    GALLERY
 ═══════════════════════════════════════════════ */
-function BookGallery({ gallery, selectedImage, onSelect, title, tk, isDark, onLightbox, t }) {
+function BookGallery({ gallery, selectedImage, onSelect, title, tk, onLightbox, t }) {
   const [imgLoaded, setImgLoaded] = useState(false);
   const [hovered, setHovered]     = useState(false);
 
   return (
     <div className="grid gap-4">
       {/* Main image */}
-      <div
-        className="group relative cursor-zoom-in overflow-hidden"
+      <button
+        type="button"
+        aria-label={t("product.openGallery", "Open image gallery")}
+        className="group relative block w-full cursor-zoom-in overflow-hidden border-0 p-0 text-left"
         style={{ borderRadius:"20px", aspectRatio:"2/3" }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -414,7 +415,7 @@ function BookGallery({ gallery, selectedImage, onSelect, title, tk, isDark, onLi
         {/* Bottom gradient overlay */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24"
           style={{ background:"linear-gradient(to top,rgba(0,0,0,0.4),transparent)" }}/>
-      </div>
+      </button>
 
       {/* Thumbnail strip */}
       {gallery.length > 1 && (
@@ -759,7 +760,7 @@ function VariationPicker({ variations, selected, onSelect, tk, isDark, t }) {
 }
 
 /* ── Quantity stepper ────────────────────────── */
-function QuantityRow({ value, max, onChange, tk, isDark, t }) {
+function QuantityRow({ value, max, onChange, tk, t }) {
   return (
     <div className="flex items-center gap-4">
       <span className="text-sm font-bold" style={{ color:tk.text2 }}>{t("product.quantity")}</span>
@@ -1078,7 +1079,7 @@ function ReviewCard({ review, tk, isDark }) {
 /* ═══════════════════════════════════════════════
    SKELETON
 ═══════════════════════════════════════════════ */
-function ProductSkeleton({ tk, isDark }) {
+function ProductSkeleton({ tk }) {
   const shimmer = { "--sa":tk.skA, "--sb":tk.skB, "--sc":tk.skC };
   return (
     <div className="relative w-full overflow-hidden" style={{ background:tk.pageBg, minHeight:"100vh" }}>

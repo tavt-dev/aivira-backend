@@ -60,6 +60,46 @@ html.dark body {
   color: #e2e8f0;
 }
 
+.admin-shell {
+  --admin-page: #f8fafc;
+  --admin-sidebar: #ffffff;
+  --admin-header: rgba(255, 255, 255, 0.82);
+  --admin-surface: #ffffff;
+  --admin-surface-soft: #f8fafc;
+  --admin-surface-muted: #f1f5f9;
+  --admin-border: #e2e8f0;
+  --admin-border-strong: #cbd5e1;
+  --admin-text: #0f172a;
+  --admin-text-muted: #64748b;
+  --admin-text-faint: #94a3b8;
+  --admin-track: #e2e8f0;
+  background: var(--admin-page);
+  color: var(--admin-text);
+}
+
+html.dark .admin-shell {
+  --admin-page: #020617;
+  --admin-sidebar: #0f172a;
+  --admin-header: rgba(15, 23, 42, 0.82);
+  --admin-surface: #0f172a;
+  --admin-surface-soft: #111c31;
+  --admin-surface-muted: #1e293b;
+  --admin-border: #1e293b;
+  --admin-border-strong: #334155;
+  --admin-text: #f8fafc;
+  --admin-text-muted: #94a3b8;
+  --admin-text-faint: #64748b;
+  --admin-track: #263348;
+}
+
+.admin-shell input[type="date"] {
+  color-scheme: light;
+}
+
+html.dark .admin-shell input[type="date"] {
+  color-scheme: dark;
+}
+
 html.dark .bg-white,
 html.dark .bg-white\/80,
 html.dark .bg-white\/85,

@@ -514,7 +514,7 @@ export default function CartPage({ onAuth }) {
 }
 
 /* ── Hero bar ────────────────────────────────── */
-function CartHeroBar({ tk, isDark, itemCount, t }) {
+function CartHeroBar({ tk, itemCount, t }) {
   return (
     <motion.div
       initial={{opacity:0,y:-20}} animate={{opacity:1,y:0}}

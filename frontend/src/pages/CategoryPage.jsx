@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
@@ -150,14 +150,15 @@ export default function CategoryPage() {
       author: filters.author, publisher: filters.publisher, isbn: filters.isbn,
       minPrice: filters.minPrice, maxPrice: filters.maxPrice,
       available: filters.available === "" ? "" : filters.available === "true",
-      sort: filters.sort, page: filters.page, size: filters.size,
+      sort: filters.sort, page: Math.max(filters.page - 1, 0), size: filters.size,
     }, { signal: ctrl.signal })
       .then(page => {
-        if (page?.totalPages > 0 && filters.page > page.totalPages) {
+        const rows = pageRows(page);
+        if (page?.totalPages > 0 && filters.page > page.totalPages && rows.length === 0) {
           setSearchParams(buildSearchParams(filters, { page: page.totalPages }), { replace:true });
           return;
         }
-        setBooks(pageRows(page).map(r => normalizeBook(r)));
+        setBooks(rows.map(r => normalizeBook(r)));
         setPageMeta(readPageMeta(page, { page:filters.page, size:filters.size }));
       })
       .catch(err => {
@@ -244,7 +245,7 @@ export default function CategoryPage() {
 /* ═══════════════════════════════════════════════════════
    HERO — same dark bg regardless of theme (editorial)
 ═══════════════════════════════════════════════════════ */
-function CatalogHero({ tk, isDark, title, loading, total, activeCategory, filters, hasActiveFilters, onClear, onRemoveChip, slug, t }) {
+function CatalogHero({ tk, title, loading, total, activeCategory, filters, hasActiveFilters, onClear, onRemoveChip, slug, t }) {
   const chips = getActiveFilterChips(filters, t);
   const categoryLabel = activeCategory?.label || activeCategory?.categoryName || t("catalog.booksFallback");
   return (

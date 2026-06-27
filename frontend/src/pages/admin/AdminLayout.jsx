@@ -3,8 +3,8 @@ import { useTranslation } from "react-i18next";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
 import {
-  BookOpen, ChevronRight, ExternalLink, Globe,
-  LayoutDashboard, CreditCard, LogOut, Moon, Package,
+  BookOpen, ChevronRight, ExternalLink,
+  LayoutDashboard, CreditCard, LogOut, Moon,
   Percent, Shield, ShoppingBag, Star, Sun, Tag, Users,
   Menu, X,
 } from "lucide-react";
@@ -29,18 +29,16 @@ const NAV_ITEMS = [
 
 /* ── Tokens ─────────────────────────────────── */
 const tk = {
-  sidebar:  "#07091a",
-  sidebarBorder: "rgba(255,255,255,0.06)",
-  surface:  "rgba(10,15,42,0.98)",
-  surface2: "rgba(16,22,58,0.92)",
-  pageBg:   "#0c1030",
-  topBg:    "rgba(10,15,42,0.95)",
-  text1:    "#e8eeff",
-  text2:    "#8892b0",
-  text3:    "#4a5578",
+  sidebar:  "var(--admin-sidebar)",
+  sidebarBorder: "var(--admin-border)",
+  pageBg:   "var(--admin-page)",
+  topBg:    "var(--admin-header)",
+  text1:    "var(--admin-text)",
+  text2:    "var(--admin-text-muted)",
+  text3:    "var(--admin-text-faint)",
   accent:   "#4f6ef7",
   heroLine: "linear-gradient(90deg,transparent,#4f6ef7 40%,#a78bfa 70%,transparent)",
-  border:   "rgba(255,255,255,0.07)",
+  border:   "var(--admin-border)",
 };
 
 export default function AdminLayout() {
@@ -68,12 +66,12 @@ export default function AdminLayout() {
 
   async function logout() {
     const rt = getRefreshToken();
-    try { if (rt) await logoutRequest(rt); } catch {}
+    try { if (rt) await logoutRequest(rt); } catch { /* Local auth still has to be cleared. */ }
     finally { clearAuth(); navigate("/?auth=login&next=/admin/dashboard",{replace:true}); }
   }
 
   return (
-    <div className="flex min-h-screen" style={{ background: tk.pageBg }}>
+    <div className="admin-shell flex min-h-screen" style={{ background: tk.pageBg }}>
 
       {/* ── Mobile overlay ── */}
       <AnimatePresence>
@@ -89,12 +87,10 @@ export default function AdminLayout() {
       {/* ── Sidebar ── */}
       <motion.aside
         initial={false}
-        animate={{ x: mobileOpen ? 0 : undefined }}
-        className="fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col lg:static lg:translate-x-0"
+        className={`fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col transform transition-transform duration-300 lg:static lg:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}
         style={{
           background: tk.sidebar,
           borderRight:`1px solid ${tk.sidebarBorder}`,
-          transform: mobileOpen ? "translateX(0)" : undefined,
         }}>
         {/* Top accent */}
         <div className="absolute left-0 right-0 top-0 h-[1.5px]" style={{ background:tk.heroLine }}/>
@@ -136,12 +132,12 @@ export default function AdminLayout() {
                     transition={{duration:0.3,delay:i*0.04}}
                     className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-bold transition-all"
                     style={{
-                      background: isActive?"rgba(79,110,247,0.18)":"transparent",
+                      background: isActive?"rgba(79,110,247,0.12)":"transparent",
                       color: isActive?tk.text1:tk.text2,
-                      border: isActive?"1px solid rgba(79,110,247,0.3)":"1px solid transparent",
+                      border: isActive?"1px solid rgba(79,110,247,0.18)":"1px solid transparent",
                     }}>
                     <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg transition-all"
-                      style={{ background:isActive?"rgba(79,110,247,0.25)":"rgba(255,255,255,0.04)", color:isActive?tk.accent:tk.text3 }}>
+                      style={{ background:isActive?"rgba(79,110,247,0.16)":"var(--admin-surface-soft)", color:isActive?tk.accent:tk.text3 }}>
                       <Icon size={14}/>
                     </div>
                     {t(label)}
@@ -214,7 +210,7 @@ export default function AdminLayout() {
             </motion.button>
             {/* User chip */}
             <div className="flex items-center gap-2 overflow-hidden rounded-full px-4 py-2"
-              style={{ background:"rgba(79,110,247,0.12)", border:"1px solid rgba(79,110,247,0.25)" }}>
+              style={{ background:"rgba(79,110,247,0.10)", border:"1px solid rgba(79,110,247,0.18)" }}>
               <div className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-black text-white"
                 style={{ background:"linear-gradient(135deg,#2a3ecc,#4f6ef7)" }}>
                 {(user?.username||user?.email||"A")[0].toUpperCase()}
@@ -227,7 +223,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-auto p-5 md:p-8">
+        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
           <Outlet/>
         </main>
       </div>

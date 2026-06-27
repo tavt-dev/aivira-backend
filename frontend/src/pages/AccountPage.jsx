@@ -6,8 +6,8 @@ import {
   AlertCircle, BadgeCheck, Camera, CheckCircle2,
   ChevronRight, Globe, Home, Key, Laptop, Lock,
   LogOut, Mail, MapPin, Monitor, Phone, Plus,
-  Shield, ShieldOff, Star, Trash2, User, UserCircle,
-  X, Zap, Eye, EyeOff, Edit3, Save, RotateCcw,
+  ShieldOff, Star, Trash2, User, UserCircle,
+  X, Eye, EyeOff, Edit3, Save, RotateCcw,
 } from "lucide-react";
 
 import { getSessions, logoutAll, revokeSession } from "../api/authApi.js";
@@ -704,7 +704,7 @@ export default function AccountPage({ onAuth }) {
 }
 
 /* ── Account Hero Bar ───────────────────────── */
-function AccountHeroBar({ profile, initials, tk, isDark, t, onAvatarClick, busy }) {
+function AccountHeroBar({ profile, initials, tk, t, onAvatarClick, busy }) {
   return (
     <motion.div initial={{opacity:0,y:-20}} animate={{opacity:1,y:0}}
       transition={{duration:0.55,ease:[0.22,1,0.36,1]}}
@@ -758,7 +758,7 @@ function AccountHeroBar({ profile, initials, tk, isDark, t, onAvatarClick, busy 
 }
 
 /* ── Section wrapper ────────────────────────── */
-function Section({ title, icon:Icon, children, tk, isDark, danger, action }) {
+function Section({ title, icon:Icon, children, tk, danger, action }) {
   return (
     <motion.div initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{duration:0.4,ease:[0.22,1,0.36,1]}}
       className="overflow-hidden rounded-[22px]"
@@ -804,7 +804,7 @@ function PInput({ tk, isDark, ...props }) {
 }
 
 /* ── Premium Select ─────────────────────────── */
-function PSelect({ tk, isDark, children, ...props }) {
+function PSelect({ tk, children, ...props }) {
   return (
     <select {...props}
       className="w-full rounded-2xl px-4 py-3.5 text-sm font-semibold outline-none transition-all"
@@ -818,7 +818,7 @@ function PSelect({ tk, isDark, children, ...props }) {
 }
 
 /* ── Primary Button ─────────────────────────── */
-function PrimaryBtn({ children, icon:Icon, loading, tk, ...props }) {
+function PrimaryBtn({ children, icon:Icon, loading, ...props }) {
   return (
     <motion.button
       whileHover={{ scale:1.02, y:-1 }} whileTap={{ scale:0.97 }}
@@ -835,7 +835,7 @@ function PrimaryBtn({ children, icon:Icon, loading, tk, ...props }) {
 }
 
 /* ── Secondary Button ───────────────────────── */
-function SecondaryBtn({ children, icon:Icon, loading, onClick, size:sz, tk, isDark }) {
+function SecondaryBtn({ children, icon:Icon, loading, onClick, size:sz, tk }) {
   return (
     <motion.button type="button" whileHover={{scale:1.03}} whileTap={{scale:0.97}}
       onClick={onClick}

@@ -16,7 +16,9 @@ describe("AdminPaymentsPage", () => {
     );
 
     expect(await screen.findByText(/PG-20260611-001/i)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Chi tiết|detail/i }));
     expect(screen.getAllByText(/ORD-20260611-001/i).length).toBeGreaterThan(0);
+    await user.click(screen.getByRole("button", { name: /close/i }));
     await user.click(screen.getByRole("button", { name: /Đối soát|reconcile/i }));
     expect(await screen.findByText(/Payment status reconciled/i)).toBeInTheDocument();
   });

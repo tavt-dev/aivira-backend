@@ -17,6 +17,7 @@ import {
 import {
   Button,
   Input,
+  Modal,
   Notice,
   PageHeader,
   Pagination,
@@ -74,6 +75,8 @@ export default function AdminDiscountsPage() {
   const [promotionForm, setPromotionForm] = useState(emptyPromotionForm);
   const [editingCouponId, setEditingCouponId] = useState(null);
   const [editingPromotionId, setEditingPromotionId] = useState(null);
+  const [couponFormOpen, setCouponFormOpen] = useState(false);
+  const [promotionFormOpen, setPromotionFormOpen] = useState(false);
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [productKeyword, setProductKeyword] = useState("");
@@ -158,7 +161,7 @@ export default function AdminDiscountsPage() {
         await createCoupon(payload);
         setMessage(t("admin.couponCreated"));
       }
-      resetCouponForm();
+      closeCouponForm();
       await refreshCoupons(couponPage);
     } catch (error) {
       setMessage(error.message || t("admin.couponSaveFailed"));
@@ -182,7 +185,7 @@ export default function AdminDiscountsPage() {
         await createPromotion(payload);
         setMessage(t("admin.promotionCreated"));
       }
-      resetPromotionForm();
+      closePromotionForm();
       await refreshPromotions(promotionPage);
     } catch (error) {
       setMessage(error.message || t("admin.promotionSaveFailed"));
@@ -251,6 +254,7 @@ export default function AdminDiscountsPage() {
       active: coupon.active !== false,
     });
     setTab("coupons");
+    setCouponFormOpen(true);
   }
 
   function editPromotion(promotion) {
@@ -268,33 +272,53 @@ export default function AdminDiscountsPage() {
       active: promotion.active !== false,
     });
     setTab("promotions");
+    setPromotionFormOpen(true);
   }
 
-  function resetCouponForm() {
+  function startCouponCreate() {
+    setEditingCouponId(null);
+    setCouponForm(emptyCouponForm);
+    setTab("coupons");
+    setCouponFormOpen(true);
+  }
+
+  function startPromotionCreate() {
+    setEditingPromotionId(null);
+    setPromotionForm(emptyPromotionForm);
+    setTab("promotions");
+    setPromotionFormOpen(true);
+  }
+
+  function closeCouponForm() {
+    setCouponFormOpen(false);
     setEditingCouponId(null);
     setCouponForm(emptyCouponForm);
   }
 
-  function resetPromotionForm() {
+  function closePromotionForm() {
+    setPromotionFormOpen(false);
     setEditingPromotionId(null);
     setPromotionForm(emptyPromotionForm);
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="mx-auto grid w-full max-w-7xl gap-6">
       <PageHeader title={t("admin.discountsTitle")} eyebrow={t("admin.discountsEyebrow")} />
       {message && <Notice>{message}</Notice>}
 
       <div className="flex flex-wrap gap-2">
         <TabButton active={tab === "coupons"} onClick={() => setTab("coupons")}>{t("admin.coupons")}</TabButton>
         <TabButton active={tab === "promotions"} onClick={() => setTab("promotions")}>{t("admin.promotions")}</TabButton>
-        <Link className="ml-auto rounded-full border border-slate-200 px-4 py-2 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50" to="/checkout">
+        <Button type="button" variant="secondary" onClick={tab === "coupons" ? startCouponCreate : startPromotionCreate}>
+          {tab === "coupons" ? t("admin.createCoupon") : t("admin.createPromotion")}
+        </Button>
+        <Link className="ml-auto rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800" to="/checkout">
           {t("admin.testInCheckout")}
         </Link>
       </div>
 
       {tab === "coupons" ? (
-        <div className="grid gap-6 xl:grid-cols-[1fr_430px]">
+        <div className="grid gap-6">
           <CouponList
             coupons={coupons}
             language={i18n.language}
@@ -307,17 +331,9 @@ export default function AdminDiscountsPage() {
             onSize={(size) => setCouponPage({ page: 1, size: Number(size || 20) })}
             t={t}
           />
-          <CouponForm
-            editing={Boolean(editingCouponId)}
-            form={couponForm}
-            onCancel={resetCouponForm}
-            onChange={setCouponForm}
-            onSubmit={submitCoupon}
-            t={t}
-          />
         </div>
       ) : (
-        <div className="grid gap-6 xl:grid-cols-[1fr_460px]">
+        <div className="grid gap-6">
           <PromotionList
             language={i18n.language}
             loading={loading === "promotions"}
@@ -330,20 +346,42 @@ export default function AdminDiscountsPage() {
             resolveTarget={(promotion) => resolveTarget(promotion, categoryOptions, productOptions)}
             t={t}
           />
-          <PromotionForm
-            categories={categoryOptions}
-            editing={Boolean(editingPromotionId)}
-            form={promotionForm}
-            onCancel={resetPromotionForm}
-            onChange={setPromotionForm}
-            onProductKeyword={setProductKeyword}
-            onSubmit={submitPromotion}
-            productKeyword={productKeyword}
-            products={productOptions}
-            t={t}
-          />
         </div>
       )}
+      <Modal
+        onClose={closeCouponForm}
+        open={couponFormOpen}
+        size="lg"
+        title={editingCouponId ? t("admin.editCoupon") : t("admin.createCoupon")}
+      >
+        <CouponForm
+          editing={Boolean(editingCouponId)}
+          form={couponForm}
+          onCancel={closeCouponForm}
+          onChange={setCouponForm}
+          onSubmit={submitCoupon}
+          t={t}
+        />
+      </Modal>
+      <Modal
+        onClose={closePromotionForm}
+        open={promotionFormOpen}
+        size="lg"
+        title={editingPromotionId ? t("admin.editPromotion") : t("admin.createPromotion")}
+      >
+        <PromotionForm
+          categories={categoryOptions}
+          editing={Boolean(editingPromotionId)}
+          form={promotionForm}
+          onCancel={closePromotionForm}
+          onChange={setPromotionForm}
+          onProductKeyword={setProductKeyword}
+          onSubmit={submitPromotion}
+          productKeyword={productKeyword}
+          products={productOptions}
+          t={t}
+        />
+      </Modal>
     </div>
   );
 }
@@ -352,9 +390,9 @@ function CouponList({ coupons, language, loading, meta, onCopy, onDeactivate, on
   return (
     <Panel title={t("admin.couponList")}>
       <PageSize value={meta.pageSize} onChange={onSize} />
-      <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
+      <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
         <table className="min-w-[980px] w-full border-collapse text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+          <thead className="bg-slate-50 text-xs uppercase text-slate-500 dark:bg-slate-800/50 dark:text-slate-400">
             <tr>
               <th className="px-4 py-3">{t("admin.code")}</th>
               <th className="px-4 py-3">{t("admin.type")}</th>
@@ -367,10 +405,10 @@ function CouponList({ coupons, language, loading, meta, onCopy, onDeactivate, on
           </thead>
           <tbody>
             {coupons.map((coupon) => (
-              <tr className="border-t border-slate-100 align-top" key={coupon.id}>
+              <tr className="border-t border-slate-100 align-top transition-colors hover:bg-slate-50/60 dark:border-slate-800 dark:hover:bg-slate-800/30" key={coupon.id}>
                 <td className="px-4 py-3">
-                  <p className="font-bold text-slate-950">{coupon.code}</p>
-                  <p className="text-xs text-slate-500">#{coupon.id}</p>
+                  <p className="font-bold text-slate-950 dark:text-slate-100">{coupon.code}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">#{coupon.id}</p>
                 </td>
                 <td className="px-4 py-3">{coupon.type}</td>
                 <td className="px-4 py-3">
@@ -382,7 +420,7 @@ function CouponList({ coupons, language, loading, meta, onCopy, onDeactivate, on
                   <p>{coupon.usedCount || 0} / {coupon.usageLimit ?? "-"}</p>
                   <p className="text-xs text-slate-500">{t("admin.perUser")}: {coupon.usageLimitPerUser ?? "-"}</p>
                 </td>
-                <td className="px-4 py-3 text-slate-600">
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
                   <p>{formatLocalDate(coupon.startAt)}</p>
                   <p>{formatLocalDate(coupon.endAt)}</p>
                   <p className="text-xs text-slate-400">{formatDateTime(coupon.updatedAt, language)}</p>
@@ -409,7 +447,6 @@ function CouponList({ coupons, language, loading, meta, onCopy, onDeactivate, on
 
 function CouponForm({ editing, form, onCancel, onChange, onSubmit, t }) {
   return (
-    <Panel title={editing ? t("admin.editCoupon") : t("admin.createCoupon")}>
       <form className="grid gap-4" onSubmit={onSubmit}>
         <Input required maxLength={50} value={form.code} onChange={(event) => onChange({ ...form, code: event.target.value.toUpperCase() })} placeholder={t("admin.code")} />
         <div className="grid gap-3 md:grid-cols-2">
@@ -426,10 +463,9 @@ function CouponForm({ editing, form, onCancel, onChange, onSubmit, t }) {
         <ActiveCheckbox checked={form.active} onChange={(active) => onChange({ ...form, active })} t={t} />
         <div className="flex flex-wrap gap-2">
           <Button type="submit">{editing ? t("admin.updateCoupon") : t("admin.createCoupon")}</Button>
-          {editing && <Button variant="secondary" type="button" onClick={onCancel}>{t("common.cancel")}</Button>}
+          <Button variant="secondary" type="button" onClick={onCancel}>{t("common.cancel")}</Button>
         </div>
       </form>
-    </Panel>
   );
 }
 
@@ -437,9 +473,9 @@ function PromotionList({ language, loading, meta, onDeactivate, onEdit, onPage, 
   return (
     <Panel title={t("admin.promotionList")}>
       <PageSize value={meta.pageSize} onChange={onSize} />
-      <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
+      <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
         <table className="min-w-[1040px] w-full border-collapse text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+          <thead className="bg-slate-50 text-xs uppercase text-slate-500 dark:bg-slate-800/50 dark:text-slate-400">
             <tr>
               <th className="px-4 py-3">{t("admin.promotionName")}</th>
               <th className="px-4 py-3">{t("admin.type")}</th>
@@ -452,10 +488,10 @@ function PromotionList({ language, loading, meta, onDeactivate, onEdit, onPage, 
           </thead>
           <tbody>
             {promotions.map((promotion) => (
-              <tr className="border-t border-slate-100 align-top" key={promotion.id}>
+              <tr className="border-t border-slate-100 align-top transition-colors hover:bg-slate-50/60 dark:border-slate-800 dark:hover:bg-slate-800/30" key={promotion.id}>
                 <td className="px-4 py-3">
-                  <p className="font-bold text-slate-950">{promotion.promotionName}</p>
-                  <p className="text-xs text-slate-500">{promotion.description}</p>
+                  <p className="font-bold text-slate-950 dark:text-slate-100">{promotion.promotionName}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{promotion.description}</p>
                 </td>
                 <td className="px-4 py-3">{promotion.promotionType}</td>
                 <td className="px-4 py-3">
@@ -466,7 +502,7 @@ function PromotionList({ language, loading, meta, onDeactivate, onEdit, onPage, 
                   <p className="font-semibold">{promotion.promotionScope}</p>
                   <p className="text-xs text-slate-500">#{promotion.targetId} {resolveTarget(promotion)}</p>
                 </td>
-                <td className="px-4 py-3 text-slate-600">
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
                   <p>{formatLocalDate(promotion.startAt)}</p>
                   <p>{formatLocalDate(promotion.endAt)}</p>
                   <p className="text-xs text-slate-400">{formatDateTime(promotion.updatedAt, language)}</p>
@@ -492,7 +528,6 @@ function PromotionList({ language, loading, meta, onDeactivate, onEdit, onPage, 
 
 function PromotionForm({ categories, editing, form, onCancel, onChange, onProductKeyword, onSubmit, productKeyword, products, t }) {
   return (
-    <Panel title={editing ? t("admin.editPromotion") : t("admin.createPromotion")}>
       <form className="grid gap-4" onSubmit={onSubmit}>
         <Input required maxLength={150} value={form.promotionName} onChange={(event) => onChange({ ...form, promotionName: event.target.value })} placeholder={t("admin.promotionName")} />
         <Textarea required value={form.description} onChange={(event) => onChange({ ...form, description: event.target.value })} placeholder={t("admin.description")} />
@@ -522,10 +557,9 @@ function PromotionForm({ categories, editing, form, onCancel, onChange, onProduc
         <ActiveCheckbox checked={form.active} onChange={(active) => onChange({ ...form, active })} t={t} />
         <div className="flex flex-wrap gap-2">
           <Button type="submit">{editing ? t("admin.updatePromotion") : t("admin.createPromotion")}</Button>
-          {editing && <Button variant="secondary" type="button" onClick={onCancel}>{t("common.cancel")}</Button>}
+          <Button variant="secondary" type="button" onClick={onCancel}>{t("common.cancel")}</Button>
         </div>
       </form>
-    </Panel>
   );
 }
 
@@ -657,10 +691,10 @@ function PageSize({ onChange, value }) {
 }
 
 function Status({ active, t }) {
-  return <span className={["rounded-full px-2 py-1 text-xs font-bold", active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"].join(" ")}>{active ? t("common.active") : t("admin.inactive")}</span>;
+  return <span className={["inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold", active ? "border-emerald-200/60 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400" : "border-slate-200 bg-slate-100 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"].join(" ")}>{active ? t("common.active") : t("admin.inactive")}</span>;
 }
 
 function TabButton({ active, children, onClick }) {
-  return <button className={["rounded-full px-4 py-2 text-sm font-bold transition-colors", active ? "bg-slate-950 text-white" : "border border-slate-200 text-slate-600 hover:bg-slate-50"].join(" ")} type="button" onClick={onClick}>{children}</button>;
+  return <button className={["rounded-lg px-4 py-2 text-sm font-semibold transition-colors", active ? "bg-indigo-600 text-white shadow-sm shadow-indigo-200 dark:shadow-none" : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"].join(" ")} type="button" onClick={onClick}>{children}</button>;
 }
 

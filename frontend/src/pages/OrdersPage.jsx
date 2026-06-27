@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "motion/react";
 import {
   AlertCircle, ArrowRight, Box, Calendar, CheckCircle2,
   ChevronRight, Clock, CreditCard, FileText, Filter,
-  Home, MapPin, Package, Phone, QrCode, RefreshCw,
+  MapPin, Package, Phone, RefreshCw,
   ShoppingBag, Star, Tag, Truck, User, X, XCircle,
   RotateCcw, Receipt, BadgeCheck, Layers,
 } from "lucide-react";
@@ -535,7 +535,7 @@ export default function OrdersPage({ onAuth }) {
 }
 
 /* ── Hero bar ──────────────────────────────── */
-function OrdersHeroBar({ tk, isDark, t }) {
+function OrdersHeroBar({ tk, t }) {
   return (
     <motion.div
       initial={{opacity:0,y:-20}} animate={{opacity:1,y:0}}
@@ -825,7 +825,7 @@ function OrderDetailContent({ order, language, tk, isDark, onCancel, onRetry, on
 }
 
 /* ── Detail card ───────────────────────────── */
-function DetailCard({ title, icon:Icon, children, tk, isDark }) {
+function DetailCard({ title, icon:Icon, children, tk }) {
   return (
     <div className="overflow-hidden rounded-2xl" style={{ background:tk.surface2, border:`1px solid ${tk.border}` }}>
       <div className="flex items-center gap-3 border-b px-5 py-4" style={{ borderColor:tk.border }}>
@@ -862,7 +862,7 @@ function SummaryRow({ label, value, tk, strong, colored }) {
 }
 
 /* ── Premium select ────────────────────────── */
-function PremiumSelect({ children, value, onChange, disabled, tk, isDark }) {
+function PremiumSelect({ children, value, onChange, disabled, tk }) {
   return (
     <select
       value={value} onChange={onChange} disabled={disabled}
@@ -901,7 +901,7 @@ function EmptyOrders({ tk, isDark, t }) {
 }
 
 /* ── Skeletons ─────────────────────────────── */
-function OrdersSkeleton({ tk, isDark }) {
+function OrdersSkeleton({ tk }) {
   const sh = { "--sa":tk.skA,"--sb":tk.skB,"--sc":tk.skC };
   return (
     <div className="grid gap-4">
@@ -923,7 +923,7 @@ function OrdersSkeleton({ tk, isDark }) {
   );
 }
 
-function DrawerSkeleton({ tk, isDark }) {
+function DrawerSkeleton({ tk }) {
   const sh = { "--sa":tk.skA,"--sb":tk.skB,"--sc":tk.skC };
   return (
     <div className="grid gap-5">

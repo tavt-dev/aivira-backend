@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import {
-  AlertTriangle, ArrowUpRight, BarChart3, BookOpen,
-  Calendar, CheckCircle2, Clock, CreditCard, Package,
-  RefreshCw, ShoppingBag, TrendingUp, Users, Zap,
+  AlertTriangle, ArrowUpRight, BarChart3,
+  Calendar, CheckCircle2, Clock, CreditCard,
+  RefreshCw, ShoppingBag, TrendingUp, Users,
   AlertCircle, Star,
 } from "lucide-react";
 
@@ -13,6 +13,8 @@ import {
   getDashboardLowStock, getDashboardOrders,
   getDashboardSales, getDashboardSummary, getDashboardTopBooks,
 } from "../../api/adminDashboardApi.js";
+import OrderStatusChart from "../../components/admin/OrderStatusChart.jsx";
+import RevenueChart from "../../components/admin/RevenueChart.jsx";
 import { formatVND } from "../../utils/formatters.js";
 
 /* ── Constants ─────────────────────────────── */
@@ -24,15 +26,15 @@ const MAX_LIMIT = 50;
 /* ── Dark admin token palette ───────────────── */
 const tk = {
   pageBg:   "transparent",
-  surface:  "rgba(10,15,42,0.95)",
-  surface2: "rgba(16,22,58,0.88)",
-  surface3: "rgba(22,28,70,0.70)",
+  surface:  "var(--admin-surface)",
+  surface2: "var(--admin-surface-soft)",
+  surface3: "var(--admin-surface-muted)",
   heroLine: "linear-gradient(90deg,transparent,#4f6ef7 40%,#a78bfa 70%,transparent)",
-  border:   "rgba(255,255,255,0.075)",
-  borderMid:"rgba(255,255,255,0.13)",
-  text1:    "#e8eeff",
-  text2:    "#8892b0",
-  text3:    "#4a5578",
+  border:   "var(--admin-border)",
+  borderMid:"var(--admin-border-strong)",
+  text1:    "var(--admin-text)",
+  text2:    "var(--admin-text-muted)",
+  text3:    "var(--admin-text-faint)",
   accent:   "#4f6ef7",
   emerald:  "#10d98a",
   gold:     "#f0a500",
@@ -53,21 +55,21 @@ const METRIC_CFG = {
   lowStock:             { icon:AlertTriangle, color:"#ef4444", bg:"rgba(239,68,68,0.10)",   border:"rgba(239,68,68,0.25)"  },
 };
 
-/* ── Order status palette ───────────────────── */
 const ORDER_STATUS_COLOR = {
   PENDING_CONFIRMATION: "#f0a500",
-  PENDING_PAYMENT:      "#f0a500",
-  PAID:                 "#10d98a",
-  CONFIRMED:            "#4f6ef7",
-  PACKING:              "#a78bfa",
-  SHIPPING:             "#38bdf8",
-  COMPLETED:            "#10d98a",
-  CANCELLED:            "#ef4444",
-  PAYMENT_FAILED:       "#ef4444",
-  EXPIRED:              "#64748b",
-  REFUNDED:             "#a78bfa",
+  PENDING_PAYMENT: "#f97316",
+  PAID: "#10d98a",
+  CONFIRMED: "#4f6ef7",
+  PACKING: "#a78bfa",
+  SHIPPING: "#38bdf8",
+  COMPLETED: "#059669",
+  CANCELLED: "#ef4444",
+  PAYMENT_FAILED: "#e11d48",
+  EXPIRED: "#64748b",
+  REFUNDED: "#a855f7",
 };
 
+/* ── Order status palette ───────────────────── */
 /* ══════════════════════════════════════════════
    DASHBOARD PAGE
 ══════════════════════════════════════════════ */
@@ -116,13 +118,13 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="grid gap-7">
+    <div className="mx-auto grid w-full max-w-7xl gap-6">
 
       {/* ── Hero + Filter bar ── */}
       <motion.div initial={{opacity:0,y:-16}} animate={{opacity:1,y:0}}
         transition={{duration:0.5,ease:[0.22,1,0.36,1]}}
-        className="relative overflow-hidden rounded-[22px]"
-        style={{ background:tk.surface, border:`1px solid ${tk.border}`, backdropFilter:"blur(24px)" }}>
+        className="relative overflow-hidden rounded-2xl shadow-sm"
+        style={{ background:tk.surface, border:`1px solid ${tk.border}` }}>
         <div className="absolute left-0 right-0 top-0 h-[1.5px]" style={{ background:tk.heroLine }}/>
         <div className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full"
           style={{ background:"radial-gradient(circle,rgba(79,110,247,0.15) 0%,transparent 70%)" }}/>
@@ -137,7 +139,7 @@ export default function AdminDashboardPage() {
               <p className="text-[0.55rem] font-black uppercase tracking-[0.2em]" style={{ color:tk.text3 }}>
                 {t("admin.dashboardEyebrow","Tổng quan")}
               </p>
-              <h1 className="text-xl font-black" style={{ color:tk.text1, fontFamily:"var(--f-serif)" }}>
+              <h1 className="text-xl font-bold tracking-tight" style={{ color:tk.text1 }}>
                 {t("admin.dashboardTitle","Dashboard")}
               </h1>
             </div>
@@ -165,7 +167,7 @@ export default function AdminDashboardPage() {
             </FilterLabel>
             <motion.button whileHover={{scale:1.04,y:-1}} whileTap={{scale:0.96}}
               type="button" onClick={handleRefresh} disabled={loading}
-              className="flex items-center gap-2 self-end rounded-full px-5 py-2.5 text-sm font-black text-white disabled:opacity-50"
+              className="flex items-center gap-2 self-end rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50"
               style={{ background:"linear-gradient(135deg,#2a3ecc,#4f6ef7)", boxShadow:"0 6px 20px rgba(79,110,247,0.4)" }}>
               <motion.div animate={spinning?{rotate:360}:{rotate:0}} transition={spinning?{duration:0.8,repeat:Infinity,ease:"linear"}:{}}>
                 <RefreshCw size={14}/>
@@ -219,8 +221,8 @@ function SummarySection({ summary, error, loading, t }) {
               initial={{opacity:0,y:20,scale:0.96}} animate={{opacity:1,y:0,scale:1}}
               transition={{duration:0.45,delay:i*0.05,ease:[0.22,1,0.36,1]}}
               whileHover={{y:-3,boxShadow:`0 16px 40px ${bg.replace("0.14","0.28").replace("0.12","0.25").replace("0.10","0.2")}`}}
-              className="relative overflow-hidden rounded-[20px] p-5 transition-all"
-              style={{ background:tk.surface, border:`1px solid ${border}`, backdropFilter:"blur(24px)" }}>
+              className="relative overflow-hidden rounded-2xl p-5 shadow-sm transition-all"
+              style={{ background:tk.surface, border:`1px solid ${border}` }}>
               {/* Top glow line */}
               <div className="absolute left-0 right-0 top-0 h-[1px]"
                 style={{ background:`linear-gradient(90deg,transparent,${color} 50%,transparent)` }}/>
@@ -245,8 +247,8 @@ function SummarySection({ summary, error, loading, t }) {
                   key={value}
                   initial={{scale:1.08}} animate={{scale:1}}
                   transition={{type:"spring",stiffness:400,damping:20}}
-                  className="mt-1.5 block text-2xl font-black"
-                  style={{ color:tk.text1, fontFamily:"var(--f-serif)" }}>
+                  className="mt-1.5 block text-2xl font-bold tracking-tight"
+                  style={{ color:tk.text1 }}>
                   {loading&&!summary?"—":value}
                 </motion.strong>
               </div>
@@ -269,7 +271,8 @@ function SalesSection({ sales, error, loading, t }) {
       {loading && points.length===0 ? <DashSkeleton rows={5}/>
         : points.length===0 ? <EmptyBlock>{t("admin.noSalesPoints","Không có dữ liệu")}</EmptyBlock>
         : (
-          <div className="grid gap-2.5">
+          <div className="grid gap-4">
+            <RevenueChart points={points} t={t}/>
             {points.map((p, i) => {
               const pct = Math.max(4, Math.round((Number(p.revenue||0)/maxRevenue)*100));
               return (
@@ -287,7 +290,7 @@ function SalesSection({ sales, error, loading, t }) {
                     </span>
                   </div>
                   {/* Bar */}
-                  <div className="h-1.5 overflow-hidden rounded-full" style={{ background:"rgba(255,255,255,0.06)" }}>
+                  <div className="h-1.5 overflow-hidden rounded-full" style={{ background:"var(--admin-track)" }}>
                     <motion.div
                       initial={{width:0}} animate={{width:`${pct}%`}}
                       transition={{duration:0.6,delay:i*0.04,ease:[0.22,1,0.36,1]}}
@@ -318,7 +321,8 @@ function OrderStatusSection({ orders, error, loading, t }) {
       {loading && rows.length===0 ? <DashSkeleton rows={4}/>
         : rows.length===0 ? <EmptyBlock>{t("admin.noOrderStatusCounts","Không có dữ liệu")}</EmptyBlock>
         : (
-          <div className="grid gap-2.5">
+          <div className="grid gap-4">
+            <OrderStatusChart rows={rows} t={t}/>
             {rows.map((row, i) => {
               const pct = Math.max(4, Math.round((Number(row.count||0)/maxCount)*100));
               const color = ORDER_STATUS_COLOR[row.status]||tk.text3;
@@ -337,7 +341,7 @@ function OrderStatusSection({ orders, error, loading, t }) {
                     </div>
                     <strong className="text-sm font-black" style={{ color:tk.text1 }}>{number(row.count)}</strong>
                   </div>
-                  <div className="h-1.5 overflow-hidden rounded-full" style={{ background:"rgba(255,255,255,0.06)" }}>
+                  <div className="h-1.5 overflow-hidden rounded-full" style={{ background:"var(--admin-track)" }}>
                     <motion.div
                       initial={{width:0}} animate={{width:`${pct}%`}}
                       transition={{duration:0.6,delay:i*0.04,ease:[0.22,1,0.36,1]}}
@@ -441,19 +445,19 @@ function DashPanel({ title, icon:Icon, children, danger, linkTo }) {
   return (
     <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}}
       transition={{duration:0.45,ease:[0.22,1,0.36,1]}}
-      className="overflow-hidden rounded-[22px]"
+      className="overflow-hidden rounded-2xl shadow-sm"
       style={{
-        background:tk.surface, backdropFilter:"blur(24px)",
+        background:tk.surface,
         border:`1px solid ${danger?"rgba(239,68,68,0.25)":tk.border}`,
       }}>
       <div className="h-[1.5px]"
         style={{ background: danger?"linear-gradient(90deg,transparent,#ef4444 40%,transparent)":tk.heroLine }}/>
-      <div className="flex items-center gap-3 border-b px-5 py-4" style={{ borderColor:tk.border }}>
+      <div className="flex items-center gap-3 border-b px-5 py-4" style={{ borderColor:tk.border, background:tk.surface2 }}>
         <div className="flex h-8 w-8 items-center justify-center rounded-lg"
           style={{ background:danger?"rgba(239,68,68,0.12)":"rgba(79,110,247,0.12)", color:danger?tk.red:tk.accent }}>
           <Icon size={14}/>
         </div>
-        <h2 className="text-sm font-black uppercase tracking-wider" style={{ color:tk.text1 }}>{title}</h2>
+        <h2 className="text-sm font-bold" style={{ color:tk.text1 }}>{title}</h2>
         {linkTo && (
           <Link to={linkTo} className="ml-auto flex items-center gap-1 text-xs font-bold hover:opacity-70 transition-opacity"
             style={{ color:tk.accent }}>
@@ -470,7 +474,7 @@ function DashPanel({ title, icon:Icon, children, danger, linkTo }) {
 function FilterLabel({ label, children }) {
   return (
     <label className="grid gap-1">
-      <span className="text-[0.6rem] font-black uppercase tracking-[0.14em]" style={{ color:"#4a5578" }}>{label}</span>
+      <span className="text-[0.6rem] font-black uppercase tracking-[0.14em]" style={{ color:tk.text3 }}>{label}</span>
       {children}
     </label>
   );
@@ -479,10 +483,10 @@ function FilterLabel({ label, children }) {
 function DateInput({ value, onChange }) {
   return (
     <input type="date" value={value} onChange={e => onChange(e.target.value)}
-      className="rounded-xl px-3 py-2 text-sm font-semibold outline-none transition-all"
+      className="rounded-lg px-3 py-2 text-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-indigo-500/30"
       style={{
-        background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.10)",
-        color:"#e8eeff", colorScheme:"dark",
+        background:tk.surface, border:`1px solid ${tk.borderMid}`,
+        color:tk.text1,
       }}/>
   );
 }
@@ -491,17 +495,17 @@ function NumInput({ value, min, max, onChange }) {
   return (
     <input type="number" min={min} max={max} value={value}
       onChange={e => onChange(Number(e.target.value))}
-      className="w-20 rounded-xl px-3 py-2 text-sm font-semibold outline-none transition-all"
+      className="w-20 rounded-lg px-3 py-2 text-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-indigo-500/30"
       style={{
-        background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.10)",
-        color:"#e8eeff", colorScheme:"dark",
+        background:tk.surface, border:`1px solid ${tk.borderMid}`,
+        color:tk.text1,
       }}/>
   );
 }
 
 /* ── Skeleton ───────────────────────────────── */
 function DashSkeleton({ rows }) {
-  const sh = { "--sa":"rgba(255,255,255,0.03)","--sb":"rgba(79,110,247,0.10)","--sc":"rgba(167,139,250,0.08)" };
+  const sh = { "--sa":"var(--admin-surface-soft)","--sb":"rgba(79,110,247,0.10)","--sc":"rgba(167,139,250,0.08)" };
   return (
     <div className="grid gap-2.5">
       {[...Array(rows)].map((_,i) => (
@@ -516,7 +520,7 @@ function DashSkeleton({ rows }) {
 function EmptyBlock({ children }) {
   return (
     <div className="rounded-2xl px-5 py-10 text-center text-sm font-bold"
-      style={{ background:"rgba(255,255,255,0.02)", border:"1px dashed rgba(255,255,255,0.07)", color:"#4a5578" }}>
+      style={{ background:tk.surface2, border:`1px dashed ${tk.border}`, color:tk.text3 }}>
       {children}
     </div>
   );
