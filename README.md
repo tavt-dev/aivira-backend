@@ -176,18 +176,7 @@ To validate that the Java code matches the formatter rules:
 
 ## Frontend
 
-The React/Vite frontend lives in `frontend/`.
+The React/Vite application is maintained in the separate
+[aivira-frontend](https://github.com/tavt-dev/aivira-frontend) repository. This repository contains only the Spring Boot backend.
 
-Local development:
-
-```powershell
-cd frontend
-npm ci
-npm run dev
-```
-
-Open `http://localhost:5173`. By default, frontend API calls use `/api/v1` and Vite proxies `/api/**` to `http://localhost:8080`.
-
-Frontend Google login uses `VITE_GOOGLE_OAUTH_AUTHORIZE_URL=/api/v1/auth/google/authorize`. Backend Google OAuth must redirect successful callbacks to `http://localhost:5173/auth/google/success` and failures to `http://localhost:5173/auth/google/failure`.
-
-Production deployments can either keep the same-origin `/api/v1` reverse proxy or set `VITE_API_BASE_URL` to a deployed backend API origin. The backend must allow the frontend origin for CORS and refresh-cookie credentials. VNPay/MoMo browser return URLs should point to the frontend `/payment-result` route, while callback/IPN URLs remain backend URLs.
+For browser integration, configure the deployed frontend origin in `CORS_ALLOWED_ORIGINS`. Google OAuth success/failure URLs and VNPay/MoMo browser return URLs must point to frontend routes, while provider callback/IPN URLs must point to this backend.
