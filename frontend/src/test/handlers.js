@@ -76,7 +76,7 @@ export const handlers = [
     )
   ),
   http.get(`${API}/cart`, () => HttpResponse.json(apiResponse({ items: [cartItem], totalAmount: 900000 }))),
-  http.post(`${API}/cart/items`, () => HttpResponse.json(apiResponse({ ...cartItem, quantity: 1 }))),
+  http.post(`${API}/cart/items`, () => HttpResponse.json(apiResponse({ items: [{ ...cartItem, quantity: 1 }] }))),
   http.put(`${API}/cart/items/:id`, () => HttpResponse.json(apiResponse(cartItem))),
   http.delete(`${API}/cart/items/:id`, () => HttpResponse.json(apiResponse(null))),
   http.get(`${API}/users/me/addresses`, () =>
@@ -141,6 +141,9 @@ export const handlers = [
   ),
   http.get(`${API}/orders`, () => HttpResponse.json(apiResponse(pageResponse([order])))),
   http.get(`${API}/orders/:id`, () => HttpResponse.json(apiResponse(order))),
+  http.get(`${API}/payments/groups/:code`, () =>
+    HttpResponse.json(apiResponse({ ...paymentGroup, paymentUrl: "https://pay.example.test/continue" }))
+  ),
   http.post(`${API}/payments/groups/:code/retry`, () =>
     HttpResponse.json(apiResponse({ ...paymentGroup, paymentUrl: "https://pay.example.test/redirect" }))
   ),

@@ -49,7 +49,5 @@ export function getCheckoutCartItemIds(items = []) {
     .map((item) => normalizeId(item.cartItemId))
     .filter(Boolean);
   const availableSet = new Set(availableIds);
-  const storedIds = getStoredCheckoutCartItemIds().filter((id) => availableSet.has(id));
-
-  return storedIds.length ? storedIds : availableIds;
+  return getStoredCheckoutCartItemIds().filter((id) => availableSet.has(id));
 }

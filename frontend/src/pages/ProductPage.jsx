@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
 import {
   BookOpen, ChevronRight, Home, Layers, Minus, Plus,
@@ -12,9 +12,10 @@ import {
 import { addCartItem } from "../api/cartApi.js";
 import { getProduct } from "../api/catalogApi.js";
 import { getProductReviews } from "../api/reviewApi.js";
+import { saveCheckoutCartItemIds } from "../utils/checkoutSelection.js";
 import { discount, formatSold, formatVND } from "../utils/formatters.js";
 import {
-  normalizeBook, normalizeReview,
+  normalizeBook, normalizeCartItem, normalizeReview,
   pageMeta as readPageMeta, pageRows,
 } from "../utils/mappers.js";
 import { getAccessToken } from "../utils/storage.js";
@@ -106,6 +107,7 @@ export default function ProductPage({ onAuth }) {
   const isDark = useTheme();
   const tk = tokens(isDark);
   const { slug } = useParams();
+  const navigate = useNavigate();
 
   const [book, setBook]                         = useState(null);
   const [selectedImage, setSelectedImage]       = useState("");
@@ -160,6 +162,31 @@ export default function ProductPage({ onAuth }) {
       setTimeout(() => setCartSuccess(false), 3000);
     } catch (err) {
       setMessage(err.message || t("product.addFailed"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function checkoutNow() {
+    if (!getAccessToken()) { onAuth?.(); return; }
+    if (!selectedVariation?.id) { setMessage(t("product.noVariation")); return; }
+    if (stockQuantity <= 0)     { setMessage(t("product.outOfStock")); return; }
+    setBusy(true); setMessage(""); setCartSuccess(false);
+    try {
+      const cart = await addCartItem({ productVariationId: selectedVariation.id, quantity });
+      const cartRows = readCartItems(cart);
+      const target = cartRows.find(item => String(item.productVariationId) === String(selectedVariation.id));
+
+      if (!target?.cartItemId) {
+        throw new Error(t("checkout.noCartIds"));
+      }
+
+      saveCheckoutCartItemIds([target.cartItemId]);
+      setCartSuccess(true);
+      window.dispatchEvent(new Event("aivira-cart"));
+      navigate("/checkout");
+    } catch (err) {
+      setMessage(err.message || t("checkout.unavailable"));
     } finally {
       setBusy(false);
     }
@@ -273,7 +300,7 @@ export default function ProductPage({ onAuth }) {
                 selectedVariationId={selectedVariationId} onVariation={setVariationId}
                 quantity={quantity} onQuantity={setQuantity}
                 busy={busy} canAdd={canAdd} cartSuccess={cartSuccess}
-                onAddToCart={addToCart} t={t}/>
+                onAddToCart={addToCart} onCheckoutNow={checkoutNow} t={t}/>
             </motion.div>
           </div>
 
@@ -461,7 +488,7 @@ function BookGallery({ gallery, selectedImage, onSelect, title, tk, onLightbox, 
    INFO PANEL
 ═══════════════════════════════════════════════ */
 function BookInfoPanel({ book, tk, isDark, hasDiscount, stockQuantity, selectedVariationId, onVariation,
-  quantity, onQuantity, busy, canAdd, cartSuccess, onAddToCart, t }) {
+  quantity, onQuantity, busy, canAdd, cartSuccess, onAddToCart, onCheckoutNow, t }) {
   return (
     <div className="flex flex-col gap-7">
       {/* Category badge */}
@@ -521,7 +548,16 @@ function BookInfoPanel({ book, tk, isDark, hasDiscount, stockQuantity, selectedV
       <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.55,delay:0.40}}
         className="flex flex-col gap-4">
         <QuantityRow value={quantity} max={Math.max(1,stockQuantity||1)} onChange={onQuantity} tk={tk} isDark={isDark} t={t}/>
-        <CTAButtons busy={busy} canAdd={canAdd} cartSuccess={cartSuccess} onAdd={onAddToCart} tk={tk} isDark={isDark} t={t}/>
+        <CTAButtons
+          busy={busy}
+          canAdd={canAdd}
+          cartSuccess={cartSuccess}
+          onAdd={onAddToCart}
+          onCheckoutNow={onCheckoutNow}
+          tk={tk}
+          isDark={isDark}
+          t={t}
+        />
       </motion.div>
 
       {/* Divider */}
@@ -793,7 +829,7 @@ function QuantityRow({ value, max, onChange, tk, t }) {
 }
 
 /* ── CTA Buttons ─────────────────────────────── */
-function CTAButtons({ busy, canAdd, cartSuccess, onAdd, tk, isDark, t }) {
+function CTAButtons({ busy, canAdd, cartSuccess, onAdd, onCheckoutNow, tk, isDark, t }) {
   return (
     <div className="flex flex-wrap gap-3">
       {/* Primary */}
@@ -827,10 +863,12 @@ function CTAButtons({ busy, canAdd, cartSuccess, onAdd, tk, isDark, t }) {
       </motion.button>
 
       {/* Secondary */}
-      <motion.div whileHover={{scale:1.02,y:-2}} whileTap={{scale:0.97}}>
-        <Link
-          to="/checkout"
-          className="flex items-center gap-2 rounded-full px-8 py-4 text-sm font-black uppercase tracking-wider transition-all"
+      <motion.div whileHover={canAdd?{scale:1.02,y:-2}:{}} whileTap={canAdd?{scale:0.97}:{}}>
+        <button
+          type="button"
+          onClick={onCheckoutNow}
+          disabled={!canAdd}
+          className="flex items-center gap-2 rounded-full px-8 py-4 text-sm font-black uppercase tracking-wider transition-all disabled:cursor-not-allowed disabled:opacity-40"
           style={{
             background:isDark?"rgba(255,255,255,0.05)":"rgba(15,23,42,0.05)",
             border:`1.5px solid ${tk.borderMid}`,
@@ -838,7 +876,7 @@ function CTAButtons({ busy, canAdd, cartSuccess, onAdd, tk, isDark, t }) {
             backdropFilter:"blur(16px)",
           }}>
           {t("product.checkout")}
-        </Link>
+        </button>
       </motion.div>
     </div>
   );
@@ -1129,4 +1167,11 @@ function pickDefaultVariation(variations = []) {
   return variations.find(v => v.active!==false && Number(v.stockQuantity||0)>0)
     || variations.find(v => v.active!==false)
     || variations[0];
+}
+
+function readCartItems(cart) {
+  const rows = Array.isArray(cart?.items)
+    ? cart.items
+    : (cart?.cartItemId || cart?.id ? [cart] : []);
+  return rows.map(normalizeCartItem);
 }

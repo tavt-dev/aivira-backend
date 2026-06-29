@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 import { cancelOrder, getOrder, getOrders } from "../api/orderApi.js";
-import { retryPayment } from "../api/paymentApi.js";
+import { getPaymentGroup, retryPayment } from "../api/paymentApi.js";
 import { createOrderItemReview } from "../api/reviewApi.js";
 import ReviewForm from "../components/reviews/ReviewForm.jsx";
 import { formatDateTime, formatVND } from "../utils/formatters.js";
@@ -27,6 +27,7 @@ const ORDER_STATUSES = [
 ];
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
 const CANCELABLE_STATUSES  = new Set(["PENDING_CONFIRMATION","PENDING_PAYMENT"]);
+const CONTINUE_PAYMENT_STATUSES = new Set(["PENDING"]);
 const RETRY_PAYMENT_STATUSES = new Set(["FAILED","CANCELLED","EXPIRED"]);
 const ONLINE_METHODS       = new Set(["VNPAY","MOMO"]);
 
@@ -164,7 +165,7 @@ export default function OrdersPage({ onAuth }) {
   }
 
   async function viewDetail(order) {
-    setMessage(""); setDetailLoading(true);
+    setMessage(""); setPaymentAction(null); setDetailLoading(true);
     try { setSelected(normalizeOrder(await getOrder(order.id))); }
     catch (err) { setMessage(err.message || t("orders.detailFailed")); }
     finally { setDetailLoading(false); }
@@ -187,11 +188,36 @@ export default function OrdersPage({ onAuth }) {
     setMessage(""); setPaymentAction(null);
     try {
       const res = normalizePaymentGroup(await retryPayment(order.paymentGroupCode));
-      const url = res.paymentUrl || res.deeplink;
-      if (url) { setPaymentAction({ url, qrCodeUrl:"", message:t("orders.retryRedirecting") }); window.setTimeout(() => window.location.assign(url), 900); }
-      else if (res.qrCodeUrl) { setPaymentAction({ url:"", qrCodeUrl:res.qrCodeUrl, message:t("orders.retryQrReady") }); }
-      else { setPaymentAction({ url:"", qrCodeUrl:"", message:t("orders.retryPending") }); }
+      showPaymentAction(res, {
+        redirecting: t("orders.retryRedirecting"),
+        qrReady: t("orders.retryQrReady"),
+        pending: t("orders.retryPending"),
+      });
     } catch (err) { setMessage(err.message || t("orders.retryFailed")); }
+  }
+
+  async function continuePayment(order) {
+    setMessage(""); setPaymentAction(null);
+    try {
+      const res = normalizePaymentGroup(await getPaymentGroup(order.paymentGroupCode));
+      showPaymentAction(res, {
+        redirecting: t("orders.continueRedirecting"),
+        qrReady: t("orders.continueQrReady"),
+        pending: t("orders.continuePending"),
+      });
+    } catch (err) { setMessage(err.message || t("orders.continueFailed")); }
+  }
+
+  function showPaymentAction(paymentGroup, messages) {
+    const url = paymentGroup.paymentUrl || paymentGroup.deeplink;
+    if (url) {
+      setPaymentAction({ url, qrCodeUrl:"", message:messages.redirecting });
+      window.setTimeout(() => window.location.assign(url), 900);
+    } else if (paymentGroup.qrCodeUrl) {
+      setPaymentAction({ url:"", qrCodeUrl:paymentGroup.qrCodeUrl, message:messages.qrReady });
+    } else {
+      setPaymentAction({ url:"", qrCodeUrl:"", message:messages.pending });
+    }
   }
 
   async function submitReview(body) {
@@ -320,6 +346,7 @@ export default function OrdersPage({ onAuth }) {
                         order={order} language={i18n.language} tk={tk} isDark={isDark}
                         onCancel={() => { setCancelTarget(order); setCancelReason(""); }}
                         onDetail={() => viewDetail(order)}
+                        onContinuePayment={() => continuePayment(order)}
                         onRetry={() => retry(order)} t={t}/>
                     </motion.div>
                   ))}
@@ -404,6 +431,7 @@ export default function OrdersPage({ onAuth }) {
                     <OrderDetailContent
                       order={selected} language={getTheme()==="dark"?"vi":"vi"} tk={tokens(getTheme()==="dark")} isDark={getTheme()==="dark"}
                       onCancel={() => { setCancelTarget(selected); setCancelReason(""); }}
+                      onContinuePayment={() => continuePayment(selected)}
                       onRetry={() => retry(selected)}
                       onReview={item => setReviewTarget({ orderId:selected.id, item })}
                       paymentAction={paymentAction} reviewedItems={reviewedItems} t={t}/>
@@ -573,7 +601,7 @@ function OrdersHeroBar({ tk, t }) {
 }
 
 /* ── Order card ──────────────────────────────── */
-function OrderCard({ order, language, tk, isDark, onCancel, onDetail, onRetry, t }) {
+function OrderCard({ order, language, tk, isDark, onCancel, onDetail, onContinuePayment, onRetry, t }) {
   const [hov, setHov] = useState(false);
   const meta = STATUS_META[order.orderStatus] || STATUS_META["EXPIRED"];
   const { Icon: StatusIcon } = meta;
@@ -644,6 +672,14 @@ function OrderCard({ order, language, tk, isDark, onCancel, onDetail, onRetry, t
                 <RefreshCw size={14}/> {t("orders.retryPayment")}
               </motion.button>
             )}
+            {canContinuePayment(order) && (
+              <motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}}
+                type="button" onClick={onContinuePayment}
+                className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold"
+                style={{ background:isDark?"rgba(79,110,247,0.15)":"rgba(29,78,216,0.10)", border:`1px solid ${isDark?"rgba(79,110,247,0.35)":"rgba(29,78,216,0.25)"}`, color:tk.accent }}>
+                <CreditCard size={14}/> {t("orders.continuePayment")}
+              </motion.button>
+            )}
             {canCancel(order) && (
               <motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}}
                 type="button" onClick={onCancel}
@@ -673,7 +709,7 @@ function MetaItem({ icon:Icon, label, value, tk, highlight }) {
 }
 
 /* ── Order detail content (inside drawer) ─── */
-function OrderDetailContent({ order, language, tk, isDark, onCancel, onRetry, onReview, paymentAction, reviewedItems, t }) {
+function OrderDetailContent({ order, language, tk, isDark, onCancel, onContinuePayment, onRetry, onReview, paymentAction, reviewedItems, t }) {
   return (
     <div className="grid gap-6">
       {/* Status strip */}
@@ -803,6 +839,14 @@ function OrderDetailContent({ order, language, tk, isDark, onCancel, onRetry, on
 
       {/* Actions */}
       <div className="flex flex-wrap justify-end gap-2 pt-2">
+        {canContinuePayment(order) && (
+          <motion.button whileHover={{scale:1.03,y:-1}} whileTap={{scale:0.97}}
+            type="button" onClick={onContinuePayment}
+            className="flex items-center gap-2 rounded-full px-6 py-3 text-sm font-black text-white"
+            style={{ background:"linear-gradient(135deg,#2a3ecc,#4f6ef7)", boxShadow:"0 6px 20px rgba(79,110,247,0.4)" }}>
+            <CreditCard size={14}/>{t("orders.continuePayment")}
+          </motion.button>
+        )}
         {canRetry(order) && (
           <motion.button whileHover={{scale:1.03,y:-1}} whileTap={{scale:0.97}}
             type="button" onClick={onRetry}
@@ -937,6 +981,7 @@ function DrawerSkeleton({ tk }) {
 
 /* ── Utils ─────────────────────────────────── */
 function canCancel(order)  { return CANCELABLE_STATUSES.has(order?.orderStatus); }
+function canContinuePayment(order) { return ONLINE_METHODS.has(order?.paymentMethod) && CONTINUE_PAYMENT_STATUSES.has(order?.paymentStatus) && Boolean(order?.paymentGroupCode); }
 function canRetry(order)   { return ONLINE_METHODS.has(order?.paymentMethod) && RETRY_PAYMENT_STATUSES.has(order?.paymentStatus) && Boolean(order?.paymentGroupCode); }
 function statusLabel(s, t) { return t(`orders.statusLabels.${s}`, { defaultValue:s||"-" }); }
 function shippingAddress(order) {

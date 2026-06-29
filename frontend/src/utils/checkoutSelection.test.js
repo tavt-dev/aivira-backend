@@ -15,8 +15,8 @@ describe("checkout selection helpers", () => {
     { cartItemId: 4, available: true, stockQuantity: 1 }
   ];
 
-  it("defaults to all available cart item ids", () => {
-    expect(getCheckoutCartItemIds(items)).toEqual([1, 4]);
+  it("returns no checkout ids until the user selects cart items", () => {
+    expect(getCheckoutCartItemIds(items)).toEqual([]);
   });
 
   it("persists selected ids and filters invalid/unavailable ids", () => {

@@ -202,6 +202,7 @@ export default function CheckoutPage({ onAuth }) {
     finalLineAmount: item.price * item.quantity,
   }));
   const temporaryTotal = cartTotal(selectedItems);
+  const hasCheckoutItems = summaryItems.length > 0;
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 pb-20 pt-28 md:px-8">
@@ -328,13 +329,13 @@ export default function CheckoutPage({ onAuth }) {
 
         <aside className="h-fit rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="font-serif text-3xl font-bold text-slate-950">{t("checkout.summary")}</h2>
-          {!canPreview && selectedAddress === "" && (
+          {!canPreview && selectedAddress === "" && cartItemIds.length > 0 && (
             <p className="mt-3 text-sm font-semibold text-slate-500">{t("checkout.previewNeedsAddress")}</p>
           )}
           {previewLoading && <Skeleton rows={3} />}
 
           <div className="mt-6 grid gap-4">
-            {summaryItems.length ? (
+            {hasCheckoutItems ? (
               summaryItems.map((item) => (
                 <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm" key={item.cartItemId}>
                   <div className="flex items-start justify-between gap-4">
@@ -354,19 +355,30 @@ export default function CheckoutPage({ onAuth }) {
                 </div>
               ))
             ) : (
-              <p className="text-sm text-slate-500">{t("checkout.noItems")}</p>
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-center">
+                <p className="font-bold text-slate-800">{t("checkout.emptyTitle")}</p>
+                <p className="mt-2 text-sm text-slate-500">{t("checkout.emptyDescription")}</p>
+                <Link
+                  className="mt-4 inline-flex justify-center rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-100"
+                  to="/cart"
+                >
+                  {t("checkout.backToCart")}
+                </Link>
+              </div>
             )}
           </div>
 
-          <div className="mt-6 grid gap-3 border-t border-slate-100 pt-5">
-            <MetaRow label={t("checkout.subtotal")} value={formatVND(preview?.subtotal ?? temporaryTotal)} />
-            <MetaRow label={t("checkout.promotionDiscount")} value={formatVND(-(preview?.promotionDiscountAmount || 0))} />
-            <MetaRow label={t("checkout.couponDiscount")} value={formatVND(-(preview?.couponDiscountAmount || 0))} />
-            <MetaRow label={t("checkout.shippingFee")} value={formatVND(preview?.shippingFee || 0)} />
-            {!preview && <p className="text-xs font-semibold text-amber-600">{t("checkout.temporaryTotal")}</p>}
-          </div>
+          {hasCheckoutItems && (
+            <div className="mt-6 grid gap-3 border-t border-slate-100 pt-5">
+              <MetaRow label={t("checkout.subtotal")} value={formatVND(preview?.subtotal ?? temporaryTotal)} />
+              <MetaRow label={t("checkout.promotionDiscount")} value={formatVND(-(preview?.promotionDiscountAmount || 0))} />
+              <MetaRow label={t("checkout.couponDiscount")} value={formatVND(-(preview?.couponDiscountAmount || 0))} />
+              <MetaRow label={t("checkout.shippingFee")} value={formatVND(preview?.shippingFee || 0)} />
+              {!preview && <p className="text-xs font-semibold text-amber-600">{t("checkout.temporaryTotal")}</p>}
+            </div>
+          )}
 
-          {preview?.appliedPromotions?.length > 0 && (
+          {hasCheckoutItems && preview?.appliedPromotions?.length > 0 && (
             <div className="mt-5 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
               <p className="text-sm font-bold text-emerald-700">{t("checkout.appliedPromotions")}</p>
               <div className="mt-2 grid gap-1 text-xs font-semibold text-emerald-700">
@@ -379,18 +391,20 @@ export default function CheckoutPage({ onAuth }) {
             </div>
           )}
 
-          {preview?.couponCode && (
+          {hasCheckoutItems && preview?.couponCode && (
             <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm font-bold text-blue-700">
               {t("checkout.couponApplied", { code: preview.couponCode })}
             </div>
           )}
 
-          <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-5">
-            <span className="font-semibold text-slate-500">{t("checkout.finalTotal")}</span>
-            <strong className="text-2xl text-slate-950">
-              {formatVND(preview?.totalAmount ?? temporaryTotal)}
-            </strong>
-          </div>
+          {hasCheckoutItems && (
+            <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-5">
+              <span className="font-semibold text-slate-500">{t("checkout.finalTotal")}</span>
+              <strong className="text-2xl text-slate-950">
+                {formatVND(preview?.totalAmount ?? temporaryTotal)}
+              </strong>
+            </div>
+          )}
 
           <button
             className="mt-6 w-full rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
