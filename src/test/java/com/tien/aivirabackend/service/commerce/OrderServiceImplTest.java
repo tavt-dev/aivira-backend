@@ -129,23 +129,29 @@ class OrderServiceImplTest {
     void getMyOrder_whenOwnedOrderExists_shouldReturnDetail() {
         Order order = order(paymentGroup(PaymentMethod.COD, PaymentStatus.PENDING), OrderStatus.PENDING_CONFIRMATION);
         when(currentUserService.getCurrentUserId()).thenReturn("user-1");
-        when(orderRepository.findDetailedByIdAndUserId(21L, "user-1")).thenReturn(Optional.of(order));
+        when(orderRepository.findWithItemsAndRefundByIdAndUserId(21L, "user-1"))
+                .thenReturn(Optional.of(order));
+        when(orderRepository.findWithPaymentsByIdAndUserId(21L, "user-1")).thenReturn(Optional.of(order));
 
         var response = orderService.getMyOrder(21L);
 
         assertThat(response.getId()).isEqualTo(21L);
         assertThat(response.getPaymentGroupCode()).isEqualTo("PAY123");
         assertThat(response.getItems()).hasSize(1);
+        verify(orderRepository).findWithItemsAndRefundByIdAndUserId(21L, "user-1");
+        verify(orderRepository).findWithPaymentsByIdAndUserId(21L, "user-1");
     }
 
     @Test
     void getMyOrder_whenOrderDoesNotBelongToCurrentUser_shouldThrowNotFound() {
         when(currentUserService.getCurrentUserId()).thenReturn("user-1");
-        when(orderRepository.findDetailedByIdAndUserId(99L, "user-1")).thenReturn(Optional.empty());
+        when(orderRepository.findWithItemsAndRefundByIdAndUserId(99L, "user-1"))
+                .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> orderService.getMyOrder(99L))
                 .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
                         .isEqualTo(OrderErrorCode.ORDER_NOT_FOUND));
+        verify(orderRepository, never()).findWithPaymentsByIdAndUserId(anyLong(), anyString());
     }
 
     @Test
@@ -175,21 +181,25 @@ class OrderServiceImplTest {
     @Test
     void getAdminOrder_whenOrderExists_shouldReturnDetail() {
         Order order = order(paymentGroup(PaymentMethod.COD, PaymentStatus.PENDING), OrderStatus.PENDING_CONFIRMATION);
-        when(orderRepository.findDetailedById(21L)).thenReturn(Optional.of(order));
+        when(orderRepository.findWithItemsAndRefundById(21L)).thenReturn(Optional.of(order));
+        when(orderRepository.findWithPaymentsById(21L)).thenReturn(Optional.of(order));
 
         var response = orderService.getAdminOrder(21L);
 
         assertThat(response.getId()).isEqualTo(21L);
         assertThat(response.getPaymentGroupCode()).isEqualTo("PAY123");
+        verify(orderRepository).findWithItemsAndRefundById(21L);
+        verify(orderRepository).findWithPaymentsById(21L);
     }
 
     @Test
     void getAdminOrder_whenMissing_shouldThrowNotFound() {
-        when(orderRepository.findDetailedById(99L)).thenReturn(Optional.empty());
+        when(orderRepository.findWithItemsAndRefundById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> orderService.getAdminOrder(99L))
                 .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
                         .isEqualTo(OrderErrorCode.ORDER_NOT_FOUND));
+        verify(orderRepository, never()).findWithPaymentsById(anyLong());
     }
 
     @Test

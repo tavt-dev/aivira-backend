@@ -94,7 +94,8 @@ class ReviewServiceImplTest {
         Product product = product();
         ProductVariation variation = variation(product);
         when(currentUserService.getCurrentUserId()).thenReturn("user-1");
-        when(orderRepository.findDetailedByIdAndUserId(21L, "user-1")).thenReturn(Optional.of(order));
+        when(orderRepository.findWithItemsAndRefundByIdAndUserId(21L, "user-1"))
+                .thenReturn(Optional.of(order));
         when(productRepository.findById(10L)).thenReturn(Optional.of(product));
         when(productVariationRepository.findById(11L)).thenReturn(Optional.of(variation));
         when(reviewRepository.save(any(Review.class))).thenAnswer(invocation -> {
@@ -119,7 +120,8 @@ class ReviewServiceImplTest {
     @Test
     void createReview_whenOrderMissingForCurrentUser_shouldThrowOrderNotFound() {
         when(currentUserService.getCurrentUserId()).thenReturn("user-1");
-        when(orderRepository.findDetailedByIdAndUserId(21L, "user-1")).thenReturn(Optional.empty());
+        when(orderRepository.findWithItemsAndRefundByIdAndUserId(21L, "user-1"))
+                .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> reviewService.createReview(21L, 31L, createRequest()))
                 .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
@@ -129,7 +131,7 @@ class ReviewServiceImplTest {
     @Test
     void createReview_whenOrderNotCompleted_shouldThrow() {
         when(currentUserService.getCurrentUserId()).thenReturn("user-1");
-        when(orderRepository.findDetailedByIdAndUserId(21L, "user-1"))
+        when(orderRepository.findWithItemsAndRefundByIdAndUserId(21L, "user-1"))
                 .thenReturn(Optional.of(order(OrderStatus.CONFIRMED)));
 
         assertThatThrownBy(() -> reviewService.createReview(21L, 31L, createRequest()))
@@ -140,7 +142,7 @@ class ReviewServiceImplTest {
     @Test
     void createReview_whenDuplicateOrderItem_shouldThrow() {
         when(currentUserService.getCurrentUserId()).thenReturn("user-1");
-        when(orderRepository.findDetailedByIdAndUserId(21L, "user-1"))
+        when(orderRepository.findWithItemsAndRefundByIdAndUserId(21L, "user-1"))
                 .thenReturn(Optional.of(order(OrderStatus.COMPLETED)));
         when(reviewRepository.existsByOrderItem_Id(31L)).thenReturn(true);
 
@@ -152,7 +154,7 @@ class ReviewServiceImplTest {
     @Test
     void createReview_whenOrderItemNotInOrder_shouldThrow() {
         when(currentUserService.getCurrentUserId()).thenReturn("user-1");
-        when(orderRepository.findDetailedByIdAndUserId(21L, "user-1"))
+        when(orderRepository.findWithItemsAndRefundByIdAndUserId(21L, "user-1"))
                 .thenReturn(Optional.of(order(OrderStatus.COMPLETED)));
 
         assertThatThrownBy(() -> reviewService.createReview(21L, 999L, createRequest()))

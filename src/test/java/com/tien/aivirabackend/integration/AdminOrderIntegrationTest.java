@@ -92,6 +92,29 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void orderDetail_shouldReturnItemsAndPaymentForCustomerAndAdmin() throws Exception {
+        String customerToken = userToken("buyer", "buyer@example.com", PredefinedRole.USER);
+        User customer = userRepository.findByUsername("buyer").orElseThrow();
+        Order order = saveOrderForCustomer(
+                customer, OrderStatus.PENDING_CONFIRMATION, PaymentStatus.PENDING, 3, PaymentMethod.COD);
+        String adminToken = adminToken();
+
+        mockMvc.perform(get("/orders/{orderId}", order.getId()).header("Authorization", "Bearer " + customerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.items[0].sku").value("BOOK-001-PB"))
+                .andExpect(jsonPath("$.data.paymentGroupCode").value("PAY-PENDING_CONFIRMATION"))
+                .andExpect(jsonPath("$.data.paymentMethod").value("COD"))
+                .andExpect(jsonPath("$.data.paymentStatus").value("PENDING"));
+
+        mockMvc.perform(get("/admin/orders/{orderId}", order.getId()).header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.items[0].sku").value("BOOK-001-PB"))
+                .andExpect(jsonPath("$.data.paymentGroupCode").value("PAY-PENDING_CONFIRMATION"))
+                .andExpect(jsonPath("$.data.paymentMethod").value("COD"))
+                .andExpect(jsonPath("$.data.paymentStatus").value("PENDING"));
+    }
+
+    @Test
     void adminCodLifecycle_shouldMovePendingConfirmationToCompleted() throws Exception {
         String token = adminToken();
         Order order = saveOrder(OrderStatus.PENDING_CONFIRMATION, PaymentStatus.PENDING, 3);
@@ -157,7 +180,7 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.data.refund.amount").value(200.00))
                 .andExpect(jsonPath("$.data.refund.refundCode").exists());
 
-        Order refundedOrder = orderRepository.findDetailedById(order.getId()).orElseThrow();
+        Order refundedOrder = orderRepository.findWithPaymentsById(order.getId()).orElseThrow();
         assertThat(refundedOrder.getOrderStatus()).isEqualTo(OrderStatus.REFUNDED);
         assertThat(refundedOrder.getPayments().getFirst().getStatus()).isEqualTo(PaymentStatus.REFUNDED);
         assertThat(paymentGroupRepository
@@ -187,10 +210,14 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
     }
 
     private String adminToken() throws Exception {
-        var role = roleRepository.findByCode(PredefinedRole.ADMIN).orElseThrow();
-        User admin = User.builder()
-                .username("admin")
-                .email("admin@example.com")
+        return userToken("admin", "admin@example.com", PredefinedRole.ADMIN);
+    }
+
+    private String userToken(String username, String email, PredefinedRole roleCode) throws Exception {
+        var role = roleRepository.findByCode(roleCode).orElseThrow();
+        User user = User.builder()
+                .username(username)
+                .email(email)
                 .password(passwordEncoder.encode(PASSWORD))
                 .provider(SignInProvider.LOCAL)
                 .emailVerified(true)
@@ -198,12 +225,12 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
                 .isLocked(false)
                 .isDeleted(false)
                 .build();
-        admin.getRoles().add(role);
-        userRepository.save(admin);
+        user.getRoles().add(role);
+        userRepository.save(user);
 
         MvcResult login = mockMvc.perform(post("/auth/token")
                         .contentType(APPLICATION_JSON)
-                        .content(json(Map.of("username", "admin", "password", PASSWORD))))
+                        .content(json(Map.of("username", username, "password", PASSWORD))))
                 .andExpect(status().isOk())
                 .andReturn();
         return read(login, "/data/token").asText();
@@ -223,6 +250,15 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
                 .emailVerified(true)
                 .isActive(true)
                 .build());
+        return saveOrderForCustomer(customer, orderStatus, paymentStatus, variationStock, paymentMethod);
+    }
+
+    private Order saveOrderForCustomer(
+            User customer,
+            OrderStatus orderStatus,
+            PaymentStatus paymentStatus,
+            int variationStock,
+            PaymentMethod paymentMethod) {
         Category category = categoryRepository.save(Category.builder()
                 .categoryName("Books")
                 .slug("books")
