@@ -1,11 +1,19 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, User, X, CheckCircle2, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { forgotPassword, login, register, resendVerification, resetPassword, verifyUser } from "../api/authApi.js";
 import { getProfile } from "../api/userApi.js";
 import { hasAdminAccess } from "../utils/authz.js";
-import { clearPendingVerify, getPendingVerify, saveAuth, saveCurrentUser, savePendingVerify } from "../utils/storage.js";
+import {
+  clearPendingVerify,
+  getPendingVerify,
+  saveAuth,
+  saveCurrentUser,
+  savePendingVerify
+} from "../utils/storage.js";
+
+const GOOGLE_AUTHORIZE_URL = import.meta.env.VITE_GOOGLE_OAUTH_AUTHORIZE_URL || "/api/v1/auth/google/authorize";
 
 const initialForm = {
   username: "",
@@ -87,6 +95,10 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
 
   function togglePassword(field) {
     setVisiblePasswords((current) => ({ ...current, [field]: !current[field] }));
+  }
+
+  function startGoogleLogin() {
+    window.location.assign(buildGoogleAuthorizeUrl(nextPath || "/"));
   }
 
   async function handleLoginRedirect(accessToken) {
@@ -213,9 +225,7 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
     }));
     setMessage({
       type: "success",
-      text: context?.source === "register"
-        ? t("auth.registerOtp")
-        : t("auth.loginOtp")
+      text: context?.source === "register" ? t("auth.registerOtp") : t("auth.loginOtp")
     });
     setMode("verify");
   }
@@ -242,123 +252,374 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
 
   return (
     <div
-      className="fixed inset-0 z-[5000] flex items-center justify-center bg-slate-950/80 px-3 py-4 sm:px-4 sm:py-8 backdrop-blur-md"
+      className="fixed inset-0 z-[5000] flex items-center justify-center px-3 py-4 sm:px-4 sm:py-8"
+      style={{ background: "rgba(2,6,23,0.82)", backdropFilter: "blur(18px)" }}
       role="presentation"
       onMouseDown={(event) => event.target === event.currentTarget && onClose()}
     >
+      {/* Ambient glow behind modal */}
       <div
-        className="relative grid max-h-[min(92vh,100dvh)] w-[min(900px,96vw)] sm:w-[min(900px,94vw)] overflow-hidden rounded-[16px] sm:rounded-[20px] border border-white/10 bg-[radial-gradient(circle_at_85%_12%,rgba(72,139,255,0.18),transparent_26%),#020a16] shadow-[0_36px_110px_rgba(5,9,15,0.4)] md:grid-cols-[0.95fr_1.05fr]"
+        aria-hidden="true"
+        style={{
+          position: "fixed",
+          top: "50%",
+          left: "50%",
+          width: 700,
+          height: 700,
+          transform: "translate(-50%,-50%)",
+          background: "radial-gradient(circle, rgba(37,99,235,0.13) 0%, transparent 70%)",
+          pointerEvents: "none",
+          zIndex: 0
+        }}
+      />
+
+      <div
+        className="relative z-10 grid max-h-[min(92vh,100dvh)] w-[min(920px,96vw)] sm:w-[min(920px,94vw)] overflow-hidden md:grid-cols-[1fr_1.1fr]"
+        style={{
+          borderRadius: 20,
+          border: "1px solid rgba(255,255,255,0.09)",
+          background: "radial-gradient(circle at 80% 10%, rgba(56,120,255,0.14) 0%, transparent 50%), #030d1e",
+          boxShadow: "0 40px 120px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04) inset"
+        }}
         role="dialog"
         aria-modal="true"
         aria-labelledby="auth-title"
       >
+        {/* ── Close button ── */}
         <button
-          className="absolute right-[12px] sm:right-[18px] top-[10px] sm:top-[15px] z-20 h-[32px] sm:h-[38px] w-[32px] sm:w-[38px] rounded-full border-0 bg-white/10 text-lg sm:text-xl text-white/75 transition hover:rotate-90 hover:bg-white/15 hover:text-white"
+          style={{
+            position: "absolute",
+            right: 14,
+            top: 12,
+            zIndex: 30,
+            width: 34,
+            height: 34,
+            borderRadius: "50%",
+            border: "1px solid rgba(255,255,255,0.12)",
+            background: "rgba(255,255,255,0.06)",
+            color: "rgba(255,255,255,0.65)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            transition: "all 0.2s ease"
+          }}
           type="button"
           onClick={onClose}
           aria-label={t("auth.close")}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(255,255,255,0.13)";
+            e.currentTarget.style.color = "#fff";
+            e.currentTarget.style.transform = "rotate(90deg)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+            e.currentTarget.style.color = "rgba(255,255,255,0.65)";
+            e.currentTarget.style.transform = "rotate(0deg)";
+          }}
         >
-          x
+          <X size={16} strokeWidth={2.5} />
         </button>
 
-        <aside className="hidden md:grid relative min-h-[190px] place-content-center overflow-hidden bg-[radial-gradient(ellipse_at_center,rgba(45,107,240,0.42),transparent_58%),linear-gradient(140deg,rgba(13,32,72,0.9),rgba(2,10,22,0.98))] p-10 text-center text-white before:absolute before:left-1/2 before:top-1/2 before:h-[360px] before:w-[360px] before:-translate-x-1/2 before:-translate-y-1/2 before:animate-spin before:rounded-full before:border before:border-white/10 before:content-[''] after:absolute after:-bottom-[70px] after:-right-20 after:h-[220px] after:w-[220px] after:rounded-full after:border after:border-white/10 after:bg-blue-500/15 after:blur-[2px] after:content-[''] md:min-h-[610px]">
-          <div className="absolute left-[calc(50%_-_6px)] top-[calc(50%_-_186px)] h-3 w-3 origin-[6px_186px] animate-spin rounded-full bg-[#c8d9ff] shadow-[0_0_24px_rgba(111,191,255,0.9)]" />
-          <div className="relative font-display text-6xl tracking-[0.18em] text-white [text-shadow:0_20px_50px_rgba(0,0,0,0.35)]">
-            AIVIRA
+        {/* ── Aside panel (desktop only) ── */}
+        <aside
+          className="hidden md:flex"
+          style={{
+            position: "relative",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: 620,
+            padding: "48px 36px",
+            textAlign: "center",
+            overflow: "hidden",
+            background:
+              "radial-gradient(ellipse at 50% 40%, rgba(37,99,235,0.38) 0%, rgba(17,45,120,0.22) 45%, transparent 72%), linear-gradient(155deg, rgba(10,28,70,0.95) 0%, rgba(2,10,28,1) 100%)"
+          }}
+        >
+          {/* Floating orb 1 */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              top: "18%",
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: 200,
+              height: 200,
+              borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(56,132,255,0.22) 0%, transparent 65%)",
+              animation: "auth-float 6s ease-in-out infinite",
+              filter: "blur(1px)"
+            }}
+          />
+          {/* Floating orb 2 */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              bottom: "14%",
+              right: "10%",
+              width: 140,
+              height: 140,
+              borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(99,179,255,0.15) 0%, transparent 65%)",
+              animation: "auth-float 8s ease-in-out infinite 1.5s",
+              filter: "blur(2px)"
+            }}
+          />
+          {/* Decorative ring */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%,-50%)",
+              width: 380,
+              height: 380,
+              borderRadius: "50%",
+              border: "1px solid rgba(255,255,255,0.06)",
+              pointerEvents: "none"
+            }}
+          />
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%,-50%)",
+              width: 280,
+              height: 280,
+              borderRadius: "50%",
+              border: "1px solid rgba(56,132,255,0.12)",
+              pointerEvents: "none"
+            }}
+          />
+
+          {/* Brand */}
+          <div style={{ position: "relative", zIndex: 1 }}>
+            {/* Glowing dot */}
+            <div
+              aria-hidden="true"
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: "50%",
+                background: "#93c5fd",
+                boxShadow: "0 0 22px 6px rgba(111,191,255,0.7)",
+                margin: "0 auto 22px"
+              }}
+            />
+            <div
+              style={{
+                fontFamily: "var(--f-display, 'Bebas Neue', sans-serif)",
+                fontSize: "clamp(3rem, 5vw, 4.2rem)",
+                letterSpacing: "0.22em",
+                color: "#fff",
+                textShadow: "0 0 40px rgba(56,132,255,0.55), 0 24px 60px rgba(0,0,0,0.4)",
+                lineHeight: 1
+              }}
+            >
+              AIVIRA
+            </div>
+            <p
+              style={{
+                marginTop: 10,
+                fontFamily: "var(--f-serif, 'Cormorant Garamond', serif)",
+                fontSize: "1.12rem",
+                fontStyle: "italic",
+                color: "rgba(255,255,255,0.38)",
+                letterSpacing: "0.04em"
+              }}
+            >
+              {t("auth.sideSubtitle")}
+            </p>
+
+            {/* Tags */}
+            <div style={{ marginTop: 28, display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 8 }}>
+              {t("auth.tags", { returnObjects: true }).map((item) => (
+                <span
+                  key={item}
+                  style={{
+                    padding: "7px 14px",
+                    borderRadius: 999,
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    background: "rgba(255,255,255,0.07)",
+                    fontFamily: "var(--f-body, 'Outfit', sans-serif)",
+                    fontSize: "0.68rem",
+                    fontWeight: 800,
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    color: "rgba(255,255,255,0.6)"
+                  }}
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
           </div>
-          <p className="relative mt-2 font-serif text-lg italic text-white/45">
-            {t("auth.sideSubtitle")}
-          </p>
-          <div className="relative mt-7 flex flex-wrap justify-center gap-2">
-            {t("auth.tags", { returnObjects: true }).map((item) => (
-              <span
-                key={item}
-                className="rounded-full border border-white/15 bg-white/10 px-3 py-2 text-[0.74rem] font-extrabold uppercase tracking-[0.08em] text-white/70"
-              >
-                {item}
-              </span>
-            ))}
-          </div>
+
+          {/* Bottom decorative line */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: "10%",
+              right: "10%",
+              height: 1,
+              background: "linear-gradient(90deg, transparent, rgba(56,132,255,0.4), transparent)"
+            }}
+          />
         </aside>
 
-        <form className="grid max-h-[min(92vh,100dvh)] content-center gap-3 sm:gap-4 overflow-y-auto p-4 sm:p-7 md:p-[42px] scroll-smooth" onSubmit={submit}>
-          <div className="grid grid-cols-2 gap-1 sm:gap-1.5 rounded-full border border-white/10 bg-white/5 p-1 sm:p-1.5" aria-label={t("auth.modes")}>
-            <button
-              type="button"
-              className={[
-                "rounded-full px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-black transition",
-                mode === "login"
-                  ? "bg-white text-slate-950 shadow-[0_12px_30px_rgba(0,0,0,0.22)]"
-                  : "text-white/60 hover:text-white",
-              ].join(" ")}
-              onClick={() => switchMode("login")}
-            >
-              {t("common.login")}
-            </button>
-            <button
-              type="button"
-              className={[
-                "rounded-full px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-black transition",
-                mode === "register"
-                  ? "bg-white text-slate-950 shadow-[0_12px_30px_rgba(0,0,0,0.22)]"
-                  : "text-white/60 hover:text-white",
-              ].join(" ")}
-              onClick={() => switchMode("register")}
-            >
-              {t("common.register")}
-            </button>
+        {/* ── Form panel ── */}
+        <form
+          style={{
+            display: "grid",
+            alignContent: "center",
+            gap: 18,
+            overflowY: "auto",
+            padding: "36px 32px",
+            scrollBehavior: "smooth"
+          }}
+          onSubmit={submit}
+        >
+          {/* Tab switcher */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 6,
+              padding: 5,
+              borderRadius: 999,
+              border: "1px solid rgba(255,255,255,0.09)",
+              background: "rgba(255,255,255,0.04)"
+            }}
+            aria-label={t("auth.modes")}
+          >
+            {["login", "register"].map((m) => (
+              <button
+                key={m}
+                type="button"
+                style={{
+                  borderRadius: 999,
+                  padding: "9px 12px",
+                  fontSize: "0.82rem",
+                  fontWeight: 800,
+                  fontFamily: "var(--f-body, 'Outfit', sans-serif)",
+                  letterSpacing: "0.04em",
+                  transition: "all 0.22s ease",
+                  border: "none",
+                  cursor: "pointer",
+                  ...(mode === m
+                    ? {
+                        background: "linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)",
+                        color: "#fff",
+                        boxShadow: "0 8px 24px rgba(37,99,235,0.38)"
+                      }
+                    : {
+                        background: "transparent",
+                        color: "rgba(255,255,255,0.5)"
+                      })
+                }}
+                onClick={() => switchMode(m)}
+              >
+                {t(`common.${m}`)}
+              </button>
+            ))}
           </div>
 
-          <div className="text-center">
-            <div className="mx-auto inline-flex w-fit rounded-full bg-blue-500/10 px-2 sm:px-2.5 py-1 sm:py-1.5 text-[0.65rem] sm:text-[0.72rem] font-black uppercase tracking-[0.12em] text-blue-300">
+          {/* Heading block */}
+          <div style={{ textAlign: "center" }}>
+            <div
+              style={{
+                display: "inline-block",
+                padding: "5px 14px",
+                borderRadius: 999,
+                background: "rgba(37,99,235,0.14)",
+                border: "1px solid rgba(37,99,235,0.28)",
+                fontFamily: "var(--f-display, 'Bebas Neue', sans-serif)",
+                fontSize: "0.78rem",
+                letterSpacing: "0.14em",
+                color: "#93c5fd",
+                marginBottom: 10
+              }}
+            >
               {t(meta.kicker)}
             </div>
             <h2
               id="auth-title"
-              className="my-2 font-serif text-[clamp(1.5rem,3.5vw,2.8rem)] italic text-white"
+              style={{
+                margin: "0 0 8px",
+                fontFamily: "var(--f-serif, 'Cormorant Garamond', serif)",
+                fontSize: "clamp(1.6rem, 3.5vw, 2.6rem)",
+                fontStyle: "italic",
+                fontWeight: 700,
+                color: "#fff",
+                lineHeight: 1.15
+              }}
             >
               {t(meta.title)}
             </h2>
-            <p className="mx-auto max-w-[390px] text-xs sm:text-sm leading-5 sm:leading-6 text-white/50 px-1">
+            <p
+              style={{
+                margin: "0 auto",
+                maxWidth: 380,
+                fontSize: "0.83rem",
+                lineHeight: 1.65,
+                color: "rgba(255,255,255,0.52)"
+              }}
+            >
               {t(meta.copy)}
             </p>
           </div>
 
+          {/* Progress steps */}
           {(mode === "verify" || mode === "forgot" || mode === "reset") && (
-            <div className="grid grid-cols-[28px_1fr_28px] sm:grid-cols-[34px_1fr_34px] items-center gap-2 sm:gap-2.5" aria-label="Auth progress">
+            <div
+              style={{ display: "grid", gridTemplateColumns: "34px 1fr 34px", alignItems: "center", gap: 10 }}
+              aria-label="Auth progress"
+            >
+              {/* Step 1 */}
               <span
-                className={[
-                  "grid h-[28px] sm:h-[34px] w-[28px] sm:w-[34px] place-items-center rounded-full border text-xs sm:text-base font-black",
-                  step >= 1
-                    ? "border-blue-600 bg-blue-600 text-white shadow-[0_0_28px_rgba(45,107,240,0.45)]"
-                    : "border-white/15 text-white/50",
-                ].join(" ")}
-              >
-                1
-              </span>
-              <i className="h-px bg-gradient-to-r from-blue-500 to-white/15" />
+                style={{
+                  width: 34, height: 34, borderRadius: "50%", display: "grid", placeItems: "center",
+                  fontSize: "0.85rem", fontWeight: 800, transition: "all 0.25s ease",
+                  background: "linear-gradient(135deg, #2563eb, #60a5fa)",
+                  border: "none", color: "#fff", boxShadow: "0 0 22px rgba(37,99,235,0.5)"
+                }}
+              >1</span>
+              {/* Connecting line */}
+              <i style={{ height: 1, background: "linear-gradient(90deg, #3b82f6, rgba(255,255,255,0.12))", display: "block" }} />
+              {/* Step 2 */}
               <span
-                className={[
-                  "grid h-[28px] sm:h-[34px] w-[28px] sm:w-[34px] place-items-center rounded-full border text-xs sm:text-base font-black",
-                  step >= 2
-                    ? "border-blue-600 bg-blue-600 text-white shadow-[0_0_28px_rgba(45,107,240,0.45)]"
-                    : "border-white/15 text-white/50",
-                ].join(" ")}
-              >
-                2
-              </span>
+                style={{
+                  width: 34, height: 34, borderRadius: "50%", display: "grid", placeItems: "center",
+                  fontSize: "0.85rem", fontWeight: 800, transition: "all 0.25s ease",
+                  ...(step >= 2
+                    ? { background: "linear-gradient(135deg, #2563eb, #60a5fa)", border: "none", color: "#fff", boxShadow: "0 0 22px rgba(37,99,235,0.5)" }
+                    : { background: "transparent", border: "1px solid rgba(255,255,255,0.14)", color: "rgba(255,255,255,0.4)" })
+                }}
+              >2</span>
             </div>
           )}
 
-          <div className="grid gap-2 sm:gap-3" key={mode}>
+          {/* Fields */}
+          <div style={{ display: "grid", gap: 12 }} key={mode}>
             {(mode === "login" || mode === "register") && (
               <>
                 <Field
-                  label={t("auth.username")}
+                  label={mode === "login" ? t("auth.email") : t("auth.username")}
                   value={form.username}
                   onChange={(value) => update("username", value)}
                   autoComplete="username"
                   minLength={mode === "register" ? 4 : undefined}
+                  icon={mode === "login" ? Mail : User}
+                  placeholder={mode === "login" ? "you@example.com" : t("auth.username")}
+                  variant="bright"
                 />
                 <Field
                   label={t("auth.password")}
@@ -369,18 +630,39 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
                   minLength={mode === "register" ? 6 : undefined}
                   passwordToggle={{
                     visible: Boolean(visiblePasswords.password),
-                    onToggle: () => togglePassword("password"),
+                    onToggle: () => togglePassword("password")
                   }}
+                  icon={Lock}
+                  placeholder={t("auth.passwordPlaceholder")}
+                  variant="bright"
                 />
               </>
             )}
 
-            {(mode === "register") && (
+            {mode === "register" && (
               <>
-                <Field label={t("auth.email")} type="email" value={form.email} onChange={(value) => update("email", value)} autoComplete="email" />
-                <div className="grid gap-2 sm:gap-2.5 md:grid-cols-2">
-                  <Field label={t("auth.firstName")} value={form.firstName} onChange={(value) => update("firstName", value)} autoComplete="given-name" required={false} />
-                  <Field label={t("auth.lastName")} value={form.lastName} onChange={(value) => update("lastName", value)} autoComplete="family-name" required={false} />
+                <Field
+                  label={t("auth.email")}
+                  type="email"
+                  value={form.email}
+                  onChange={(value) => update("email", value)}
+                  autoComplete="email"
+                />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <Field
+                    label={t("auth.firstName")}
+                    value={form.firstName}
+                    onChange={(value) => update("firstName", value)}
+                    autoComplete="given-name"
+                    required={false}
+                  />
+                  <Field
+                    label={t("auth.lastName")}
+                    value={form.lastName}
+                    onChange={(value) => update("lastName", value)}
+                    autoComplete="family-name"
+                    required={false}
+                  />
                 </div>
                 <Field
                   label={t("auth.confirmPassword")}
@@ -391,7 +673,7 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
                   minLength={6}
                   passwordToggle={{
                     visible: Boolean(visiblePasswords.confirmPassword),
-                    onToggle: () => togglePassword("confirmPassword"),
+                    onToggle: () => togglePassword("confirmPassword")
                   }}
                 />
               </>
@@ -420,7 +702,13 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
 
             {mode === "reset" && (
               <>
-                <Field label={t("auth.otpCode")} value={form.otpCode} onChange={(value) => update("otpCode", value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" maxLength={6} />
+                <Field
+                  label={t("auth.otpCode")}
+                  value={form.otpCode}
+                  onChange={(value) => update("otpCode", value.replace(/\D/g, "").slice(0, 6))}
+                  inputMode="numeric"
+                  maxLength={6}
+                />
                 <Field
                   label={t("auth.newPassword")}
                   type={visiblePasswords.newPassword ? "text" : "password"}
@@ -430,81 +718,428 @@ export default function AuthModal({ open, onClose, initialMode = "login", nextPa
                   minLength={6}
                   passwordToggle={{
                     visible: Boolean(visiblePasswords.newPassword),
-                    onToggle: () => togglePassword("newPassword"),
+                    onToggle: () => togglePassword("newPassword")
                   }}
                 />
               </>
             )}
           </div>
 
+          {/* Alert message */}
           {message && (
             <div
-              className={[
-                "rounded-lg sm:rounded-xl border px-3 sm:px-3.5 py-2.5 sm:py-3 text-xs sm:text-sm leading-5 sm:leading-6",
-                message.type === "success"
-                  ? "border-emerald-300/30 bg-emerald-500/15 text-emerald-100"
-                  : "border-red-300/30 bg-red-500/15 text-red-100",
-              ].join(" ")}
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 10,
+                padding: "12px 14px",
+                borderRadius: 14,
+                fontSize: "0.82rem",
+                lineHeight: 1.6,
+                ...(message.type === "success"
+                  ? {
+                      border: "1px solid rgba(52,211,153,0.28)",
+                      background: "rgba(16,185,129,0.1)",
+                      color: "#a7f3d0"
+                    }
+                  : {
+                      border: "1px solid rgba(248,113,113,0.28)",
+                      background: "rgba(239,68,68,0.1)",
+                      color: "#fca5a5"
+                    })
+              }}
             >
-              {message.text}
+              {message.type === "success" ? (
+                <CheckCircle2 size={16} style={{ marginTop: 1, flexShrink: 0, color: "#34d399" }} />
+              ) : (
+                <XCircle size={16} style={{ marginTop: 1, flexShrink: 0, color: "#f87171" }} />
+              )}
+              <span>{message.text}</span>
             </div>
           )}
 
+          {/* CTA button */}
           <button
-            className="relative overflow-hidden rounded-[10px] border-0 bg-blue-700 px-4 sm:px-5 py-3 sm:py-3.5 font-extrabold text-sm sm:text-base text-white shadow-[0_10px_30px_rgba(24,83,227,0.28)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_38px_rgba(24,83,227,0.36)] disabled:cursor-wait disabled:opacity-70 disabled:hover:translate-y-0"
             disabled={busy}
             type="submit"
+            style={{
+              position: "relative",
+              overflow: "hidden",
+              borderRadius: 12,
+              border: "none",
+              padding: "13px 20px",
+              fontFamily: "var(--f-body, 'Outfit', sans-serif)",
+              fontWeight: 800,
+              fontSize: "0.9rem",
+              letterSpacing: "0.04em",
+              color: "#fff",
+              cursor: busy ? "wait" : "pointer",
+              opacity: busy ? 0.7 : 1,
+              background: "linear-gradient(135deg, #1d4ed8 0%, #3b82f6 60%, #60a5fa 100%)",
+              boxShadow: busy ? "none" : "0 10px 32px rgba(37,99,235,0.38)",
+              transition: "all 0.22s ease"
+            }}
+            onMouseEnter={(e) => {
+              if (!busy) {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = "0 18px 44px rgba(37,99,235,0.48)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 10px 32px rgba(37,99,235,0.38)";
+            }}
           >
-            <span>{busy ? t("common.working") : t(meta.action)}</span>
+            {/* Shimmer overlay */}
+            <span
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                inset: 0,
+                background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 50%, transparent 65%)",
+                backgroundSize: "200% 100%",
+                animation: busy ? "none" : "auth-shimmer 2.2s infinite"
+              }}
+            />
+            <span style={{ position: "relative" }}>
+              {busy ? t("common.working") : t(meta.action)}
+            </span>
           </button>
 
-          <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2.5">
-            {mode === "verify" && <button className="px-1.5 sm:px-1.5 py-1 text-xs sm:text-sm font-extrabold text-[#c8d9ff] hover:text-white disabled:cursor-wait disabled:opacity-55" type="button" onClick={resendOtp} disabled={busy}>{t("auth.resendOtp")}</button>}
-            {(mode === "login" || mode === "register") && <button className="px-1.5 sm:px-1.5 py-1 text-xs sm:text-sm font-extrabold text-[#c8d9ff] hover:text-white" type="button" onClick={() => switchMode("forgot")}>{t("auth.forgotPassword")}</button>}
-            {(mode === "verify" || mode === "forgot" || mode === "reset") && <button className="px-1.5 sm:px-1.5 py-1 text-xs sm:text-sm font-extrabold text-[#c8d9ff] hover:text-white" type="button" onClick={() => switchMode("login")}>{t("auth.backToLogin")}</button>}
+          {/* Google login section */}
+          {(mode === "login" || mode === "register") && (
+            <>
+              {/* OR divider */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr auto 1fr",
+                  alignItems: "center",
+                  gap: 12,
+                  color: "rgba(255,255,255,0.38)",
+                  fontSize: "0.7rem",
+                  fontWeight: 800,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase"
+                }}
+              >
+                <span style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.14))" }} />
+                {t("auth.or")}
+                <span style={{ height: 1, background: "linear-gradient(90deg, rgba(255,255,255,0.14), transparent)" }} />
+              </div>
+
+              {/* Google button */}
+              <button
+                type="button"
+                onClick={startGoogleLogin}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 12,
+                  padding: "11px 18px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.16)",
+                  background: "rgba(255,255,255,0.96)",
+                  color: "#374151",
+                  fontFamily: "var(--f-body, 'Outfit', sans-serif)",
+                  fontWeight: 700,
+                  fontSize: "0.87rem",
+                  letterSpacing: "0.01em",
+                  cursor: "pointer",
+                  boxShadow: "0 4px 18px rgba(0,0,0,0.18)",
+                  transition: "all 0.2s ease"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = "0 10px 28px rgba(0,0,0,0.24)";
+                  e.currentTarget.style.background = "#fff";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 4px 18px rgba(0,0,0,0.18)";
+                  e.currentTarget.style.background = "rgba(255,255,255,0.96)";
+                }}
+              >
+                <GoogleMark />
+                {t("auth.continueWithGoogle")}
+              </button>
+            </>
+          )}
+
+          {/* Secondary links */}
+          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 6 }}>
+            {mode === "verify" && (
+              <button
+                style={{
+                  padding: "6px 10px",
+                  fontSize: "0.8rem",
+                  fontWeight: 700,
+                  color: "#93c5fd",
+                  background: "none",
+                  border: "none",
+                  cursor: busy ? "wait" : "pointer",
+                  opacity: busy ? 0.55 : 1,
+                  transition: "color 0.15s"
+                }}
+                type="button"
+                onClick={resendOtp}
+                disabled={busy}
+                onMouseEnter={(e) => { e.currentTarget.style.color = "#fff"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = "#93c5fd"; }}
+              >
+                {t("auth.resendOtp")}
+              </button>
+            )}
+            {(mode === "login" || mode === "register") && (
+              <button
+                style={{
+                  padding: "6px 10px",
+                  fontSize: "0.8rem",
+                  fontWeight: 700,
+                  color: "#93c5fd",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  transition: "color 0.15s"
+                }}
+                type="button"
+                onClick={() => switchMode("forgot")}
+                onMouseEnter={(e) => { e.currentTarget.style.color = "#fff"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = "#93c5fd"; }}
+              >
+                {t("auth.forgotPassword")}
+              </button>
+            )}
+            {(mode === "verify" || mode === "forgot" || mode === "reset") && (
+              <button
+                style={{
+                  padding: "6px 10px",
+                  fontSize: "0.8rem",
+                  fontWeight: 700,
+                  color: "#93c5fd",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  transition: "color 0.15s"
+                }}
+                type="button"
+                onClick={() => switchMode("login")}
+                onMouseEnter={(e) => { e.currentTarget.style.color = "#fff"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = "#93c5fd"; }}
+              >
+                {t("auth.backToLogin")}
+              </button>
+            )}
           </div>
+
+          {/* No account / Has account + Terms */}
+          {(mode === "login" || mode === "register") && (
+            <div style={{ textAlign: "center", fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", display: "grid", gap: 8 }}>
+              <p style={{ margin: 0 }}>
+                {mode === "login" ? t("auth.noAccount") : t("auth.hasAccount")}{" "}
+                <button
+                  style={{ fontWeight: 800, color: "#93c5fd", background: "none", border: "none", cursor: "pointer" }}
+                  type="button"
+                  onClick={() => switchMode(mode === "login" ? "register" : "login")}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "#fff"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "#93c5fd"; }}
+                >
+                  {mode === "login" ? t("auth.createNow") : t("common.login")}
+                </button>
+              </p>
+              <p style={{ margin: 0, lineHeight: 1.7 }}>
+                {t("auth.termsPrefix")}{" "}
+                <button
+                  style={{ fontWeight: 700, color: "#93c5fd", background: "none", border: "none", cursor: "pointer" }}
+                  type="button"
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "#fff"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "#93c5fd"; }}
+                >
+                  {t("footer.privacy")}
+                </button>{" "}
+                {t("auth.and")}{" "}
+                <button
+                  style={{ fontWeight: 700, color: "#93c5fd", background: "none", border: "none", cursor: "pointer" }}
+                  type="button"
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "#fff"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "#93c5fd"; }}
+                >
+                  {t("footer.terms")}
+                </button>
+                .
+              </p>
+            </div>
+          )}
         </form>
       </div>
+
+      {/* Keyframes injected via style tag */}
+      <style>{`
+        @keyframes auth-float {
+          0%, 100% { transform: translateX(-50%) translateY(0px); }
+          50% { transform: translateX(-50%) translateY(-18px); }
+        }
+        @keyframes auth-shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+      `}</style>
     </div>
   );
 }
 
-function Field({ label, type = "text", value, onChange, required = true, passwordToggle, ...props }) {
+// ── Field component ──
+function Field({
+  label,
+  type = "text",
+  value,
+  onChange,
+  required = true,
+  passwordToggle,
+  icon: Icon,
+  placeholder,
+  variant = "default",
+  ...props
+}) {
   const { t } = useTranslation();
+  const [focused, setFocused] = useState(false);
+  const bright = variant === "bright";
+
+  const inputBase = {
+    width: "100%",
+    borderRadius: 10,
+    padding: Icon ? "11px 12px 11px 40px" : "11px 14px",
+    paddingRight: passwordToggle ? 50 : undefined,
+    fontSize: "0.88rem",
+    fontFamily: "var(--f-body, 'Outfit', sans-serif)",
+    outline: "none",
+    transition: "all 0.18s ease",
+    ...(bright
+      ? {
+          border: focused
+            ? "1.5px solid rgba(96,165,250,0.8)"
+            : "1.5px solid rgba(255,255,255,0.72)",
+          background: "#fff",
+          color: "#111827",
+          boxShadow: focused
+            ? "0 0 0 4px rgba(37,99,235,0.16), 0 6px 20px rgba(0,0,0,0.08)"
+            : "0 4px 14px rgba(0,0,0,0.06)"
+        }
+      : {
+          border: focused
+            ? "1.5px solid rgba(96,165,250,0.7)"
+            : "1.5px solid rgba(255,255,255,0.14)",
+          background: "rgba(255,255,255,0.06)",
+          color: "#f8fafc",
+          boxShadow: focused ? "0 0 0 4px rgba(37,99,235,0.14)" : "none"
+        })
+  };
+
   return (
-    <label className="grid gap-1.5 sm:gap-2">
-      <span className="text-[0.7rem] sm:text-[0.78rem] font-black uppercase tracking-[0.08em] text-white/65">
+    <label style={{ display: "grid", gap: 7 }}>
+      <span
+        style={{
+          fontSize: "0.7rem",
+          fontWeight: 800,
+          fontFamily: "var(--f-body, 'Outfit', sans-serif)",
+          textTransform: "uppercase",
+          letterSpacing: "0.1em",
+          color: "rgba(255,255,255,0.65)"
+        }}
+      >
         {label}
       </span>
-      <span className="relative block">
+      <span style={{ position: "relative", display: "block" }}>
+        {Icon && (
+          <Icon
+            style={{
+              position: "absolute",
+              left: 13,
+              top: "50%",
+              transform: "translateY(-50%)",
+              width: 16,
+              height: 16,
+              pointerEvents: "none",
+              color: bright ? "#2563eb" : "rgba(148,163,184,0.8)"
+            }}
+            strokeWidth={2.4}
+            aria-hidden="true"
+          />
+        )}
         <input
           type={type}
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          placeholder={label}
+          placeholder={placeholder || label}
           required={required}
-          className={[
-            "w-full rounded-[8px] sm:rounded-[10px] border border-white/10 bg-white/95 px-3 sm:px-3.5 py-2.5 sm:py-3 text-sm sm:text-base text-slate-950 outline-none transition focus:-translate-y-px focus:border-sky-300 focus:shadow-[0_0_0_4px_rgba(45,107,240,0.16)] disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-white/70",
-            passwordToggle ? "pr-[62px] sm:pr-[72px]" : "",
-          ].join(" ")}
+          style={inputBase}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           {...props}
         />
         {passwordToggle && (
           <button
             type="button"
             onClick={passwordToggle.onToggle}
-            className="absolute right-1.5 sm:right-2 top-1/2 grid h-8 sm:h-9 w-8 sm:w-9 -translate-y-1/2 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-950"
+            style={{
+              position: "absolute",
+              right: 8,
+              top: "50%",
+              transform: "translateY(-50%)",
+              width: 34,
+              height: 34,
+              borderRadius: "50%",
+              border: "none",
+              background: "transparent",
+              cursor: "pointer",
+              display: "grid",
+              placeItems: "center",
+              color: bright ? "#6b7280" : "rgba(148,163,184,0.7)",
+              transition: "all 0.15s"
+            }}
             aria-label={passwordToggle.visible ? t("auth.hidePassword", { label }) : t("auth.showPassword", { label })}
+            onMouseEnter={(e) => { e.currentTarget.style.background = bright ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.08)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
           >
             {passwordToggle.visible ? (
-              <EyeOff className="h-3.5 sm:h-4 w-3.5 sm:w-4" strokeWidth={2.4} />
+              <EyeOff style={{ width: 15, height: 15 }} strokeWidth={2.4} />
             ) : (
-              <Eye className="h-3.5 sm:h-4 w-3.5 sm:w-4" strokeWidth={2.4} />
+              <Eye style={{ width: 15, height: 15 }} strokeWidth={2.4} />
             )}
           </button>
         )}
       </span>
     </label>
+  );
+}
+
+// ── Google SVG logo (official 4-color) ──
+function GoogleMark() {
+  return (
+    <svg
+      aria-hidden="true"
+      style={{ width: 20, height: 20, flexShrink: 0 }}
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+        fill="#4285F4"
+      />
+      <path
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+        fill="#34A853"
+      />
+      <path
+        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
+        fill="#FBBC05"
+      />
+      <path
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"
+        fill="#EA4335"
+      />
+    </svg>
   );
 }
 
@@ -535,6 +1170,14 @@ function validateForm(mode, form, t) {
   }
 }
 
+export function buildGoogleAuthorizeUrl(nextPath = "/") {
+  const url = new URL(GOOGLE_AUTHORIZE_URL, window.location.origin);
+  const safeNext =
+    typeof nextPath === "string" && nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/";
+  url.searchParams.set("next", safeNext);
+  return url.toString();
+}
+
 function shouldVerifyOtp(response, registerSuccess = false) {
   const nextStep = response?.nextStep || response?.status || response?.authStep;
   if (String(nextStep || "").toUpperCase() === "VERIFY_OTP") return true;
@@ -545,14 +1188,16 @@ function shouldVerifyOtp(response, registerSuccess = false) {
 
 function isVerifyRequiredError(error) {
   const text = normalizeText(`${error?.message || ""} ${error?.errorCode || ""}`);
-  return error?.errorCode === "E2202"
-    || error?.errorCode === "E3106"
-    || text.includes("verify")
-    || text.includes("verified")
-    || text.includes("active")
-    || text.includes("otp")
-    || text.includes("xac minh")
-    || text.includes("kich hoat");
+  return (
+    error?.errorCode === "E2202" ||
+    error?.errorCode === "E3106" ||
+    text.includes("verify") ||
+    text.includes("verified") ||
+    text.includes("active") ||
+    text.includes("otp") ||
+    text.includes("xac minh") ||
+    text.includes("kich hoat")
+  );
 }
 
 function normalizeText(value) {

@@ -29,6 +29,23 @@ export const handlers = [
   http.post(`${API}/auth/refresh-token`, () =>
     HttpResponse.json(apiResponse({ token: "new-access-token", refreshToken: "refresh-token", user: customerUser }))
   ),
+  http.post(`${API}/auth/google/exchange-ticket`, async ({ request }) => {
+    const body = await request.json().catch(() => ({}));
+    if (!body.ticket || body.ticket === "bad-ticket") {
+      return HttpResponse.json(
+        {
+          success: false,
+          errorCode: "GOOGLE_LOGIN_TICKET_INVALID",
+          message: "Google login ticket is invalid",
+          data: null
+        },
+        { status: 400 }
+      );
+    }
+    return HttpResponse.json(
+      apiResponse({ token: "google-access-token", refreshToken: "google-refresh-token", user: customerUser })
+    );
+  }),
   http.get(`${API}/users/me`, ({ request }) => {
     const auth = request.headers.get("authorization") || "";
     return HttpResponse.json(apiResponse(auth.includes("admin") ? adminUser : customerUser));

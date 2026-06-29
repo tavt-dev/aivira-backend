@@ -9,6 +9,7 @@ import {
   InfoCard,
   Input,
   MetaRow as Meta,
+  Modal,
   Notice,
   PageHeader,
   Pagination,
@@ -50,6 +51,8 @@ export default function AdminReviewsPage() {
   const [busy, setBusy] = useState("");
   const [replyDraft, setReplyDraft] = useState("");
   const [moderationDraft, setModerationDraft] = useState({ approved: false, visible: true });
+  const [moderationOpen, setModerationOpen] = useState(false);
+  const [replyOpen, setReplyOpen] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
 
   const refreshReviews = useCallback(async (nextFilters = appliedFilters) => {
@@ -144,6 +147,7 @@ export default function AdminReviewsPage() {
     event.preventDefault();
     if (!selected) return;
     await runModeration(selected, Boolean(moderationDraft.approved), Boolean(moderationDraft.visible), "admin.reviewModerated");
+    setModerationOpen(false);
   }
 
   async function saveReply(event) {
@@ -157,6 +161,7 @@ export default function AdminReviewsPage() {
       setMessage(replyDraft.trim() ? t("admin.reviewReplySaved") : t("admin.reviewReplyCleared"));
       toast({ message: replyDraft.trim() ? t("admin.reviewReplySaved") : t("admin.reviewReplyCleared"), variant: "success" });
       await refreshReviews(appliedFilters);
+      setReplyOpen(false);
     } catch (error) {
       setMessage(error.message || t("admin.reviewReplyFailed"));
     } finally {
@@ -193,7 +198,7 @@ export default function AdminReviewsPage() {
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="mx-auto grid w-full max-w-7xl gap-6">
       <PageHeader title={t("admin.reviewsTitle")} eyebrow={t("admin.reviewsEyebrow")} />
       {message && <Notice>{message}</Notice>}
 
@@ -225,9 +230,9 @@ export default function AdminReviewsPage() {
       </Panel>
 
       <Panel title={t("admin.reviewsList")}>
-        <div className="overflow-x-auto rounded-xl border border-slate-200">
+        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
           <table className="min-w-[1180px] w-full border-collapse text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+            <thead className="bg-slate-50 text-xs uppercase text-slate-500 dark:bg-slate-800/50 dark:text-slate-400">
               <tr>
                 <th className="px-4 py-3">{t("admin.review")}</th>
                 <th className="px-4 py-3">{t("admin.book")}</th>
@@ -241,26 +246,26 @@ export default function AdminReviewsPage() {
             </thead>
             <tbody>
               {reviews.map((review) => (
-                <tr className="border-t border-slate-100 align-middle" key={review.id}>
+                <tr className="border-t border-slate-100 align-middle transition-colors hover:bg-slate-50/60 dark:border-slate-800 dark:hover:bg-slate-800/30" key={review.id}>
                   <td className="px-4 py-3">
                     <div className="flex items-start gap-3">
                       <ReviewThumb review={review} onPreview={setImagePreview} />
                       <div className="min-w-0">
                         <RatingStars size="sm" value={review.rating} />
-                        <p className="mt-1 max-w-xs truncate font-semibold text-slate-700">{review.comment || "-"}</p>
+                        <p className="mt-1 max-w-xs truncate font-semibold text-slate-700 dark:text-slate-300">{review.comment || "-"}</p>
                         <p className="text-xs text-slate-400">#{review.id}</p>
                       </div>
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <p className="font-bold text-slate-950">{review.productName || "-"}</p>
+                    <p className="font-bold text-slate-950 dark:text-slate-100">{review.productName || "-"}</p>
                     <p className="text-xs text-slate-500">ID {review.productId || "-"} / {review.sku || "-"}</p>
                   </td>
                   <td className="px-4 py-3">
-                    <p className="font-semibold text-slate-700">{review.username || "-"}</p>
+                    <p className="font-semibold text-slate-700 dark:text-slate-300">{review.username || "-"}</p>
                     <p className="text-xs text-slate-500">{review.userId || "-"}</p>
                   </td>
-                  <td className="px-4 py-3 text-slate-600">
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
                     <p>{t("admin.order")} #{review.orderId || "-"}</p>
                     <p className="text-xs">{t("admin.orderItemId")} #{review.orderItemId || "-"}</p>
                   </td>
@@ -287,19 +292,41 @@ export default function AdminReviewsPage() {
         <ReviewDetailDrawer
           busy={busy}
           language={i18n.language}
-          moderationDraft={moderationDraft}
           onClearReply={clearReply}
           onClose={() => setSelected(null)}
           onImagePreview={setImagePreview}
-          onModerationDraft={setModerationDraft}
-          onModerationSubmit={saveModeration}
+          onOpenModeration={() => setModerationOpen(true)}
+          onOpenReply={() => setReplyOpen(true)}
           onQuickModerate={runModeration}
-          onReplyChange={setReplyDraft}
-          onReplySubmit={saveReply}
-          replyDraft={replyDraft}
           review={selected}
           t={t}
         />
+      )}
+      {selected && (
+        <>
+          <ReviewModerationModal
+            busy={busy}
+            draft={moderationDraft}
+            onChange={setModerationDraft}
+            onClose={() => setModerationOpen(false)}
+            onSubmit={saveModeration}
+            open={moderationOpen}
+            review={selected}
+            t={t}
+          />
+          <ReviewReplyModal
+            busy={busy}
+            draft={replyDraft}
+            language={i18n.language}
+            onChange={setReplyDraft}
+            onClearReply={clearReply}
+            onClose={() => setReplyOpen(false)}
+            onSubmit={saveReply}
+            open={replyOpen}
+            review={selected}
+            t={t}
+          />
+        </>
       )}
       {imagePreview && <ImagePreview image={imagePreview} onClose={() => setImagePreview(null)} t={t} />}
     </div>
@@ -309,16 +336,12 @@ export default function AdminReviewsPage() {
 function ReviewDetailDrawer({
   busy,
   language,
-  moderationDraft,
   onClearReply,
   onClose,
   onImagePreview,
-  onModerationDraft,
-  onModerationSubmit,
+  onOpenModeration,
+  onOpenReply,
   onQuickModerate,
-  onReplyChange,
-  onReplySubmit,
-  replyDraft,
   review,
   t,
 }) {
@@ -326,11 +349,12 @@ function ReviewDetailDrawer({
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/60 backdrop-blur-sm">
-      <aside className="h-full w-full max-w-5xl overflow-y-auto bg-white p-5 shadow-2xl md:p-8">
+      <aside className="h-full w-full max-w-5xl overflow-y-auto bg-white shadow-2xl dark:bg-slate-900">
+        <div className="p-5 md:p-8">
         <div className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-5 md:flex-row md:items-start md:justify-between">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-blue-600">{t("admin.reviewDetail")}</span>
-            <h2 className="mt-2 text-3xl font-bold text-slate-950">{review.productName || t("admin.review")}</h2>
+            <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">{t("admin.reviewDetail")}</span>
+            <h2 className="mt-2 text-2xl font-bold text-slate-950 dark:text-slate-50">{review.productName || t("admin.review")}</h2>
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <RatingStars size="sm" value={review.rating} />
               <ReviewBadges review={review} t={t} />
@@ -348,7 +372,7 @@ function ReviewDetailDrawer({
           <InfoCard title={t("admin.reviewContent")}>
             <Meta label="ID" value={review.id || "-"} />
             <Meta label={t("admin.rating")} value={review.rating || "-"} />
-            <div className="rounded-xl bg-slate-50 p-4 text-sm leading-6 text-slate-700">{review.comment || "-"}</div>
+            <div className="rounded-xl bg-slate-50 p-4 text-sm leading-6 text-slate-700 dark:bg-slate-800 dark:text-slate-300">{review.comment || "-"}</div>
           </InfoCard>
           <InfoCard title={t("admin.book")}>
             <Meta label={t("admin.bookTitle")} value={review.productName || "-"} />
@@ -381,52 +405,87 @@ function ReviewDetailDrawer({
 
         <div className="mt-5 grid gap-5 xl:grid-cols-2">
           <InfoCard title={t("admin.moderationActions")}>
-            <form className="grid gap-4" onSubmit={onModerationSubmit}>
-              <label className="flex items-center gap-3 rounded-xl border border-slate-200 p-4 text-sm font-bold text-slate-700">
-                <input
-                  checked={Boolean(moderationDraft.approved)}
-                  disabled={deleted}
-                  type="checkbox"
-                  onChange={(event) => onModerationDraft({ ...moderationDraft, approved: event.target.checked })}
-                />
-                {t("admin.approved")}
-              </label>
-              <label className="flex items-center gap-3 rounded-xl border border-slate-200 p-4 text-sm font-bold text-slate-700">
-                <input
-                  checked={Boolean(moderationDraft.visible)}
-                  disabled={deleted}
-                  type="checkbox"
-                  onChange={(event) => onModerationDraft({ ...moderationDraft, visible: event.target.checked })}
-                />
-                {t("common.visible")}
-              </label>
-              <Button disabled={deleted || Boolean(busy)} type="submit">{t("admin.saveModeration")}</Button>
-            </form>
+            <div className="grid gap-3">
+              <Meta label={t("admin.approved")} value={yesNo(review.approved, t)} />
+              <Meta label={t("common.visible")} value={yesNo(review.visible, t)} />
+              <Button disabled={deleted || Boolean(busy)} type="button" onClick={onOpenModeration}>{t("admin.saveModeration")}</Button>
+            </div>
           </InfoCard>
           <InfoCard title={t("admin.adminReply")}>
-            <form className="grid gap-4" onSubmit={onReplySubmit}>
-              <Textarea
-                disabled={deleted}
-                maxLength={2000}
-                value={replyDraft}
-                onChange={(event) => onReplyChange(event.target.value)}
-                placeholder={t("admin.reviewReplyPlaceholder")}
-              />
-              <div className="flex flex-wrap justify-between gap-3 text-xs font-semibold text-slate-500">
-                <span>{t("admin.adminReplyNote")}</span>
-                <span>{replyDraft.length}/2000</span>
-              </div>
+            <div className="grid gap-4">
+              <div className="rounded-xl bg-slate-50 p-4 text-sm leading-6 text-slate-700 dark:bg-slate-800 dark:text-slate-300">{review.adminReply || "-"}</div>
               <div className="flex flex-wrap gap-2">
-                <Button disabled={deleted || Boolean(busy)} type="submit">{t("admin.saveReply")}</Button>
+                <Button disabled={deleted || Boolean(busy)} type="button" onClick={onOpenReply}>{t("admin.saveReply")}</Button>
                 <Button variant="secondary" disabled={deleted || Boolean(busy)} type="button" onClick={onClearReply}>{t("admin.clearReply")}</Button>
               </div>
               <Meta label={t("admin.repliedBy")} value={review.repliedBy || "-"} />
               <Meta label={t("admin.repliedAt")} value={formatDateTime(review.repliedAt, language)} />
-            </form>
+            </div>
           </InfoCard>
+        </div>
         </div>
       </aside>
     </div>
+  );
+}
+
+function ReviewModerationModal({ busy, draft, onChange, onClose, onSubmit, open, review, t }) {
+  const deleted = Boolean(review.deletedAt);
+  return (
+    <Modal onClose={onClose} open={open} title={t("admin.moderationActions")}>
+      <form className="grid gap-4" onSubmit={onSubmit}>
+        <label className="flex items-center gap-3 rounded-xl border border-slate-200 p-4 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">
+          <input
+            checked={Boolean(draft.approved)}
+            disabled={deleted}
+            type="checkbox"
+            onChange={(event) => onChange({ ...draft, approved: event.target.checked })}
+          />
+          {t("admin.approved")}
+        </label>
+        <label className="flex items-center gap-3 rounded-xl border border-slate-200 p-4 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">
+          <input
+            checked={Boolean(draft.visible)}
+            disabled={deleted}
+            type="checkbox"
+            onChange={(event) => onChange({ ...draft, visible: event.target.checked })}
+          />
+          {t("common.visible")}
+        </label>
+        <div className="flex flex-wrap gap-2">
+          <Button disabled={deleted || Boolean(busy)} type="submit">{t("admin.saveModeration")}</Button>
+          <Button variant="secondary" type="button" onClick={onClose}>{t("common.cancel")}</Button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+function ReviewReplyModal({ busy, draft, language, onChange, onClearReply, onClose, onSubmit, open, review, t }) {
+  const deleted = Boolean(review.deletedAt);
+  return (
+    <Modal onClose={onClose} open={open} size="lg" title={t("admin.adminReply")}>
+      <form className="grid gap-4" onSubmit={onSubmit}>
+        <Textarea
+          disabled={deleted}
+          maxLength={2000}
+          value={draft}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={t("admin.reviewReplyPlaceholder")}
+        />
+        <div className="flex flex-wrap justify-between gap-3 text-xs font-semibold text-slate-500">
+          <span>{t("admin.adminReplyNote")}</span>
+          <span>{draft.length}/2000</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button disabled={deleted || Boolean(busy)} type="submit">{t("admin.saveReply")}</Button>
+          <Button variant="secondary" disabled={deleted || Boolean(busy)} type="button" onClick={onClearReply}>{t("admin.clearReply")}</Button>
+          <Button variant="secondary" type="button" onClick={onClose}>{t("common.cancel")}</Button>
+        </div>
+        <Meta label={t("admin.repliedBy")} value={review.repliedBy || "-"} />
+        <Meta label={t("admin.repliedAt")} value={formatDateTime(review.repliedAt, language)} />
+      </form>
+    </Modal>
   );
 }
 
@@ -471,10 +530,10 @@ function ReviewBadges({ review, t }) {
 function ReviewThumb({ onPreview, review }) {
   const image = firstImage(review.images);
   if (!image) {
-    return <span className="grid h-14 w-14 place-items-center rounded-xl bg-slate-100 text-xs font-bold text-slate-400">{review.images?.length || 0}</span>;
+    return <span className="grid h-14 w-14 place-items-center rounded-xl bg-slate-100 text-xs font-bold text-slate-400 dark:bg-slate-800">{review.images?.length || 0}</span>;
   }
   return (
-    <button className="h-14 w-14 overflow-hidden rounded-xl ring-1 ring-slate-200" type="button" onClick={() => onPreview(image)}>
+    <button className="h-14 w-14 overflow-hidden rounded-xl ring-1 ring-slate-200 transition hover:ring-2 hover:ring-indigo-500 dark:ring-slate-700" type="button" onClick={() => onPreview(image)}>
       <img className="h-full w-full object-cover" src={image.imageUrl} alt={image.imagePublicId || "review"} />
     </button>
   );
@@ -485,7 +544,7 @@ function ImageGrid({ images = [], onPreview, t }) {
   return (
     <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
       {images.map((image, index) => (
-        <button className="aspect-square overflow-hidden rounded-xl ring-1 ring-slate-200" key={image.id || image.imagePublicId || index} type="button" onClick={() => onPreview(image)}>
+        <button className="aspect-square overflow-hidden rounded-xl ring-1 ring-slate-200 transition hover:ring-2 hover:ring-indigo-500 dark:ring-slate-700" key={image.id || image.imagePublicId || index} type="button" onClick={() => onPreview(image)}>
           <img className="h-full w-full object-cover" src={image.imageUrl} alt={image.imagePublicId || t("admin.reviewImageAlt", { index: index + 1 })} />
         </button>
       ))}
@@ -589,5 +648,5 @@ function createEmptyMeta(filters) {
 }
 
 function Badge({ active = false, children }) {
-  return <span className={["rounded-full px-2 py-1 text-xs font-bold", active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"].join(" ")}>{children}</span>;
+  return <span className={["inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold", active ? "border-emerald-200/60 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400" : "border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"].join(" ")}>{children}</span>;
 }

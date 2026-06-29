@@ -54,17 +54,17 @@ const en = {
     viewDetails: "View Details",
     backToBookstore: "Back to bookstore",
     noData: "No data.",
-    paymentPending: "payment group pending",
+    paymentPending: "payment group pending"
   },
   nav: {
     searchPlaceholder: "Search books by title or author...",
     searchMobilePlaceholder: "Search books...",
     topResults: "Top Results",
-    viewAllResults: "View all results for \"{{query}}\"",
+    viewAllResults: 'View all results for "{{query}}"',
     reader: "Reader",
     greeting: "Hi, {{name}}",
     hiLogout: "Hi, {{name}} / Logout",
-    toggleMenu: "Toggle menu",
+    toggleMenu: "Toggle menu"
   },
   footer: {
     desc: "Aivira single-vendor online bookstore. Browse, checkout, pay, and track orders from one curated catalog.",
@@ -77,7 +77,7 @@ const en = {
     contact: "Contact",
     rights: "© {{year}} Aivira Bookstore. All rights reserved.",
     privacy: "Privacy Policy",
-    terms: "Terms of Service",
+    terms: "Terms of Service"
   },
   auth: {
     modes: "Authentication modes",
@@ -103,6 +103,7 @@ const en = {
     resetAction: "Reset password",
     username: "Username",
     password: "Password",
+    passwordPlaceholder: "Enter your password",
     confirmPassword: "Confirm password",
     email: "Email",
     firstName: "First name",
@@ -111,6 +112,16 @@ const en = {
     newPassword: "New password",
     forgotPassword: "Forgot password",
     backToLogin: "Back to login",
+    continueWithGoogle: "Continue with Google",
+    googleSigningIn: "Signing in with Google...",
+    googleLoginFailed: "Google login could not be completed.",
+    googleTicketMissing: "Google login ticket is missing or expired.",
+    or: "OR",
+    noAccount: "Don't have an account?",
+    hasAccount: "Already have an account?",
+    createNow: "Create now",
+    termsPrefix: "By continuing, you agree to",
+    and: "and",
     resendOtp: "Resend OTP",
     close: "Close auth modal",
     showPassword: "Show {{label}}",
@@ -135,8 +146,8 @@ const en = {
       confirm: "Password confirmation does not match.",
       email: "Email is required.",
       otp: "OTP code must be 6 digits.",
-      newPassword: "New password must be at least 6 characters.",
-    },
+      newPassword: "New password must be at least 6 characters."
+    }
   },
   home: {
     heroKicker: "Aivira Single-Vendor Bookstore",
@@ -144,19 +155,27 @@ const en = {
     title2: "A",
     titleWorld: "WORLD",
     subtitle: "waiting to be explored.",
-    heroCopy: "Aivira curates books across business, growth, fiction, technology, and education with a checkout flow connected to the bookstore backend.",
+    heroCopy:
+      "Aivira curates books across business, growth, fiction, technology, and education with a checkout flow connected to the bookstore backend.",
     exploreLibrary: "Explore Library",
     viewCart: "View Cart",
     titles: "Titles",
     supported: "Supported",
     momo: "& MoMo",
-    ticker: "Business and Finance - Self-help and Growth - Literature and Fiction - Skills and Wellness - Technology - Education - ",
+    ticker:
+      "Business and Finance - Self-help and Growth - Literature and Fiction - Skills and Wellness - Technology - Education - ",
     explore: "Explore",
     curatedCollections: "Curated Collections",
     backendCatalog: "Backend Catalog",
+    weeklyPicksChip: "Picks",
     featuredBooks: "Featured Books",
     weeklyPicks: "This Week's Picks",
     newArrivals: "New Arrivals",
+    newArrivalsSubtitle: "Freshly curated titles for this week's Aivira shelf, selected for readers who want the next remarkable page.",
+    newArrivalSpotlight: "Just landed",
+    justArrived: "New",
+    viewNewBooks: "View New Books",
+    releaseShelf: "New Release Shelf",
     bestsellingBooks: "Bestselling Books",
     bestsellerBadge: "Bestseller",
     categoryHighlights: "Category Highlights",
@@ -183,15 +202,16 @@ const en = {
       chooseTitle: "Choose",
       chooseDesc: "Read summaries, metadata, prices, stock state, and recommendations before checkout.",
       trackTitle: "Buy & Track",
-      trackDesc: "Add to cart, checkout with COD/VNPay/MoMo, then follow your order status.",
+      trackDesc: "Add to cart, checkout with COD/VNPay/MoMo, then follow your order status."
     },
     whyUs: "Why Us",
     aboutTitle: "AIVIRA BOOKSTORE",
-    aboutCopy: "Aivira is the sole bookstore operator. Customers browse, add books to cart, checkout, pay, and track orders in one place.",
+    aboutCopy:
+      "Aivira is the sole bookstore operator. Customers browse, add books to cart, checkout, pay, and track orders in one place.",
     aboutBullets: [
       "Admin-managed catalog with book variants and stock.",
       "Customer cart, checkout, COD, VNPay, and MoMo flows.",
-      "Frontend uses real backend APIs for auth, catalog, cart, checkout, orders, and admin.",
+      "Frontend uses real backend APIs for auth, catalog, cart, checkout, orders, and admin."
     ],
     learnMore: "Learn More",
     readers: "Readers",
@@ -201,7 +221,7 @@ const en = {
     posts: {
       one: "Top 10 Books Worth Reading This Year",
       two: "Time Management Lessons From High-Performing Leaders",
-      three: "Why Fiction Helps Readers Build Empathy",
+      three: "Why Fiction Helps Readers Build Empathy"
     },
     categories: {
       business: "Business",
@@ -211,9 +231,9 @@ const en = {
       count120: "120+ titles",
       count180: "180+ titles",
       count95: "95+ titles",
-      count110: "110+ titles",
+      count110: "110+ titles"
     },
-    demoMessage: "Showing demo catalog while backend is unavailable.",
+    demoMessage: "Showing demo catalog while backend is unavailable."
   },
   catalog: {
     titleAll: "All Books",
@@ -222,7 +242,18 @@ const en = {
     literature: "Literature & Fiction",
     skills: "Skills & Wellness",
     catalog: "Catalog",
-    searchTitle: "Search: \"{{search}}\"",
+    heroEyebrow: "Aivira Library",
+    heroCopy: "Browse the curated shelf with clean filters, quick sorting, and a catalog rhythm built for scanning.",
+    activeFilters: "{{count}} filters",
+    clearAll: "Clear all",
+    resultsSummary: "Current results",
+    emptyCopy: "Try another keyword, switch category, or clear some filters to widen the book list.",
+    filterOptions: "Filter Options",
+    bookInfo: "Book Info",
+    price: "Price",
+    sortBy: "Sort by",
+    showingRange: "Showing {{from}}-{{to}} of {{total}} results",
+    searchTitle: 'Search: "{{search}}"',
     booksFound: "{{count}} books found",
     loadingBooks: "Loading books...",
     loadingCatalog: "Loading catalog...",
@@ -254,12 +285,12 @@ const en = {
     sortBestSelling: "Best selling",
     sortNameAsc: "Name A-Z",
     pageSize: "Page size",
-    perPage: "{{count}} / page",
+    perPage: "{{count}}/page",
     firstPage: "First",
     previousPage: "Previous",
     nextPage: "Next",
     lastPage: "Last",
-    pageIndicator: "Page {{page}} / {{total}}",
+    pageIndicator: "Page {{page}}/{{total}}"
   },
   product: {
     notFound: "Product not found or backend unavailable.",
@@ -311,7 +342,7 @@ const en = {
     reviewCommentRequired: "Write a short review before submitting.",
     reviewCommentPlaceholder: "Share your thoughts about this book...",
     reviewModerationNotice: "New reviews require admin approval before public display.",
-    submitReview: "Submit review",
+    submitReview: "Submit review"
   },
   cart: {
     title: "Cart",
@@ -336,7 +367,7 @@ const en = {
     unavailable: "Out of stock or unavailable",
     stockLeft: "{{count}} left",
     decrease: "Decrease quantity",
-    increase: "Increase quantity",
+    increase: "Increase quantity"
   },
   checkout: {
     title: "Checkout",
@@ -390,8 +421,8 @@ const en = {
     methodLabel: {
       COD: "COD",
       VNPAY: "VNPay",
-      MOMO: "MoMo",
-    },
+      MOMO: "MoMo"
+    }
   },
   orders: {
     title: "Orders",
@@ -444,8 +475,8 @@ const en = {
       CANCELLED: "Cancelled",
       PAYMENT_FAILED: "Payment failed",
       EXPIRED: "Expired",
-      REFUNDED: "Refunded",
-    },
+      REFUNDED: "Refunded"
+    }
   },
   account: {
     title: "Account",
@@ -513,7 +544,7 @@ const en = {
     deactivate: "Deactivate account",
     deactivateMismatch: "Please type DEACTIVATE exactly to continue.",
     deactivated: "Account deactivated.",
-    deactivateFailed: "Deactivate account failed.",
+    deactivateFailed: "Deactivate account failed."
   },
   payment: {
     title: "Payment Result",
@@ -525,7 +556,7 @@ const en = {
     noCode: "No payment code in URL",
     pending: "Pending / unavailable",
     continue: "Continue payment",
-    retry: "Retry payment",
+    retry: "Retry payment"
   },
   admin: {
     brand: "AIVIRA ADMIN",
@@ -554,7 +585,8 @@ const en = {
     latestBooks: "Latest books",
     noProducts: "No admin products loaded.",
     createEditBook: "Create/Edit Book",
-    productNote: "Manage full book metadata, pricing, category, variations, stock, and media through the backend Product DTO.",
+    productNote:
+      "Manage full book metadata, pricing, category, variations, stock, and media through the backend Product DTO.",
     bookFilters: "Book filters",
     searchBooks: "Search title, SKU, author, ISBN",
     allStatuses: "All statuses",
@@ -705,7 +737,8 @@ const en = {
     roleReplaceNote: "Saving roles replaces the full current role set. Only USER and ADMIN are supported.",
     updateRoles: "Update roles",
     userPermissionShortcut: "Direct permissions",
-    userPermissionShortcutCopy: "Open the permissions workspace for this user to inspect effective and direct permissions.",
+    userPermissionShortcutCopy:
+      "Open the permissions workspace for this user to inspect effective and direct permissions.",
     openPermissions: "Open permissions",
     permissionSearch: "Search permission or group",
     roleGrantedPermissions: "Role permissions",
@@ -834,11 +867,11 @@ const en = {
     endAt: "End at",
     discountTypeLabel: {
       PERCENT: "Percent (%)",
-      FIXED: "Fixed amount",
+      FIXED: "Fixed amount"
     },
     promotionScopeLabel: {
       PRODUCT: "Product",
-      CATEGORY: "Category",
+      CATEGORY: "Category"
     },
     deactivate: "Deactivate",
     copyCode: "Copy code",
@@ -912,7 +945,8 @@ const en = {
     clearReply: "Clear reply",
     reviewReplyPlaceholder: "Write Aivira's reply to this review...",
     confirmClearReviewReply: "Clear the current admin reply?",
-    deletedReviewNotice: "This review was soft-deleted. Admin can inspect history only, not return it to public display.",
+    deletedReviewNotice:
+      "This review was soft-deleted. Admin can inspect history only, not return it to public display.",
     noReviews: "No matching reviews.",
     reviewLoadFailed: "Could not load reviews.",
     reviewModerationFailed: "Could not update review moderation.",
@@ -985,22 +1019,23 @@ const en = {
       userPermissions: "User permissions unavailable.",
       grant: "Grant permission failed.",
       revoke: "Revoke permission failed.",
-      reconcile: "Backend pending: reconcile unavailable.",
-    },
+      reconcile: "Backend pending: reconcile unavailable."
+    }
   },
   intro: {
     skip: "Skip",
     chapter: "CHAPTER I: Aivira Bookstore",
     pageHeading1: "Endless",
     pageHeading2: "knowledge",
-    pageText: "A thousand-mile journey begins with one step. In an endless space of knowledge, every book is a new horizon waiting to be explored.",
+    pageText:
+      "A thousand-mile journey begins with one step. In an endless space of knowledge, every book is a new horizon waiting to be explored.",
     insideBrand: "Aivira",
     copy: "Touch to open a world of knowledge",
-    open: "Open book",
+    open: "Open book"
   },
   notFound: {
-    title: "Page not found",
-  },
+    title: "Page not found"
+  }
 };
 
 export default en;

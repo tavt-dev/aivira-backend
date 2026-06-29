@@ -153,19 +153,33 @@ export default function Navbar({ solid, user, onAuth }) {
       ].join(" ")}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 md:px-8">
-        <Link to="/" onClick={closePanels} className="group flex flex-shrink-0 items-center gap-2">
-          <div
-            className={[
-              "flex h-9 w-9 items-center justify-center rounded-xl shadow-lg transition-all duration-500 group-hover:scale-105",
-              isSolid ? "bg-slate-900 shadow-slate-900/20" : "bg-white shadow-white/20"
-            ].join(" ")}
-          >
-            <span className={["font-serif text-xl font-bold leading-none", isSolid ? "text-white" : "text-slate-900"].join(" ")}>
-              A
+        <Link to="/" onClick={closePanels} className="group flex flex-shrink-0 items-center gap-3">
+          <img 
+             src="/logo.png" 
+             alt="Aivira Bookstore" 
+             className={[
+                "h-10 w-auto rounded-lg object-contain transition-transform duration-500 group-hover:scale-105",
+                isSolid ? "shadow-[0_4px_14px_rgba(0,0,0,0.18)]" : "border border-white/10 shadow-[0_4px_14px_rgba(0,0,0,0.4)]"
+             ].join(" ")}
+          />
+          <span className="flex flex-col leading-none">
+            <span
+              className={[
+                "text-[1.35rem] font-black transition-colors duration-500",
+                isSolid ? "text-slate-950" : "text-white"
+              ].join(" ")}
+              style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+            >
+              Aivira
             </span>
-          </div>
-          <span className={["font-serif text-xl font-bold tracking-wider transition-colors duration-500", isSolid ? "text-slate-900" : "text-white"].join(" ")}>
-            AIVIRA
+            <span
+              className={[
+                "hidden text-[0.68rem] font-bold uppercase transition-colors duration-500 sm:block",
+                isSolid ? "text-blue-600" : "text-blue-100"
+              ].join(" ")}
+            >
+              Bookstore
+            </span>
           </span>
         </Link>
 

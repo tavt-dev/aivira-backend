@@ -14,8 +14,8 @@
     "quality": "npm run build && npm run test",
     "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint . --fix",
-    "format": "prettier \"README.md\" \"../README.md\" \"*.config.js\" \"*.{json,md}\" \"tests/**/*.{js,jsx}\" \"src/**/*.test.{js,jsx}\" \"src/test/**/*.{js,jsx}\" --write",
-    "format:check": "prettier \"README.md\" \"../README.md\" \"*.config.js\" \"*.{json,md}\" \"tests/**/*.{js,jsx}\" \"src/**/*.test.{js,jsx}\" \"src/test/**/*.{js,jsx}\" --check",
+    "format": "prettier \"README.md\" \"../README.md\" \"*.config.js\" \"*.{json,md}\" \"tests/**/*.{js,jsx}\" \"src/**/*.test.{js,jsx}\" \"src/test/**/*.{js,jsx}\" --write --no-error-on-unmatched-pattern",
+    "format:check": "prettier \"README.md\" \"../README.md\" \"*.config.js\" \"*.{json,md}\" \"tests/**/*.{js,jsx}\" \"src/**/*.test.{js,jsx}\" \"src/test/**/*.{js,jsx}\" --check --no-error-on-unmatched-pattern",
     "ci": "npm run build && npm run test && npm run test:e2e && npm run lint && npm run format:check"
   },
   "dependencies": {
@@ -28,6 +28,7 @@
     "react-dom": "^18.3.1",
     "react-i18next": "^17.0.8",
     "react-router-dom": "^6.28.0",
+    "recharts": "^3.8.1",
     "vite": "^5.4.11"
   },
   "devDependencies": {

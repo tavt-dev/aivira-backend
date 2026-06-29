@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ArrowUp } from "lucide-react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import AuthModal from "./components/AuthModal.jsx";
+import PageLoader from "./components/PageLoader.jsx";
 import IntroBook, { hasSeenIntro } from "./components/IntroBook.jsx";
 import Layout from "./components/Layout.jsx";
 import RequireAuth from "./components/RequireAuth.jsx";
@@ -12,6 +13,7 @@ import AccountPage from "./pages/AccountPage.jsx";
 import CartPage from "./pages/CartPage.jsx";
 import CategoryPage from "./pages/CategoryPage.jsx";
 import CheckoutPage from "./pages/CheckoutPage.jsx";
+import GoogleOAuthResultPage from "./pages/GoogleOAuthResultPage.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import OrdersPage from "./pages/OrdersPage.jsx";
 import PaymentResultPage from "./pages/PaymentResultPage.jsx";
@@ -35,6 +37,7 @@ export default function App() {
   const [authMode, setAuthMode] = useState("login");
   const [user, setUser] = useState(getCurrentUser());
   const [introDone, setIntroDone] = useState(hasSeenIntro);
+  const [pageLoaderDone, setPageLoaderDone] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const isAdminRoute = location.pathname.startsWith("/admin");
@@ -95,6 +98,12 @@ export default function App() {
     }
   }, [authParam, introDone, isAuthRequest, isAdminRoute, location.pathname]);
 
+  // PageLoader fallback dismiss (PageLoader handles its own onDone)
+  useEffect(() => {
+    const timer = setTimeout(() => setPageLoaderDone(true), 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
   function openAuth(mode = "login") {
     setAuthMode(mode);
     setAuthOpen(true);
@@ -107,59 +116,65 @@ export default function App() {
   return (
     <ToastProvider>
       <ConfirmDialogProvider>
-      {!isAdminRoute && <MotionChrome />}
-      <Routes>
-        <Route path="/admin/login" element={<Navigate to="/?auth=login&next=/admin/dashboard" replace />} />
-        <Route path="/admin/forbidden" element={<AdminForbiddenPage />} />
-        <Route
-          path="/admin"
-          element={
-            <RequireAdmin>
-              <AdminLayout />
-            </RequireAdmin>
-          }
-        >
-          <Route index element={<Navigate to="/admin/dashboard" replace />} />
-          <Route path="dashboard" element={<AdminDashboardPage />} />
-          <Route path="products" element={<AdminProductsPage />} />
-          <Route path="categories" element={<AdminCategoriesPage />} />
-          <Route path="orders" element={<AdminOrdersPage />} />
-          <Route path="orders-pending" element={<Navigate to="/admin/orders" replace />} />
-          <Route path="discounts" element={<AdminDiscountsPage />} />
-          <Route path="coupons" element={<Navigate to="/admin/discounts" replace />} />
-          <Route path="promotions" element={<Navigate to="/admin/discounts" replace />} />
-          <Route path="payments" element={<AdminPaymentsPage />} />
-          <Route path="reviews" element={<AdminReviewsPage />} />
-          <Route path="users" element={<AdminUsersPage />} />
-          <Route path="permissions" element={<AdminPermissionsPage />} />
-          <Route path="*" element={<NotFoundPage />} />
-        </Route>
-        <Route element={<Layout user={user} onAuth={() => openAuth("login")} />}>
-          <Route index element={<HomePage />} />
-          <Route path="/login" element={<Navigate to="/" replace />} />
-          <Route path="/register" element={<Navigate to="/" replace />} />
-          <Route path="/verify-otp" element={<Navigate to="/login" replace />} />
-          <Route path="/category" element={<Navigate to="/category/all" replace />} />
-          <Route path="/category/:slug" element={<CategoryPage />} />
-          <Route path="/books/:slug" element={<LegacyProductRedirect />} />
-          <Route path="/product/:slug" element={<ProductPage onAuth={() => openAuth("login")} />} />
-          <Route path="/cart" element={<RequireAuth><CartPage onAuth={() => openAuth("login")} /></RequireAuth>} />
-          <Route path="/checkout" element={<RequireAuth><CheckoutPage onAuth={() => openAuth("login")} /></RequireAuth>} />
-          <Route path="/orders" element={<RequireAuth><OrdersPage onAuth={() => openAuth("login")} /></RequireAuth>} />
-          <Route path="/account" element={<RequireAuth><AccountPage onAuth={() => openAuth("login")} /></RequireAuth>} />
-          <Route path="/payment/result" element={<Navigate to="/payment-result" replace />} />
-          <Route path="/payment-result" element={<PaymentResultPage />} />
-          <Route path="*" element={<NotFoundPage />} />
-        </Route>
-      </Routes>
-      {!isAdminRoute && (
-        <AuthModal
-          open={authOpen}
-          initialMode={authMode}
-          nextPath={authNextPath}
-          onClose={() => setAuthOpen(false)}
-        />
-      )}
+        {/* Brand splash — shown on every page load, fades out in ~880ms */}
+        {!pageLoaderDone && !isAdminRoute && (
+          <PageLoader onDone={() => setPageLoaderDone(true)} />
+        )}
+        {!isAdminRoute && <MotionChrome />}
+        <Routes>
+          <Route path="/auth/google/success" element={<GoogleOAuthResultPage />} />
+          <Route path="/auth/google/failure" element={<GoogleOAuthResultPage failure />} />
+          <Route path="/admin/login" element={<Navigate to="/?auth=login&next=/admin/dashboard" replace />} />
+          <Route path="/admin/forbidden" element={<AdminForbiddenPage />} />
+          <Route
+            path="/admin"
+            element={
+              <RequireAdmin>
+                <AdminLayout />
+              </RequireAdmin>
+            }
+          >
+            <Route index element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="dashboard" element={<AdminDashboardPage />} />
+            <Route path="products" element={<AdminProductsPage />} />
+            <Route path="categories" element={<AdminCategoriesPage />} />
+            <Route path="orders" element={<AdminOrdersPage />} />
+            <Route path="orders-pending" element={<Navigate to="/admin/orders" replace />} />
+            <Route path="discounts" element={<AdminDiscountsPage />} />
+            <Route path="coupons" element={<Navigate to="/admin/discounts" replace />} />
+            <Route path="promotions" element={<Navigate to="/admin/discounts" replace />} />
+            <Route path="payments" element={<AdminPaymentsPage />} />
+            <Route path="reviews" element={<AdminReviewsPage />} />
+            <Route path="users" element={<AdminUsersPage />} />
+            <Route path="permissions" element={<AdminPermissionsPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
+          <Route element={<Layout user={user} onAuth={() => openAuth("login")} />}>
+            <Route index element={<HomePage />} />
+            <Route path="/login" element={<Navigate to="/" replace />} />
+            <Route path="/register" element={<Navigate to="/" replace />} />
+            <Route path="/verify-otp" element={<Navigate to="/login" replace />} />
+            <Route path="/category" element={<Navigate to="/category/all" replace />} />
+            <Route path="/category/:slug" element={<CategoryPage />} />
+            <Route path="/books/:slug" element={<LegacyProductRedirect />} />
+            <Route path="/product/:slug" element={<ProductPage onAuth={() => openAuth("login")} />} />
+            <Route path="/cart" element={<RequireAuth><CartPage onAuth={() => openAuth("login")} /></RequireAuth>} />
+            <Route path="/checkout" element={<RequireAuth><CheckoutPage onAuth={() => openAuth("login")} /></RequireAuth>} />
+            <Route path="/orders" element={<RequireAuth><OrdersPage onAuth={() => openAuth("login")} /></RequireAuth>} />
+            <Route path="/account" element={<RequireAuth><AccountPage onAuth={() => openAuth("login")} /></RequireAuth>} />
+            <Route path="/payment/result" element={<Navigate to="/payment-result" replace />} />
+            <Route path="/payment-result" element={<PaymentResultPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
+        </Routes>
+        {!isAdminRoute && (
+          <AuthModal
+            open={authOpen}
+            initialMode={authMode}
+            nextPath={authNextPath}
+            onClose={() => setAuthOpen(false)}
+          />
+        )}
       </ConfirmDialogProvider>
     </ToastProvider>
   );
@@ -253,8 +268,6 @@ function LegacyProductRedirect() {
   const slug = window.location.pathname.split("/").pop();
   return <Navigate to={`/product/${slug}`} replace />;
 }
-
-
 
 function NotFoundPage() {
   const { t } = useTranslation();

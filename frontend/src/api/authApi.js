@@ -43,3 +43,12 @@ export function forgotPassword(body) {
 export function resetPassword(body) {
   return request("/auth/reset-password", { method: "POST", body });
 }
+
+export function exchangeGoogleTicket(ticket) {
+  return request("/auth/google/exchange-ticket", {
+    method: "POST",
+    body: { ticket },
+    skipAuth: true,
+    skipRefresh: true
+  });
+}

@@ -54,17 +54,17 @@ const vi = {
     viewDetails: "Xem chi tiết",
     backToBookstore: "Về nhà sách",
     noData: "Chưa có dữ liệu.",
-    paymentPending: "đang chờ thanh toán",
+    paymentPending: "đang chờ thanh toán"
   },
   nav: {
     searchPlaceholder: "Tìm sách theo tên hoặc tác giả...",
     searchMobilePlaceholder: "Tìm sách...",
     topResults: "Kết quả nổi bật",
-    viewAllResults: "Xem tất cả kết quả cho \"{{query}}\"",
+    viewAllResults: 'Xem tất cả kết quả cho "{{query}}"',
     reader: "Bạn đọc",
     greeting: "Xin chào, {{name}}",
     hiLogout: "Xin chào, {{name}} / Đăng xuất",
-    toggleMenu: "Mở menu",
+    toggleMenu: "Mở menu"
   },
   footer: {
     desc: "Aivira là nhà sách trực tuyến một người bán. Khám phá, thanh toán và theo dõi đơn hàng từ một danh mục được tuyển chọn.",
@@ -77,7 +77,7 @@ const vi = {
     contact: "Liên hệ",
     rights: "© {{year}} Aivira Bookstore. Mọi quyền được bảo lưu.",
     privacy: "Chính sách bảo mật",
-    terms: "Điều khoản dịch vụ",
+    terms: "Điều khoản dịch vụ"
   },
   auth: {
     modes: "Chế độ xác thực",
@@ -103,6 +103,7 @@ const vi = {
     resetAction: "Đặt lại mật khẩu",
     username: "Tên đăng nhập",
     password: "Mật khẩu",
+    passwordPlaceholder: "Nhập mật khẩu của bạn",
     confirmPassword: "Xác nhận mật khẩu",
     email: "Email",
     firstName: "Tên",
@@ -111,6 +112,16 @@ const vi = {
     newPassword: "Mật khẩu mới",
     forgotPassword: "Quên mật khẩu",
     backToLogin: "Quay lại đăng nhập",
+    continueWithGoogle: "Tiếp tục với Google",
+    googleSigningIn: "Đang đăng nhập với Google...",
+    googleLoginFailed: "Không thể hoàn tất đăng nhập Google.",
+    googleTicketMissing: "Thiếu hoặc hết hạn ticket đăng nhập Google.",
+    or: "HOẶC",
+    noAccount: "Chưa có tài khoản?",
+    hasAccount: "Đã có tài khoản?",
+    createNow: "Tạo ngay",
+    termsPrefix: "Bằng việc tiếp tục, bạn đồng ý với",
+    and: "và",
     resendOtp: "Gửi lại OTP",
     close: "Đóng đăng nhập",
     showPassword: "Hiện {{label}}",
@@ -135,8 +146,8 @@ const vi = {
       confirm: "Xác nhận mật khẩu không khớp.",
       email: "Email là bắt buộc.",
       otp: "Mã OTP phải gồm 6 chữ số.",
-      newPassword: "Mật khẩu mới phải có ít nhất 6 ký tự.",
-    },
+      newPassword: "Mật khẩu mới phải có ít nhất 6 ký tự."
+    }
   },
   home: {
     heroKicker: "Nhà sách trực tuyến Aivira",
@@ -144,19 +155,27 @@ const vi = {
     title2: "LÀ MỘT",
     titleWorld: "THẾ GIỚI",
     subtitle: "đang chờ bạn khám phá.",
-    heroCopy: "Khám phá những cuốn sách được tuyển chọn kỹ lưỡng về kinh doanh, phát triển bản thân, văn học, công nghệ và giáo dục. Aivira giúp bạn tìm đúng cuốn sách để mở ra chương tiếp theo của tri thức.",
+    heroCopy:
+      "Khám phá những cuốn sách được tuyển chọn kỹ lưỡng về kinh doanh, phát triển bản thân, văn học, công nghệ và giáo dục. Aivira giúp bạn tìm đúng cuốn sách để mở ra chương tiếp theo của tri thức.",
     exploreLibrary: "Khám phá thư viện",
     viewCart: "Xem giỏ hàng",
     titles: "Đầu sách",
     supported: "Hỗ trợ",
     momo: "& MoMo",
-    ticker: "Kinh doanh và Tài chính - Phát triển bản thân - Văn học và Tiểu thuyết - Kỹ năng và Sức khỏe - Công nghệ - Giáo dục - ",
+    ticker:
+      "Kinh doanh và Tài chính - Phát triển bản thân - Văn học và Tiểu thuyết - Kỹ năng và Sức khỏe - Công nghệ - Giáo dục - ",
     explore: "Khám phá",
     curatedCollections: "Bộ sưu tập tuyển chọn",
     backendCatalog: "Danh mục backend",
+    weeklyPicksChip: "Gợi ý",
     featuredBooks: "Sách nổi bật",
     weeklyPicks: "Gợi ý tuần này",
     newArrivals: "Sách mới về",
+    newArrivalsSubtitle: "Những đầu sách vừa được Aivira tuyển chọn cho kệ sách tuần này.",
+    newArrivalSpotlight: "Vừa lên kệ",
+    justArrived: "Mới",
+    viewNewBooks: "Xem sách mới",
+    releaseShelf: "New Release Shelf",
     bestsellingBooks: "Sách bán chạy",
     bestsellerBadge: "Bán chạy",
     categoryHighlights: "Danh mục nổi bật",
@@ -171,7 +190,8 @@ const vi = {
     outOfStock: "Hết hàng",
     collection: "Bộ sưu tập",
     allBooks: "Tất cả sách",
-    quote: "Một cuốn sách không chỉ để đọc - nó được sống cùng. Aivira giúp bạn tìm ra những cuốn sách có thể thay đổi mọi điều.",
+    quote:
+      "Một cuốn sách không chỉ để đọc - nó được sống cùng. Aivira giúp bạn tìm ra những cuốn sách có thể thay đổi mọi điều.",
     philosophy: "Triết lý Aivira",
     noBooks: "Không tìm thấy sách",
     process: "Quy trình",
@@ -183,15 +203,16 @@ const vi = {
       chooseTitle: "Chọn sách",
       chooseDesc: "Xem tóm tắt, metadata, giá, tồn kho và gợi ý trước khi thanh toán.",
       trackTitle: "Mua & theo dõi",
-      trackDesc: "Thêm vào giỏ, thanh toán COD/VNPay/MoMo và theo dõi trạng thái đơn hàng.",
+      trackDesc: "Thêm vào giỏ, thanh toán COD/VNPay/MoMo và theo dõi trạng thái đơn hàng."
     },
     whyUs: "Vì sao chọn chúng tôi",
     aboutTitle: "NHÀ SÁCH AIVIRA",
-    aboutCopy: "Aivira là nhà sách trực tuyến hiện đại, nơi khách hàng có thể khám phá, đặt mua và theo dõi đơn hàng một cách dễ dàng. Từ danh mục sách được tuyển chọn, giỏ hàng thông minh đến các phương thức thanh toán linh hoạt như COD, VNPay và MoMo, Aivira mang đến trải nghiệm mua sách nhanh chóng, rõ ràng và thuận tiện.",
+    aboutCopy:
+      "Aivira là nhà sách trực tuyến hiện đại, nơi khách hàng có thể khám phá, đặt mua và theo dõi đơn hàng một cách dễ dàng. Từ danh mục sách được tuyển chọn, giỏ hàng thông minh đến các phương thức thanh toán linh hoạt như COD, VNPay và MoMo, Aivira mang đến trải nghiệm mua sách nhanh chóng, rõ ràng và thuận tiện.",
     aboutBullets: [
       "Danh mục sách được tuyển chọn và quản lý trực tiếp bởi Aivira.",
       "Thông tin sách, phiên bản, giá bán và tồn kho luôn được cập nhật rõ ràng.",
-      "Hỗ trợ đặt hàng và thanh toán linh hoạt qua COD, VNPay và MoMo.",
+      "Hỗ trợ đặt hàng và thanh toán linh hoạt qua COD, VNPay và MoMo."
     ],
     learnMore: "Tìm hiểu thêm",
     readers: "Bạn đọc",
@@ -201,7 +222,7 @@ const vi = {
     posts: {
       one: "10 cuốn sách đáng đọc trong năm nay",
       two: "Bài học quản lý thời gian từ các nhà lãnh đạo hiệu suất cao",
-      three: "Vì sao tiểu thuyết giúp người đọc xây dựng sự đồng cảm",
+      three: "Vì sao tiểu thuyết giúp người đọc xây dựng sự đồng cảm"
     },
     categories: {
       business: "Kinh doanh",
@@ -211,9 +232,9 @@ const vi = {
       count120: "120+ đầu sách",
       count180: "180+ đầu sách",
       count95: "95+ đầu sách",
-      count110: "110+ đầu sách",
+      count110: "110+ đầu sách"
     },
-    demoMessage: "Đang hiển thị danh mục demo khi backend chưa sẵn sàng.",
+    demoMessage: "Đang hiển thị danh mục demo khi backend chưa sẵn sàng."
   },
   catalog: {
     titleAll: "Tất cả sách",
@@ -222,7 +243,18 @@ const vi = {
     literature: "Văn học & Tiểu thuyết",
     skills: "Kỹ năng & Sức khỏe",
     catalog: "Danh mục",
-    searchTitle: "Tìm kiếm: \"{{search}}\"",
+    heroEyebrow: "Thư viện Aivira",
+    heroCopy: "Duyệt kệ sách được tuyển chọn với bộ lọc rõ ràng, sắp xếp nhanh và nhịp đọc dễ scan.",
+    activeFilters: "{{count}} bộ lọc",
+    clearAll: "Xóa tất cả",
+    resultsSummary: "Kết quả hiện tại",
+    emptyCopy: "Thử đổi từ khóa, chọn danh mục khác hoặc xóa bớt bộ lọc để mở rộng danh sách sách.",
+    filterOptions: "Tùy chọn lọc",
+    bookInfo: "Thông tin sách",
+    price: "Giá",
+    sortBy: "Sắp xếp theo",
+    showingRange: "Hiển thị {{from}}-{{to}} trong {{total}} kết quả",
+    searchTitle: 'Tìm kiếm: "{{search}}"',
     booksFound: "{{count}} sách được tìm thấy",
     loadingBooks: "Đang tải sách...",
     loadingCatalog: "Đang tải danh mục...",
@@ -254,12 +286,12 @@ const vi = {
     sortBestSelling: "Bán chạy",
     sortNameAsc: "Tên A-Z",
     pageSize: "Số lượng mỗi trang",
-    perPage: "{{count}} / trang",
+    perPage: "{{count}} sách/trang",
     firstPage: "Đầu",
     previousPage: "Trước",
     nextPage: "Sau",
     lastPage: "Cuối",
-    pageIndicator: "Trang {{page}} / {{total}}",
+    pageIndicator: "Trang {{page}}/{{total}}"
   },
   product: {
     notFound: "Không tìm thấy sản phẩm hoặc backend chưa sẵn sàng.",
@@ -311,7 +343,7 @@ const vi = {
     reviewCommentRequired: "Vui lòng nhập nhận xét trước khi gửi.",
     reviewCommentPlaceholder: "Chia sẻ cảm nhận của bạn về cuốn sách...",
     reviewModerationNotice: "Đánh giá mới sẽ cần admin duyệt trước khi hiển thị công khai.",
-    submitReview: "Gửi đánh giá",
+    submitReview: "Gửi đánh giá"
   },
   cart: {
     title: "Giỏ hàng",
@@ -336,7 +368,7 @@ const vi = {
     unavailable: "Hết hàng hoặc không khả dụng",
     stockLeft: "Còn {{count}}",
     decrease: "Giảm số lượng",
-    increase: "Tăng số lượng",
+    increase: "Tăng số lượng"
   },
   checkout: {
     title: "Thanh toán",
@@ -390,8 +422,8 @@ const vi = {
     methodLabel: {
       COD: "COD",
       VNPAY: "VNPay",
-      MOMO: "MoMo",
-    },
+      MOMO: "MoMo"
+    }
   },
   orders: {
     title: "Đơn hàng",
@@ -444,8 +476,8 @@ const vi = {
       CANCELLED: "Đã hủy",
       PAYMENT_FAILED: "Thanh toán lỗi",
       EXPIRED: "Hết hạn",
-      REFUNDED: "Đã hoàn tiền",
-    },
+      REFUNDED: "Đã hoàn tiền"
+    }
   },
   account: {
     title: "Tài khoản",
@@ -513,7 +545,7 @@ const vi = {
     deactivate: "Khóa tài khoản",
     deactivateMismatch: "Vui lòng nhập chính xác DEACTIVATE để tiếp tục.",
     deactivated: "Tài khoản đã được khóa.",
-    deactivateFailed: "Khóa tài khoản thất bại.",
+    deactivateFailed: "Khóa tài khoản thất bại."
   },
   payment: {
     title: "Kết quả thanh toán",
@@ -525,7 +557,7 @@ const vi = {
     noCode: "Không có mã thanh toán trên URL",
     pending: "Đang chờ / không khả dụng",
     continue: "Tiếp tục thanh toán",
-    retry: "Thử thanh toán lại",
+    retry: "Thử thanh toán lại"
   },
   admin: {
     brand: "AIVIRA ADMIN",
@@ -834,11 +866,11 @@ const vi = {
     endAt: "Kết thúc",
     discountTypeLabel: {
       PERCENT: "Phần trăm (%)",
-      FIXED: "Số tiền cố định",
+      FIXED: "Số tiền cố định"
     },
     promotionScopeLabel: {
       PRODUCT: "Sản phẩm",
-      CATEGORY: "Danh mục",
+      CATEGORY: "Danh mục"
     },
     deactivate: "Ngừng kích hoạt",
     copyCode: "Copy mã",
@@ -985,22 +1017,23 @@ const vi = {
       userPermissions: "Không thể tải quyền user.",
       grant: "Cấp quyền thất bại.",
       revoke: "Thu hồi quyền thất bại.",
-      reconcile: "Backend pending: không thể đối soát.",
-    },
+      reconcile: "Backend pending: không thể đối soát."
+    }
   },
   intro: {
     skip: "Bỏ qua",
     chapter: "CHƯƠNG I: Nhà sách Aivira",
     pageHeading1: "Tri thức",
     pageHeading2: "vô tận",
-    pageText: "Hành trình vạn dặm bắt đầu từ một bước chân. Trong không gian tri thức vô tận, mỗi cuốn sách là một chân trời mới đang chờ được khám phá.",
+    pageText:
+      "Hành trình vạn dặm bắt đầu từ một bước chân. Trong không gian tri thức vô tận, mỗi cuốn sách là một chân trời mới đang chờ được khám phá.",
     insideBrand: "Aivira",
     copy: "Chạm để mở ra thế giới tri thức",
-    open: "Mở sách",
+    open: "Mở sách"
   },
   notFound: {
-    title: "Không tìm thấy trang",
-  },
+    title: "Không tìm thấy trang"
+  }
 };
 
 export default vi;
