@@ -39,11 +39,17 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     @EntityGraph(attributePaths = {"items"})
     List<Order> findByIdIn(Collection<Long> ids);
 
-    @EntityGraph(attributePaths = {"items", "payments", "payments.paymentGroup", "refund"})
-    Optional<Order> findDetailedById(Long id);
+    @EntityGraph(attributePaths = {"items", "refund"})
+    Optional<Order> findWithItemsAndRefundById(Long id);
 
-    @EntityGraph(attributePaths = {"items", "payments", "payments.paymentGroup", "refund"})
-    Optional<Order> findDetailedByIdAndUserId(Long id, String userId);
+    @EntityGraph(attributePaths = {"items", "refund"})
+    Optional<Order> findWithItemsAndRefundByIdAndUserId(Long id, String userId);
+
+    @EntityGraph(attributePaths = {"payments", "payments.paymentGroup"})
+    Optional<Order> findWithPaymentsById(Long id);
+
+    @EntityGraph(attributePaths = {"payments", "payments.paymentGroup"})
+    Optional<Order> findWithPaymentsByIdAndUserId(Long id, String userId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select o from Order o where o.id = :id")

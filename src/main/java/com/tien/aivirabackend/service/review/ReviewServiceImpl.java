@@ -69,7 +69,7 @@ public class ReviewServiceImpl implements ReviewService {
     public ReviewResponse createReview(Long orderId, Long orderItemId, ReviewCreateRequest request) {
         String userId = currentUserService.getCurrentUserId();
         Order order = orderRepository
-                .findDetailedByIdAndUserId(orderId, userId)
+                .findWithItemsAndRefundByIdAndUserId(orderId, userId)
                 .orElseThrow(() -> new AppException(OrderErrorCode.ORDER_NOT_FOUND));
         if (order.getOrderStatus() != OrderStatus.COMPLETED) {
             throw new AppException(ReviewErrorCode.REVIEW_ORDER_NOT_COMPLETED);
