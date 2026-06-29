@@ -73,7 +73,10 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse getMyOrder(Long orderId) {
         String userId = currentUserService.getCurrentUserId();
         Order order = orderRepository
-                .findDetailedByIdAndUserId(orderId, userId)
+                .findWithItemsAndRefundByIdAndUserId(orderId, userId)
+                .orElseThrow(() -> new AppException(OrderErrorCode.ORDER_NOT_FOUND));
+        orderRepository
+                .findWithPaymentsByIdAndUserId(orderId, userId)
                 .orElseThrow(() -> new AppException(OrderErrorCode.ORDER_NOT_FOUND));
         return commerceMapper.toOrderResponse(order);
     }
@@ -122,7 +125,10 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(readOnly = true)
     public OrderResponse getAdminOrder(Long orderId) {
         Order order = orderRepository
-                .findDetailedById(orderId)
+                .findWithItemsAndRefundById(orderId)
+                .orElseThrow(() -> new AppException(OrderErrorCode.ORDER_NOT_FOUND));
+        orderRepository
+                .findWithPaymentsById(orderId)
                 .orElseThrow(() -> new AppException(OrderErrorCode.ORDER_NOT_FOUND));
         return commerceMapper.toOrderResponse(order);
     }
