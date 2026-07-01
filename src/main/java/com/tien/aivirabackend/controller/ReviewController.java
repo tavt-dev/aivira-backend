@@ -2,9 +2,13 @@ package com.tien.aivirabackend.controller;
 
 import jakarta.validation.Valid;
 
+import java.util.List;
+
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.tien.aivirabackend.domain.dto.ApiResponse;
 import com.tien.aivirabackend.domain.dto.PageResponse;
@@ -41,7 +45,9 @@ public class ReviewController {
                 "Get reviews successful", reviewService.getPublicReviews(slug, rating, sort, page, size)));
     }
 
-    @PostMapping("/orders/{orderId}/items/{orderItemId}/review")
+    @PostMapping(
+            value = "/orders/{orderId}/items/{orderItemId}/review",
+            consumes = MediaType.APPLICATION_JSON_VALUE)
     @Tag(name = "Customer Reviews")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
@@ -55,6 +61,25 @@ public class ReviewController {
             @Valid @RequestBody ReviewCreateRequest request) {
         return ResponseEntity.ok(ApiResponse.success(
                 "Create review successful", reviewService.createReview(orderId, orderItemId, request)));
+    }
+
+    @PostMapping(
+            value = "/orders/{orderId}/items/{orderItemId}/review",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Tag(name = "Customer Reviews")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(
+            summary = "Create review with uploaded images",
+            description = "Creates a pending review and uploads up to five images for the purchased order item.")
+    @PreAuthorize("@authorizationService.hasPermission('REVIEW_CREATE_SELF')")
+    public ResponseEntity<ApiResponse<ReviewResponse>> createReviewWithImages(
+            @PathVariable Long orderId,
+            @PathVariable Long orderItemId,
+            @Valid @RequestPart("review") ReviewCreateRequest request,
+            @RequestPart(value = "images", required = false) List<MultipartFile> imageFiles) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Create review successful",
+                reviewService.createReviewWithImages(orderId, orderItemId, request, imageFiles)));
     }
 
     @PutMapping("/reviews/{reviewId}")

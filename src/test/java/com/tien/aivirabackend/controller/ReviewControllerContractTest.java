@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.tien.aivirabackend.domain.dto.request.ReviewCreateRequest;
@@ -42,6 +43,10 @@ class ReviewControllerContractTest {
     void customerEndpoints_shouldDeclareExpectedPermissions() throws Exception {
         assertPreAuthorize(
                 ReviewController.class.getMethod("createReview", Long.class, Long.class, ReviewCreateRequest.class),
+                "REVIEW_CREATE_SELF");
+        assertPreAuthorize(
+                ReviewController.class.getMethod(
+                        "createReviewWithImages", Long.class, Long.class, ReviewCreateRequest.class, java.util.List.class),
                 "REVIEW_CREATE_SELF");
         assertPreAuthorize(
                 ReviewController.class.getMethod("updateReview", Long.class, ReviewUpdateRequest.class),
@@ -74,6 +79,26 @@ class ReviewControllerContractTest {
     }
 
     @Test
+    void createReviewWithImages_shouldAcceptMultipartWithAndWithoutImages() throws Exception {
+        MockMultipartFile reviewPart = new MockMultipartFile(
+                "review", "review.json", MediaType.APPLICATION_JSON_VALUE, validReviewWithoutImagesJson().getBytes());
+        MockMultipartFile image =
+                new MockMultipartFile("images", "book.jpg", MediaType.IMAGE_JPEG_VALUE, new byte[] {1, 2, 3});
+
+        mockMvc.perform(multipart("/orders/21/items/31/review").file(reviewPart).file(image))
+                .andExpect(status().isOk());
+        mockMvc.perform(multipart("/orders/21/items/31/review").file(reviewPart))
+                .andExpect(status().isOk());
+
+        verify(reviewService).createReviewWithImages(
+                eq(21L),
+                eq(31L),
+                any(ReviewCreateRequest.class),
+                argThat(files -> files != null && files.size() == 1));
+        verify(reviewService).createReviewWithImages(eq(21L), eq(31L), any(ReviewCreateRequest.class), isNull());
+    }
+
+    @Test
     void createReview_whenPayloadInvalid_shouldReturnValidationError() throws Exception {
         mockMvc.perform(
                         post("/orders/21/items/31/review")
@@ -96,6 +121,16 @@ class ReviewControllerContractTest {
 				"rating":5,
 				"comment":"Great book",
 				"images":[{"imageUrl":"https://cdn.example.com/review.jpg","imagePublicId":"review-img","sortOrder":0}]
+				}
+				""";
+    }
+
+    private String validReviewWithoutImagesJson() {
+        return """
+				{
+				"rating":5,
+				"comment":"Great book",
+				"images":[]
 				}
 				""";
     }

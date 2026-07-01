@@ -21,6 +21,8 @@ public interface PaymentService {
 
     VnpayIpnResponse handleVnpayIpn(Map<String, String> params);
 
+    PaymentGroupResponse handleMomoReturn(Map<String, String> params);
+
     PaymentGroupResponse handleMomoIpn(Map<String, Object> payload);
 
     PaymentReconciliationResponse reconcile(String paymentGroupCode);

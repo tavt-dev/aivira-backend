@@ -31,6 +31,7 @@ import com.tien.aivirabackend.exception.errorCode.OrderErrorCode;
 import com.tien.aivirabackend.repository.OrderRepository;
 import com.tien.aivirabackend.repository.PaymentAttemptRepository;
 import com.tien.aivirabackend.repository.PaymentGroupRepository;
+import com.tien.aivirabackend.repository.ProductRepository;
 import com.tien.aivirabackend.repository.RefundRepository;
 import com.tien.aivirabackend.service.auth.CurrentUserService;
 import com.tien.aivirabackend.service.discount.DiscountService;
@@ -50,6 +51,7 @@ public class OrderServiceImpl implements OrderService {
     RefundRepository refundRepository;
     PaymentGroupRepository paymentGroupRepository;
     PaymentAttemptRepository paymentAttemptRepository;
+    ProductRepository productRepository;
     CurrentUserService currentUserService;
     CommerceMapper commerceMapper;
     InventoryService inventoryService;
@@ -241,6 +243,9 @@ public class OrderServiceImpl implements OrderService {
             throw new AppException(OrderErrorCode.ORDER_INVALID_STATUS_TRANSITION);
         }
         order.setOrderStatus(target);
+        if (target == OrderStatus.COMPLETED) {
+            order.getItems().forEach(item -> productRepository.incrementSoldCount(item.getProductId(), item.getQuantity()));
+        }
         logAdminLifecycleChange(order, previousStatus, target);
         return commerceMapper.toOrderResponse(orderRepository.save(order));
     }

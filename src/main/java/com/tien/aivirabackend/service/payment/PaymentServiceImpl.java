@@ -194,6 +194,25 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional
+    public PaymentGroupResponse handleMomoReturn(Map<String, String> params) {
+        PaymentProviderClient provider = provider(PaymentMethod.MOMO);
+        if (!provider.verifyCallback(params)) {
+            throw new AppException(PaymentErrorCode.PAYMENT_INVALID_SIGNATURE);
+        }
+        PaymentProviderCallbackResult result = provider.parseCallback(params);
+        PaymentAttempt attempt = paymentAttemptResolver.resolveForUpdate(PaymentProvider.MOMO, result);
+        return applyProviderState(
+                attempt,
+                result.amount(),
+                result.status(),
+                result.transactionId(),
+                PaymentProvider.MOMO,
+                result.eventKey(),
+                result.rawPayload());
+    }
+
+    @Override
+    @Transactional
     public PaymentGroupResponse handleMomoIpn(Map<String, Object> payload) {
         PaymentProviderClient provider = provider(PaymentMethod.MOMO);
         if (!provider.verifyCallback(payload)) {

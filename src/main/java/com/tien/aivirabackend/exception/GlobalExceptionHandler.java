@@ -15,11 +15,13 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import com.tien.aivirabackend.domain.dto.ApiResponse;
 import com.tien.aivirabackend.exception.errorCode.AccountErrorCode;
 import com.tien.aivirabackend.exception.errorCode.AuthErrorCode;
 import com.tien.aivirabackend.exception.errorCode.CommonErrorCode;
+import com.tien.aivirabackend.exception.errorCode.FileValidationErrorCode;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -85,6 +87,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class})
     public ResponseEntity<ApiResponse<Void>> handleBadRequest() {
         return build(CommonErrorCode.INVALID_INPUT);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMaxUploadSizeExceeded() {
+        return build(FileValidationErrorCode.FILE_TOO_LARGE);
     }
 
     /* ================= FALLBACK ================= */

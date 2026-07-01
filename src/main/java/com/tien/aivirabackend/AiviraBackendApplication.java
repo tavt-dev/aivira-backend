@@ -4,6 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
+import com.tien.aivirabackend.config.properties.BrevoProperties;
 import com.tien.aivirabackend.config.properties.CloudinaryProperties;
 import com.tien.aivirabackend.config.properties.FileUploadProperties;
 import com.tien.aivirabackend.config.properties.GoogleOAuthProperties;
@@ -13,6 +14,7 @@ import com.tien.aivirabackend.config.properties.VnpayPaymentProperties;
 
 @SpringBootApplication
 @EnableConfigurationProperties({
+    BrevoProperties.class,
     FileUploadProperties.class,
     CloudinaryProperties.class,
     GoogleOAuthProperties.class,
