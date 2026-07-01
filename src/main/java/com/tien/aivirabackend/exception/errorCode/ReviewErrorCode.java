@@ -15,7 +15,8 @@ public enum ReviewErrorCode implements ErrorCode {
     REVIEW_ALREADY_EXISTS("REVIEW-003", "Review already exists for this order item", HttpStatus.CONFLICT),
     REVIEW_ORDER_NOT_COMPLETED("REVIEW-004", "Order must be completed before review", HttpStatus.BAD_REQUEST),
     REVIEW_DELETED("REVIEW-005", "Review has been deleted", HttpStatus.BAD_REQUEST),
-    REVIEW_INVALID_IMAGE("REVIEW-006", "Review image is invalid", HttpStatus.BAD_REQUEST);
+    REVIEW_INVALID_IMAGE("REVIEW-006", "Review image is invalid", HttpStatus.BAD_REQUEST),
+    REVIEW_IMAGE_UPLOAD_FAILED("REVIEW-007", "Review image upload failed", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String code;
     private final String message;

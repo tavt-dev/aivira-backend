@@ -4,26 +4,16 @@ server:
     context-path: /api/v1
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: ${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:5MB}
+      max-request-size: ${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:26MB}
+
   datasource:
     url: ${DB_URL}
     username: ${USERNAME_DB}
     password: ${PASSWORD_DB}
     driver-class-name: com.mysql.cj.jdbc.Driver
-
-  mail:
-    host: ${MAIL_HOST:smtp-relay.brevo.com}
-    port: ${MAIL_PORT:587}
-    username: ${BREVO_SMTP_LOGIN}
-    password: ${BREVO_SMTP_KEY}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-          connectiontimeout: 5000
-          timeout: 5000
-          writetimeout: 5000
 
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
@@ -40,7 +30,7 @@ spring:
     baseline-on-migrate: ${FLYWAY_BASELINE_ON_MIGRATE:false}
 
 security:
-  public-endpoints: ${PUBLIC_ENDPOINTS:/oauth2/**,/auth/token,/auth/register,/auth/verify-user,/auth/resend-verification,/auth/forgot-password,/auth/reset-password,/auth/refresh-token,/auth/logout,/auth/google/**,/categories,/categories/**,/products,/products/**,/storefront/**,/payments/vnpay/return,/payments/vnpay/ipn,/payments/momo/ipn,/actuator/health,/swagger-ui.html,/swagger-ui/**,/v3/api-docs,/v3/api-docs/**,/v3/api-docs.yaml,/api/v1/auth/token,/api/v1/auth/register,/api/v1/auth/verify-user,/api/v1/auth/resend-verification,/api/v1/auth/forgot-password,/api/v1/auth/reset-password,/api/v1/auth/refresh-token,/api/v1/auth/logout,/api/v1/auth/google/**,/api/v1/categories,/api/v1/categories/**,/api/v1/products,/api/v1/products/**,/api/v1/storefront/**,/api/v1/payments/vnpay/return,/api/v1/payments/vnpay/ipn,/api/v1/payments/momo/ipn,/api/v1/actuator/health,/api/v1/swagger-ui.html,/api/v1/swagger-ui/**,/api/v1/v3/api-docs,/api/v1/v3/api-docs/**,/api/v1/v3/api-docs.yaml}
+  public-endpoints: ${PUBLIC_ENDPOINTS:/oauth2/**,/auth/token,/auth/register,/auth/verify-user,/auth/resend-verification,/auth/forgot-password,/auth/reset-password,/auth/refresh-token,/auth/logout,/auth/google/**,/categories,/categories/**,/products,/products/**,/storefront/**,/payments/vnpay/return,/payments/vnpay/ipn,/payments/momo/return,/payments/momo/ipn,/actuator/health,/swagger-ui.html,/swagger-ui/**,/v3/api-docs,/v3/api-docs/**,/v3/api-docs.yaml,/api/v1/auth/token,/api/v1/auth/register,/api/v1/auth/verify-user,/api/v1/auth/resend-verification,/api/v1/auth/forgot-password,/api/v1/auth/reset-password,/api/v1/auth/refresh-token,/api/v1/auth/logout,/api/v1/auth/google/**,/api/v1/categories,/api/v1/categories/**,/api/v1/products,/api/v1/products/**,/api/v1/storefront/**,/api/v1/payments/vnpay/return,/api/v1/payments/vnpay/ipn,/api/v1/payments/momo/return,/api/v1/payments/momo/ipn,/api/v1/actuator/health,/api/v1/swagger-ui.html,/api/v1/swagger-ui/**,/api/v1/v3/api-docs,/api/v1/v3/api-docs/**,/api/v1/v3/api-docs.yaml}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
     allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,PATCH,DELETE,OPTIONS}
@@ -91,7 +81,7 @@ app:
       password: ${SEED_ADMIN_PASSWORD:}
       email: ${SEED_ADMIN_EMAIL:}
   mail:
-    from: ${MAIL_FROM:***REMOVED***}
+    from: ${MAIL_FROM:}
     from-name: ${MAIL_FROM_NAME:Aivira Store}
   upload:
     enabled: ${APP_UPLOAD_ENABLED:true}
@@ -107,9 +97,18 @@ cloudinary:
   secure: ${CLOUDINARY_SECURE:true}
   avatar-folder: ${CLOUDINARY_AVATAR_FOLDER:aivira/users}
   product-media-folder: ${CLOUDINARY_PRODUCT_MEDIA_FOLDER:aivira/products}
+  review-image-folder: ${CLOUDINARY_REVIEW_IMAGE_FOLDER:aivira/reviews}
+
+brevo:
+  api-key: ${BREVO_API_KEY:}
+  base-url: ${BREVO_BASE_URL:https://api.brevo.com}
+  send-email-path: ${BREVO_SEND_EMAIL_PATH:/v3/smtp/email}
+  connect-timeout-ms: ${BREVO_CONNECT_TIMEOUT_MS:5000}
+  read-timeout-ms: ${BREVO_READ_TIMEOUT_MS:10000}
 
 payment:
   pending-ttl-minutes: ${PAYMENT_PENDING_TTL_MINUTES:15}
+  frontend-result-url: ${PAYMENT_FRONTEND_RESULT_URL:http://localhost:5173/payment-result}
   expiry-scan-delay-ms: ${PAYMENT_EXPIRY_SCAN_DELAY_MS:60000}
   provider-connect-timeout-ms: ${PAYMENT_PROVIDER_CONNECT_TIMEOUT_MS:5000}
   provider-read-timeout-ms: ${PAYMENT_PROVIDER_READ_TIMEOUT_MS:30000}

@@ -14,6 +14,8 @@ public class PaymentProperties {
     @Min(1)
     private long pendingTtlMinutes = 15;
 
+    private String frontendResultUrl = "http://localhost:5173/payment-result";
+
     @Min(100)
     private int providerConnectTimeoutMs = 5000;
 

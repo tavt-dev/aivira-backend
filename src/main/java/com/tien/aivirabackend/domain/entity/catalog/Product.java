@@ -6,6 +6,7 @@ import java.util.Set;
 
 import jakarta.persistence.*;
 
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -104,6 +105,10 @@ public class Product extends BaseEntity {
     @Column(name = "sold_count", nullable = false)
     @Builder.Default
     Integer soldCount = 0;
+
+    @Formula(
+            "(select coalesce(avg(r.rating), 0) from reviews r where r.product_id = id and r.is_approved = true and r.is_visible = true and r.deleted_at is null)")
+    BigDecimal averageRating;
 
     /* STATUS */
     @Column(name = "is_active")

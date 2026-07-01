@@ -45,6 +45,7 @@ import com.tien.aivirabackend.exception.errorCode.OrderErrorCode;
 import com.tien.aivirabackend.repository.OrderRepository;
 import com.tien.aivirabackend.repository.PaymentAttemptRepository;
 import com.tien.aivirabackend.repository.PaymentGroupRepository;
+import com.tien.aivirabackend.repository.ProductRepository;
 import com.tien.aivirabackend.repository.ProductVariationRepository;
 import com.tien.aivirabackend.repository.RefundRepository;
 import com.tien.aivirabackend.service.auth.CurrentUserService;
@@ -65,6 +66,9 @@ class OrderServiceImplTest {
     PaymentAttemptRepository paymentAttemptRepository;
 
     @Mock
+    ProductRepository productRepository;
+
+    @Mock
     ProductVariationRepository variationRepository;
 
     @Mock
@@ -82,6 +86,7 @@ class OrderServiceImplTest {
                 refundRepository,
                 paymentGroupRepository,
                 paymentAttemptRepository,
+                productRepository,
                 currentUserService,
                 new CommerceMapper(),
                 new InventoryService(variationRepository),
@@ -336,6 +341,7 @@ class OrderServiceImplTest {
         assertTransition(OrderStatus.CONFIRMED, OrderStatus.PACKING, () -> orderService.markPacking(21L));
         assertTransition(OrderStatus.PACKING, OrderStatus.SHIPPING, () -> orderService.markShipping(21L));
         assertTransition(OrderStatus.SHIPPING, OrderStatus.COMPLETED, () -> orderService.markCompleted(21L));
+        verify(productRepository).incrementSoldCount(10L, 2);
     }
 
     @Test
@@ -595,6 +601,7 @@ class OrderServiceImplTest {
         order.getItems()
                 .add(OrderItem.builder()
                         .order(order)
+                        .productId(10L)
                         .productVariationId(41L)
                         .productName("Dress")
                         .sku("DRESS-001")
@@ -627,7 +634,7 @@ class OrderServiceImplTest {
     }
 
     private void assertTransition(OrderStatus source, OrderStatus target, java.util.function.Supplier<?> action) {
-        reset(orderRepository);
+        reset(orderRepository, productRepository);
         Order order = order(paymentGroup(PaymentMethod.COD, PaymentStatus.PENDING), source);
         when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
         when(orderRepository.save(order)).thenReturn(order);

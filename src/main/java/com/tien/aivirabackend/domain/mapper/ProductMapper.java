@@ -57,6 +57,7 @@ public class ProductMapper {
                 .weight(product.getWeight())
                 .stockQuantity(product.getStockQuantity())
                 .soldCount(product.getSoldCount())
+                .averageRating(product.getAverageRating())
                 .active(product.getActive())
                 .featured(product.getFeatured())
                 .status(product.getStatus())

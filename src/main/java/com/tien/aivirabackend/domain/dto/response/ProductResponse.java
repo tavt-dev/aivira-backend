@@ -82,6 +82,9 @@ public class ProductResponse {
     @Schema(example = "42")
     Integer soldCount;
 
+    @Schema(description = "Average rating from approved, visible, non-deleted reviews.", example = "4.7")
+    BigDecimal averageRating;
+
     Boolean active;
     Boolean featured;
     ProductStatus status;

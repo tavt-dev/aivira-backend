@@ -18,7 +18,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.mock.web.MockMultipartFile;
 
+import com.tien.aivirabackend.config.properties.CloudinaryProperties;
 import com.tien.aivirabackend.constant.OrderStatus;
 import com.tien.aivirabackend.domain.dto.request.ReviewCreateRequest;
 import com.tien.aivirabackend.domain.dto.request.ReviewImageRequest;
@@ -40,6 +42,9 @@ import com.tien.aivirabackend.repository.ProductRepository;
 import com.tien.aivirabackend.repository.ProductVariationRepository;
 import com.tien.aivirabackend.repository.ReviewRepository;
 import com.tien.aivirabackend.service.auth.CurrentUserService;
+import com.tien.aivirabackend.service.media.CloudinaryStorageService;
+import com.tien.aivirabackend.service.media.CloudinaryUploadResult;
+import com.tien.aivirabackend.service.media.FileValidatorService;
 
 @ExtendWith(MockitoExtension.class)
 class ReviewServiceImplTest {
@@ -58,10 +63,20 @@ class ReviewServiceImplTest {
     @Mock
     CurrentUserService currentUserService;
 
+    @Mock
+    FileValidatorService fileValidatorService;
+
+    @Mock
+    CloudinaryStorageService cloudinaryStorageService;
+
+    CloudinaryProperties cloudinaryProperties;
+
     ReviewServiceImpl reviewService;
 
     @BeforeEach
     void setUp() {
+        cloudinaryProperties = new CloudinaryProperties();
+        cloudinaryProperties.setReviewImageFolder("aivira/reviews");
         reviewService = new ReviewServiceImpl(
                 reviewRepository,
                 orderRepository,
@@ -69,7 +84,10 @@ class ReviewServiceImplTest {
                 productVariationRepository,
                 currentUserService,
                 new ReviewSpecifications(),
-                new ReviewMapper());
+                new ReviewMapper(),
+                fileValidatorService,
+                cloudinaryStorageService,
+                cloudinaryProperties);
     }
 
     @Test
@@ -98,7 +116,7 @@ class ReviewServiceImplTest {
                 .thenReturn(Optional.of(order));
         when(productRepository.findById(10L)).thenReturn(Optional.of(product));
         when(productVariationRepository.findById(11L)).thenReturn(Optional.of(variation));
-        when(reviewRepository.save(any(Review.class))).thenAnswer(invocation -> {
+        when(reviewRepository.saveAndFlush(any(Review.class))).thenAnswer(invocation -> {
             Review review = invocation.getArgument(0);
             review.setId(99L);
             return review;
@@ -111,10 +129,96 @@ class ReviewServiceImplTest {
         assertThat(response.getVisible()).isTrue();
         assertThat(response.getImages()).hasSize(1);
         verify(reviewRepository)
-                .save(argThat(review -> review.getOrderItem().getId().equals(31L)
+                .saveAndFlush(argThat(review -> review.getOrderItem().getId().equals(31L)
                         && review.getProduct().getId().equals(10L)
                         && !review.isApproved()
                         && review.isVisible()));
+    }
+
+    @Test
+    void createReviewWithImages_shouldUploadAndPersistImagesInSelectionOrder() {
+        stubEligibleReview();
+        MockMultipartFile first = imageFile("first.jpg");
+        MockMultipartFile second = imageFile("second.png", "image/png");
+        when(cloudinaryStorageService.uploadReviewImage(any(), anyString(), anyString(), eq(1600), eq(1600)))
+                .thenReturn(new CloudinaryUploadResult("https://cdn.example.com/first.jpg", "reviews/first"))
+                .thenReturn(new CloudinaryUploadResult("https://cdn.example.com/second.png", "reviews/second"));
+        when(reviewRepository.saveAndFlush(any(Review.class))).thenAnswer(invocation -> {
+            Review review = invocation.getArgument(0);
+            review.setId(99L);
+            return review;
+        });
+
+        var response = reviewService.createReviewWithImages(
+                21L, 31L, ReviewCreateRequest.builder().rating(5).comment("Great").build(), List.of(first, second));
+
+        assertThat(response.getImages()).extracting("imagePublicId").containsExactly("reviews/first", "reviews/second");
+        assertThat(response.getImages()).extracting("sortOrder").containsExactly(0, 1);
+        verify(fileValidatorService).validateFile(first, com.tien.aivirabackend.constant.MediaType.IMAGE);
+        verify(fileValidatorService).validateFile(second, com.tien.aivirabackend.constant.MediaType.IMAGE);
+        verify(cloudinaryStorageService, times(2))
+                .uploadReviewImage(any(), eq("aivira/reviews/user-1/31"), eq("review-31"), eq(1600), eq(1600));
+    }
+
+    @Test
+    void createReviewWithImages_whenTooManyImages_shouldRejectBeforeValidationOrUpload() {
+        stubEligibleReview();
+        List<MockMultipartFile> files = List.of(
+                imageFile("1.jpg"), imageFile("2.jpg"), imageFile("3.jpg"),
+                imageFile("4.jpg"), imageFile("5.jpg"), imageFile("6.jpg"));
+
+        assertThatThrownBy(() -> reviewService.createReviewWithImages(
+                        21L, 31L, ReviewCreateRequest.builder().rating(5).build(), List.copyOf(files)))
+                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
+                        .isEqualTo(ReviewErrorCode.REVIEW_INVALID_IMAGE));
+
+        verifyNoInteractions(fileValidatorService, cloudinaryStorageService);
+    }
+
+    @Test
+    void createReviewWithImages_whenValidationFails_shouldNotUploadAnything() {
+        stubEligibleReview();
+        MockMultipartFile image = imageFile("invalid.jpg");
+        doThrow(new AppException(ReviewErrorCode.REVIEW_INVALID_IMAGE))
+                .when(fileValidatorService).validateFile(image, com.tien.aivirabackend.constant.MediaType.IMAGE);
+
+        assertThatThrownBy(() -> reviewService.createReviewWithImages(
+                        21L, 31L, ReviewCreateRequest.builder().rating(5).build(), List.of(image)))
+                .isInstanceOf(AppException.class);
+
+        verifyNoInteractions(cloudinaryStorageService);
+    }
+
+    @Test
+    void createReviewWithImages_whenLaterUploadFails_shouldDeleteEarlierUploads() {
+        stubEligibleReview();
+        when(cloudinaryStorageService.uploadReviewImage(any(), anyString(), anyString(), anyInt(), anyInt()))
+                .thenReturn(new CloudinaryUploadResult("https://cdn.example.com/first.jpg", "reviews/first"))
+                .thenThrow(new AppException(ReviewErrorCode.REVIEW_IMAGE_UPLOAD_FAILED));
+
+        assertThatThrownBy(() -> reviewService.createReviewWithImages(
+                        21L,
+                        31L,
+                        ReviewCreateRequest.builder().rating(5).build(),
+                        List.of(imageFile("first.jpg"), imageFile("second.jpg"))))
+                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
+                        .isEqualTo(ReviewErrorCode.REVIEW_IMAGE_UPLOAD_FAILED));
+
+        verify(cloudinaryStorageService).deleteImage("reviews/first");
+    }
+
+    @Test
+    void createReviewWithImages_whenDatabaseSaveFails_shouldDeleteUploadedImages() {
+        stubEligibleReview();
+        when(cloudinaryStorageService.uploadReviewImage(any(), anyString(), anyString(), anyInt(), anyInt()))
+                .thenReturn(new CloudinaryUploadResult("https://cdn.example.com/first.jpg", "reviews/first"));
+        when(reviewRepository.saveAndFlush(any(Review.class))).thenThrow(new IllegalStateException("database failed"));
+
+        assertThatThrownBy(() -> reviewService.createReviewWithImages(
+                        21L, 31L, ReviewCreateRequest.builder().rating(5).build(), List.of(imageFile("first.jpg"))))
+                .isInstanceOf(IllegalStateException.class);
+
+        verify(cloudinaryStorageService).deleteImage("reviews/first");
     }
 
     @Test
@@ -247,6 +351,23 @@ class ReviewServiceImplTest {
                 .comment(" Great book ")
                 .images(List.of(imageRequest("https://cdn.example.com/review.jpg", "review-img")))
                 .build();
+    }
+
+    private void stubEligibleReview() {
+        Order order = order(OrderStatus.COMPLETED);
+        Product product = product();
+        when(currentUserService.getCurrentUserId()).thenReturn("user-1");
+        when(orderRepository.findWithItemsAndRefundByIdAndUserId(21L, "user-1")).thenReturn(Optional.of(order));
+        when(productRepository.findById(10L)).thenReturn(Optional.of(product));
+        when(productVariationRepository.findById(11L)).thenReturn(Optional.of(variation(product)));
+    }
+
+    private MockMultipartFile imageFile(String name) {
+        return imageFile(name, "image/jpeg");
+    }
+
+    private MockMultipartFile imageFile(String name, String contentType) {
+        return new MockMultipartFile("images", name, contentType, new byte[] {1, 2, 3});
     }
 
     private ReviewUpdateRequest updateRequest() {

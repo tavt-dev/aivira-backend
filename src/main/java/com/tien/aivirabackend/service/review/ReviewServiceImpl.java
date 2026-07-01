@@ -1,6 +1,7 @@
 package com.tien.aivirabackend.service.review;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -8,7 +9,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.tien.aivirabackend.config.properties.CloudinaryProperties;
+import com.tien.aivirabackend.constant.MediaType;
 import com.tien.aivirabackend.constant.OrderStatus;
 import com.tien.aivirabackend.domain.dto.PageResponse;
 import com.tien.aivirabackend.domain.dto.request.ReviewCreateRequest;
@@ -32,6 +36,9 @@ import com.tien.aivirabackend.repository.ProductRepository;
 import com.tien.aivirabackend.repository.ProductVariationRepository;
 import com.tien.aivirabackend.repository.ReviewRepository;
 import com.tien.aivirabackend.service.auth.CurrentUserService;
+import com.tien.aivirabackend.service.media.CloudinaryStorageService;
+import com.tien.aivirabackend.service.media.CloudinaryUploadResult;
+import com.tien.aivirabackend.service.media.FileValidatorService;
 import com.tien.aivirabackend.util.PageRequestUtils;
 
 import lombok.AccessLevel;
@@ -45,6 +52,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j(topic = "REVIEW-SERVICE")
 public class ReviewServiceImpl implements ReviewService {
     private static final int MAX_IMAGES = 5;
+    private static final int REVIEW_IMAGE_MAX_WIDTH = 1600;
+    private static final int REVIEW_IMAGE_MAX_HEIGHT = 1600;
 
     ReviewRepository reviewRepository;
     OrderRepository orderRepository;
@@ -53,6 +62,9 @@ public class ReviewServiceImpl implements ReviewService {
     CurrentUserService currentUserService;
     ReviewSpecifications reviewSpecifications;
     ReviewMapper reviewMapper;
+    FileValidatorService fileValidatorService;
+    CloudinaryStorageService cloudinaryStorageService;
+    CloudinaryProperties cloudinaryProperties;
 
     @Override
     @Transactional(readOnly = true)
@@ -67,6 +79,49 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional
     public ReviewResponse createReview(Long orderId, Long orderItemId, ReviewCreateRequest request) {
+        ReviewContext context = resolveReviewContext(orderId, orderItemId);
+        return persistReview(context, request, request.getImages());
+    }
+
+    @Override
+    @Transactional
+    public ReviewResponse createReviewWithImages(
+            Long orderId, Long orderItemId, ReviewCreateRequest request, List<MultipartFile> imageFiles) {
+        ReviewContext context = resolveReviewContext(orderId, orderItemId);
+        List<MultipartFile> files = imageFiles == null ? List.of() : List.copyOf(imageFiles);
+        if (files.size() > MAX_IMAGES) {
+            throw new AppException(ReviewErrorCode.REVIEW_INVALID_IMAGE);
+        }
+        files.forEach(file -> fileValidatorService.validateFile(file, MediaType.IMAGE));
+
+        List<CloudinaryUploadResult> uploadedImages = new ArrayList<>();
+        try {
+            for (MultipartFile file : files) {
+                uploadedImages.add(cloudinaryStorageService.uploadReviewImage(
+                        file,
+                        buildReviewImageFolder(context.userId(), orderItemId),
+                        "review-" + orderItemId,
+                        REVIEW_IMAGE_MAX_WIDTH,
+                        REVIEW_IMAGE_MAX_HEIGHT));
+            }
+
+            List<ReviewImageRequest> imageRequests = new ArrayList<>();
+            for (int index = 0; index < uploadedImages.size(); index++) {
+                CloudinaryUploadResult image = uploadedImages.get(index);
+                imageRequests.add(ReviewImageRequest.builder()
+                        .imageUrl(image.secureUrl())
+                        .imagePublicId(image.publicId())
+                        .sortOrder(index)
+                        .build());
+            }
+            return persistReview(context, request, imageRequests);
+        } catch (RuntimeException exception) {
+            uploadedImages.forEach(image -> cloudinaryStorageService.deleteImage(image.publicId()));
+            throw exception;
+        }
+    }
+
+    private ReviewContext resolveReviewContext(Long orderId, Long orderItemId) {
         String userId = currentUserService.getCurrentUserId();
         Order order = orderRepository
                 .findWithItemsAndRefundByIdAndUserId(orderId, userId)
@@ -91,19 +146,24 @@ public class ReviewServiceImpl implements ReviewService {
             throw new AppException(ReviewErrorCode.REVIEW_NOT_ALLOWED);
         }
 
+        return new ReviewContext(userId, order, orderItem, product, variation);
+    }
+
+    private ReviewResponse persistReview(
+            ReviewContext context, ReviewCreateRequest request, List<ReviewImageRequest> imageRequests) {
         Review review = Review.builder()
                 .rating(request.getRating())
                 .comment(trimToNull(request.getComment()))
                 .approved(false)
                 .visible(true)
-                .user(order.getUser())
-                .product(product)
-                .productVariation(variation)
-                .order(order)
-                .orderItem(orderItem)
+                .user(context.order().getUser())
+                .product(context.product())
+                .productVariation(context.variation())
+                .order(context.order())
+                .orderItem(context.orderItem())
                 .build();
-        replaceImages(review, request.getImages());
-        return reviewMapper.toResponse(reviewRepository.save(review));
+        replaceImages(review, imageRequests);
+        return reviewMapper.toResponse(reviewRepository.saveAndFlush(review));
     }
 
     @Override
@@ -251,4 +311,11 @@ public class ReviewServiceImpl implements ReviewService {
     private String trimToNull(String value) {
         return StringUtils.hasText(value) ? value.trim() : null;
     }
+
+    private String buildReviewImageFolder(String userId, Long orderItemId) {
+        return cloudinaryProperties.getReviewImageFolder() + "/" + userId + "/" + orderItemId;
+    }
+
+    private record ReviewContext(
+            String userId, Order order, OrderItem orderItem, Product product, ProductVariation variation) {}
 }
