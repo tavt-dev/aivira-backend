@@ -43,6 +43,7 @@ import com.tien.aivirabackend.domain.mapper.CommerceMapper;
 import com.tien.aivirabackend.exception.AppException;
 import com.tien.aivirabackend.exception.errorCode.OrderErrorCode;
 import com.tien.aivirabackend.repository.OrderRepository;
+import com.tien.aivirabackend.repository.OrderItemRepository;
 import com.tien.aivirabackend.repository.PaymentAttemptRepository;
 import com.tien.aivirabackend.repository.PaymentGroupRepository;
 import com.tien.aivirabackend.repository.ProductRepository;
@@ -55,6 +56,9 @@ import com.tien.aivirabackend.service.discount.DiscountService;
 class OrderServiceImplTest {
     @Mock
     OrderRepository orderRepository;
+
+    @Mock
+    OrderItemRepository orderItemRepository;
 
     @Mock
     RefundRepository refundRepository;
@@ -83,6 +87,7 @@ class OrderServiceImplTest {
     void setUp() {
         orderService = new OrderServiceImpl(
                 orderRepository,
+                orderItemRepository,
                 refundRepository,
                 paymentGroupRepository,
                 paymentAttemptRepository,
@@ -100,12 +105,16 @@ class OrderServiceImplTest {
         when(currentUserService.getCurrentUserId()).thenReturn("user-1");
         when(orderRepository.findByUserId(eq("user-1"), any(PageRequest.class)))
                 .thenReturn(new PageImpl<>(List.of(order)));
+        when(orderItemRepository.findByOrderIdInOrderByOrderIdAscIdAsc(List.of(21L)))
+                .thenReturn(order.getItems());
 
         PageResponse<OrderSummaryResponse> response = orderService.getMyOrders(null, 1, 20);
 
         assertThat(response.getData()).hasSize(1);
         assertThat(response.getData().getFirst().getOrderCode()).isEqualTo("ORD123");
         assertThat(response.getData().getFirst().getItemCount()).isEqualTo(2);
+        assertThat(response.getData().getFirst().getPreviewItem().getProductName()).isEqualTo("Dress");
+        assertThat(response.getData().getFirst().getPreviewItem().getProductId()).isEqualTo(10L);
         verify(orderRepository)
                 .findByUserId(
                         eq("user-1"),
@@ -128,6 +137,7 @@ class OrderServiceImplTest {
                 .findByUserIdAndOrderStatus(
                         eq("user-1"), eq(OrderStatus.CANCELLED), argThat(pageable -> pageable.getPageNumber() == 1));
         verify(orderRepository, never()).findByUserId(anyString(), any());
+        verify(orderItemRepository, never()).findByOrderIdInOrderByOrderIdAscIdAsc(any());
     }
 
     @Test
@@ -598,8 +608,7 @@ class OrderServiceImplTest {
         payment.setId(31L);
         order.getPayments().add(payment);
         group.getPayments().add(payment);
-        order.getItems()
-                .add(OrderItem.builder()
+        OrderItem item = OrderItem.builder()
                         .order(order)
                         .productId(10L)
                         .productVariationId(41L)
@@ -609,7 +618,9 @@ class OrderServiceImplTest {
                         .additionalPrice(BigDecimal.ZERO)
                         .finalPrice(new BigDecimal("50.00"))
                         .quantity(2)
-                        .build());
+                        .build();
+        item.setId(51L);
+        order.getItems().add(item);
         return order;
     }
 

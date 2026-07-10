@@ -139,13 +139,24 @@ public class CommerceMapper {
                 .build();
     }
 
-    public OrderSummaryResponse toOrderSummaryResponse(Order order) {
+    public OrderSummaryResponse toOrderSummaryResponse(Order order, List<OrderItem> summaryItems) {
         Payment payment = primaryPayment(order);
-        int itemCount = order.getItems().stream()
+        List<OrderItem> orderedItems = summaryItems == null
+                ? List.of()
+                : summaryItems.stream().sorted(Comparator.comparing(OrderItem::getId)).toList();
+        int itemCount = orderedItems.stream()
                 .map(OrderItem::getQuantity)
                 .filter(quantity -> quantity != null)
                 .mapToInt(Integer::intValue)
                 .sum();
+        OrderPreviewItemResponse previewItem = orderedItems.stream()
+                .findFirst()
+                .map(item -> OrderPreviewItemResponse.builder()
+                        .productId(item.getProductId())
+                        .productName(item.getProductName())
+                        .thumbnailUrl(item.getThumbnailUrl())
+                        .build())
+                .orElse(null);
         return OrderSummaryResponse.builder()
                 .id(order.getId())
                 .orderCode(order.getOrderCode())
@@ -158,6 +169,7 @@ public class CommerceMapper {
                 .paymentStatus(payment == null ? null : payment.getStatus())
                 .paidAt(payment == null ? null : payment.getPaidAt())
                 .itemCount(itemCount)
+                .previewItem(previewItem)
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
                 .build();

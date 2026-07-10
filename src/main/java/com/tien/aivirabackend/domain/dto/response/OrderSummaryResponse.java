@@ -42,6 +42,7 @@ public class OrderSummaryResponse {
 
     Instant paidAt;
     Integer itemCount;
+    OrderPreviewItemResponse previewItem;
     Instant createdAt;
     Instant updatedAt;
 }
