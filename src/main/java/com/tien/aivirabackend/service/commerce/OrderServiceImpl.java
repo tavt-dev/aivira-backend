@@ -3,10 +3,14 @@ package com.tien.aivirabackend.service.commerce;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +33,7 @@ import com.tien.aivirabackend.domain.mapper.CommerceMapper;
 import com.tien.aivirabackend.exception.AppException;
 import com.tien.aivirabackend.exception.errorCode.OrderErrorCode;
 import com.tien.aivirabackend.repository.OrderRepository;
+import com.tien.aivirabackend.repository.OrderItemRepository;
 import com.tien.aivirabackend.repository.PaymentAttemptRepository;
 import com.tien.aivirabackend.repository.PaymentGroupRepository;
 import com.tien.aivirabackend.repository.ProductRepository;
@@ -48,6 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j(topic = "ORDER-SERVICE")
 public class OrderServiceImpl implements OrderService {
     OrderRepository orderRepository;
+    OrderItemRepository orderItemRepository;
     RefundRepository refundRepository;
     PaymentGroupRepository paymentGroupRepository;
     PaymentAttemptRepository paymentAttemptRepository;
@@ -63,11 +69,10 @@ public class OrderServiceImpl implements OrderService {
     public PageResponse<OrderSummaryResponse> getMyOrders(OrderStatus status, int page, int size) {
         String userId = currentUserService.getCurrentUserId();
         var pageable = PageRequestUtils.newestFirst(page, size);
-        var orderPage = (status == null
+        Page<Order> orderPage = status == null
                         ? orderRepository.findByUserId(userId, pageable)
-                        : orderRepository.findByUserIdAndOrderStatus(userId, status, pageable))
-                .map(commerceMapper::toOrderSummaryResponse);
-        return PageResponse.from(orderPage);
+                        : orderRepository.findByUserIdAndOrderStatus(userId, status, pageable);
+        return toOrderSummaryPage(orderPage);
     }
 
     @Override
@@ -119,8 +124,20 @@ public class OrderServiceImpl implements OrderService {
             OrderStatus status, String keyword, Instant fromDate, Instant toDate, int page, int size) {
         var pageable = PageRequestUtils.newestFirst(page, size);
         Specification<Order> specification = orderSpecifications.adminOrders(status, keyword, fromDate, toDate);
-        var orderPage = orderRepository.findAll(specification, pageable).map(commerceMapper::toOrderSummaryResponse);
-        return PageResponse.from(orderPage);
+        return toOrderSummaryPage(orderRepository.findAll(specification, pageable));
+    }
+
+    private PageResponse<OrderSummaryResponse> toOrderSummaryPage(Page<Order> orderPage) {
+        if (orderPage.isEmpty()) {
+            return PageResponse.from(orderPage.map(order -> commerceMapper.toOrderSummaryResponse(order, List.of())));
+        }
+
+        List<Long> orderIds = orderPage.getContent().stream().map(Order::getId).toList();
+        Map<Long, List<com.tien.aivirabackend.domain.entity.transaction.OrderItem>> itemsByOrderId =
+                orderItemRepository.findByOrderIdInOrderByOrderIdAscIdAsc(orderIds).stream()
+                        .collect(Collectors.groupingBy(item -> item.getOrder().getId()));
+        return PageResponse.from(orderPage.map(order -> commerceMapper.toOrderSummaryResponse(
+                order, itemsByOrderId.getOrDefault(order.getId(), Collections.emptyList()))));
     }
 
     @Override
