@@ -30,7 +30,7 @@ spring:
     baseline-on-migrate: ${FLYWAY_BASELINE_ON_MIGRATE:false}
 
 security:
-  public-endpoints: ${PUBLIC_ENDPOINTS:/oauth2/**,/auth/token,/auth/register,/auth/verify-user,/auth/resend-verification,/auth/forgot-password,/auth/reset-password,/auth/refresh-token,/auth/logout,/auth/google/**,/categories,/categories/**,/products,/products/**,/storefront/**,/payments/vnpay/return,/payments/vnpay/ipn,/payments/momo/return,/payments/momo/ipn,/actuator/health,/swagger-ui.html,/swagger-ui/**,/v3/api-docs,/v3/api-docs/**,/v3/api-docs.yaml,/api/v1/auth/token,/api/v1/auth/register,/api/v1/auth/verify-user,/api/v1/auth/resend-verification,/api/v1/auth/forgot-password,/api/v1/auth/reset-password,/api/v1/auth/refresh-token,/api/v1/auth/logout,/api/v1/auth/google/**,/api/v1/categories,/api/v1/categories/**,/api/v1/products,/api/v1/products/**,/api/v1/storefront/**,/api/v1/payments/vnpay/return,/api/v1/payments/vnpay/ipn,/api/v1/payments/momo/return,/api/v1/payments/momo/ipn,/api/v1/actuator/health,/api/v1/swagger-ui.html,/api/v1/swagger-ui/**,/api/v1/v3/api-docs,/api/v1/v3/api-docs/**,/api/v1/v3/api-docs.yaml}
+  public-endpoints: ${PUBLIC_ENDPOINTS:/oauth2/**,/auth/token,/auth/register,/auth/verify-user,/auth/resend-verification,/auth/forgot-password,/auth/reset-password,/auth/refresh-token,/auth/logout,/auth/google/**,/categories,/categories/**,/products,/products/**,/blog/**,/storefront/**,/payments/vnpay/return,/payments/vnpay/ipn,/payments/momo/return,/payments/momo/ipn,/actuator/health,/swagger-ui.html,/swagger-ui/**,/v3/api-docs,/v3/api-docs/**,/v3/api-docs.yaml,/api/v1/auth/token,/api/v1/auth/register,/api/v1/auth/verify-user,/api/v1/auth/resend-verification,/api/v1/auth/forgot-password,/api/v1/auth/reset-password,/api/v1/auth/refresh-token,/api/v1/auth/logout,/api/v1/auth/google/**,/api/v1/categories,/api/v1/categories/**,/api/v1/products,/api/v1/products/**,/api/v1/blog/**,/api/v1/storefront/**,/api/v1/payments/vnpay/return,/api/v1/payments/vnpay/ipn,/api/v1/payments/momo/return,/api/v1/payments/momo/ipn,/api/v1/actuator/health,/api/v1/swagger-ui.html,/api/v1/swagger-ui/**,/api/v1/v3/api-docs,/api/v1/v3/api-docs/**,/api/v1/v3/api-docs.yaml}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
     allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,PATCH,DELETE,OPTIONS}
@@ -98,6 +98,7 @@ cloudinary:
   avatar-folder: ${CLOUDINARY_AVATAR_FOLDER:aivira/users}
   product-media-folder: ${CLOUDINARY_PRODUCT_MEDIA_FOLDER:aivira/products}
   review-image-folder: ${CLOUDINARY_REVIEW_IMAGE_FOLDER:aivira/reviews}
+  blog-image-folder: ${CLOUDINARY_BLOG_IMAGE_FOLDER:aivira/blog}
 
 brevo:
   api-key: ${BREVO_API_KEY:}

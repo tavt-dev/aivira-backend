@@ -30,4 +30,8 @@ public class StorefrontHomeResponse {
     @Schema(description = "Public categories with active book counts.")
     @Builder.Default
     List<CategoryHighlightResponse> categoryHighlights = new ArrayList<>();
+
+    @Schema(description = "Latest four published blog posts.")
+    @Builder.Default
+    List<BlogPostSummaryResponse> latestPosts = new ArrayList<>();
 }

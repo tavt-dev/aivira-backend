@@ -13,6 +13,7 @@ import com.cloudinary.utils.ObjectUtils;
 import com.tien.aivirabackend.exception.ErrorCode;
 import com.tien.aivirabackend.exception.AppException;
 import com.tien.aivirabackend.exception.errorCode.ReviewErrorCode;
+import com.tien.aivirabackend.exception.errorCode.BlogErrorCode;
 import com.tien.aivirabackend.exception.errorCode.UserErrorCode;
 
 import lombok.RequiredArgsConstructor;
@@ -53,6 +54,36 @@ public class CloudinaryStorageService {
                         .quality("auto")
                         .fetchFormat("auto"),
                 ReviewErrorCode.REVIEW_IMAGE_UPLOAD_FAILED);
+    }
+
+    public CloudinaryUploadResult uploadBlogCover(MultipartFile file, String folder, String publicIdPrefix) {
+        return uploadTransformedImage(
+                file,
+                folder,
+                publicIdPrefix,
+                new Transformation<>()
+                        .width(1200)
+                        .height(630)
+                        .crop("fill")
+                        .gravity("auto")
+                        .quality("auto")
+                        .fetchFormat("auto"),
+                BlogErrorCode.BLOG_IMAGE_UPLOAD_FAILED);
+    }
+
+    public CloudinaryUploadResult uploadBlogContentImage(
+            MultipartFile file, String folder, String publicIdPrefix) {
+        return uploadTransformedImage(
+                file,
+                folder,
+                publicIdPrefix,
+                new Transformation<>()
+                        .width(1600)
+                        .height(1600)
+                        .crop("limit")
+                        .quality("auto")
+                        .fetchFormat("auto"),
+                BlogErrorCode.BLOG_IMAGE_UPLOAD_FAILED);
     }
 
     public void deleteImage(String publicId) {
