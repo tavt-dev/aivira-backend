@@ -14,6 +14,7 @@ import com.tien.aivirabackend.repository.CategoryRepository;
 import com.tien.aivirabackend.repository.ProductRepository;
 import com.tien.aivirabackend.repository.projection.CategoryHighlightProjection;
 import com.tien.aivirabackend.service.catalog.ProductSpecifications;
+import com.tien.aivirabackend.service.blog.BlogPostService;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class StorefrontServiceImpl implements StorefrontService {
     CategoryRepository categoryRepository;
     ProductSpecifications productSpecifications;
     ProductMapper productMapper;
+    BlogPostService blogPostService;
 
     @Override
     @Transactional(readOnly = true)
@@ -44,6 +46,7 @@ public class StorefrontServiceImpl implements StorefrontService {
                         categoryRepository.findCategoryHighlights(PageRequest.of(0, CATEGORY_HIGHLIGHT_LIMIT)).stream()
                                 .map(this::toCategoryHighlight)
                                 .toList())
+                .latestPosts(blogPostService.getLatestPosts(4))
                 .build();
     }
 
