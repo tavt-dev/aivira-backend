@@ -22,6 +22,7 @@ Spring Boot backend for the Aivira single-vendor online bookstore. Aivira/Admin 
 - Admin catalog: create/update/soft-delete products, manage media, variations, and stock.
 - Cart, checkout preview, coupon/promotion discounts, one-order checkout creation, payment groups, payment callbacks, retry, and reconciliation.
 - Admin orders, users, manual refunds, reviews, storefront home, and dashboard APIs.
+- Admin-managed news/blog with categories, sanitized rich-text content, SEO metadata, Cloudinary images, and related books.
 
 ## Active Roles
 
@@ -42,6 +43,9 @@ Public:
 - `GET /categories`
 - `GET /categories/tree`
 - `GET /storefront/home`
+- `GET /blog/posts`
+- `GET /blog/posts/{slug}`
+- `GET /blog/categories`
 - `GET /auth/google/authorize`
 - `GET /auth/google/callback`
 - `POST /auth/google/exchange-ticket`
@@ -70,6 +74,7 @@ Admin:
 - `/admin/permissions/**`
 - `/admin/roles/**`
 - `/admin/payments/**`
+- `/admin/blog/**`
 
 ## API Behavior Notes
 
@@ -94,6 +99,7 @@ Admin:
 - `V8__manual_refunds.sql`: manual refund metadata table.
 - `V9__review_order_item_visibility.sql`: review order item ownership, visibility, and moderation metadata.
 - `V10__google_oauth_login.sql`: one-time Google OAuth state and login-ticket tables.
+- `V12__blog_news_module.sql`: blog categories, posts, rich-text assets, and related-book links.
 
 ## Seed Data
 

@@ -24,6 +24,7 @@ import com.tien.aivirabackend.repository.CategoryRepository;
 import com.tien.aivirabackend.repository.ProductRepository;
 import com.tien.aivirabackend.repository.projection.CategoryHighlightProjection;
 import com.tien.aivirabackend.service.catalog.ProductSpecifications;
+import com.tien.aivirabackend.service.blog.BlogPostService;
 
 @ExtendWith(MockitoExtension.class)
 class StorefrontServiceImplTest {
@@ -33,12 +34,15 @@ class StorefrontServiceImplTest {
     @Mock
     CategoryRepository categoryRepository;
 
+    @Mock
+    BlogPostService blogPostService;
+
     StorefrontServiceImpl storefrontService;
 
     @BeforeEach
     void setUp() {
         storefrontService = new StorefrontServiceImpl(
-                productRepository, categoryRepository, new ProductSpecifications(), new ProductMapper());
+                productRepository, categoryRepository, new ProductSpecifications(), new ProductMapper(), blogPostService);
     }
 
     @Test
@@ -50,6 +54,7 @@ class StorefrontServiceImplTest {
                 .thenReturn(new PageImpl<>(List.of(product("BOOK-3", "Book 3", 20))));
         when(categoryRepository.findCategoryHighlights(any(Pageable.class)))
                 .thenReturn(List.of(categoryHighlight(1L, "Fiction", 12L)));
+        when(blogPostService.getLatestPosts(4)).thenReturn(List.of());
 
         var response = storefrontService.getHome();
 
@@ -58,6 +63,7 @@ class StorefrontServiceImplTest {
         assertThat(response.getBestsellingBooks()).hasSize(1);
         assertThat(response.getCategoryHighlights()).hasSize(1);
         assertThat(response.getCategoryHighlights().getFirst().getBookCount()).isEqualTo(12L);
+        assertThat(response.getLatestPosts()).isEmpty();
         verify(productRepository, times(3)).findAll(any(Specification.class), any(Pageable.class));
         verify(categoryRepository).findCategoryHighlights(argThat(pageable -> pageable.getPageSize() == 6));
     }
@@ -67,6 +73,7 @@ class StorefrontServiceImplTest {
         when(productRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of()));
         when(categoryRepository.findCategoryHighlights(any(Pageable.class))).thenReturn(List.of());
+        when(blogPostService.getLatestPosts(4)).thenReturn(List.of());
 
         var response = storefrontService.getHome();
 
@@ -74,6 +81,7 @@ class StorefrontServiceImplTest {
         assertThat(response.getNewArrivals()).isEmpty();
         assertThat(response.getBestsellingBooks()).isEmpty();
         assertThat(response.getCategoryHighlights()).isEmpty();
+        assertThat(response.getLatestPosts()).isEmpty();
     }
 
     private Product product(String sku, String name, int soldCount) {

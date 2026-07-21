@@ -27,4 +27,6 @@ public class CloudinaryProperties {
     private String productMediaFolder = "aivira/products";
 
     private String reviewImageFolder = "aivira/reviews";
+
+    private String blogImageFolder = "aivira/blog";
 }

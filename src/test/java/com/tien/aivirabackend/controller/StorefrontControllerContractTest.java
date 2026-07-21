@@ -47,7 +47,8 @@ class StorefrontControllerContractTest {
                 .andExpect(jsonPath("$.data.featuredBooks").isArray())
                 .andExpect(jsonPath("$.data.newArrivals").isArray())
                 .andExpect(jsonPath("$.data.bestsellingBooks").isArray())
-                .andExpect(jsonPath("$.data.categoryHighlights").isArray());
+                .andExpect(jsonPath("$.data.categoryHighlights").isArray())
+                .andExpect(jsonPath("$.data.latestPosts").isArray());
 
         verify(storefrontService).getHome();
     }
