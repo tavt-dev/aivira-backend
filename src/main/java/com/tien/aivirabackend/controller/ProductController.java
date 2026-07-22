@@ -17,8 +17,11 @@ import com.tien.aivirabackend.domain.dto.request.ProductCreateRequest;
 import com.tien.aivirabackend.domain.dto.request.ProductMediaUpdateRequest;
 import com.tien.aivirabackend.domain.dto.request.ProductUpdateRequest;
 import com.tien.aivirabackend.domain.dto.request.ProductVariationRequest;
+import com.tien.aivirabackend.domain.dto.request.ProductViewRequest;
 import com.tien.aivirabackend.domain.dto.request.StockUpdateRequest;
 import com.tien.aivirabackend.domain.dto.response.ProductResponse;
+import com.tien.aivirabackend.domain.dto.response.ProductViewRecordResponse;
+import com.tien.aivirabackend.service.analytics.ProductViewTrackingService;
 import com.tien.aivirabackend.service.catalog.ProductService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,6 +37,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductController {
     ProductService productService;
+    ProductViewTrackingService productViewTrackingService;
 
     @GetMapping("/products")
     @Tag(name = "Public Catalog")
@@ -97,6 +101,15 @@ public class ProductController {
     @Operation(summary = "Get public book detail", description = "Returns one active public book by slug.")
     public ResponseEntity<ApiResponse<ProductResponse>> getPublicProduct(@PathVariable String slug) {
         return ResponseEntity.ok(ApiResponse.success("Get product successful", productService.getPublicProduct(slug)));
+    }
+
+    @PostMapping("/products/{slug}/views")
+    @Tag(name = "Product Views")
+    @Operation(summary = "Record a public book view")
+    public ResponseEntity<ApiResponse<ProductViewRecordResponse>> recordProductView(
+            @PathVariable String slug, @Valid @RequestBody ProductViewRequest request) {
+        return ResponseEntity.ok(
+                ApiResponse.success("Product view processed", productViewTrackingService.record(slug, request)));
     }
 
     @GetMapping("/admin/products")

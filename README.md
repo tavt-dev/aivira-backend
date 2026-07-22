@@ -115,6 +115,10 @@ Do not enable demo catalog seed in production. Re-running the seed does not dupl
 
 ## Environment Variables
 
+Product view tracking requires `PRODUCT_VIEW_HASH_PEPPER` in production. Use a long random secret that is different
+from the JWT signing key. View history APIs include public `POST /products/{slug}/views` and authenticated
+`/users/me/recently-viewed/**` operations.
+
 Practical local/dev configuration is environment-driven:
 
 - Database: `DB_URL`, `USERNAME_DB`, `PASSWORD_DB`.

@@ -10,6 +10,7 @@ import com.tien.aivirabackend.config.properties.FileUploadProperties;
 import com.tien.aivirabackend.config.properties.GoogleOAuthProperties;
 import com.tien.aivirabackend.config.properties.MomoPaymentProperties;
 import com.tien.aivirabackend.config.properties.PaymentProperties;
+import com.tien.aivirabackend.config.properties.ProductViewProperties;
 import com.tien.aivirabackend.config.properties.VnpayPaymentProperties;
 
 @SpringBootApplication
@@ -20,7 +21,8 @@ import com.tien.aivirabackend.config.properties.VnpayPaymentProperties;
     GoogleOAuthProperties.class,
     PaymentProperties.class,
     VnpayPaymentProperties.class,
-    MomoPaymentProperties.class
+    MomoPaymentProperties.class,
+    ProductViewProperties.class
 })
 public class AiviraBackendApplication {
 

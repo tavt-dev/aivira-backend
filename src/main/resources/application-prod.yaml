@@ -11,3 +11,7 @@ auth:
   refresh-token:
     cookie-secure: true
     cookie-http-only: true
+
+analytics:
+  product-view:
+    hash-pepper: ${PRODUCT_VIEW_HASH_PEPPER}

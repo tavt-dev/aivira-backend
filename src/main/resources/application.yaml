@@ -141,3 +141,16 @@ management:
     health:
       probes:
         enabled: true
+
+analytics:
+  product-view:
+    enabled: ${PRODUCT_VIEW_ENABLED:true}
+    deduplication-minutes: ${PRODUCT_VIEW_DEDUPLICATION_MINUTES:15}
+    anonymous-retention-days: ${PRODUCT_VIEW_ANONYMOUS_RETENTION_DAYS:90}
+    event-retention-days: ${PRODUCT_VIEW_EVENT_RETENTION_DAYS:365}
+    recent-retention-days: ${PRODUCT_VIEW_RECENT_RETENTION_DAYS:180}
+    max-recent-products: ${PRODUCT_VIEW_MAX_RECENT_PRODUCTS:100}
+    minute-rate-limit: ${PRODUCT_VIEW_MINUTE_RATE_LIMIT:60}
+    hourly-rate-limit: ${PRODUCT_VIEW_HOURLY_RATE_LIMIT:300}
+    cleanup-cron: ${PRODUCT_VIEW_CLEANUP_CRON:0 30 3 * * *}
+    hash-pepper: ${PRODUCT_VIEW_HASH_PEPPER:local-product-view-pepper}

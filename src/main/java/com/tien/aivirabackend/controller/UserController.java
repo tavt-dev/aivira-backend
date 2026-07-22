@@ -1,14 +1,21 @@
 package com.tien.aivirabackend.controller;
 
+import jakarta.validation.Valid;
+
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.tien.aivirabackend.domain.dto.ApiResponse;
+import com.tien.aivirabackend.domain.dto.PageResponse;
+import com.tien.aivirabackend.domain.dto.request.ClaimAnonymousHistoryRequest;
 import com.tien.aivirabackend.domain.dto.request.UpdatePasswordRequest;
 import com.tien.aivirabackend.domain.dto.request.UserUpdateRequest;
+import com.tien.aivirabackend.domain.dto.response.ClaimAnonymousHistoryResponse;
+import com.tien.aivirabackend.domain.dto.response.RecentlyViewedProductResponse;
 import com.tien.aivirabackend.domain.dto.response.UserResponse;
+import com.tien.aivirabackend.service.analytics.RecentlyViewedService;
 import com.tien.aivirabackend.service.user.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,6 +36,37 @@ import lombok.extern.slf4j.Slf4j;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserController {
     UserService userService;
+    RecentlyViewedService recentlyViewedService;
+
+    @GetMapping("/recently-viewed")
+    @Operation(summary = "Get my recently viewed books")
+    public ResponseEntity<ApiResponse<PageResponse<RecentlyViewedProductResponse>>> getRecentlyViewed(
+            @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Get recently viewed products successful", recentlyViewedService.getMine(page, size)));
+    }
+
+    @DeleteMapping("/recently-viewed/{productId}")
+    @Operation(summary = "Remove one book from my recently viewed history")
+    public ResponseEntity<ApiResponse<Void>> removeRecentlyViewed(@PathVariable Long productId) {
+        recentlyViewedService.remove(productId);
+        return ResponseEntity.ok(ApiResponse.success("Remove recently viewed product successful", null));
+    }
+
+    @DeleteMapping("/recently-viewed")
+    @Operation(summary = "Clear my recently viewed history")
+    public ResponseEntity<ApiResponse<Void>> clearRecentlyViewed() {
+        recentlyViewedService.clear();
+        return ResponseEntity.ok(ApiResponse.success("Clear recently viewed products successful", null));
+    }
+
+    @PostMapping("/recently-viewed/claim")
+    @Operation(summary = "Claim anonymous product view history")
+    public ResponseEntity<ApiResponse<ClaimAnonymousHistoryResponse>> claimRecentlyViewed(
+            @Valid @RequestBody ClaimAnonymousHistoryRequest request) {
+        return ResponseEntity.ok(
+                ApiResponse.success("Claim anonymous history successful", recentlyViewedService.claim(request)));
+    }
 
     @GetMapping
     @Operation(summary = "Get my profile", description = "Returns the authenticated user's profile.")
