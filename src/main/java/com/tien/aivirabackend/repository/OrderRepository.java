@@ -34,6 +34,9 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     Page<Order> findByUserIdAndOrderStatus(String userId, OrderStatus orderStatus, Pageable pageable);
 
     @EntityGraph(attributePaths = {"items"})
+    List<Order> findTop10ByUserIdAndOrderStatusOrderByCreatedAtDesc(String userId, OrderStatus orderStatus);
+
+    @EntityGraph(attributePaths = {"items"})
     List<Order> findByPaymentsPaymentGroupId(Long paymentGroupId);
 
     @EntityGraph(attributePaths = {"items"})
