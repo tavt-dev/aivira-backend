@@ -5,25 +5,20 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 import com.tien.aivirabackend.config.properties.BrevoProperties;
+import com.tien.aivirabackend.config.properties.AiAdviceProperties;
 import com.tien.aivirabackend.config.properties.CloudinaryProperties;
 import com.tien.aivirabackend.config.properties.FileUploadProperties;
 import com.tien.aivirabackend.config.properties.GoogleOAuthProperties;
+import com.tien.aivirabackend.config.properties.GeminiProperties;
 import com.tien.aivirabackend.config.properties.MomoPaymentProperties;
 import com.tien.aivirabackend.config.properties.OpenAiProperties;
 import com.tien.aivirabackend.config.properties.PaymentProperties;
 import com.tien.aivirabackend.config.properties.VnpayPaymentProperties;
 
 @SpringBootApplication
-@EnableConfigurationProperties({
-    BrevoProperties.class,
-    FileUploadProperties.class,
-    CloudinaryProperties.class,
-    GoogleOAuthProperties.class,
-    PaymentProperties.class,
-    VnpayPaymentProperties.class,
-    MomoPaymentProperties.class,
-    OpenAiProperties.class
-})
+@EnableConfigurationProperties({ BrevoProperties.class, FileUploadProperties.class, CloudinaryProperties.class,
+        GoogleOAuthProperties.class, PaymentProperties.class, VnpayPaymentProperties.class, MomoPaymentProperties.class,
+        AiAdviceProperties.class, GeminiProperties.class, OpenAiProperties.class })
 public class AiviraBackendApplication {
 
     public static void main(String[] args) {

@@ -39,12 +39,9 @@ class OpenAiAdvisorClientTest {
         structuredValue.put("maxPrice", 300000);
         structuredValue.put("rankingPriorities", List.of("beginner friendly"));
         String structured = objectMapper.writeValueAsString(structuredValue);
-        String response = objectMapper.writeValueAsString(Map.of(
-                "model", "gpt-5.6-luna",
-                "usage", Map.of("input_tokens", 21, "output_tokens", 13),
-                "output", List.of(Map.of(
-                        "type", "message",
-                        "content", List.of(Map.of("type", "output_text", "text", structured))))));
+        String response = objectMapper.writeValueAsString(Map.of("model", "gpt-5.6-luna", "usage",
+                Map.of("input_tokens", 21, "output_tokens", 13), "output", List.of(Map.of("type", "message", "content",
+                        List.of(Map.of("type", "output_text", "text", structured))))));
 
         server.expect(requestTo("http://openai.test/responses"))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("\"model\":\"gpt-5.6-luna\"")))
@@ -52,11 +49,8 @@ class OpenAiAdvisorClientTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("\"effort\":\"none\"")))
                 .andRespond(withSuccess(response, MediaType.APPLICATION_JSON));
 
-        AiModelResult<AiSearchProfile> result = client.analyze(
-                List.of(new AiConversationTurn("user", "Tôi muốn học lập trình")),
-                null,
-                "vi",
-                "safe-user");
+        AiModelResult<AiSearchProfile> result = client
+                .analyze(List.of(new AiConversationTurn("user", "Tôi muốn học lập trình")), null, "vi", "safe-user");
 
         assertThat(result.model()).isEqualTo("gpt-5.6-luna");
         assertThat(result.inputTokens()).isEqualTo(21);
@@ -66,14 +60,7 @@ class OpenAiAdvisorClientTest {
     }
 
     private OpenAiProperties properties(String key) {
-        return new OpenAiProperties(
-                key,
-                "http://openai.test",
-                "gpt-5.6-luna",
-                Duration.ofSeconds(1),
-                Duration.ofSeconds(3),
-                30,
-                10,
-                30);
+        return new OpenAiProperties(key, "http://openai.test", "gpt-5.6-luna", Duration.ofSeconds(1),
+                Duration.ofSeconds(3));
     }
 }

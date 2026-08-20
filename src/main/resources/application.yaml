@@ -8,6 +8,8 @@ spring:
     multipart:
       max-file-size: ${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:5MB}
       max-request-size: ${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:26MB}
+  config:
+    import: optional:file:.env[.properties]
 
   datasource:
     url: ${DB_URL}
@@ -132,16 +134,29 @@ payment:
     request-type: ${MOMO_REQUEST_TYPE:payWithMethod}
     query-endpoint: ${MOMO_QUERY_ENDPOINT:https://test-payment.momo.vn/v2/gateway/api/query}
 
+ai-advice:
+  provider: ${AI_ADVICE_PROVIDER:gemini}
+  monthly-limit: ${AI_ADVICE_MONTHLY_LIMIT:30}
+  page-size: ${AI_ADVICE_PAGE_SIZE:10}
+  candidate-limit: ${AI_ADVICE_CANDIDATE_LIMIT:200}
+  result-limit: ${AI_ADVICE_RESULT_LIMIT:30}
+  retention-days: ${AI_ADVICE_RETENTION_DAYS:30}
+  fail-fast: ${AI_ADVICE_FAIL_FAST:false}
+  cleanup-cron: ${AI_ADVICE_CLEANUP_CRON:0 25 3 * * *}
+
+gemini:
+  api-key: ${GEMINI_API_KEY:}
+  base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com}
+  model: ${GEMINI_MODEL:gemini-3.5-flash}
+  connect-timeout: ${GEMINI_CONNECT_TIMEOUT:5s}
+  read-timeout: ${GEMINI_READ_TIMEOUT:45s}
+
 openai:
   api-key: ${OPENAI_API_KEY:}
   base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
   model: ${OPENAI_MODEL:gpt-5.6-luna}
   connect-timeout: ${OPENAI_CONNECT_TIMEOUT:5s}
   read-timeout: ${OPENAI_READ_TIMEOUT:45s}
-  monthly-limit: ${AI_ADVICE_MONTHLY_LIMIT:30}
-  page-size: ${AI_ADVICE_PAGE_SIZE:10}
-  retention-days: ${AI_ADVICE_RETENTION_DAYS:30}
-  cleanup-cron: ${AI_ADVICE_CLEANUP_CRON:0 25 3 * * *}
 
 management:
   endpoints:

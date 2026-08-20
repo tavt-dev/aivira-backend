@@ -25,9 +25,12 @@ public class AiAdviceSession extends BaseEntity {
     @Column(length = 36)
     String id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     User user;
+
+    @Column(name = "guest_key", length = 36)
+    String guestKey;
 
     @Column(nullable = false, length = 10)
     String locale;

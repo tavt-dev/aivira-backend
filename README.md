@@ -100,6 +100,8 @@ Admin:
 - `V9__review_order_item_visibility.sql`: review order item ownership, visibility, and moderation metadata.
 - `V10__google_oauth_login.sql`: one-time Google OAuth state and login-ticket tables.
 - `V12__blog_news_module.sql`: blog categories, posts, rich-text assets, and related-book links.
+- `V13__ai_book_advisor.sql`: AI advisor sessions, messages, quota, snapshots, and recommendations.
+- `V14__ai_advice_provider.sql`: provider metadata for AI advisor messages.
 
 ## Seed Data
 
@@ -125,6 +127,11 @@ Practical local/dev configuration is environment-driven:
 - Payment providers: VNPay and MoMo enable flags, merchant ids/codes, secret keys, callback/IPN/return URLs, and expiry settings.
 - Seed: `SEED_ENABLED`, `SEED_ADMIN_USERNAME`, `SEED_ADMIN_PASSWORD`, `SEED_ADMIN_EMAIL`, `SEED_DEMO_CATALOG_ENABLED`.
 - Browser integration: CORS allowed origins and refresh-cookie secure/same-site/domain settings.
+- AI Book Advisor: `AI_ADVICE_PROVIDER=gemini|openai` (default `gemini`), quota/page/candidate/result/retention settings under `AI_ADVICE_*`.
+- Gemini: `GEMINI_API_KEY`, optional `GEMINI_MODEL` (default `gemini-3.5-flash`), base URL, and timeout settings.
+- OpenAI (manual provider only): `OPENAI_API_KEY`, model, base URL, and timeout settings. Gemini failures never fall back to OpenAI automatically.
+
+If the Gemini key is absent, the application remains healthy and the advisor returns deterministic degraded recommendations. Set `AI_ADVICE_FAIL_FAST=true` in an environment where startup must fail when the selected provider has no key. Never commit real provider keys; copy `.env.example` to a local `.env` instead.
 
 Production should provide secrets through the deployment environment, not committed config files. `JWT_SIGNER_KEY` and provider secrets must be treated as required outside test/local-only setups.
 

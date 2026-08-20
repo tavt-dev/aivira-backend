@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.tien.aivirabackend.config.properties.OpenAiProperties;
+import com.tien.aivirabackend.config.properties.AiAdviceProperties;
 import com.tien.aivirabackend.constant.AiAdviceUsageStatus;
 import com.tien.aivirabackend.domain.dto.response.AiAdviceQuotaResponse;
 import com.tien.aivirabackend.domain.entity.ai.AiAdviceMonthlyQuota;
@@ -33,7 +33,7 @@ public class AiAdviceQuotaService {
     private final UserRepository userRepository;
     private final AiAdviceMonthlyQuotaRepository quotaRepository;
     private final AiAdviceUsageRepository usageRepository;
-    private final OpenAiProperties properties;
+    private final AiAdviceProperties properties;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Long reserve(String userId, String clientMessageId) {
@@ -41,8 +41,7 @@ public class AiAdviceQuotaService {
         User user = userRepository.findByIdForUpdate(userId)
                 .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
         AiAdviceUsage existing = usageRepository
-                .findByUserIdAndPeriodKeyAndClientMessageId(userId, period, clientMessageId)
-                .orElse(null);
+                .findByUserIdAndPeriodKeyAndClientMessageId(userId, period, clientMessageId).orElse(null);
         if (existing != null && existing.getStatus() == AiAdviceUsageStatus.RESERVED) {
             throw new AppException(AiAdviceErrorCode.REQUEST_IN_PROGRESS);
         }
@@ -51,63 +50,44 @@ public class AiAdviceQuotaService {
         }
 
         AiAdviceMonthlyQuota quota = quotaRepository.findForUpdate(userId, period)
-                .orElseGet(() -> quotaRepository.saveAndFlush(AiAdviceMonthlyQuota.builder()
-                        .user(user)
-                        .periodKey(period)
-                        .usedCount(0)
-                        .reservedCount(0)
-                        .build()));
+                .orElseGet(() -> quotaRepository.saveAndFlush(AiAdviceMonthlyQuota.builder().user(user)
+                        .periodKey(period).usedCount(0).reservedCount(0).build()));
         if (quota.getUsedCount() + quota.getReservedCount() >= properties.monthlyLimit()) {
             AiAdviceQuotaResponse details = toResponse(quota);
-            throw new AppException(
-                    AiAdviceErrorCode.MONTHLY_LIMIT_REACHED,
-                    Map.of(),
-                    Map.of(
-                            "limit", details.limit(),
-                            "used", details.used(),
-                            "remaining", details.remaining(),
-                            "resetsAt", details.resetsAt()),
-                    null);
+            throw new AppException(AiAdviceErrorCode.MONTHLY_LIMIT_REACHED, Map.of(), Map.of("limit", details.limit(),
+                    "used", details.used(), "remaining", details.remaining(), "resetsAt", details.resetsAt()), null);
         }
 
         quota.setReservedCount(quota.getReservedCount() + 1);
         quotaRepository.save(quota);
-        AiAdviceUsage usage = existing == null
-                ? AiAdviceUsage.builder()
-                        .user(user)
-                        .periodKey(period)
-                        .clientMessageId(clientMessageId)
-                        .status(AiAdviceUsageStatus.RESERVED)
-                        .build()
-                : existing;
+        AiAdviceUsage usage = existing == null ? AiAdviceUsage.builder().user(user).periodKey(period)
+                .clientMessageId(clientMessageId).status(AiAdviceUsageStatus.RESERVED).build() : existing;
         usage.setStatus(AiAdviceUsageStatus.RESERVED);
         return usageRepository.save(usage).getId();
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void complete(Long usageId) {
         transition(usageId, AiAdviceUsageStatus.SUCCEEDED);
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void fail(Long usageId) {
         transition(usageId, AiAdviceUsageStatus.FAILED);
     }
 
     @Transactional(readOnly = true)
     public AiAdviceQuotaResponse getQuota(String userId) {
-        return quotaRepository
-                .findByUserIdAndPeriodKey(userId, currentPeriod())
-                .map(this::toResponse)
-                .orElseGet(() -> new AiAdviceQuotaResponse(
-                        properties.monthlyLimit(), 0, properties.monthlyLimit(), resetInstant()));
+        return quotaRepository.findByUserIdAndPeriodKey(userId, currentPeriod()).map(this::toResponse)
+                .orElseGet(() -> new AiAdviceQuotaResponse(properties.monthlyLimit(), 0, properties.monthlyLimit(),
+                        resetInstant()));
     }
 
     @Transactional
     public void releaseStaleReservations(Instant cutoff) {
-        for (AiAdviceUsage usage : usageRepository.findByStatusAndUpdatedAtBefore(AiAdviceUsageStatus.RESERVED, cutoff)) {
-            AiAdviceMonthlyQuota quota = quotaRepository
-                    .findForUpdate(usage.getUser().getId(), usage.getPeriodKey())
+        for (AiAdviceUsage usage : usageRepository.findByStatusAndUpdatedAtBefore(AiAdviceUsageStatus.RESERVED,
+                cutoff)) {
+            AiAdviceMonthlyQuota quota = quotaRepository.findForUpdate(usage.getUser().getId(), usage.getPeriodKey())
                     .orElse(null);
             if (quota != null) {
                 quota.setReservedCount(Math.max(0, quota.getReservedCount() - 1));
@@ -121,8 +101,7 @@ public class AiAdviceQuotaService {
         if (usage == null || usage.getStatus() != AiAdviceUsageStatus.RESERVED) {
             return;
         }
-        AiAdviceMonthlyQuota quota = quotaRepository
-                .findForUpdate(usage.getUser().getId(), usage.getPeriodKey())
+        AiAdviceMonthlyQuota quota = quotaRepository.findForUpdate(usage.getUser().getId(), usage.getPeriodKey())
                 .orElseThrow(() -> new AppException(AiAdviceErrorCode.AI_ADVISOR_UNAVAILABLE));
         quota.setReservedCount(Math.max(0, quota.getReservedCount() - 1));
         if (target == AiAdviceUsageStatus.SUCCEEDED) {
@@ -142,10 +121,6 @@ public class AiAdviceQuotaService {
 
     private Instant resetInstant() {
         ZonedDateTime now = ZonedDateTime.now(QUOTA_ZONE);
-        return now.toLocalDate()
-                .withDayOfMonth(1)
-                .plusMonths(1)
-                .atStartOfDay(QUOTA_ZONE)
-                .toInstant();
+        return now.toLocalDate().withDayOfMonth(1).plusMonths(1).atStartOfDay(QUOTA_ZONE).toInstant();
     }
 }

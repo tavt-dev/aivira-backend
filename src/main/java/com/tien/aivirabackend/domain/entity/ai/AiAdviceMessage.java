@@ -43,6 +43,9 @@ public class AiAdviceMessage extends BaseEntity {
     @Column(length = 100)
     String model;
 
+    @Column(length = 30)
+    String provider;
+
     @Column(name = "input_tokens")
     Integer inputTokens;
 

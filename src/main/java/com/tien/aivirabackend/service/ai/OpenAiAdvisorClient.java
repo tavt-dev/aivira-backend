@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -17,21 +18,23 @@ import com.tien.aivirabackend.config.properties.OpenAiProperties;
 import com.tien.aivirabackend.exception.AppException;
 import com.tien.aivirabackend.exception.errorCode.AiAdviceErrorCode;
 
-import lombok.RequiredArgsConstructor;
-
 @Component
-@RequiredArgsConstructor
-public class OpenAiAdvisorClient {
-    @Qualifier("openAiRestClient")
+@ConditionalOnProperty(name = "ai-advice.provider", havingValue = "openai")
+public class OpenAiAdvisorClient implements AiAdvisorClient {
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
     private final OpenAiProperties properties;
 
-    public AiModelResult<AiSearchProfile> analyze(
-            List<AiConversationTurn> history,
-            String personalizationContext,
-            String locale,
-            String safetyIdentifier) {
+    public OpenAiAdvisorClient(@Qualifier("openAiRestClient") RestClient restClient, ObjectMapper objectMapper,
+            OpenAiProperties properties) {
+        this.restClient = restClient;
+        this.objectMapper = objectMapper;
+        this.properties = properties;
+    }
+
+    @Override
+    public AiModelResult<AiSearchProfile> analyze(List<AiConversationTurn> history, String personalizationContext,
+            String locale, String safetyIdentifier) {
         String language = locale != null && locale.startsWith("en") ? "English" : "Vietnamese";
         String instructions = """
                 You analyze requests for a bookstore recommendation assistant.
@@ -48,10 +51,8 @@ public class OpenAiAdvisorClient {
         return request(input, profileSchema(), AiSearchProfile.class, safetyIdentifier);
     }
 
-    public AiModelResult<AiAdviceDraft> explain(
-            AiSearchProfile profile,
-            List<AiBookCandidate> books,
-            String locale,
+    @Override
+    public AiModelResult<AiAdviceDraft> explain(AiSearchProfile profile, List<AiBookCandidate> books, String locale,
             String safetyIdentifier) {
         String language = locale != null && locale.startsWith("en") ? "English" : "Vietnamese";
         try {
@@ -62,20 +63,20 @@ public class OpenAiAdvisorClient {
                     prices, ratings, authors, or claims not present in the catalog data.
                     User preference profile: %s
                     Catalog page: %s
-                    """.formatted(
-                    language,
-                    objectMapper.writeValueAsString(profile),
+                    """.formatted(language, objectMapper.writeValueAsString(profile),
                     objectMapper.writeValueAsString(books));
-            return request(List.of(message("developer", instructions)), adviceSchema(), AiAdviceDraft.class, safetyIdentifier);
+            return request(List.of(message("developer", instructions)), adviceSchema(), AiAdviceDraft.class,
+                    safetyIdentifier);
         } catch (JacksonException ex) {
             throw new AppException(AiAdviceErrorCode.INVALID_AI_RESPONSE, ex);
         }
     }
 
-    private <T> AiModelResult<T> request(
-            List<Map<String, Object>> input, Map<String, Object> schema, Class<T> type, String safetyIdentifier) {
+    private <T> AiModelResult<T> request(List<Map<String, Object>> input, Map<String, Object> schema, Class<T> type,
+            String safetyIdentifier) {
         if (properties.apiKey() == null || properties.apiKey().isBlank()) {
-            throw new AppException(AiAdviceErrorCode.AI_ADVISOR_UNAVAILABLE).addDetail("reason", "OPENAI_API_KEY is missing");
+            throw new AppException(AiAdviceErrorCode.AI_ADVISOR_UNAVAILABLE).addDetail("reason",
+                    "OPENAI_API_KEY is missing");
         }
 
         Map<String, Object> format = new LinkedHashMap<>();
@@ -102,12 +103,8 @@ public class OpenAiAdvisorClient {
             String outputText = extractOutputText(response);
             T parsed = objectMapper.readValue(outputText, type);
             JsonNode usage = response.path("usage");
-            return new AiModelResult<>(
-                    parsed,
-                    response.path("model").asText(properties.model()),
-                    usage.path("input_tokens").asInt(0),
-                    usage.path("output_tokens").asInt(0),
-                    latencyMs);
+            return new AiModelResult<>(parsed, "openai", response.path("model").asText(properties.model()),
+                    usage.path("input_tokens").asInt(0), usage.path("output_tokens").asInt(0), latencyMs);
         } catch (AppException ex) {
             throw ex;
         } catch (RestClientException ex) {
@@ -162,9 +159,7 @@ public class OpenAiAdvisorClient {
 
         Map<String, Object> propertiesMap = new LinkedHashMap<>();
         propertiesMap.put("message", Map.of("type", "string"));
-        propertiesMap.put(
-                "recommendations",
-                Map.of("type", "array", "items", objectSchema(recommendationProperties)));
+        propertiesMap.put("recommendations", Map.of("type", "array", "items", objectSchema(recommendationProperties)));
         propertiesMap.put("suggestedPrompts", stringArray());
         return objectSchema(propertiesMap);
     }

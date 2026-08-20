@@ -24,39 +24,46 @@ public class AiAdviceController {
     @PostMapping("/sessions")
     @Operation(summary = "Create an authenticated AI book-advice session")
     public ResponseEntity<ApiResponse<AiAdviceSessionResponse>> createSession(
+            @RequestHeader(value = "X-Guest-Id", required = false) String guestId,
             @Valid @RequestBody AiAdviceSessionCreateRequest request) {
-        return ResponseEntity.ok(ApiResponse.success("AI advice session created", service.createSession(request)));
+        return ResponseEntity
+                .ok(ApiResponse.success("AI advice session created", service.createSession(request, guestId)));
     }
 
     @GetMapping("/sessions/{sessionId}")
-    public ResponseEntity<ApiResponse<AiAdviceSessionResponse>> getSession(@PathVariable String sessionId) {
-        return ResponseEntity.ok(ApiResponse.success(service.getSession(sessionId)));
+    public ResponseEntity<ApiResponse<AiAdviceSessionResponse>> getSession(@PathVariable String sessionId,
+            @RequestHeader(value = "X-Guest-Id", required = false) String guestId) {
+        return ResponseEntity.ok(ApiResponse.success(service.getSession(sessionId, guestId)));
     }
 
     @PostMapping("/sessions/{sessionId}/messages")
-    public ResponseEntity<ApiResponse<AiAdviceMessageResponse>> sendMessage(
-            @PathVariable String sessionId, @Valid @RequestBody AiAdviceMessageRequest request) {
-        return ResponseEntity.ok(ApiResponse.success("AI advice completed", service.sendMessage(sessionId, request)));
+    public ResponseEntity<ApiResponse<AiAdviceMessageResponse>> sendMessage(@PathVariable String sessionId,
+            @RequestHeader(value = "X-Guest-Id", required = false) String guestId,
+            @Valid @RequestBody AiAdviceMessageRequest request) {
+        return ResponseEntity
+                .ok(ApiResponse.success("AI advice completed", service.sendMessage(sessionId, request, guestId)));
     }
 
     @GetMapping("/sessions/{sessionId}/messages/{messageId}/recommendations")
     public ResponseEntity<ApiResponse<AiAdviceRecommendationPageResponse>> getRecommendations(
-            @PathVariable String sessionId,
-            @PathVariable Long messageId,
+            @PathVariable String sessionId, @PathVariable Long messageId,
+            @RequestHeader(value = "X-Guest-Id", required = false) String guestId,
             @RequestParam(defaultValue = "1") int page) {
-        return ResponseEntity.ok(ApiResponse.success(service.getRecommendations(sessionId, messageId, page)));
+        return ResponseEntity.ok(ApiResponse.success(service.getRecommendations(sessionId, messageId, page, guestId)));
     }
 
     @PatchMapping("/sessions/{sessionId}/preferences")
-    public ResponseEntity<ApiResponse<AiAdviceSessionResponse>> updatePreferences(
-            @PathVariable String sessionId, @Valid @RequestBody AiAdvicePreferencesRequest request) {
-        return ResponseEntity.ok(ApiResponse.success(service.updatePreferences(sessionId, request)));
+    public ResponseEntity<ApiResponse<AiAdviceSessionResponse>> updatePreferences(@PathVariable String sessionId,
+            @RequestHeader(value = "X-Guest-Id", required = false) String guestId,
+            @Valid @RequestBody AiAdvicePreferencesRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(service.updatePreferences(sessionId, request, guestId)));
     }
 
     @PostMapping("/sessions/{sessionId}/events")
-    public ResponseEntity<ApiResponse<Void>> recordEvent(
-            @PathVariable String sessionId, @Valid @RequestBody AiAdviceEventRequest request) {
-        service.recordEvent(sessionId, request);
+    public ResponseEntity<ApiResponse<Void>> recordEvent(@PathVariable String sessionId,
+            @RequestHeader(value = "X-Guest-Id", required = false) String guestId,
+            @Valid @RequestBody AiAdviceEventRequest request) {
+        service.recordEvent(sessionId, request, guestId);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
