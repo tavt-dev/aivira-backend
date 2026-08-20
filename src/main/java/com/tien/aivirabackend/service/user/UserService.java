@@ -21,14 +21,8 @@ public interface UserService {
 
     void requestDeactivateMyAccount();
 
-    PageResponse<AdminUserResponse> getAdminUsers(
-            String keyword,
-            PredefinedRole role,
-            Boolean active,
-            Boolean locked,
-            Boolean emailVerified,
-            int page,
-            int size);
+    PageResponse<AdminUserResponse> getAdminUsers(String keyword, PredefinedRole role, Boolean active, Boolean locked,
+            Boolean emailVerified, int page, int size);
 
     AdminUserResponse getAdminUser(String userId);
 
@@ -38,9 +32,9 @@ public interface UserService {
 
     AdminUserResponse updateUserRoles(String userId, UpdateUserRolesRequest request);
 
-    //    void requestEmailChange(ChangeEmailRequest request);
-    //    void confirmEmailChange(VerifyEmailChangeRequest request);
+    // void requestEmailChange(ChangeEmailRequest request);
+    // void confirmEmailChange(VerifyEmailChangeRequest request);
     //
-    //    void requestPhoneChange(ChangePhoneRequest request);
-    //    void confirmPhoneChange(VerifyPhoneChangeRequest request);
+    // void requestPhoneChange(ChangePhoneRequest request);
+    // void confirmPhoneChange(VerifyPhoneChangeRequest request);
 }

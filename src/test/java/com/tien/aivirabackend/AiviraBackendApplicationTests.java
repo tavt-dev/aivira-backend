@@ -7,5 +7,6 @@ import com.tien.aivirabackend.integration.AbstractIntegrationTest;
 class AiviraBackendApplicationTests extends AbstractIntegrationTest {
 
     @Test
-    void contextLoads() {}
+    void contextLoads() {
+    }
 }

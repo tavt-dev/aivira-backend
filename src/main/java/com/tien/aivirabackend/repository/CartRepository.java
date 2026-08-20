@@ -10,12 +10,7 @@ import com.tien.aivirabackend.domain.entity.transaction.Cart;
 
 @Repository
 public interface CartRepository extends JpaRepository<Cart, Long> {
-    @EntityGraph(
-            attributePaths = {
-                "items",
-                "items.productVariation",
-                "items.productVariation.product",
-                "items.productVariation.product.category"
-            })
+    @EntityGraph(attributePaths = { "items", "items.productVariation", "items.productVariation.product",
+            "items.productVariation.product.category" })
     Optional<Cart> findByUserIdAndActiveTrue(String userId);
 }

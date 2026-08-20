@@ -29,26 +29,12 @@ import com.tien.aivirabackend.exception.errorCode.ReviewErrorCode;
 import com.tien.aivirabackend.exception.errorCode.UserErrorCode;
 
 class ErrorCodeContractTest {
-    private static final List<Class<? extends Enum<?>>> ERROR_ENUMS = List.of(
-            AccountErrorCode.class,
-            AddressErrorCode.class,
-            AuthErrorCode.class,
-            CartErrorCode.class,
-            CategoryErrorCode.class,
-            CheckoutErrorCode.class,
-            CommonErrorCode.class,
-            CouponErrorCode.class,
-            EmailErrorCode.class,
-            FileValidationErrorCode.class,
-            JwtErrorCode.class,
-            OrderErrorCode.class,
-            OtpErrorCode.class,
-            PasswordErrorCode.class,
-            PaymentErrorCode.class,
-            ProductErrorCode.class,
-            PromotionErrorCode.class,
-            ReviewErrorCode.class,
-            UserErrorCode.class);
+    private static final List<Class<? extends Enum<?>>> ERROR_ENUMS = List.of(AccountErrorCode.class,
+            AddressErrorCode.class, AuthErrorCode.class, CartErrorCode.class, CategoryErrorCode.class,
+            CheckoutErrorCode.class, CommonErrorCode.class, CouponErrorCode.class, EmailErrorCode.class,
+            FileValidationErrorCode.class, JwtErrorCode.class, OrderErrorCode.class, OtpErrorCode.class,
+            PasswordErrorCode.class, PaymentErrorCode.class, ProductErrorCode.class, PromotionErrorCode.class,
+            ReviewErrorCode.class, UserErrorCode.class);
 
     @Test
     void allErrorCodesHaveCompleteAndUniqueContractValues() {
@@ -58,23 +44,14 @@ class ErrorCodeContractTest {
             for (Enum<?> constant : enumClass.getEnumConstants()) {
                 ErrorCode errorCode = (ErrorCode) constant;
 
-                assertThat(errorCode.getCode())
-                        .as(enumClass.getSimpleName() + "." + constant.name())
-                        .isNotBlank();
-                assertThat(errorCode.getMessage())
-                        .as(enumClass.getSimpleName() + "." + constant.name())
-                        .isNotBlank();
-                assertThat(errorCode.getHttpStatus())
-                        .as(enumClass.getSimpleName() + "." + constant.name())
-                        .isNotNull();
+                assertThat(errorCode.getCode()).as(enumClass.getSimpleName() + "." + constant.name()).isNotBlank();
+                assertThat(errorCode.getMessage()).as(enumClass.getSimpleName() + "." + constant.name()).isNotBlank();
+                assertThat(errorCode.getHttpStatus()).as(enumClass.getSimpleName() + "." + constant.name()).isNotNull();
 
-                String previous =
-                        seenCodes.putIfAbsent(errorCode.getCode(), enumClass.getSimpleName() + "." + constant.name());
-                assertThat(previous)
-                        .as(
-                                "Duplicate error code %s used by %s and %s",
-                                errorCode.getCode(), previous, enumClass.getSimpleName() + "." + constant.name())
-                        .isNull();
+                String previous = seenCodes.putIfAbsent(errorCode.getCode(),
+                        enumClass.getSimpleName() + "." + constant.name());
+                assertThat(previous).as("Duplicate error code %s used by %s and %s", errorCode.getCode(), previous,
+                        enumClass.getSimpleName() + "." + constant.name()).isNull();
             }
         }
     }

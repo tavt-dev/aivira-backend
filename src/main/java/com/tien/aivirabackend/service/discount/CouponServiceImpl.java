@@ -34,8 +34,7 @@ public class CouponServiceImpl implements CouponService {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<CouponResponse> getCoupons(int page, int size) {
-        return PageResponse.from(couponRepository
-                .findAll(PageRequestUtils.newestFirst(page, size))
+        return PageResponse.from(couponRepository.findAll(PageRequestUtils.newestFirst(page, size))
                 .map(discountMapper::toCouponResponse));
     }
 
@@ -52,28 +51,14 @@ public class CouponServiceImpl implements CouponService {
         if (couponRepository.existsByCode(code)) {
             throw new AppException(CouponErrorCode.COUPON_CODE_ALREADY_EXISTS);
         }
-        validateCoupon(
-                request.getType(),
-                request.getValue(),
-                request.getMaxDiscountAmount(),
-                request.getMinOrderAmount(),
-                request.getUsageLimit(),
-                request.getUsageLimitPerUser(),
-                request.getStartAt(),
-                request.getEndAt());
-        Coupon coupon = Coupon.builder()
-                .code(code)
-                .type(request.getType())
-                .value(request.getValue())
-                .maxDiscountAmount(request.getMaxDiscountAmount())
-                .minOrderAmount(request.getMinOrderAmount())
-                .usageLimit(request.getUsageLimit())
-                .usageLimitPerUser(request.getUsageLimitPerUser())
-                .usedCount(0)
-                .startAt(request.getStartAt())
-                .endAt(request.getEndAt())
-                .active(request.getActive() == null || Boolean.TRUE.equals(request.getActive()))
-                .build();
+        validateCoupon(request.getType(), request.getValue(), request.getMaxDiscountAmount(),
+                request.getMinOrderAmount(), request.getUsageLimit(), request.getUsageLimitPerUser(),
+                request.getStartAt(), request.getEndAt());
+        Coupon coupon = Coupon.builder().code(code).type(request.getType()).value(request.getValue())
+                .maxDiscountAmount(request.getMaxDiscountAmount()).minOrderAmount(request.getMinOrderAmount())
+                .usageLimit(request.getUsageLimit()).usageLimitPerUser(request.getUsageLimitPerUser()).usedCount(0)
+                .startAt(request.getStartAt()).endAt(request.getEndAt())
+                .active(request.getActive() == null || Boolean.TRUE.equals(request.getActive())).build();
         return discountMapper.toCouponResponse(couponRepository.save(coupon));
     }
 
@@ -115,15 +100,8 @@ public class CouponServiceImpl implements CouponService {
         if (request.getActive() != null) {
             coupon.setActive(request.getActive());
         }
-        validateCoupon(
-                coupon.getType(),
-                coupon.getValue(),
-                coupon.getMaxDiscountAmount(),
-                coupon.getMinOrderAmount(),
-                coupon.getUsageLimit(),
-                coupon.getUsageLimitPerUser(),
-                coupon.getStartAt(),
-                coupon.getEndAt());
+        validateCoupon(coupon.getType(), coupon.getValue(), coupon.getMaxDiscountAmount(), coupon.getMinOrderAmount(),
+                coupon.getUsageLimit(), coupon.getUsageLimitPerUser(), coupon.getStartAt(), coupon.getEndAt());
         return discountMapper.toCouponResponse(couponRepository.save(coupon));
     }
 
@@ -136,19 +114,12 @@ public class CouponServiceImpl implements CouponService {
     }
 
     private Coupon findCoupon(Long couponId) {
-        return couponRepository
-                .findById(couponId)
+        return couponRepository.findById(couponId)
                 .orElseThrow(() -> new AppException(CouponErrorCode.COUPON_NOT_FOUND));
     }
 
-    private void validateCoupon(
-            CouponType type,
-            BigDecimal value,
-            BigDecimal maxDiscountAmount,
-            BigDecimal minOrderAmount,
-            Integer usageLimit,
-            Integer usageLimitPerUser,
-            java.time.LocalDateTime startAt,
+    private void validateCoupon(CouponType type, BigDecimal value, BigDecimal maxDiscountAmount,
+            BigDecimal minOrderAmount, Integer usageLimit, Integer usageLimitPerUser, java.time.LocalDateTime startAt,
             java.time.LocalDateTime endAt) {
         if (type == null || value == null || value.compareTo(BigDecimal.ZERO) <= 0) {
             throw new AppException(PromotionErrorCode.DISCOUNT_INVALID_VALUE);

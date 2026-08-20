@@ -27,10 +27,8 @@ import tools.jackson.databind.ObjectMapper;
 @ActiveProfiles("test")
 public abstract class AbstractIntegrationTest {
     @Container
-    static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.4")
-            .withDatabaseName("aivira_test")
-            .withUsername("test")
-            .withPassword("test");
+    static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.4").withDatabaseName("aivira_test")
+            .withUsername("test").withPassword("test");
 
     protected MockMvc mockMvc;
 
@@ -62,8 +60,7 @@ public abstract class AbstractIntegrationTest {
 
     @BeforeEach
     void setUpIntegrationTest() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
-                .addFilters(springSecurityFilterChain)
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).addFilters(springSecurityFilterChain)
                 .build();
 
         jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");

@@ -1,5 +1,7 @@
 package com.tien.aivirabackend.service.auth;
 
+import java.util.Optional;
+
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,25 +31,15 @@ public class RefreshTokenCookieService {
     private boolean cookieHttpOnly;
 
     public void writeRefreshTokenCookie(HttpServletResponse response, String refreshToken, long maxAgeSeconds) {
-        ResponseCookie cookie = ResponseCookie.from(cookieName, refreshToken)
-                .httpOnly(cookieHttpOnly)
-                .secure(cookieSecure)
-                .sameSite(cookieSameSite)
-                .path(cookiePath)
-                .maxAge(maxAgeSeconds)
-                .build();
+        ResponseCookie cookie = ResponseCookie.from(cookieName, refreshToken).httpOnly(cookieHttpOnly)
+                .secure(cookieSecure).sameSite(cookieSameSite).path(cookiePath).maxAge(maxAgeSeconds).build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
     public void clearRefreshTokenCookie(HttpServletResponse response) {
-        ResponseCookie cookie = ResponseCookie.from(cookieName, "")
-                .httpOnly(cookieHttpOnly)
-                .secure(cookieSecure)
-                .sameSite(cookieSameSite)
-                .path(cookiePath)
-                .maxAge(0)
-                .build();
+        ResponseCookie cookie = ResponseCookie.from(cookieName, "").httpOnly(cookieHttpOnly).secure(cookieSecure)
+                .sameSite(cookieSameSite).path(cookiePath).maxAge(0).build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
@@ -65,5 +57,19 @@ public class RefreshTokenCookieService {
         }
 
         return null;
+    }
+
+    public Optional<String> resolveRefreshToken(HttpServletRequest request, String requestBodyToken,
+            boolean requestBodyEnabled) {
+        String cookieToken = extractRefreshToken(request);
+        if (StringUtils.hasText(cookieToken)) {
+            return Optional.of(cookieToken);
+        }
+
+        if (requestBodyEnabled && StringUtils.hasText(requestBodyToken)) {
+            return Optional.of(requestBodyToken);
+        }
+
+        return Optional.empty();
     }
 }

@@ -29,13 +29,8 @@ public class UserOtpService {
     public UserOtp createOtp(User user, OtpType type, int expiryMinutes) {
         String otpCode = generateSecureOtp();
 
-        UserOtp userOtp = UserOtp.builder()
-                .user(user)
-                .otpCode(otpCode)
-                .otpType(type)
-                .expiresTime(Instant.now().plus(expiryMinutes, ChronoUnit.MINUTES))
-                .used(false)
-                .build();
+        UserOtp userOtp = UserOtp.builder().user(user).otpCode(otpCode).otpType(type)
+                .expiresTime(Instant.now().plus(expiryMinutes, ChronoUnit.MINUTES)).used(false).build();
 
         UserOtp saved = userOtpRepository.save(userOtp);
 
@@ -72,16 +67,14 @@ public class UserOtpService {
     }
 
     public UserOtp findLatestOtp(User user, OtpType type) {
-        return userOtpRepository
-                .findTopByUserAndOtpTypeAndUsedFalseOrderByCreatedAtDesc(user, type)
+        return userOtpRepository.findTopByUserAndOtpTypeAndUsedFalseOrderByCreatedAtDesc(user, type)
                 .orElseThrow(() -> new AppException(OtpErrorCode.OTP_NOT_FOUND));
     }
 
     public void checkOtpFrequency(User user, OtpType type) {
-        Optional<UserOtp> lastOtp =
-                userOtpRepository.findTopByUserAndOtpTypeAndUsedFalseOrderByCreatedAtDesc(user, type);
-        if (lastOtp.isPresent()
-                && lastOtp.get().getCreatedAt().isAfter(Instant.now().minus(1, ChronoUnit.MINUTES))) {
+        Optional<UserOtp> lastOtp = userOtpRepository.findTopByUserAndOtpTypeAndUsedFalseOrderByCreatedAtDesc(user,
+                type);
+        if (lastOtp.isPresent() && lastOtp.get().getCreatedAt().isAfter(Instant.now().minus(1, ChronoUnit.MINUTES))) {
             log.warn("OTP request too frequent for user: {}, type: {}", user.getUsername(), type);
             throw new AppException(OtpErrorCode.OTP_REQUEST_TOO_FREQUENT);
         }

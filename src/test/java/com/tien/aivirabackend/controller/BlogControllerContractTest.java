@@ -36,44 +36,28 @@ class BlogControllerContractTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(new BlogController(postService, categoryService))
-                .setControllerAdvice(new GlobalExceptionHandler())
-                .build();
+                .setControllerAdvice(new GlobalExceptionHandler()).build();
     }
 
     @Test
     void publicEndpoints_shouldNotRequireMethodAuthorization() throws Exception {
         assertThat(BlogController.class
-                        .getMethod(
-                                "getPosts",
-                                String.class,
-                                String.class,
-                                String.class,
-                                String.class,
-                                int.class,
-                                int.class)
-                        .getAnnotation(PreAuthorize.class))
-                .isNull();
+                .getMethod("getPosts", String.class, String.class, String.class, String.class, int.class, int.class)
+                .getAnnotation(PreAuthorize.class)).isNull();
 
         when(postService.getPublicPosts(null, null, null, "newest", 1, 20))
-                .thenReturn(PageResponse.<com.tien.aivirabackend.domain.dto.response.BlogPostSummaryResponse>builder()
-                        .data(List.of())
-                        .build());
-        mockMvc.perform(get("/blog/posts"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
+                .thenReturn(PageResponse.<com.tien.aivirabackend.domain.dto.response.BlogPostSummaryResponse> builder()
+                        .data(List.of()).build());
+        mockMvc.perform(get("/blog/posts")).andExpect(status().isOk()).andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.data").isArray());
     }
 
     @Test
     void getPost_shouldReturnPublicDetailContract() throws Exception {
         when(postService.getPublicPost("book-news"))
-                .thenReturn(BlogPostDetailResponse.builder()
-                        .slug("book-news")
-                        .relatedProducts(List.of())
-                        .build());
+                .thenReturn(BlogPostDetailResponse.builder().slug("book-news").relatedProducts(List.of()).build());
 
-        mockMvc.perform(get("/blog/posts/book-news"))
-                .andExpect(status().isOk())
+        mockMvc.perform(get("/blog/posts/book-news")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.slug").value("book-news"))
                 .andExpect(jsonPath("$.data.relatedProducts").isArray())
                 .andExpect(jsonPath("$.data.coverPublicId").doesNotExist());

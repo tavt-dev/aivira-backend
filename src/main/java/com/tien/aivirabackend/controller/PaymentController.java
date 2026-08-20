@@ -51,8 +51,8 @@ public class PaymentController {
     @Operation(summary = "Get my payment group")
     @PreAuthorize("@authorizationService.hasPermission('PAYMENT_READ_SELF')")
     public ResponseEntity<ApiResponse<PaymentGroupResponse>> getPaymentGroup(@PathVariable String paymentGroupCode) {
-        return ResponseEntity.ok(ApiResponse.success(
-                "Get payment group successful", paymentService.getMyPaymentGroup(paymentGroupCode)));
+        return ResponseEntity.ok(ApiResponse.success("Get payment group successful",
+                paymentService.getMyPaymentGroup(paymentGroupCode)));
     }
 
     @GetMapping("/admin/payments/groups/{paymentGroupCode}")
@@ -61,8 +61,8 @@ public class PaymentController {
     @PreAuthorize("@authorizationService.hasAnyPermission('PAYMENT_MANAGE_ALL', 'PAYMENT_READ_ALL')")
     public ResponseEntity<ApiResponse<PaymentGroupResponse>> getAdminPaymentGroup(
             @PathVariable String paymentGroupCode) {
-        return ResponseEntity.ok(ApiResponse.success(
-                "Get admin payment group successful", paymentService.getAdminPaymentGroup(paymentGroupCode)));
+        return ResponseEntity.ok(ApiResponse.success("Get admin payment group successful",
+                paymentService.getAdminPaymentGroup(paymentGroupCode)));
     }
 
     @GetMapping("/payments/{paymentId}")
@@ -77,10 +77,9 @@ public class PaymentController {
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Retry online payment group")
     @PreAuthorize("@authorizationService.hasPermission('PAYMENT_RETRY_SELF')")
-    public ResponseEntity<ApiResponse<PaymentGroupResponse>> retry(
-            @PathVariable String paymentGroupCode, HttpServletRequest request) {
-        return ResponseEntity.ok(ApiResponse.success(
-                "Retry payment successful",
+    public ResponseEntity<ApiResponse<PaymentGroupResponse>> retry(@PathVariable String paymentGroupCode,
+            HttpServletRequest request) {
+        return ResponseEntity.ok(ApiResponse.success("Retry payment successful",
                 paymentService.retry(paymentGroupCode, requestMetadataService.from(request))));
     }
 
@@ -89,14 +88,11 @@ public class PaymentController {
     public ResponseEntity<Void> vnpayReturn(HttpServletRequest request) {
         Map<String, String> params = queryParams(request);
         try {
-            return paymentResultRedirect(
-                    paymentService.handleVnpayCallback(params, true), PaymentMethod.VNPAY.name(), null);
+            return paymentResultRedirect(paymentService.handleVnpayCallback(params, true), PaymentMethod.VNPAY.name(),
+                    null);
         } catch (AppException ex) {
-            return paymentResultRedirect(
-                    inferPaymentCode(params.get("vnp_TxnRef")),
-                    PaymentMethod.VNPAY.name(),
-                    PaymentStatus.FAILED.name(),
-                    ex.getErrorCode().getCode());
+            return paymentResultRedirect(inferPaymentCode(params.get("vnp_TxnRef")), PaymentMethod.VNPAY.name(),
+                    PaymentStatus.FAILED.name(), ex.getErrorCode().getCode());
         }
     }
 
@@ -120,11 +116,8 @@ public class PaymentController {
         try {
             return paymentResultRedirect(paymentService.handleMomoReturn(params), PaymentMethod.MOMO.name(), null);
         } catch (AppException ex) {
-            return paymentResultRedirect(
-                    inferPaymentCode(params.get("orderId")),
-                    PaymentMethod.MOMO.name(),
-                    PaymentStatus.FAILED.name(),
-                    ex.getErrorCode().getCode());
+            return paymentResultRedirect(inferPaymentCode(params.get("orderId")), PaymentMethod.MOMO.name(),
+                    PaymentStatus.FAILED.name(), ex.getErrorCode().getCode());
         }
     }
 
@@ -133,30 +126,26 @@ public class PaymentController {
     @Operation(summary = "Reconcile payment group with provider")
     @PreAuthorize("@authorizationService.hasPermission('PAYMENT_RECONCILE')")
     public ResponseEntity<ApiResponse<PaymentReconciliationResponse>> reconcile(@PathVariable String paymentGroupCode) {
-        return ResponseEntity.ok(
-                ApiResponse.success("Reconcile payment successful", paymentService.reconcile(paymentGroupCode)));
+        return ResponseEntity
+                .ok(ApiResponse.success("Reconcile payment successful", paymentService.reconcile(paymentGroupCode)));
     }
 
     private Map<String, String> queryParams(HttpServletRequest request) {
-        return request.getParameterMap().entrySet().stream()
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey, entry -> entry.getValue().length == 0 ? "" : entry.getValue()[0]));
+        return request.getParameterMap().entrySet().stream().collect(
+                Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().length == 0 ? "" : entry.getValue()[0]));
     }
 
-    private ResponseEntity<Void> paymentResultRedirect(
-            PaymentGroupResponse response, String fallbackMethod, String errorCode) {
-        return paymentResultRedirect(
-                response.getPaymentCode(),
+    private ResponseEntity<Void> paymentResultRedirect(PaymentGroupResponse response, String fallbackMethod,
+            String errorCode) {
+        return paymentResultRedirect(response.getPaymentCode(),
                 response.getMethod() == null ? fallbackMethod : response.getMethod().name(),
-                response.getStatus() == null ? PaymentStatus.PENDING.name() : response.getStatus().name(),
-                errorCode);
+                response.getStatus() == null ? PaymentStatus.PENDING.name() : response.getStatus().name(), errorCode);
     }
 
-    private ResponseEntity<Void> paymentResultRedirect(
-            String paymentGroupCode, String method, String status, String errorCode) {
+    private ResponseEntity<Void> paymentResultRedirect(String paymentGroupCode, String method, String status,
+            String errorCode) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(paymentProperties.getFrontendResultUrl())
-                .queryParam("method", method)
-                .queryParam("status", status);
+                .queryParam("method", method).queryParam("status", status);
         if (StringUtils.hasText(paymentGroupCode)) {
             builder.queryParam("paymentGroupCode", paymentGroupCode);
         }

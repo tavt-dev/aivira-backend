@@ -44,30 +44,19 @@ class CartServiceImplTest {
     @Test
     void addItem_shouldMergeDuplicateVariationQuantity() {
         User user = User.builder().id("user-1").build();
-        Cart cart = Cart.builder()
-                .id(1L)
-                .user(user)
-                .active(true)
-                .items(new ArrayList<>())
-                .build();
+        Cart cart = Cart.builder().id(1L).user(user).active(true).items(new ArrayList<>()).build();
         ProductVariation variation = activeVariation(10);
-        CartItem existing = CartItem.builder()
-                .id(1L)
-                .cart(cart)
-                .productVariation(variation)
-                .quantity(2)
-                .build();
+        CartItem existing = CartItem.builder().id(1L).cart(cart).productVariation(variation).quantity(2).build();
         cart.getItems().add(existing);
-        CartServiceImpl service = new CartServiceImpl(
-                cartRepository, cartItemRepository, variationRepository, currentUserService, commerceMapper);
+        CartServiceImpl service = new CartServiceImpl(cartRepository, cartItemRepository, variationRepository,
+                currentUserService, commerceMapper);
 
         when(currentUserService.getCurrentUser()).thenReturn(user);
         when(cartRepository.findByUserIdAndActiveTrue("user-1")).thenReturn(Optional.of(cart));
         when(variationRepository.findById(1L)).thenReturn(Optional.of(variation));
         when(cartItemRepository.findByCartIdAndProductVariationId(1L, 1L)).thenReturn(Optional.of(existing));
 
-        service.addItem(
-                CartItemRequest.builder().productVariationId(1L).quantity(3).build());
+        service.addItem(CartItemRequest.builder().productVariationId(1L).quantity(3).build());
 
         verify(cartItemRepository).save(existing);
         org.assertj.core.api.Assertions.assertThat(existing.getQuantity()).isEqualTo(5);
@@ -76,45 +65,24 @@ class CartServiceImplTest {
     @Test
     void addItem_shouldRejectInsufficientStock() {
         User user = User.builder().id("user-1").build();
-        Cart cart = Cart.builder()
-                .id(1L)
-                .user(user)
-                .active(true)
-                .items(new ArrayList<>())
-                .build();
+        Cart cart = Cart.builder().id(1L).user(user).active(true).items(new ArrayList<>()).build();
         ProductVariation variation = activeVariation(1);
-        CartServiceImpl service = new CartServiceImpl(
-                cartRepository, cartItemRepository, variationRepository, currentUserService, commerceMapper);
+        CartServiceImpl service = new CartServiceImpl(cartRepository, cartItemRepository, variationRepository,
+                currentUserService, commerceMapper);
 
         when(currentUserService.getCurrentUser()).thenReturn(user);
         when(cartRepository.findByUserIdAndActiveTrue("user-1")).thenReturn(Optional.of(cart));
         when(variationRepository.findById(1L)).thenReturn(Optional.of(variation));
 
-        assertThatThrownBy(() -> service.addItem(CartItemRequest.builder()
-                        .productVariationId(1L)
-                        .quantity(2)
-                        .build()))
+        assertThatThrownBy(() -> service.addItem(CartItemRequest.builder().productVariationId(1L).quantity(2).build()))
                 .isInstanceOf(AppException.class);
         verify(cartItemRepository, never()).save(any());
     }
 
     private ProductVariation activeVariation(int stock) {
-        Product product = Product.builder()
-                .id(1L)
-                .productName("Product")
-                .slug("product")
-                .price(java.math.BigDecimal.TEN)
-                .active(true)
-                .status(ProductStatus.ACTIVE)
-                .build();
-        return ProductVariation.builder()
-                .id(1L)
-                .product(product)
-                .sku("SKU-1")
-                .color("Black")
-                .size("M")
-                .stockQuantity(stock)
-                .active(true)
-                .build();
+        Product product = Product.builder().id(1L).productName("Product").slug("product")
+                .price(java.math.BigDecimal.TEN).active(true).status(ProductStatus.ACTIVE).build();
+        return ProductVariation.builder().id(1L).product(product).sku("SKU-1").color("Black").size("M")
+                .stockQuantity(stock).active(true).build();
     }
 }

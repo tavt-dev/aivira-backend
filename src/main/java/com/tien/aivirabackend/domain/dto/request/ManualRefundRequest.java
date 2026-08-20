@@ -19,9 +19,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Schema(description = "Admin request to mark a paid pre-shipping order as manually refunded.")
 public class ManualRefundRequest {
-    @Schema(
-            description = "Full refund amount. Must match the successful payment/order payable amount in Phase 5.",
-            example = "320000")
+    @Schema(description = "Full refund amount. Must match the successful payment/order payable amount in Phase 5.", example = "320000")
     @NotNull
     @DecimalMin(value = "0.00", inclusive = false)
     BigDecimal amount;

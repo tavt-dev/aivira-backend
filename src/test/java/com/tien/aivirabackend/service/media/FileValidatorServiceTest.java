@@ -27,20 +27,18 @@ class FileValidatorServiceTest {
         MockMultipartFile file = new MockMultipartFile("avatar", "avatar.png", "image/png", new byte[0]);
 
         assertThatThrownBy(() -> fileValidatorService.validateFile(file, MediaType.IMAGE))
-                .isInstanceOf(AppException.class)
-                .satisfies(ex ->
-                        assertThat(((AppException) ex).getErrorCode()).isEqualTo(FileValidationErrorCode.EMPTY_FILE));
+                .isInstanceOf(AppException.class).satisfies(ex -> assertThat(((AppException) ex).getErrorCode())
+                        .isEqualTo(FileValidationErrorCode.EMPTY_FILE));
     }
 
     @Test
     void validateFile_shouldRejectFileLargerThanAllowedSize() {
         properties.setMaxImageSize(2);
-        MockMultipartFile file =
-                new MockMultipartFile("avatar", "avatar.png", "image/png", new byte[] {(byte) 0x89, 0x50, 0x4E});
+        MockMultipartFile file = new MockMultipartFile("avatar", "avatar.png", "image/png",
+                new byte[] { (byte) 0x89, 0x50, 0x4E });
 
         assertThatThrownBy(() -> fileValidatorService.validateFile(file, MediaType.IMAGE))
-                .isInstanceOf(AppException.class)
-                .satisfies(ex -> assertThat(((AppException) ex).getErrorCode())
+                .isInstanceOf(AppException.class).satisfies(ex -> assertThat(((AppException) ex).getErrorCode())
                         .isEqualTo(FileValidationErrorCode.FILE_TOO_LARGE));
     }
 
@@ -49,8 +47,7 @@ class FileValidatorServiceTest {
         MockMultipartFile file = new MockMultipartFile("avatar", "avatar.txt", "text/plain", "hello".getBytes());
 
         assertThatThrownBy(() -> fileValidatorService.validateFile(file, MediaType.IMAGE))
-                .isInstanceOf(AppException.class)
-                .satisfies(ex -> assertThat(((AppException) ex).getErrorCode())
+                .isInstanceOf(AppException.class).satisfies(ex -> assertThat(((AppException) ex).getErrorCode())
                         .isEqualTo(FileValidationErrorCode.INVALID_MIME_TYPE));
     }
 
@@ -59,23 +56,20 @@ class FileValidatorServiceTest {
         MockMultipartFile file = new MockMultipartFile("avatar", "avatar.png", "image/png", "not-png".getBytes());
 
         assertThatThrownBy(() -> fileValidatorService.validateFile(file, MediaType.IMAGE))
-                .isInstanceOf(AppException.class)
-                .satisfies(ex -> assertThat(((AppException) ex).getErrorCode())
+                .isInstanceOf(AppException.class).satisfies(ex -> assertThat(((AppException) ex).getErrorCode())
                         .isEqualTo(FileValidationErrorCode.INVALID_FILE_SIGNATURE));
     }
 
     @Test
     void validateFile_shouldAcceptValidJpegPngGifAndWebpImages() {
-        MockMultipartFile jpeg = new MockMultipartFile(
-                "avatar", "avatar.jpg", "image/jpeg", new byte[] {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x00});
-        MockMultipartFile png = new MockMultipartFile("avatar", "avatar.png", "image/png", new byte[] {
-            (byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00
-        });
-        MockMultipartFile gif =
-                new MockMultipartFile("avatar", "avatar.gif", "image/gif", new byte[] {0x47, 0x49, 0x46, 0x38, 0x00});
-        MockMultipartFile webp = new MockMultipartFile("avatar", "avatar.webp", "image/webp", new byte[] {
-            0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50
-        });
+        MockMultipartFile jpeg = new MockMultipartFile("avatar", "avatar.jpg", "image/jpeg",
+                new byte[] { (byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x00 });
+        MockMultipartFile png = new MockMultipartFile("avatar", "avatar.png", "image/png",
+                new byte[] { (byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00 });
+        MockMultipartFile gif = new MockMultipartFile("avatar", "avatar.gif", "image/gif",
+                new byte[] { 0x47, 0x49, 0x46, 0x38, 0x00 });
+        MockMultipartFile webp = new MockMultipartFile("avatar", "avatar.webp", "image/webp",
+                new byte[] { 0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50 });
 
         fileValidatorService.validateFile(jpeg, MediaType.IMAGE);
         fileValidatorService.validateFile(png, MediaType.IMAGE);

@@ -106,8 +106,7 @@ public class Product extends BaseEntity {
     @Builder.Default
     Integer soldCount = 0;
 
-    @Formula(
-            "(select coalesce(avg(r.rating), 0) from reviews r where r.product_id = id and r.is_approved = true and r.is_visible = true and r.deleted_at is null)")
+    @Formula("(select coalesce(avg(r.rating), 0) from reviews r where r.product_id = id and r.is_approved = true and r.is_visible = true and r.deleted_at is null)")
     BigDecimal averageRating;
 
     /* STATUS */

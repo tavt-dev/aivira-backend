@@ -16,13 +16,12 @@ public interface PromotionRepository extends JpaRepository<Promotion, Long> {
 
     boolean existsByPromotionNameAndIdNot(String promotionName, Long id);
 
-    @Query(
-            """
-			select p
-			from Promotion p
-			where p.active = true
-			and p.startAt <= :now
-			and p.endAt >= :now
-			""")
+    @Query("""
+            select p
+            from Promotion p
+            where p.active = true
+            and p.startAt <= :now
+            and p.endAt >= :now
+            """)
     List<Promotion> findActiveAt(@Param("now") LocalDateTime now);
 }

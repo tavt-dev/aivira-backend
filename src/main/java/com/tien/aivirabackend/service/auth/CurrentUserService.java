@@ -27,8 +27,7 @@ public class CurrentUserService {
     UserRepository userRepository;
 
     public User getCurrentUser() {
-        return userRepository
-                .findById(getCurrentUserId())
+        return userRepository.findById(getCurrentUserId())
                 .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
     }
 

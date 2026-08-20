@@ -13,42 +13,23 @@ public class DiscountMapper {
         if (coupon == null) {
             return null;
         }
-        return CouponResponse.builder()
-                .id(coupon.getId())
-                .code(coupon.getCode())
-                .type(coupon.getType())
-                .value(coupon.getValue())
-                .maxDiscountAmount(coupon.getMaxDiscountAmount())
-                .minOrderAmount(coupon.getMinOrderAmount())
-                .usageLimit(coupon.getUsageLimit())
-                .usageLimitPerUser(coupon.getUsageLimitPerUser())
-                .usedCount(coupon.getUsedCount())
-                .startAt(coupon.getStartAt())
-                .endAt(coupon.getEndAt())
-                .active(coupon.getActive())
-                .createdAt(coupon.getCreatedAt())
-                .updatedAt(coupon.getUpdatedAt())
-                .build();
+        return CouponResponse.builder().id(coupon.getId()).code(coupon.getCode()).type(coupon.getType())
+                .value(coupon.getValue()).maxDiscountAmount(coupon.getMaxDiscountAmount())
+                .minOrderAmount(coupon.getMinOrderAmount()).usageLimit(coupon.getUsageLimit())
+                .usageLimitPerUser(coupon.getUsageLimitPerUser()).usedCount(coupon.getUsedCount())
+                .startAt(coupon.getStartAt()).endAt(coupon.getEndAt()).active(coupon.getActive())
+                .createdAt(coupon.getCreatedAt()).updatedAt(coupon.getUpdatedAt()).build();
     }
 
     public PromotionResponse toPromotionResponse(Promotion promotion) {
         if (promotion == null) {
             return null;
         }
-        return PromotionResponse.builder()
-                .id(promotion.getId())
-                .promotionName(promotion.getPromotionName())
-                .description(promotion.getDescription())
-                .promotionType(promotion.getPromotionType())
-                .value(promotion.getValue())
-                .maxDiscountAmount(promotion.getMaxDiscountAmount())
-                .promotionScope(promotion.getPromotionScope())
-                .targetId(promotion.getTargetId())
-                .startAt(promotion.getStartAt())
-                .endAt(promotion.getEndAt())
-                .active(promotion.getActive())
-                .createdAt(promotion.getCreatedAt())
-                .updatedAt(promotion.getUpdatedAt())
-                .build();
+        return PromotionResponse.builder().id(promotion.getId()).promotionName(promotion.getPromotionName())
+                .description(promotion.getDescription()).promotionType(promotion.getPromotionType())
+                .value(promotion.getValue()).maxDiscountAmount(promotion.getMaxDiscountAmount())
+                .promotionScope(promotion.getPromotionScope()).targetId(promotion.getTargetId())
+                .startAt(promotion.getStartAt()).endAt(promotion.getEndAt()).active(promotion.getActive())
+                .createdAt(promotion.getCreatedAt()).updatedAt(promotion.getUpdatedAt()).build();
     }
 }

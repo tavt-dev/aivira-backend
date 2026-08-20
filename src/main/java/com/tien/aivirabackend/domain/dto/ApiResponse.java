@@ -34,41 +34,24 @@ public class ApiResponse<T> {
     /* ================= SUCCESS ================= */
 
     public static <T> ApiResponse<T> success(T data) {
-        return ApiResponse.<T>builder()
-                .success(true)
-                .message("Success")
-                .data(data)
-                .timestamp(System.currentTimeMillis())
-                .build();
+        return ApiResponse.<T> builder().success(true).message("Success").data(data)
+                .timestamp(System.currentTimeMillis()).build();
     }
 
     public static <T> ApiResponse<T> success(String message, T data) {
-        return ApiResponse.<T>builder()
-                .success(true)
-                .message(message)
-                .data(data)
-                .timestamp(System.currentTimeMillis())
+        return ApiResponse.<T> builder().success(true).message(message).data(data).timestamp(System.currentTimeMillis())
                 .build();
     }
 
     /* ================= ERROR ================= */
 
     public static ApiResponse<Void> error(String errorCode, String message) {
-        return ApiResponse.<Void>builder()
-                .success(false)
-                .errorCode(errorCode)
-                .message(message)
-                .timestamp(System.currentTimeMillis())
-                .build();
+        return ApiResponse.<Void> builder().success(false).errorCode(errorCode).message(message)
+                .timestamp(System.currentTimeMillis()).build();
     }
 
     public static <T> ApiResponse<T> error(String errorCode, String message, T data) {
-        return ApiResponse.<T>builder()
-                .success(false)
-                .errorCode(errorCode)
-                .message(message)
-                .data(data)
-                .timestamp(System.currentTimeMillis())
-                .build();
+        return ApiResponse.<T> builder().success(false).errorCode(errorCode).message(message).data(data)
+                .timestamp(System.currentTimeMillis()).build();
     }
 }

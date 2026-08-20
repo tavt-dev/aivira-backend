@@ -57,21 +57,17 @@ public class UserPermissionServiceImpl implements UserPermissionService {
         effectiveCodes.addAll(rolePermissionCodes);
         effectiveCodes.addAll(directActiveCodes);
 
-        Map<PermissionCode, Permission> permissionsByCode = effectiveCodes.isEmpty()
-                ? Map.of()
+        Map<PermissionCode, Permission> permissionsByCode = effectiveCodes.isEmpty() ? Map.of()
                 : permissionRepository.findByCodeIn(effectiveCodes).stream()
                         .collect(Collectors.toMap(Permission::getCode, permission -> permission));
 
         List<UserPermissionResponse> directPermissions = userPermissionRepository.findAllByUserId(userId).stream()
-                .map(permission -> toUserPermissionResponse(permission, now))
-                .toList();
+                .map(permission -> toUserPermissionResponse(permission, now)).toList();
 
-        return UserEffectivePermissionsResponse.builder()
-                .userId(userId)
+        return UserEffectivePermissionsResponse.builder().userId(userId)
                 .rolePermissions(toPermissionResponses(rolePermissionCodes, permissionsByCode))
                 .directPermissions(directPermissions)
-                .effectivePermissions(toPermissionResponses(effectiveCodes, permissionsByCode))
-                .build();
+                .effectivePermissions(toPermissionResponses(effectiveCodes, permissionsByCode)).build();
     }
 
     @Override
@@ -82,38 +78,26 @@ public class UserPermissionServiceImpl implements UserPermissionService {
             throw new AppException(CommonErrorCode.ACCESS_DENIED);
         }
 
-        User targetUser =
-                userRepository.findById(userId).orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND_BY_ID));
-        User grantedBy = StringUtils.hasText(currentUserId)
-                ? userRepository.findById(currentUserId).orElse(null)
+        User targetUser = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND_BY_ID));
+        User grantedBy = StringUtils.hasText(currentUserId) ? userRepository.findById(currentUserId).orElse(null)
                 : null;
-        Permission permission = permissionRepository
-                .findByCode(request.getPermissionCode())
+        Permission permission = permissionRepository.findByCode(request.getPermissionCode())
                 .orElseThrow(() -> new AppException(CommonErrorCode.RESOURCE_NOT_FOUND));
 
-        if (userPermissionRepository.existsByUser_IdAndPermission_CodeAndActiveTrue(
-                userId, request.getPermissionCode())) {
+        if (userPermissionRepository.existsByUser_IdAndPermission_CodeAndActiveTrue(userId,
+                request.getPermissionCode())) {
             throw new AppException(CommonErrorCode.RESOURCE_ALREADY_EXISTS);
         }
 
         Instant now = Instant.now();
-        UserPermission userPermission = UserPermission.builder()
-                .user(targetUser)
-                .permission(permission)
-                .reason(request.getReason())
-                .expiresAt(request.getExpiresAt())
-                .grantedBy(grantedBy)
-                .grantedAt(now)
-                .active(true)
-                .build();
+        UserPermission userPermission = UserPermission.builder().user(targetUser).permission(permission)
+                .reason(request.getReason()).expiresAt(request.getExpiresAt()).grantedBy(grantedBy).grantedAt(now)
+                .active(true).build();
 
         UserPermission saved = userPermissionRepository.save(userPermission);
-        log.info(
-                "Granted direct permission {} to user {} by {} expiresAt={}",
-                permission.getCode(),
-                userId,
-                currentUserId,
-                request.getExpiresAt());
+        log.info("Granted direct permission {} to user {} by {} expiresAt={}", permission.getCode(), userId,
+                currentUserId, request.getExpiresAt());
         return toUserPermissionResponse(saved, now);
     }
 
@@ -141,43 +125,28 @@ public class UserPermissionServiceImpl implements UserPermissionService {
         }
     }
 
-    private Set<PermissionResponse> toPermissionResponses(
-            Set<PermissionCode> codes, Map<PermissionCode, Permission> permissionsByCode) {
+    private Set<PermissionResponse> toPermissionResponses(Set<PermissionCode> codes,
+            Map<PermissionCode, Permission> permissionsByCode) {
         if (codes == null || codes.isEmpty()) {
             return Set.of();
         }
 
-        return codes.stream()
-                .sorted()
-                .map(permissionsByCode::get)
-                .filter(Objects::nonNull)
-                .map(this::toPermissionResponse)
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+        return codes.stream().sorted().map(permissionsByCode::get).filter(Objects::nonNull)
+                .map(this::toPermissionResponse).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     private UserPermissionResponse toUserPermissionResponse(UserPermission userPermission, Instant now) {
         User grantedBy = userPermission.getGrantedBy();
-        return UserPermissionResponse.builder()
-                .id(userPermission.getId())
-                .permission(toPermissionResponse(userPermission.getPermission()))
-                .reason(userPermission.getReason())
-                .grantedByUserId(grantedBy == null ? null : grantedBy.getId())
-                .grantedAt(userPermission.getGrantedAt())
-                .expiresAt(userPermission.getExpiresAt())
-                .revokedAt(userPermission.getRevokedAt())
-                .active(userPermission.getActive())
-                .currentlyActive(userPermission.isCurrentlyActive(now))
-                .build();
+        return UserPermissionResponse.builder().id(userPermission.getId())
+                .permission(toPermissionResponse(userPermission.getPermission())).reason(userPermission.getReason())
+                .grantedByUserId(grantedBy == null ? null : grantedBy.getId()).grantedAt(userPermission.getGrantedAt())
+                .expiresAt(userPermission.getExpiresAt()).revokedAt(userPermission.getRevokedAt())
+                .active(userPermission.getActive()).currentlyActive(userPermission.isCurrentlyActive(now)).build();
     }
 
     private PermissionResponse toPermissionResponse(Permission permission) {
-        return PermissionResponse.builder()
-                .id(permission.getId())
-                .code(permission.getCode())
-                .name(permission.getName())
-                .description(permission.getDescription())
-                .group(permission.getGroup())
-                .system(permission.getSystem())
+        return PermissionResponse.builder().id(permission.getId()).code(permission.getCode()).name(permission.getName())
+                .description(permission.getDescription()).group(permission.getGroup()).system(permission.getSystem())
                 .build();
     }
 

@@ -39,13 +39,11 @@ class DemoCatalogSeedIntegrationTest extends AbstractIntegrationTest {
         assertThat(productVariationRepository.count()).isEqualTo(30);
         assertThat(productMediaRepository.count()).isEqualTo(30);
 
-        mockMvc.perform(get("/products").param("size", "50"))
-                .andExpect(status().isOk())
+        mockMvc.perform(get("/products").param("size", "50")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalElements").value(30))
                 .andExpect(jsonPath("$.data.data[0].bookAuthor").isNotEmpty());
 
-        mockMvc.perform(get("/storefront/home"))
-                .andExpect(status().isOk())
+        mockMvc.perform(get("/storefront/home")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.featuredBooks").isArray())
                 .andExpect(jsonPath("$.data.featuredBooks.length()").value(8))
                 .andExpect(jsonPath("$.data.newArrivals").isArray())

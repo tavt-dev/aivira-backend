@@ -28,14 +28,10 @@ public class BlogController {
     @GetMapping("/posts")
     @Operation(summary = "List published blog posts")
     public ResponseEntity<ApiResponse<PageResponse<BlogPostSummaryResponse>>> getPosts(
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String categorySlug,
-            @RequestParam(required = false) String productSlug,
-            @RequestParam(defaultValue = "newest") String sort,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(ApiResponse.success(
-                "Get blog posts successful",
+            @RequestParam(required = false) String keyword, @RequestParam(required = false) String categorySlug,
+            @RequestParam(required = false) String productSlug, @RequestParam(defaultValue = "newest") String sort,
+            @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(ApiResponse.success("Get blog posts successful",
                 postService.getPublicPosts(keyword, categorySlug, productSlug, sort, page, size)));
     }
 
@@ -48,7 +44,7 @@ public class BlogController {
     @GetMapping("/categories")
     @Operation(summary = "List active blog categories")
     public ResponseEntity<ApiResponse<List<BlogCategoryResponse>>> getCategories() {
-        return ResponseEntity.ok(
-                ApiResponse.success("Get blog categories successful", categoryService.getPublicCategories()));
+        return ResponseEntity
+                .ok(ApiResponse.success("Get blog categories successful", categoryService.getPublicCategories()));
     }
 }

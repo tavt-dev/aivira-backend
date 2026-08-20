@@ -63,17 +63,15 @@ public class BlogPostServiceImpl implements BlogPostService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<BlogPostSummaryResponse> getPublicPosts(
-            String keyword, String categorySlug, String productSlug, String sort, int page, int size) {
-        Sort pageSort =
-                switch (sort == null ? "newest" : sort.toLowerCase()) {
-                    case "oldest" -> Sort.by(Sort.Direction.ASC, "publishedAt");
-                    case "title_asc" -> Sort.by(Sort.Direction.ASC, "title");
-                    default -> Sort.by(Sort.Direction.DESC, "publishedAt");
-                };
+    public PageResponse<BlogPostSummaryResponse> getPublicPosts(String keyword, String categorySlug, String productSlug,
+            String sort, int page, int size) {
+        Sort pageSort = switch (sort == null ? "newest" : sort.toLowerCase()) {
+        case "oldest" -> Sort.by(Sort.Direction.ASC, "publishedAt");
+        case "title_asc" -> Sort.by(Sort.Direction.ASC, "title");
+        default -> Sort.by(Sort.Direction.DESC, "publishedAt");
+        };
         Page<BlogPostSummaryResponse> result = postRepository
-                .findAll(
-                        specifications.publicPosts(keyword, categorySlug, productSlug),
+                .findAll(specifications.publicPosts(keyword, categorySlug, productSlug),
                         PageRequestUtils.of(page, size, pageSort))
                 .map(blogMapper::toSummaryResponse);
         return PageResponse.from(result);
@@ -82,27 +80,17 @@ public class BlogPostServiceImpl implements BlogPostService {
     @Override
     @Transactional(readOnly = true)
     public BlogPostDetailResponse getPublicPost(String slug) {
-        BlogPost post = postRepository
-                .findDetailedBySlug(slug)
-                .filter(this::isPublic)
+        BlogPost post = postRepository.findDetailedBySlug(slug).filter(this::isPublic)
                 .orElseThrow(() -> new AppException(BlogErrorCode.BLOG_POST_NOT_FOUND));
         return blogMapper.toDetailResponse(post);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<BlogPostSummaryResponse> getAdminPosts(
-            BlogPostStatus status,
-            Long categoryId,
-            String keyword,
-            String createdBy,
-            Instant publishedFrom,
-            Instant publishedTo,
-            int page,
-            int size) {
+    public PageResponse<BlogPostSummaryResponse> getAdminPosts(BlogPostStatus status, Long categoryId, String keyword,
+            String createdBy, Instant publishedFrom, Instant publishedTo, int page, int size) {
         Page<BlogPostSummaryResponse> result = postRepository
-                .findAll(
-                        specifications.adminPosts(status, categoryId, keyword, createdBy, publishedFrom, publishedTo),
+                .findAll(specifications.adminPosts(status, categoryId, keyword, createdBy, publishedFrom, publishedTo),
                         PageRequestUtils.newestFirst(page, size))
                 .map(blogMapper::toSummaryResponse);
         return PageResponse.from(result);
@@ -119,19 +107,12 @@ public class BlogPostServiceImpl implements BlogPostService {
     public BlogPostResponse createPost(BlogPostCreateRequest request) {
         User admin = currentUserService.getCurrentUser();
         String slug = normalizeSlug(request.getSlug(), request.getTitle(), null);
-        BlogPost post = BlogPost.builder()
-                .title(request.getTitle().trim())
-                .slug(slug)
-                .excerpt(request.getExcerpt().trim())
-                .contentHtml(htmlSanitizer.sanitize(request.getContentHtml()))
-                .category(findCategory(request.getCategoryId()))
-                .seoTitle(trimToNull(request.getSeoTitle()))
+        BlogPost post = BlogPost.builder().title(request.getTitle().trim()).slug(slug)
+                .excerpt(request.getExcerpt().trim()).contentHtml(htmlSanitizer.sanitize(request.getContentHtml()))
+                .category(findCategory(request.getCategoryId())).seoTitle(trimToNull(request.getSeoTitle()))
                 .metaDescription(trimToNull(request.getMetaDescription()))
-                .coverAltText(trimToNull(request.getCoverAltText()))
-                .createdBy(admin)
-                .updatedBy(admin)
-                .relatedProducts(resolveProducts(request.getRelatedProductIds()))
-                .build();
+                .coverAltText(trimToNull(request.getCoverAltText())).createdBy(admin).updatedBy(admin)
+                .relatedProducts(resolveProducts(request.getRelatedProductIds())).build();
         return blogMapper.toResponse(postRepository.save(post));
     }
 
@@ -199,8 +180,8 @@ public class BlogPostServiceImpl implements BlogPostService {
     public BlogPostResponse uploadCover(Long id, MultipartFile file, String altText) {
         BlogPost post = findActivePost(id);
         fileValidatorService.validateFile(file, MediaType.IMAGE);
-        CloudinaryUploadResult uploaded = cloudinaryStorageService.uploadBlogCover(
-                file, cloudinaryProperties.getBlogImageFolder(), "post-" + id + "-cover");
+        CloudinaryUploadResult uploaded = cloudinaryStorageService.uploadBlogCover(file,
+                cloudinaryProperties.getBlogImageFolder(), "post-" + id + "-cover");
         String previousPublicId = post.getCoverPublicId();
         post.setCoverUrl(uploaded.secureUrl());
         post.setCoverPublicId(uploaded.publicId());
@@ -238,15 +219,11 @@ public class BlogPostServiceImpl implements BlogPostService {
     public BlogAssetResponse uploadContentImage(Long id, MultipartFile file, String altText) {
         BlogPost post = findActivePost(id);
         fileValidatorService.validateFile(file, MediaType.IMAGE);
-        CloudinaryUploadResult uploaded = cloudinaryStorageService.uploadBlogContentImage(
-                file, cloudinaryProperties.getBlogImageFolder(), "post-" + id + "-content");
+        CloudinaryUploadResult uploaded = cloudinaryStorageService.uploadBlogContentImage(file,
+                cloudinaryProperties.getBlogImageFolder(), "post-" + id + "-content");
         try {
-            BlogAsset asset = BlogAsset.builder()
-                    .post(post)
-                    .url(uploaded.secureUrl())
-                    .publicId(uploaded.publicId())
-                    .altText(trimToNull(altText))
-                    .build();
+            BlogAsset asset = BlogAsset.builder().post(post).url(uploaded.secureUrl()).publicId(uploaded.publicId())
+                    .altText(trimToNull(altText)).build();
             return blogMapper.toAssetResponse(assetRepository.saveAndFlush(asset));
         } catch (RuntimeException exception) {
             cloudinaryStorageService.deleteImage(uploaded.publicId());
@@ -258,12 +235,11 @@ public class BlogPostServiceImpl implements BlogPostService {
     @Transactional
     public void deleteContentImage(Long postId, Long assetId) {
         BlogPost post = findActivePost(postId);
-        BlogAsset asset = assetRepository
-                .findByIdAndPost_Id(assetId, postId)
+        BlogAsset asset = assetRepository.findByIdAndPost_Id(assetId, postId)
                 .orElseThrow(() -> new AppException(BlogErrorCode.BLOG_ASSET_NOT_FOUND));
         if (post.getContentHtml() != null && post.getContentHtml().contains(asset.getUrl())) {
-            throw new AppException(BlogErrorCode.BLOG_PUBLISH_VALIDATION_FAILED)
-                    .addDetail("reason", "Remove the image from contentHtml before deleting the asset");
+            throw new AppException(BlogErrorCode.BLOG_PUBLISH_VALIDATION_FAILED).addDetail("reason",
+                    "Remove the image from contentHtml before deleting the asset");
         }
         String publicId = asset.getPublicId();
         assetRepository.delete(asset);
@@ -276,24 +252,18 @@ public class BlogPostServiceImpl implements BlogPostService {
     public List<BlogPostSummaryResponse> getLatestPosts(int limit) {
         int safeLimit = Math.min(Math.max(limit, 1), 20);
         return postRepository
-                .findAll(
-                        specifications.publicPosts(null, null, null),
+                .findAll(specifications.publicPosts(null, null, null),
                         PageRequest.of(0, safeLimit, Sort.by(Sort.Direction.DESC, "publishedAt")))
-                .stream()
-                .map(blogMapper::toSummaryResponse)
-                .toList();
+                .stream().map(blogMapper::toSummaryResponse).toList();
     }
 
     private BlogPost findActivePost(Long id) {
-        return postRepository
-                .findDetailedById(id)
-                .filter(post -> post.getDeletedAt() == null)
+        return postRepository.findDetailedById(id).filter(post -> post.getDeletedAt() == null)
                 .orElseThrow(() -> new AppException(BlogErrorCode.BLOG_POST_NOT_FOUND));
     }
 
     private BlogCategory findCategory(Long id) {
-        return categoryRepository
-                .findById(id)
+        return categoryRepository.findById(id)
                 .orElseThrow(() -> new AppException(BlogErrorCode.BLOG_CATEGORY_NOT_FOUND));
     }
 
@@ -310,8 +280,7 @@ public class BlogPostServiceImpl implements BlogPostService {
 
     private String normalizeSlug(String requestedSlug, String title, Long currentId) {
         String slug = SlugUtils.slugify(requestedSlug, SlugUtils.slugify(title, "blog-post"));
-        boolean duplicate = currentId == null
-                ? postRepository.existsBySlug(slug)
+        boolean duplicate = currentId == null ? postRepository.existsBySlug(slug)
                 : postRepository.existsBySlugAndIdNot(slug, currentId);
         if (duplicate) {
             throw new AppException(BlogErrorCode.BLOG_SLUG_ALREADY_EXISTS);
@@ -320,19 +289,15 @@ public class BlogPostServiceImpl implements BlogPostService {
     }
 
     private void validatePublishable(BlogPost post) {
-        if (!StringUtils.hasText(post.getTitle())
-                || !StringUtils.hasText(post.getExcerpt())
-                || !StringUtils.hasText(post.getContentHtml())
-                || post.getCategory() == null
-                || !Boolean.TRUE.equals(post.getCategory().getActive())
-                || !StringUtils.hasText(post.getCoverUrl())) {
+        if (!StringUtils.hasText(post.getTitle()) || !StringUtils.hasText(post.getExcerpt())
+                || !StringUtils.hasText(post.getContentHtml()) || post.getCategory() == null
+                || !Boolean.TRUE.equals(post.getCategory().getActive()) || !StringUtils.hasText(post.getCoverUrl())) {
             throw new AppException(BlogErrorCode.BLOG_PUBLISH_VALIDATION_FAILED);
         }
     }
 
     private boolean isPublic(BlogPost post) {
-        return post.getDeletedAt() == null
-                && post.getStatus() == BlogPostStatus.PUBLISHED
+        return post.getDeletedAt() == null && post.getStatus() == BlogPostStatus.PUBLISHED
                 && Boolean.TRUE.equals(post.getCategory().getActive());
     }
 

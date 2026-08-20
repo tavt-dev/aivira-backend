@@ -14,12 +14,8 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 @Entity
-@Table(
-        name = "payment_attempts",
-        uniqueConstraints =
-                @UniqueConstraint(
-                        name = "uk_payment_attempts_group_attempt",
-                        columnNames = {"payment_group_id", "attempt_no"}))
+@Table(name = "payment_attempts", uniqueConstraints = @UniqueConstraint(name = "uk_payment_attempts_group_attempt", columnNames = {
+        "payment_group_id", "attempt_no" }))
 @Getter
 @Setter
 @Builder

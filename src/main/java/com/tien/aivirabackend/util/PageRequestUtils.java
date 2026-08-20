@@ -6,7 +6,8 @@ import org.springframework.data.domain.Sort;
 public final class PageRequestUtils {
     public static final int MAX_PAGE_SIZE = 100;
 
-    private PageRequestUtils() {}
+    private PageRequestUtils() {
+    }
 
     public static PageRequest of(int page, int size, Sort sort) {
         int pageIndex = Math.max(page - 1, 0);

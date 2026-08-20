@@ -73,29 +73,19 @@ public class GoogleOAuthServiceImpl implements GoogleOAuthService {
     public GoogleOAuthAuthorizationResponse createAuthorization(String nextPath, String deviceInfo, String ipAddress) {
         requireConfigured();
         String state = randomToken();
-        OAuthLoginState loginState = OAuthLoginState.builder()
-                .stateHash(hash(state))
-                .nextPath(sanitizeNextPath(nextPath))
-                .deviceInfo(truncate(deviceInfo, 512))
+        OAuthLoginState loginState = OAuthLoginState.builder().stateHash(hash(state))
+                .nextPath(sanitizeNextPath(nextPath)).deviceInfo(truncate(deviceInfo, 512))
                 .ipAddress(truncate(ipAddress, 45))
-                .expiresAt(Instant.now().plus(properties.getStateTtlSeconds(), ChronoUnit.SECONDS))
-                .build();
+                .expiresAt(Instant.now().plus(properties.getStateTtlSeconds(), ChronoUnit.SECONDS)).build();
         stateRepository.save(loginState);
 
         String authorizationUrl = UriComponentsBuilder.fromUriString(properties.getAuthorizationUri())
                 .queryParam("client_id", properties.getClientId())
-                .queryParam("redirect_uri", properties.getRedirectUri())
-                .queryParam("response_type", "code")
-                .queryParam("scope", properties.getScopes())
-                .queryParam("state", state)
-                .queryParam("access_type", "online")
-                .queryParam("include_granted_scopes", "true")
-                .build()
-                .encode()
+                .queryParam("redirect_uri", properties.getRedirectUri()).queryParam("response_type", "code")
+                .queryParam("scope", properties.getScopes()).queryParam("state", state)
+                .queryParam("access_type", "online").queryParam("include_granted_scopes", "true").build().encode()
                 .toUriString();
-        return GoogleOAuthAuthorizationResponse.builder()
-                .authorizationUrl(authorizationUrl)
-                .build();
+        return GoogleOAuthAuthorizationResponse.builder().authorizationUrl(authorizationUrl).build();
     }
 
     @Override
@@ -118,8 +108,7 @@ public class GoogleOAuthServiceImpl implements GoogleOAuthService {
         String ticket = createTicket(user, deviceInfo, ipAddress);
         log.info("google_oauth_login_ticket_created userId={} email={}", user.getId(), user.getEmail());
 
-        return GoogleOAuthCallbackResponse.builder()
-                .redirectUrl(successRedirectUrl(ticket, loginState.getNextPath()))
+        return GoogleOAuthCallbackResponse.builder().redirectUrl(successRedirectUrl(ticket, loginState.getNextPath()))
                 .build();
     }
 
@@ -127,8 +116,7 @@ public class GoogleOAuthServiceImpl implements GoogleOAuthService {
     @Transactional
     public AuthenticationResponse exchangeTicket(String ticket, String deviceInfo, String ipAddress) {
         requireConfigured();
-        OAuthLoginTicket loginTicket = ticketRepository
-                .findByTicketHashForUpdate(hash(ticket))
+        OAuthLoginTicket loginTicket = ticketRepository.findByTicketHashForUpdate(hash(ticket))
                 .orElseThrow(() -> new AppException(GoogleOAuthErrorCode.GOOGLE_LOGIN_TICKET_INVALID));
         Instant now = Instant.now();
         if (!loginTicket.isUsable(now)) {
@@ -143,13 +131,8 @@ public class GoogleOAuthServiceImpl implements GoogleOAuthService {
         String refreshToken = jwtService.createRefreshToken(user, deviceInfo, ipAddress, null);
         log.info("google_oauth_exchange_success userId={} email={}", user.getId(), user.getEmail());
 
-        return AuthenticationResponse.builder()
-                .token(accessToken)
-                .refreshToken(refreshToken)
-                .tokenType("Bearer")
-                .accessTokenExpiresIn(jwtService.getAccessTokenExpiresIn())
-                .authenticated(true)
-                .build();
+        return AuthenticationResponse.builder().token(accessToken).refreshToken(refreshToken).tokenType("Bearer")
+                .accessTokenExpiresIn(jwtService.getAccessTokenExpiresIn()).authenticated(true).build();
     }
 
     @Override
@@ -158,8 +141,7 @@ public class GoogleOAuthServiceImpl implements GoogleOAuthService {
     }
 
     private OAuthLoginState consumeState(String state) {
-        OAuthLoginState loginState = stateRepository
-                .findByStateHashForUpdate(hash(state))
+        OAuthLoginState loginState = stateRepository.findByStateHashForUpdate(hash(state))
                 .orElseThrow(() -> new AppException(GoogleOAuthErrorCode.GOOGLE_OAUTH_STATE_INVALID));
         Instant now = Instant.now();
         if (!loginState.isUsable(now)) {
@@ -178,14 +160,10 @@ public class GoogleOAuthServiceImpl implements GoogleOAuthService {
         form.add("redirect_uri", properties.getRedirectUri());
         form.add("grant_type", "authorization_code");
         try {
-            Map<String, Object> response = restClientBuilder
-                    .build()
-                    .post()
-                    .uri(URI.create(properties.getTokenUri()))
-                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                    .body(form)
-                    .retrieve()
-                    .body(new ParameterizedTypeReference<>() {});
+            Map<String, Object> response = restClientBuilder.build().post().uri(URI.create(properties.getTokenUri()))
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED).body(form).retrieve()
+                    .body(new ParameterizedTypeReference<>() {
+                    });
             String idToken = response == null ? null : stringValue(response.get("id_token"));
             if (!StringUtils.hasText(idToken)) {
                 throw new AppException(GoogleOAuthErrorCode.GOOGLE_OAUTH_CODE_INVALID);
@@ -197,10 +175,8 @@ public class GoogleOAuthServiceImpl implements GoogleOAuthService {
     }
 
     private User resolveUser(GoogleUserInfo googleUser) {
-        return userRepository
-                .findByProviderAndProviderUserId(SignInProvider.GOOGLE, googleUser.subject())
-                .orElseGet(() -> userRepository
-                        .findByEmail(googleUser.email())
+        return userRepository.findByProviderAndProviderUserId(SignInProvider.GOOGLE, googleUser.subject())
+                .orElseGet(() -> userRepository.findByEmail(googleUser.email())
                         .map(existing -> linkGoogleUser(existing, googleUser))
                         .orElseGet(() -> createGoogleUser(googleUser)));
     }
@@ -218,22 +194,11 @@ public class GoogleOAuthServiceImpl implements GoogleOAuthService {
     }
 
     private User createGoogleUser(GoogleUserInfo googleUser) {
-        Role userRole = roleRepository
-                .findByCode(PredefinedRole.USER)
+        Role userRole = roleRepository.findByCode(PredefinedRole.USER)
                 .orElseThrow(() -> new AppException(UserErrorCode.ROLE_NOT_FOUND));
-        User user = User.builder()
-                .username(generateUsername(googleUser))
-                .email(googleUser.email())
-                .password(null)
-                .provider(SignInProvider.GOOGLE)
-                .providerUserId(googleUser.subject())
-                .emailVerified(true)
-                .isActive(true)
-                .isLocked(false)
-                .isDeleted(false)
-                .tokenVersion(0)
-                .failedLoginAttempts(0)
-                .build();
+        User user = User.builder().username(generateUsername(googleUser)).email(googleUser.email()).password(null)
+                .provider(SignInProvider.GOOGLE).providerUserId(googleUser.subject()).emailVerified(true).isActive(true)
+                .isLocked(false).isDeleted(false).tokenVersion(0).failedLoginAttempts(0).build();
         copyGoogleProfileIfMissing(user, googleUser);
         user.getRoles().add(userRole);
         return userRepository.save(user);
@@ -253,13 +218,9 @@ public class GoogleOAuthServiceImpl implements GoogleOAuthService {
 
     private String createTicket(User user, String deviceInfo, String ipAddress) {
         String ticket = randomToken();
-        OAuthLoginTicket loginTicket = OAuthLoginTicket.builder()
-                .ticketHash(hash(ticket))
-                .user(user)
-                .deviceInfo(truncate(deviceInfo, 512))
-                .ipAddress(truncate(ipAddress, 45))
-                .expiresAt(Instant.now().plus(properties.getTicketTtlSeconds(), ChronoUnit.SECONDS))
-                .build();
+        OAuthLoginTicket loginTicket = OAuthLoginTicket.builder().ticketHash(hash(ticket)).user(user)
+                .deviceInfo(truncate(deviceInfo, 512)).ipAddress(truncate(ipAddress, 45))
+                .expiresAt(Instant.now().plus(properties.getTicketTtlSeconds(), ChronoUnit.SECONDS)).build();
         ticketRepository.save(loginTicket);
         return ticket;
     }
@@ -280,8 +241,7 @@ public class GoogleOAuthServiceImpl implements GoogleOAuthService {
     }
 
     private String successRedirectUrl(String ticket, String nextPath) {
-        return appendQuery(
-                properties.getFrontendSuccessUrl(),
+        return appendQuery(properties.getFrontendSuccessUrl(),
                 Map.of("ticket", ticket, "next", StringUtils.hasText(nextPath) ? nextPath : "/"));
     }
 
@@ -310,14 +270,12 @@ public class GoogleOAuthServiceImpl implements GoogleOAuthService {
         if (!properties.isEnabled()) {
             throw new AppException(GoogleOAuthErrorCode.GOOGLE_OAUTH_DISABLED);
         }
-        if (!StringUtils.hasText(properties.getClientId())
-                || !StringUtils.hasText(properties.getClientSecret())
+        if (!StringUtils.hasText(properties.getClientId()) || !StringUtils.hasText(properties.getClientSecret())
                 || !StringUtils.hasText(properties.getRedirectUri())
                 || !StringUtils.hasText(properties.getFrontendSuccessUrl())
                 || !StringUtils.hasText(properties.getFrontendFailureUrl())
                 || !StringUtils.hasText(properties.getAuthorizationUri())
-                || !StringUtils.hasText(properties.getTokenUri())
-                || !StringUtils.hasText(properties.getIssuerUri())) {
+                || !StringUtils.hasText(properties.getTokenUri()) || !StringUtils.hasText(properties.getIssuerUri())) {
             throw new AppException(GoogleOAuthErrorCode.GOOGLE_OAUTH_CONFIG_INVALID);
         }
     }
@@ -358,5 +316,6 @@ public class GoogleOAuthServiceImpl implements GoogleOAuthService {
         return value == null ? "" : String.valueOf(value);
     }
 
-    private record GoogleTokenResponse(String idToken) {}
+    private record GoogleTokenResponse(String idToken) {
+    }
 }

@@ -42,8 +42,8 @@ class PaymentProviderClientTest {
         PaymentGroup group = paymentGroup(PaymentMethod.VNPAY);
         PaymentAttempt attempt = paymentAttempt(group, PaymentProvider.VNPAY, "PAY123-A1-ABC");
 
-        PaymentProviderResult result = client.createPayment(
-                new PaymentProviderRequest(group, attempt, new RequestMetadata("JUnit", "10.0.0.1")));
+        PaymentProviderResult result = client
+                .createPayment(new PaymentProviderRequest(group, attempt, new RequestMetadata("JUnit", "10.0.0.1")));
 
         assertThat(result.providerTxnRef()).isEqualTo("PAY123-A1-ABC");
         assertThat(result.paymentUrl()).contains("vnp_Amount=123400");
@@ -104,12 +104,9 @@ class PaymentProviderClientTest {
         PaymentGroup group = paymentGroup(PaymentMethod.MOMO);
         PaymentAttempt attempt = paymentAttempt(group, PaymentProvider.MOMO, "PAY123-A1-ABC");
 
-        server.expect(once(), requestTo("http://localhost/momo/query"))
-                .andRespond(withSuccess(
-                        """
-						{"resultCode":0,"message":"Successful.","amount":1234,"transId":987654321}
-						""",
-                        MediaType.APPLICATION_JSON));
+        server.expect(once(), requestTo("http://localhost/momo/query")).andRespond(withSuccess("""
+                {"resultCode":0,"message":"Successful.","amount":1234,"transId":987654321}
+                """, MediaType.APPLICATION_JSON));
 
         PaymentProviderQueryResult result = client.queryPayment(attempt);
 
@@ -130,8 +127,8 @@ class PaymentProviderClientTest {
         server.expect(once(), requestTo("http://localhost/vnpay/query"))
                 .andRespond(withSuccess(
                         """
-						{"vnp_TransactionStatus":"00","vnp_Message":"Confirm Success","vnp_Amount":"123400","vnp_TransactionNo":"14123456"}
-						""",
+                                {"vnp_TransactionStatus":"00","vnp_Message":"Confirm Success","vnp_Amount":"123400","vnp_TransactionNo":"14123456"}
+                                """,
                         MediaType.APPLICATION_JSON));
 
         PaymentProviderQueryResult result = client.queryPayment(attempt);
@@ -150,9 +147,9 @@ class PaymentProviderClientTest {
         PaymentGroup group = paymentGroup(PaymentMethod.VNPAY);
         PaymentAttempt attempt = paymentAttempt(group, PaymentProvider.VNPAY, "PAY123-A1-ABC");
 
-        assertThatThrownBy(() -> client.createPayment(
-                        new PaymentProviderRequest(group, attempt, new RequestMetadata("JUnit", "10.0.0.1"))))
-                .isInstanceOf(AppException.class);
+        assertThatThrownBy(() -> client
+                .createPayment(new PaymentProviderRequest(group, attempt, new RequestMetadata("JUnit", "10.0.0.1"))))
+                        .isInstanceOf(AppException.class);
     }
 
     private VnpayPaymentProperties vnpayProperties() {
@@ -181,55 +178,32 @@ class PaymentProviderClientTest {
     }
 
     private PaymentGroup paymentGroup(PaymentMethod method) {
-        return PaymentGroup.builder()
-                .paymentCode("PAY123")
-                .method(method)
-                .status(PaymentStatus.PENDING)
-                .amount(new BigDecimal("1234.00"))
-                .expiresAt(Instant.now().plusSeconds(900))
-                .build();
+        return PaymentGroup.builder().paymentCode("PAY123").method(method).status(PaymentStatus.PENDING)
+                .amount(new BigDecimal("1234.00")).expiresAt(Instant.now().plusSeconds(900)).build();
     }
 
     private PaymentAttempt paymentAttempt(PaymentGroup group, PaymentProvider provider, String providerTxnRef) {
-        return PaymentAttempt.builder()
-                .paymentGroup(group)
-                .provider(provider)
-                .method(group.getMethod())
-                .attemptNo(1)
-                .providerTxnRef(providerTxnRef)
-                .requestId(providerTxnRef + "-REQ")
-                .status(PaymentStatus.PENDING)
-                .amount(group.getAmount())
-                .expiresAt(group.getExpiresAt())
-                .build();
+        return PaymentAttempt.builder().paymentGroup(group).provider(provider).method(group.getMethod()).attemptNo(1)
+                .providerTxnRef(providerTxnRef).requestId(providerTxnRef + "-REQ").status(PaymentStatus.PENDING)
+                .amount(group.getAmount()).expiresAt(group.getExpiresAt()).build();
     }
 
     private String vnpayQuery(Map<String, String> payload) {
-        return payload.entrySet().stream()
-                .filter(entry -> entry.getKey().startsWith("vnp_"))
+        return payload.entrySet().stream().filter(entry -> entry.getKey().startsWith("vnp_"))
                 .filter(entry -> !"vnp_SecureHash".equals(entry.getKey()))
-                .filter(entry -> !"vnp_SecureHashType".equals(entry.getKey()))
-                .sorted(Map.Entry.comparingByKey())
+                .filter(entry -> !"vnp_SecureHashType".equals(entry.getKey())).sorted(Map.Entry.comparingByKey())
                 .map(entry -> entry.getKey() + "=" + URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8))
-                .reduce((left, right) -> left + "&" + right)
-                .orElse("");
+                .reduce((left, right) -> left + "&" + right).orElse("");
     }
 
     private String momoIpnSignature(Map<String, Object> payload) {
-        String rawSignature = "accessKey=access"
-                + "&amount=" + payload.get("amount")
-                + "&extraData=" + payload.get("extraData")
-                + "&message=" + payload.get("message")
-                + "&orderId=" + payload.get("orderId")
-                + "&orderInfo=" + payload.get("orderInfo")
-                + "&orderType=" + payload.get("orderType")
-                + "&partnerClientId=" + payload.get("partnerClientId")
-                + "&partnerCode=" + payload.get("partnerCode")
-                + "&payType=" + payload.get("payType")
-                + "&requestId=" + payload.get("requestId")
-                + "&responseTime=" + payload.get("responseTime")
-                + "&resultCode=" + payload.get("resultCode")
-                + "&transId=" + payload.get("transId");
+        String rawSignature = "accessKey=access" + "&amount=" + payload.get("amount") + "&extraData="
+                + payload.get("extraData") + "&message=" + payload.get("message") + "&orderId=" + payload.get("orderId")
+                + "&orderInfo=" + payload.get("orderInfo") + "&orderType=" + payload.get("orderType")
+                + "&partnerClientId=" + payload.get("partnerClientId") + "&partnerCode=" + payload.get("partnerCode")
+                + "&payType=" + payload.get("payType") + "&requestId=" + payload.get("requestId") + "&responseTime="
+                + payload.get("responseTime") + "&resultCode=" + payload.get("resultCode") + "&transId="
+                + payload.get("transId");
         return PaymentSignatureUtils.hmacSha256(rawSignature, "secret");
     }
 }

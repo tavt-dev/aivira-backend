@@ -11,13 +11,10 @@ import com.tien.aivirabackend.domain.entity.user.User;
 
 @Component
 public class UserSpecifications {
-    public Specification<User> adminUsers(
-            String keyword, PredefinedRole role, Boolean active, Boolean locked, Boolean emailVerified) {
-        return Specification.where(keywordContains(keyword))
-                .and(hasRole(role))
-                .and(hasActive(active))
-                .and(hasLocked(locked))
-                .and(hasEmailVerified(emailVerified));
+    public Specification<User> adminUsers(String keyword, PredefinedRole role, Boolean active, Boolean locked,
+            Boolean emailVerified) {
+        return Specification.where(keywordContains(keyword)).and(hasRole(role)).and(hasActive(active))
+                .and(hasLocked(locked)).and(hasEmailVerified(emailVerified));
     }
 
     private Specification<User> keywordContains(String keyword) {
@@ -26,8 +23,7 @@ public class UserSpecifications {
                 return null;
             }
             String pattern = "%" + keyword.trim().toLowerCase() + "%";
-            return criteriaBuilder.or(
-                    criteriaBuilder.like(criteriaBuilder.lower(root.get("id")), pattern),
+            return criteriaBuilder.or(criteriaBuilder.like(criteriaBuilder.lower(root.get("id")), pattern),
                     criteriaBuilder.like(criteriaBuilder.lower(root.get("username")), pattern),
                     criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), pattern),
                     criteriaBuilder.like(criteriaBuilder.lower(root.get("firstName")), pattern),
@@ -50,17 +46,17 @@ public class UserSpecifications {
     }
 
     private Specification<User> hasActive(Boolean active) {
-        return (root, query, criteriaBuilder) ->
-                active == null ? null : criteriaBuilder.equal(root.get("isActive"), active);
+        return (root, query, criteriaBuilder) -> active == null ? null
+                : criteriaBuilder.equal(root.get("isActive"), active);
     }
 
     private Specification<User> hasLocked(Boolean locked) {
-        return (root, query, criteriaBuilder) ->
-                locked == null ? null : criteriaBuilder.equal(root.get("isLocked"), locked);
+        return (root, query, criteriaBuilder) -> locked == null ? null
+                : criteriaBuilder.equal(root.get("isLocked"), locked);
     }
 
     private Specification<User> hasEmailVerified(Boolean emailVerified) {
-        return (root, query, criteriaBuilder) ->
-                emailVerified == null ? null : criteriaBuilder.equal(root.get("emailVerified"), emailVerified);
+        return (root, query, criteriaBuilder) -> emailVerified == null ? null
+                : criteriaBuilder.equal(root.get("emailVerified"), emailVerified);
     }
 }

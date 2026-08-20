@@ -35,8 +35,7 @@ class ReviewControllerContractTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(new ReviewController(reviewService))
-                .setControllerAdvice(new GlobalExceptionHandler())
-                .build();
+                .setControllerAdvice(new GlobalExceptionHandler()).build();
     }
 
     @Test
@@ -44,31 +43,21 @@ class ReviewControllerContractTest {
         assertPreAuthorize(
                 ReviewController.class.getMethod("createReview", Long.class, Long.class, ReviewCreateRequest.class),
                 "REVIEW_CREATE_SELF");
-        assertPreAuthorize(
-                ReviewController.class.getMethod(
-                        "createReviewWithImages", Long.class, Long.class, ReviewCreateRequest.class, java.util.List.class),
-                "REVIEW_CREATE_SELF");
-        assertPreAuthorize(
-                ReviewController.class.getMethod("updateReview", Long.class, ReviewUpdateRequest.class),
+        assertPreAuthorize(ReviewController.class.getMethod("createReviewWithImages", Long.class, Long.class,
+                ReviewCreateRequest.class, java.util.List.class), "REVIEW_CREATE_SELF");
+        assertPreAuthorize(ReviewController.class.getMethod("updateReview", Long.class, ReviewUpdateRequest.class),
                 "REVIEW_UPDATE_SELF");
         assertPreAuthorize(ReviewController.class.getMethod("deleteReview", Long.class), "REVIEW_DELETE_SELF");
     }
 
     @Test
     void endpoints_shouldDelegateToService() throws Exception {
-        mockMvc.perform(get("/products/aivira-book/reviews")
-                        .param("rating", "5")
-                        .param("sort", "rating_desc")
-                        .param("page", "2")
-                        .param("size", "10"))
+        mockMvc.perform(get("/products/aivira-book/reviews").param("rating", "5").param("sort", "rating_desc")
+                .param("page", "2").param("size", "10")).andExpect(status().isOk());
+        mockMvc.perform(
+                post("/orders/21/items/31/review").contentType(MediaType.APPLICATION_JSON).content(validReviewJson()))
                 .andExpect(status().isOk());
-        mockMvc.perform(post("/orders/21/items/31/review")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(validReviewJson()))
-                .andExpect(status().isOk());
-        mockMvc.perform(put("/reviews/99")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(validReviewJson()))
+        mockMvc.perform(put("/reviews/99").contentType(MediaType.APPLICATION_JSON).content(validReviewJson()))
                 .andExpect(status().isOk());
         mockMvc.perform(delete("/reviews/99")).andExpect(status().isOk());
 
@@ -80,59 +69,49 @@ class ReviewControllerContractTest {
 
     @Test
     void createReviewWithImages_shouldAcceptMultipartWithAndWithoutImages() throws Exception {
-        MockMultipartFile reviewPart = new MockMultipartFile(
-                "review", "review.json", MediaType.APPLICATION_JSON_VALUE, validReviewWithoutImagesJson().getBytes());
-        MockMultipartFile image =
-                new MockMultipartFile("images", "book.jpg", MediaType.IMAGE_JPEG_VALUE, new byte[] {1, 2, 3});
+        MockMultipartFile reviewPart = new MockMultipartFile("review", "review.json", MediaType.APPLICATION_JSON_VALUE,
+                validReviewWithoutImagesJson().getBytes());
+        MockMultipartFile image = new MockMultipartFile("images", "book.jpg", MediaType.IMAGE_JPEG_VALUE,
+                new byte[] { 1, 2, 3 });
 
         mockMvc.perform(multipart("/orders/21/items/31/review").file(reviewPart).file(image))
                 .andExpect(status().isOk());
-        mockMvc.perform(multipart("/orders/21/items/31/review").file(reviewPart))
-                .andExpect(status().isOk());
+        mockMvc.perform(multipart("/orders/21/items/31/review").file(reviewPart)).andExpect(status().isOk());
 
-        verify(reviewService).createReviewWithImages(
-                eq(21L),
-                eq(31L),
-                any(ReviewCreateRequest.class),
+        verify(reviewService).createReviewWithImages(eq(21L), eq(31L), any(ReviewCreateRequest.class),
                 argThat(files -> files != null && files.size() == 1));
         verify(reviewService).createReviewWithImages(eq(21L), eq(31L), any(ReviewCreateRequest.class), isNull());
     }
 
     @Test
     void createReview_whenPayloadInvalid_shouldReturnValidationError() throws Exception {
-        mockMvc.perform(
-                        post("/orders/21/items/31/review")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(
-                                        """
-								{
-								"rating":6,
-								"comment":"ok",
-								"images":[{"imageUrl":"","imagePublicId":"","sortOrder":0}]
-								}
-								"""))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false));
+        mockMvc.perform(post("/orders/21/items/31/review").contentType(MediaType.APPLICATION_JSON).content("""
+                {
+                "rating":6,
+                "comment":"ok",
+                "images":[{"imageUrl":"","imagePublicId":"","sortOrder":0}]
+                }
+                """)).andExpect(status().isBadRequest()).andExpect(jsonPath("$.success").value(false));
     }
 
     private String validReviewJson() {
         return """
-				{
-				"rating":5,
-				"comment":"Great book",
-				"images":[{"imageUrl":"https://cdn.example.com/review.jpg","imagePublicId":"review-img","sortOrder":0}]
-				}
-				""";
+                {
+                "rating":5,
+                "comment":"Great book",
+                "images":[{"imageUrl":"https://cdn.example.com/review.jpg","imagePublicId":"review-img","sortOrder":0}]
+                }
+                """;
     }
 
     private String validReviewWithoutImagesJson() {
         return """
-				{
-				"rating":5,
-				"comment":"Great book",
-				"images":[]
-				}
-				""";
+                {
+                "rating":5,
+                "comment":"Great book",
+                "images":[]
+                }
+                """;
     }
 
     private void assertPreAuthorize(Method method, String permission) {

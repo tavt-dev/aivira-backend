@@ -14,20 +14,13 @@ import com.tien.aivirabackend.domain.dto.response.BlogPostResponse;
 import com.tien.aivirabackend.domain.dto.response.BlogPostSummaryResponse;
 
 public interface BlogPostService {
-    PageResponse<BlogPostSummaryResponse> getPublicPosts(
-            String keyword, String categorySlug, String productSlug, String sort, int page, int size);
+    PageResponse<BlogPostSummaryResponse> getPublicPosts(String keyword, String categorySlug, String productSlug,
+            String sort, int page, int size);
 
     BlogPostDetailResponse getPublicPost(String slug);
 
-    PageResponse<BlogPostSummaryResponse> getAdminPosts(
-            BlogPostStatus status,
-            Long categoryId,
-            String keyword,
-            String createdBy,
-            Instant publishedFrom,
-            Instant publishedTo,
-            int page,
-            int size);
+    PageResponse<BlogPostSummaryResponse> getAdminPosts(BlogPostStatus status, Long categoryId, String keyword,
+            String createdBy, Instant publishedFrom, Instant publishedTo, int page, int size);
 
     BlogPostResponse getAdminPost(Long id);
 

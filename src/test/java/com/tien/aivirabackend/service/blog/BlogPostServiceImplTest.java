@@ -52,18 +52,9 @@ class BlogPostServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        service = new BlogPostServiceImpl(
-                postRepository,
-                categoryRepository,
-                assetRepository,
-                productRepository,
-                new BlogSpecifications(),
-                new BlogHtmlSanitizer(),
-                new BlogMapper(),
-                currentUserService,
-                fileValidatorService,
-                cloudinaryStorageService,
-                new CloudinaryProperties());
+        service = new BlogPostServiceImpl(postRepository, categoryRepository, assetRepository, productRepository,
+                new BlogSpecifications(), new BlogHtmlSanitizer(), new BlogMapper(), currentUserService,
+                fileValidatorService, cloudinaryStorageService, new CloudinaryProperties());
     }
 
     @Test
@@ -85,9 +76,7 @@ class BlogPostServiceImplTest {
         post.setCoverUrl(null);
         when(postRepository.findDetailedById(10L)).thenReturn(Optional.of(post));
 
-        assertThatThrownBy(() -> service.publishPost(10L))
-                .isInstanceOf(AppException.class)
-                .extracting("errorCode")
+        assertThatThrownBy(() -> service.publishPost(10L)).isInstanceOf(AppException.class).extracting("errorCode")
                 .isEqualTo(BlogErrorCode.BLOG_PUBLISH_VALIDATION_FAILED);
     }
 
@@ -109,23 +98,9 @@ class BlogPostServiceImplTest {
 
     private BlogPost readyDraft() {
         User admin = User.builder().id("admin-1").username("admin").build();
-        BlogCategory category = BlogCategory.builder()
-                .id(1L)
-                .name("News")
-                .slug("news")
-                .active(true)
-                .build();
-        return BlogPost.builder()
-                .id(10L)
-                .title("Aivira bookstore news")
-                .slug("aivira-bookstore-news")
-                .excerpt("News excerpt")
-                .contentHtml("<p>Content</p>")
-                .coverUrl("https://cdn.example.com/cover.jpg")
-                .category(category)
-                .createdBy(admin)
-                .updatedBy(admin)
-                .relatedProducts(new HashSet<>())
-                .build();
+        BlogCategory category = BlogCategory.builder().id(1L).name("News").slug("news").active(true).build();
+        return BlogPost.builder().id(10L).title("Aivira bookstore news").slug("aivira-bookstore-news")
+                .excerpt("News excerpt").contentHtml("<p>Content</p>").coverUrl("https://cdn.example.com/cover.jpg")
+                .category(category).createdBy(admin).updatedBy(admin).relatedProducts(new HashSet<>()).build();
     }
 }

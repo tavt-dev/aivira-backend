@@ -19,8 +19,8 @@ public class CodPaymentProviderClient implements PaymentProviderClient {
 
     @Override
     public PaymentProviderResult createPayment(PaymentProviderRequest request) {
-        return new PaymentProviderResult(
-                request.paymentGroup().getPaymentCode(), null, null, null, null, null, null, null);
+        return new PaymentProviderResult(request.paymentGroup().getPaymentCode(), null, null, null, null, null, null,
+                null);
     }
 
     @Override
@@ -35,13 +35,8 @@ public class CodPaymentProviderClient implements PaymentProviderClient {
 
     @Override
     public PaymentProviderQueryResult queryPayment(PaymentAttempt attempt) {
-        return new PaymentProviderQueryResult(
-                attempt.getProviderTxnRef(),
-                attempt.getRequestId(),
-                attempt.getProviderTransactionId(),
-                attempt.getAmount(),
-                PaymentStatus.PENDING,
-                "COD payment does not support provider query",
-                null);
+        return new PaymentProviderQueryResult(attempt.getProviderTxnRef(), attempt.getRequestId(),
+                attempt.getProviderTransactionId(), attempt.getAmount(), PaymentStatus.PENDING,
+                "COD payment does not support provider query", null);
     }
 }

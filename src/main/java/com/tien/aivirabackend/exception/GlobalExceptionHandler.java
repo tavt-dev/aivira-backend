@@ -35,9 +35,8 @@ public class GlobalExceptionHandler {
 
         log.warn("AppException [{}] {}", ex.getErrorCode().getCode(), ex.getMessage());
 
-        return ResponseEntity.status(ex.getErrorCode().getHttpStatus())
-                .body(ApiResponse.error(
-                        ex.getErrorCode().getCode(), ex.getMessage(), ex.hasDetails() ? ex.getDetails() : null));
+        return ResponseEntity.status(ex.getErrorCode().getHttpStatus()).body(ApiResponse
+                .error(ex.getErrorCode().getCode(), ex.getMessage(), ex.hasDetails() ? ex.getDetails() : null));
     }
 
     // SECURITY
@@ -77,14 +76,11 @@ public class GlobalExceptionHandler {
             errors.put(error.getField(), error.getDefaultMessage());
         }
 
-        return ResponseEntity.status(CommonErrorCode.VALIDATION_FAILED.getHttpStatus())
-                .body(ApiResponse.error(
-                        CommonErrorCode.VALIDATION_FAILED.getCode(),
-                        CommonErrorCode.VALIDATION_FAILED.getMessage(),
-                        errors));
+        return ResponseEntity.status(CommonErrorCode.VALIDATION_FAILED.getHttpStatus()).body(ApiResponse.error(
+                CommonErrorCode.VALIDATION_FAILED.getCode(), CommonErrorCode.VALIDATION_FAILED.getMessage(), errors));
     }
 
-    @ExceptionHandler({MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class})
+    @ExceptionHandler({ MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class })
     public ResponseEntity<ApiResponse<Void>> handleBadRequest() {
         return build(CommonErrorCode.INVALID_INPUT);
     }

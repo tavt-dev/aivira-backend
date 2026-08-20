@@ -18,16 +18,8 @@ import com.tien.aivirabackend.domain.entity.catalog.Product;
 
 @Component
 public class ProductSpecifications {
-    public Specification<Product> publicProducts(
-            String keyword,
-            String categorySlug,
-            String brand,
-            String author,
-            String publisher,
-            String isbn,
-            BigDecimal minPrice,
-            BigDecimal maxPrice,
-            Boolean available) {
+    public Specification<Product> publicProducts(String keyword, String categorySlug, String brand, String author,
+            String publisher, String isbn, BigDecimal minPrice, BigDecimal maxPrice, Boolean available) {
         return (root, query, cb) -> {
             fetchDetails(root, query);
             Join<Product, Category> category = root.join("category");
@@ -78,14 +70,9 @@ public class ProductSpecifications {
         }
     }
 
-    private Predicate addCommonFilters(
-            Predicate predicate,
-            Root<Product> root,
+    private Predicate addCommonFilters(Predicate predicate, Root<Product> root,
             jakarta.persistence.criteria.Join<Product, Category> category,
-            jakarta.persistence.criteria.CriteriaBuilder cb,
-            String keyword,
-            String categorySlug,
-            String brand) {
+            jakarta.persistence.criteria.CriteriaBuilder cb, String keyword, String categorySlug, String brand) {
         if (StringUtils.hasText(keyword)) {
             predicate = cb.and(predicate, keywordPredicate(root, cb, keyword));
         }
@@ -93,20 +80,13 @@ public class ProductSpecifications {
             predicate = cb.and(predicate, cb.equal(category.get("slug"), categorySlug.trim()));
         }
         if (StringUtils.hasText(brand)) {
-            predicate = cb.and(
-                    predicate,
-                    cb.equal(cb.lower(root.get("brand")), brand.trim().toLowerCase(Locale.ROOT)));
+            predicate = cb.and(predicate, cb.equal(cb.lower(root.get("brand")), brand.trim().toLowerCase(Locale.ROOT)));
         }
         return predicate;
     }
 
-    private Predicate addBookFilters(
-            Predicate predicate,
-            Root<Product> root,
-            jakarta.persistence.criteria.CriteriaBuilder cb,
-            String author,
-            String publisher,
-            String isbn) {
+    private Predicate addBookFilters(Predicate predicate, Root<Product> root,
+            jakarta.persistence.criteria.CriteriaBuilder cb, String author, String publisher, String isbn) {
         if (StringUtils.hasText(author)) {
             predicate = cb.and(predicate, containsIgnoreCase(root, cb, "bookAuthor", author));
         }
@@ -119,11 +99,10 @@ public class ProductSpecifications {
         return predicate;
     }
 
-    private Predicate keywordPredicate(
-            Root<Product> root, jakarta.persistence.criteria.CriteriaBuilder cb, String keyword) {
+    private Predicate keywordPredicate(Root<Product> root, jakarta.persistence.criteria.CriteriaBuilder cb,
+            String keyword) {
         String likeKeyword = "%" + keyword.trim().toLowerCase(Locale.ROOT) + "%";
-        return cb.or(
-                cb.like(cb.lower(root.get("productName")), likeKeyword),
+        return cb.or(cb.like(cb.lower(root.get("productName")), likeKeyword),
                 cb.like(cb.lower(root.get("sku")), likeKeyword),
                 cb.like(cb.lower(root.get("description")), likeKeyword),
                 cb.like(cb.lower(root.get("brand")), likeKeyword),
@@ -132,8 +111,8 @@ public class ProductSpecifications {
                 cb.like(cb.lower(root.get("isbn")), likeKeyword));
     }
 
-    private Predicate containsIgnoreCase(
-            Root<Product> root, jakarta.persistence.criteria.CriteriaBuilder cb, String field, String value) {
+    private Predicate containsIgnoreCase(Root<Product> root, jakarta.persistence.criteria.CriteriaBuilder cb,
+            String field, String value) {
         return cb.like(cb.lower(root.get(field)), "%" + value.trim().toLowerCase(Locale.ROOT) + "%");
     }
 }

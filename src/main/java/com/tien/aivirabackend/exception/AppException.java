@@ -24,8 +24,8 @@ public class AppException extends RuntimeException {
         this(errorCode, Map.of(), Map.of(), cause);
     }
 
-    public AppException(
-            ErrorCode errorCode, Map<String, Object> attributes, Map<String, Object> details, Throwable cause) {
+    public AppException(ErrorCode errorCode, Map<String, Object> attributes, Map<String, Object> details,
+            Throwable cause) {
         super(errorCode.formatMessage(attributes), cause);
         this.errorCode = errorCode;
         this.attributes = new HashMap<>(attributes);

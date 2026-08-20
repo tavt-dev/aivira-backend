@@ -14,24 +14,14 @@ import com.tien.aivirabackend.domain.dto.request.StockUpdateRequest;
 import com.tien.aivirabackend.domain.dto.response.ProductResponse;
 
 public interface ProductService {
-    PageResponse<ProductResponse> getPublicProducts(
-            String keyword,
-            String categorySlug,
-            String brand,
-            String author,
-            String publisher,
-            String isbn,
-            BigDecimal minPrice,
-            BigDecimal maxPrice,
-            Boolean available,
-            String sort,
-            int page,
-            int size);
+    PageResponse<ProductResponse> getPublicProducts(String keyword, String categorySlug, String brand, String author,
+            String publisher, String isbn, BigDecimal minPrice, BigDecimal maxPrice, Boolean available, String sort,
+            int page, int size);
 
     ProductResponse getPublicProduct(String slug);
 
-    PageResponse<ProductResponse> getAdminProducts(
-            ProductStatus status, Long categoryId, String keyword, int page, int size);
+    PageResponse<ProductResponse> getAdminProducts(ProductStatus status, Long categoryId, String keyword, int page,
+            int size);
 
     ProductResponse getAdminProduct(Long productId);
 
@@ -41,8 +31,8 @@ public interface ProductService {
 
     void deleteAdminProduct(Long productId);
 
-    ProductResponse uploadProductMedia(
-            Long productId, MultipartFile mediaFile, String altText, Integer sortOrder, Boolean primary);
+    ProductResponse uploadProductMedia(Long productId, MultipartFile mediaFile, String altText, Integer sortOrder,
+            Boolean primary);
 
     ProductResponse updateProductMedia(Long productId, Long mediaId, ProductMediaUpdateRequest request);
 

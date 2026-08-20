@@ -31,8 +31,7 @@ class AdminDashboardControllerContractTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(new AdminDashboardController(dashboardService))
-                .setControllerAdvice(new GlobalExceptionHandler())
-                .build();
+                .setControllerAdvice(new GlobalExceptionHandler()).build();
     }
 
     @Test
@@ -47,26 +46,15 @@ class AdminDashboardControllerContractTest {
 
     @Test
     void endpoints_shouldDelegateToDashboardService() throws Exception {
-        mockMvc.perform(get("/admin/dashboard/summary")
-                        .param("fromDate", "2026-01-01T00:00:00Z")
-                        .param("toDate", "2026-01-31T23:59:59Z"))
-                .andExpect(status().isOk());
-        mockMvc.perform(get("/admin/dashboard/sales")
-                        .param("fromDate", "2026-01-01T00:00:00Z")
-                        .param("toDate", "2026-01-31T23:59:59Z"))
-                .andExpect(status().isOk());
-        mockMvc.perform(get("/admin/dashboard/orders")
-                        .param("fromDate", "2026-01-01T00:00:00Z")
-                        .param("toDate", "2026-01-31T23:59:59Z"))
-                .andExpect(status().isOk());
-        mockMvc.perform(get("/admin/dashboard/top-books")
-                        .param("fromDate", "2026-01-01T00:00:00Z")
-                        .param("toDate", "2026-01-31T23:59:59Z")
-                        .param("limit", "7"))
-                .andExpect(status().isOk());
-        mockMvc.perform(get("/admin/dashboard/low-stock")
-                        .param("threshold", "3")
-                        .param("limit", "4"))
+        mockMvc.perform(get("/admin/dashboard/summary").param("fromDate", "2026-01-01T00:00:00Z").param("toDate",
+                "2026-01-31T23:59:59Z")).andExpect(status().isOk());
+        mockMvc.perform(get("/admin/dashboard/sales").param("fromDate", "2026-01-01T00:00:00Z").param("toDate",
+                "2026-01-31T23:59:59Z")).andExpect(status().isOk());
+        mockMvc.perform(get("/admin/dashboard/orders").param("fromDate", "2026-01-01T00:00:00Z").param("toDate",
+                "2026-01-31T23:59:59Z")).andExpect(status().isOk());
+        mockMvc.perform(get("/admin/dashboard/top-books").param("fromDate", "2026-01-01T00:00:00Z")
+                .param("toDate", "2026-01-31T23:59:59Z").param("limit", "7")).andExpect(status().isOk());
+        mockMvc.perform(get("/admin/dashboard/low-stock").param("threshold", "3").param("limit", "4"))
                 .andExpect(status().isOk());
 
         Instant from = Instant.parse("2026-01-01T00:00:00Z");

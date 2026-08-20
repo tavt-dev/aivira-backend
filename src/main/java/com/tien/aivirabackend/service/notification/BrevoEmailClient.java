@@ -50,26 +50,16 @@ public class BrevoEmailClient {
         payload.put("tags", List.of("aivira", message.tag()));
 
         try {
-            Map<String, Object> response = brevoRestClient
-                    .post()
-                    .uri(brevoProperties.sendEmailUrl())
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .accept(MediaType.APPLICATION_JSON)
-                    .header("api-key", brevoProperties.getApiKey())
-                    .body(payload)
-                    .retrieve()
-                    .body(new ParameterizedTypeReference<>() {});
+            Map<String, Object> response = brevoRestClient.post().uri(brevoProperties.sendEmailUrl())
+                    .contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
+                    .header("api-key", brevoProperties.getApiKey()).body(payload).retrieve()
+                    .body(new ParameterizedTypeReference<>() {
+                    });
             Object messageId = response == null ? null : response.get("messageId");
-            log.info(
-                    "brevo_email_sent recipient={} tag={} messageId={}",
-                    message.toEmail(),
-                    message.tag(),
+            log.info("brevo_email_sent recipient={} tag={} messageId={}", message.toEmail(), message.tag(),
                     messageId == null ? "" : messageId);
         } catch (RestClientResponseException ex) {
-            log.warn(
-                    "brevo_email_failed recipient={} tag={} status={}",
-                    message.toEmail(),
-                    message.tag(),
+            log.warn("brevo_email_failed recipient={} tag={} status={}", message.toEmail(), message.tag(),
                     ex.getStatusCode().value());
             throw new AppException(EmailErrorCode.EMAIL_SEND_FAILED, ex);
         } catch (RestClientException ex) {

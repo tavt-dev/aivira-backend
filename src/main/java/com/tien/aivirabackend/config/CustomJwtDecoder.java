@@ -87,9 +87,7 @@ public class CustomJwtDecoder implements JwtDecoder {
                 userRepository.findById(userId).ifPresent(user -> {
                     Integer currentTokenVersion = user.getTokenVersion();
                     if (currentTokenVersion != null && tokenVersion < currentTokenVersion.longValue()) {
-                        log.warn(
-                                "Token version mismatch. Token has old version: {}, current: {}",
-                                tokenVersion,
+                        log.warn("Token version mismatch. Token has old version: {}, current: {}", tokenVersion,
                                 currentTokenVersion);
                         throw new AppException(JwtErrorCode.TOKEN_REVOKED);
                     }
@@ -100,11 +98,7 @@ public class CustomJwtDecoder implements JwtDecoder {
             Date iat = claims.getIssueTime();
             Instant issueAt = iat != null ? iat.toInstant() : Instant.now();
 
-            return new Jwt(
-                    token,
-                    issueAt,
-                    expirationTime.toInstant(),
-                    signedJWT.getHeader().toJSONObject(),
+            return new Jwt(token, issueAt, expirationTime.toInstant(), signedJWT.getHeader().toJSONObject(),
                     claims.toJSONObject());
         } catch (AppException e) {
             throw e;

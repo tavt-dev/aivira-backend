@@ -31,23 +31,18 @@ public class InventoryService {
     ProductVariationRepository variationRepository;
 
     public Map<Long, ProductVariation> lockVariationsForCartItems(List<CartItem> cartItems) {
-        List<Long> variationIds = cartItems.stream()
-                .map(item -> item.getProductVariation().getId())
-                .distinct()
-                .sorted()
+        List<Long> variationIds = cartItems.stream().map(item -> item.getProductVariation().getId()).distinct().sorted()
                 .toList();
         return lockVariations(variationIds);
     }
 
     public void validateCheckoutItems(List<CartItem> cartItems, Map<Long, ProductVariation> lockedVariations) {
-        cartItems.forEach(item -> validateCheckoutItem(
-                item, lockedVariations.get(item.getProductVariation().getId())));
+        cartItems.forEach(item -> validateCheckoutItem(item, lockedVariations.get(item.getProductVariation().getId())));
     }
 
     public void deductCartItems(List<CartItem> cartItems, Map<Long, ProductVariation> lockedVariations) {
         for (CartItem item : cartItems) {
-            ProductVariation variation =
-                    lockedVariations.get(item.getProductVariation().getId());
+            ProductVariation variation = lockedVariations.get(item.getProductVariation().getId());
             Product product = variation.getProduct();
             variation.setStockQuantity(variation.getStockQuantity() - item.getQuantity());
             product.setStockQuantity(Math.max(0, product.getStockQuantity() - item.getQuantity()));
@@ -82,11 +77,9 @@ public class InventoryService {
     }
 
     public Map<Long, Integer> orderVariationQuantities(List<Order> orders) {
-        return orders.stream()
-                .flatMap(order -> order.getItems().stream())
-                .filter(item -> item.getProductVariationId() != null)
-                .collect(Collectors.toMap(
-                        OrderItem::getProductVariationId, OrderItem::getQuantity, Integer::sum, TreeMap::new));
+        return orders.stream().flatMap(order -> order.getItems().stream())
+                .filter(item -> item.getProductVariationId() != null).collect(Collectors
+                        .toMap(OrderItem::getProductVariationId, OrderItem::getQuantity, Integer::sum, TreeMap::new));
     }
 
     private Map<Long, ProductVariation> lockVariations(Collection<Long> variationIds) {
@@ -102,8 +95,7 @@ public class InventoryService {
             throw new AppException(CheckoutErrorCode.CHECKOUT_CART_ITEM_MISMATCH);
         }
         Product product = variation.getProduct();
-        if (!Boolean.TRUE.equals(variation.getActive())
-                || !Boolean.TRUE.equals(product.getActive())
+        if (!Boolean.TRUE.equals(variation.getActive()) || !Boolean.TRUE.equals(product.getActive())
                 || product.getStatus() != ProductStatus.ACTIVE) {
             throw new AppException(CartErrorCode.CART_PRODUCT_NOT_AVAILABLE);
         }

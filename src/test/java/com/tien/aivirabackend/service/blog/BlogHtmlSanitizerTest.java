@@ -18,8 +18,8 @@ class BlogHtmlSanitizerTest {
 
     @Test
     void sanitize_shouldOnlyAllowHttpsImages() {
-        String result = sanitizer.sanitize(
-                "<img src='http://example.com/a.jpg'><img src='https://example.com/b.jpg' alt='cover'>");
+        String result = sanitizer
+                .sanitize("<img src='http://example.com/a.jpg'><img src='https://example.com/b.jpg' alt='cover'>");
 
         assertThat(result).doesNotContain("http://example.com/a.jpg");
         assertThat(result).contains("https://example.com/b.jpg");

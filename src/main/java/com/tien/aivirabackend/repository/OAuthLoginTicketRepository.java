@@ -16,7 +16,7 @@ import com.tien.aivirabackend.domain.entity.user.OAuthLoginTicket;
 
 public interface OAuthLoginTicketRepository extends JpaRepository<OAuthLoginTicket, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @EntityGraph(attributePaths = {"user", "user.roles"})
+    @EntityGraph(attributePaths = { "user", "user.roles" })
     @Query("select t from OAuthLoginTicket t where t.ticketHash = :ticketHash")
     Optional<OAuthLoginTicket> findByTicketHashForUpdate(@Param("ticketHash") String ticketHash);
 

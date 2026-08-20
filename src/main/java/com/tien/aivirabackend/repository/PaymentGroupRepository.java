@@ -25,13 +25,13 @@ public interface PaymentGroupRepository extends JpaRepository<PaymentGroup, Long
 
     Optional<PaymentGroup> findByProviderTxnRef(String providerTxnRef);
 
-    @EntityGraph(attributePaths = {"payments", "payments.order"})
+    @EntityGraph(attributePaths = { "payments", "payments.order" })
     Optional<PaymentGroup> findDetailedByPaymentCode(String paymentCode);
 
     Optional<PaymentGroup> findByPaymentCodeAndUserId(String paymentCode, String userId);
 
-    List<PaymentGroup> findByStatusAndMethodNotAndExpiresAtBefore(
-            PaymentStatus status, PaymentMethod method, Instant expiresAt);
+    List<PaymentGroup> findByStatusAndMethodNotAndExpiresAtBefore(PaymentStatus status, PaymentMethod method,
+            Instant expiresAt);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select g from PaymentGroup g where g.id = :id")

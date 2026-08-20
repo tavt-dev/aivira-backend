@@ -37,8 +37,7 @@ public class PromotionServiceImpl implements PromotionService {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<PromotionResponse> getPromotions(int page, int size) {
-        return PageResponse.from(promotionRepository
-                .findAll(PageRequestUtils.newestFirst(page, size))
+        return PageResponse.from(promotionRepository.findAll(PageRequestUtils.newestFirst(page, size))
                 .map(discountMapper::toPromotionResponse));
     }
 
@@ -55,26 +54,14 @@ public class PromotionServiceImpl implements PromotionService {
         if (promotionRepository.existsByPromotionName(name)) {
             throw new AppException(PromotionErrorCode.PROMOTION_NAME_ALREADY_EXISTS);
         }
-        validatePromotion(
-                request.getPromotionType(),
-                request.getValue(),
-                request.getMaxDiscountAmount(),
-                request.getPromotionScope(),
-                request.getTargetId(),
-                request.getStartAt(),
-                request.getEndAt());
-        Promotion promotion = Promotion.builder()
-                .promotionName(name)
-                .description(trimRequired(request.getDescription()))
-                .promotionType(request.getPromotionType())
-                .value(request.getValue())
-                .maxDiscountAmount(request.getMaxDiscountAmount())
-                .promotionScope(request.getPromotionScope())
-                .targetId(request.getTargetId())
-                .startAt(request.getStartAt())
-                .endAt(request.getEndAt())
-                .active(request.getActive() == null || Boolean.TRUE.equals(request.getActive()))
-                .build();
+        validatePromotion(request.getPromotionType(), request.getValue(), request.getMaxDiscountAmount(),
+                request.getPromotionScope(), request.getTargetId(), request.getStartAt(), request.getEndAt());
+        Promotion promotion = Promotion.builder().promotionName(name)
+                .description(trimRequired(request.getDescription())).promotionType(request.getPromotionType())
+                .value(request.getValue()).maxDiscountAmount(request.getMaxDiscountAmount())
+                .promotionScope(request.getPromotionScope()).targetId(request.getTargetId())
+                .startAt(request.getStartAt()).endAt(request.getEndAt())
+                .active(request.getActive() == null || Boolean.TRUE.equals(request.getActive())).build();
         return discountMapper.toPromotionResponse(promotionRepository.save(promotion));
     }
 
@@ -117,14 +104,8 @@ public class PromotionServiceImpl implements PromotionService {
         if (request.getActive() != null) {
             promotion.setActive(request.getActive());
         }
-        validatePromotion(
-                promotion.getPromotionType(),
-                promotion.getValue(),
-                promotion.getMaxDiscountAmount(),
-                promotion.getPromotionScope(),
-                promotion.getTargetId(),
-                promotion.getStartAt(),
-                promotion.getEndAt());
+        validatePromotion(promotion.getPromotionType(), promotion.getValue(), promotion.getMaxDiscountAmount(),
+                promotion.getPromotionScope(), promotion.getTargetId(), promotion.getStartAt(), promotion.getEndAt());
         return discountMapper.toPromotionResponse(promotionRepository.save(promotion));
     }
 
@@ -137,19 +118,12 @@ public class PromotionServiceImpl implements PromotionService {
     }
 
     private Promotion findPromotion(Long promotionId) {
-        return promotionRepository
-                .findById(promotionId)
+        return promotionRepository.findById(promotionId)
                 .orElseThrow(() -> new AppException(PromotionErrorCode.PROMOTION_NOT_FOUND));
     }
 
-    private void validatePromotion(
-            PromotionType type,
-            BigDecimal value,
-            BigDecimal maxDiscountAmount,
-            PromotionScope scope,
-            Long targetId,
-            java.time.LocalDateTime startAt,
-            java.time.LocalDateTime endAt) {
+    private void validatePromotion(PromotionType type, BigDecimal value, BigDecimal maxDiscountAmount,
+            PromotionScope scope, Long targetId, java.time.LocalDateTime startAt, java.time.LocalDateTime endAt) {
         if (type == null || value == null || value.compareTo(BigDecimal.ZERO) <= 0) {
             throw new AppException(PromotionErrorCode.DISCOUNT_INVALID_VALUE);
         }
@@ -165,8 +139,7 @@ public class PromotionServiceImpl implements PromotionService {
         if (scope == null || targetId == null || targetId <= 0) {
             throw new AppException(PromotionErrorCode.PROMOTION_INVALID_TARGET);
         }
-        boolean targetExists = scope == PromotionScope.PRODUCT
-                ? productRepository.existsById(targetId)
+        boolean targetExists = scope == PromotionScope.PRODUCT ? productRepository.existsById(targetId)
                 : categoryRepository.existsById(targetId);
         if (!targetExists) {
             throw new AppException(PromotionErrorCode.PROMOTION_INVALID_TARGET);

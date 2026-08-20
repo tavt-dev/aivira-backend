@@ -33,15 +33,11 @@ public class AdminUserController {
     @Operation(summary = "List users for admin")
     @PreAuthorize("@authorizationService.hasAnyPermission('USER_MANAGE_ALL', 'USER_READ_ALL')")
     public ResponseEntity<ApiResponse<PageResponse<AdminUserResponse>>> getAdminUsers(
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) PredefinedRole role,
-            @RequestParam(required = false) Boolean active,
-            @RequestParam(required = false) Boolean locked,
-            @RequestParam(required = false) Boolean emailVerified,
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(required = false) String keyword, @RequestParam(required = false) PredefinedRole role,
+            @RequestParam(required = false) Boolean active, @RequestParam(required = false) Boolean locked,
+            @RequestParam(required = false) Boolean emailVerified, @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(ApiResponse.success(
-                "Get admin users successful",
+        return ResponseEntity.ok(ApiResponse.success("Get admin users successful",
                 userService.getAdminUsers(keyword, role, active, locked, emailVerified, page, size)));
     }
 
@@ -69,9 +65,9 @@ public class AdminUserController {
     @PutMapping("/{userId}/roles")
     @Operation(summary = "Replace user roles")
     @PreAuthorize("@authorizationService.hasAnyPermission('USER_MANAGE_ALL', 'USER_ASSIGN_ROLE')")
-    public ResponseEntity<ApiResponse<AdminUserResponse>> updateUserRoles(
-            @PathVariable String userId, @Valid @RequestBody UpdateUserRolesRequest request) {
-        return ResponseEntity.ok(
-                ApiResponse.success("Update user roles successful", userService.updateUserRoles(userId, request)));
+    public ResponseEntity<ApiResponse<AdminUserResponse>> updateUserRoles(@PathVariable String userId,
+            @Valid @RequestBody UpdateUserRolesRequest request) {
+        return ResponseEntity
+                .ok(ApiResponse.success("Update user roles successful", userService.updateUserRoles(userId, request)));
     }
 }

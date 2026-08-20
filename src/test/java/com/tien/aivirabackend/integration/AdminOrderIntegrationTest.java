@@ -76,18 +76,13 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
         String token = adminToken();
         Order order = saveOrder(OrderStatus.PENDING_CONFIRMATION, PaymentStatus.PENDING, 3);
 
-        mockMvc.perform(get("/admin/orders")
-                        .header("Authorization", "Bearer " + token)
-                        .param("status", "PENDING_CONFIRMATION"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.totalElements").value(1))
+        mockMvc.perform(
+                get("/admin/orders").header("Authorization", "Bearer " + token).param("status", "PENDING_CONFIRMATION"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.totalElements").value(1))
                 .andExpect(jsonPath("$.data.data[0].orderCode").value(order.getOrderCode()));
 
-        mockMvc.perform(get("/admin/orders")
-                        .header("Authorization", "Bearer " + token)
-                        .param("keyword", "0900000000"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.totalElements").value(1))
+        mockMvc.perform(get("/admin/orders").header("Authorization", "Bearer " + token).param("keyword", "0900000000"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.totalElements").value(1))
                 .andExpect(jsonPath("$.data.data[0].orderCode").value(order.getOrderCode()));
     }
 
@@ -95,20 +90,18 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
     void orderDetail_shouldReturnItemsAndPaymentForCustomerAndAdmin() throws Exception {
         String customerToken = userToken("buyer", "buyer@example.com", PredefinedRole.USER);
         User customer = userRepository.findByUsername("buyer").orElseThrow();
-        Order order = saveOrderForCustomer(
-                customer, OrderStatus.PENDING_CONFIRMATION, PaymentStatus.PENDING, 3, PaymentMethod.COD);
+        Order order = saveOrderForCustomer(customer, OrderStatus.PENDING_CONFIRMATION, PaymentStatus.PENDING, 3,
+                PaymentMethod.COD);
         String adminToken = adminToken();
 
         mockMvc.perform(get("/orders/{orderId}", order.getId()).header("Authorization", "Bearer " + customerToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.items[0].sku").value("BOOK-001-PB"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.items[0].sku").value("BOOK-001-PB"))
                 .andExpect(jsonPath("$.data.paymentGroupCode").value("PAY-PENDING_CONFIRMATION"))
                 .andExpect(jsonPath("$.data.paymentMethod").value("COD"))
                 .andExpect(jsonPath("$.data.paymentStatus").value("PENDING"));
 
         mockMvc.perform(get("/admin/orders/{orderId}", order.getId()).header("Authorization", "Bearer " + adminToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.items[0].sku").value("BOOK-001-PB"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.items[0].sku").value("BOOK-001-PB"))
                 .andExpect(jsonPath("$.data.paymentGroupCode").value("PAY-PENDING_CONFIRMATION"))
                 .andExpect(jsonPath("$.data.paymentMethod").value("COD"))
                 .andExpect(jsonPath("$.data.paymentStatus").value("PENDING"));
@@ -119,22 +112,18 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
         String token = adminToken();
         Order order = saveOrder(OrderStatus.PENDING_CONFIRMATION, PaymentStatus.PENDING, 3);
 
-        mockMvc.perform(put("/admin/orders/{orderId}/confirm", order.getId())
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.orderStatus").value("CONFIRMED"));
-        mockMvc.perform(put("/admin/orders/{orderId}/packing", order.getId())
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.orderStatus").value("PACKING"));
-        mockMvc.perform(put("/admin/orders/{orderId}/shipping", order.getId())
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.orderStatus").value("SHIPPING"));
-        mockMvc.perform(put("/admin/orders/{orderId}/completed", order.getId())
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.orderStatus").value("COMPLETED"));
+        mockMvc.perform(
+                put("/admin/orders/{orderId}/confirm", order.getId()).header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.orderStatus").value("CONFIRMED"));
+        mockMvc.perform(
+                put("/admin/orders/{orderId}/packing", order.getId()).header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.orderStatus").value("PACKING"));
+        mockMvc.perform(
+                put("/admin/orders/{orderId}/shipping", order.getId()).header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.orderStatus").value("SHIPPING"));
+        mockMvc.perform(
+                put("/admin/orders/{orderId}/completed", order.getId()).header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.orderStatus").value("COMPLETED"));
 
         assertThat(orderRepository.findById(order.getId()).orElseThrow().getOrderStatus())
                 .isEqualTo(OrderStatus.COMPLETED);
@@ -146,19 +135,12 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
         Order order = saveOrder(OrderStatus.CONFIRMED, PaymentStatus.PENDING, 3);
         Long variationId = order.getItems().getFirst().getProductVariationId();
 
-        mockMvc.perform(put("/admin/orders/{orderId}/cancel", order.getId())
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(APPLICATION_JSON)
-                        .content(json(Map.of("reason", "out of stock"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.orderStatus").value("CANCELLED"))
+        mockMvc.perform(put("/admin/orders/{orderId}/cancel", order.getId()).header("Authorization", "Bearer " + token)
+                .contentType(APPLICATION_JSON).content(json(Map.of("reason", "out of stock"))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.orderStatus").value("CANCELLED"))
                 .andExpect(jsonPath("$.data.cancelReason").value("out of stock"));
 
-        assertThat(productVariationRepository
-                        .findById(variationId)
-                        .orElseThrow()
-                        .getStockQuantity())
-                .isEqualTo(5);
+        assertThat(productVariationRepository.findById(variationId).orElseThrow().getStockQuantity()).isEqualTo(5);
     }
 
     @Test
@@ -168,14 +150,10 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
         Long variationId = order.getItems().getFirst().getProductVariationId();
 
         mockMvc.perform(put("/admin/orders/{orderId}/mark-refunded", order.getId())
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(APPLICATION_JSON)
-                        .content(json(Map.of(
-                                "amount", "200.00",
-                                "reason", "customer refund",
-                                "note", "manual bank transfer completed"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.orderStatus").value("REFUNDED"))
+                .header("Authorization", "Bearer " + token).contentType(APPLICATION_JSON)
+                .content(json(Map.of("amount", "200.00", "reason", "customer refund", "note",
+                        "manual bank transfer completed"))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.orderStatus").value("REFUNDED"))
                 .andExpect(jsonPath("$.data.paymentStatus").value("REFUNDED"))
                 .andExpect(jsonPath("$.data.refund.amount").value(200.00))
                 .andExpect(jsonPath("$.data.refund.refundCode").exists());
@@ -183,29 +161,14 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
         Order refundedOrder = orderRepository.findWithPaymentsById(order.getId()).orElseThrow();
         assertThat(refundedOrder.getOrderStatus()).isEqualTo(OrderStatus.REFUNDED);
         assertThat(refundedOrder.getPayments().getFirst().getStatus()).isEqualTo(PaymentStatus.REFUNDED);
-        assertThat(paymentGroupRepository
-                        .findById(refundedOrder
-                                .getPayments()
-                                .getFirst()
-                                .getPaymentGroup()
-                                .getId())
-                        .orElseThrow()
-                        .getStatus())
-                .isEqualTo(PaymentStatus.REFUNDED);
-        assertThat(productVariationRepository
-                        .findById(variationId)
-                        .orElseThrow()
-                        .getStockQuantity())
-                .isEqualTo(5);
+        assertThat(paymentGroupRepository.findById(refundedOrder.getPayments().getFirst().getPaymentGroup().getId())
+                .orElseThrow().getStatus()).isEqualTo(PaymentStatus.REFUNDED);
+        assertThat(productVariationRepository.findById(variationId).orElseThrow().getStockQuantity()).isEqualTo(5);
         assertThat(refundRepository.existsByOrder_Id(order.getId())).isTrue();
 
         mockMvc.perform(put("/admin/orders/{orderId}/mark-refunded", order.getId())
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(APPLICATION_JSON)
-                        .content(json(Map.of(
-                                "amount", "200.00",
-                                "reason", "duplicate",
-                                "note", "duplicate manual refund"))))
+                .header("Authorization", "Bearer " + token).contentType(APPLICATION_JSON)
+                .content(json(Map.of("amount", "200.00", "reason", "duplicate", "note", "duplicate manual refund"))))
                 .andExpect(status().isBadRequest());
     }
 
@@ -215,24 +178,16 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
 
     private String userToken(String username, String email, PredefinedRole roleCode) throws Exception {
         var role = roleRepository.findByCode(roleCode).orElseThrow();
-        User user = User.builder()
-                .username(username)
-                .email(email)
-                .password(passwordEncoder.encode(PASSWORD))
-                .provider(SignInProvider.LOCAL)
-                .emailVerified(true)
-                .isActive(true)
-                .isLocked(false)
-                .isDeleted(false)
+        User user = User.builder().username(username).email(email).password(passwordEncoder.encode(PASSWORD))
+                .provider(SignInProvider.LOCAL).emailVerified(true).isActive(true).isLocked(false).isDeleted(false)
                 .build();
         user.getRoles().add(role);
         userRepository.save(user);
 
-        MvcResult login = mockMvc.perform(post("/auth/token")
-                        .contentType(APPLICATION_JSON)
+        MvcResult login = mockMvc
+                .perform(post("/auth/token").contentType(APPLICATION_JSON)
                         .content(json(Map.of("username", username, "password", PASSWORD))))
-                .andExpect(status().isOk())
-                .andReturn();
+                .andExpect(status().isOk()).andReturn();
         return read(login, "/data/token").asText();
     }
 
@@ -240,101 +195,40 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
         return saveOrder(orderStatus, paymentStatus, variationStock, PaymentMethod.COD);
     }
 
-    private Order saveOrder(
-            OrderStatus orderStatus, PaymentStatus paymentStatus, int variationStock, PaymentMethod paymentMethod) {
-        User customer = userRepository.save(User.builder()
-                .username("buyer")
-                .email("buyer@example.com")
-                .password(passwordEncoder.encode(PASSWORD))
-                .provider(SignInProvider.LOCAL)
-                .emailVerified(true)
-                .isActive(true)
-                .build());
+    private Order saveOrder(OrderStatus orderStatus, PaymentStatus paymentStatus, int variationStock,
+            PaymentMethod paymentMethod) {
+        User customer = userRepository.save(
+                User.builder().username("buyer").email("buyer@example.com").password(passwordEncoder.encode(PASSWORD))
+                        .provider(SignInProvider.LOCAL).emailVerified(true).isActive(true).build());
         return saveOrderForCustomer(customer, orderStatus, paymentStatus, variationStock, paymentMethod);
     }
 
-    private Order saveOrderForCustomer(
-            User customer,
-            OrderStatus orderStatus,
-            PaymentStatus paymentStatus,
-            int variationStock,
-            PaymentMethod paymentMethod) {
-        Category category = categoryRepository.save(Category.builder()
-                .categoryName("Books")
-                .slug("books")
-                .description("Books")
-                .displayOrder(0)
-                .active(true)
-                .visible(true)
-                .build());
-        Product product = Product.builder()
-                .category(category)
-                .sku("BOOK-001")
-                .productName("Aivira Book")
-                .slug("aivira-book")
-                .description("Book")
-                .bookAuthor("Aivira")
-                .price(BigDecimal.valueOf(100))
-                .stockQuantity(variationStock)
-                .soldCount(0)
-                .active(true)
-                .featured(false)
-                .status(ProductStatus.ACTIVE)
+    private Order saveOrderForCustomer(User customer, OrderStatus orderStatus, PaymentStatus paymentStatus,
+            int variationStock, PaymentMethod paymentMethod) {
+        Category category = categoryRepository.save(Category.builder().categoryName("Books").slug("books")
+                .description("Books").displayOrder(0).active(true).visible(true).build());
+        Product product = Product.builder().category(category).sku("BOOK-001").productName("Aivira Book")
+                .slug("aivira-book").description("Book").bookAuthor("Aivira").price(BigDecimal.valueOf(100))
+                .stockQuantity(variationStock).soldCount(0).active(true).featured(false).status(ProductStatus.ACTIVE)
                 .build();
-        ProductVariation variation = ProductVariation.builder()
-                .product(product)
-                .sku("BOOK-001-PB")
-                .color("Default")
-                .size("Paperback")
-                .additionalPrice(BigDecimal.ZERO)
-                .stockQuantity(variationStock)
-                .active(true)
-                .build();
+        ProductVariation variation = ProductVariation.builder().product(product).sku("BOOK-001-PB").color("Default")
+                .size("Paperback").additionalPrice(BigDecimal.ZERO).stockQuantity(variationStock).active(true).build();
         product.getProductVariations().add(variation);
         Product savedProduct = productRepository.save(product);
-        ProductVariation savedVariation =
-                savedProduct.getProductVariations().iterator().next();
+        ProductVariation savedVariation = savedProduct.getProductVariations().iterator().next();
 
-        PaymentGroup group = paymentGroupRepository.save(PaymentGroup.builder()
-                .paymentCode("PAY-" + orderStatus.name())
-                .user(customer)
-                .method(paymentMethod)
-                .status(paymentStatus)
-                .amount(new BigDecimal("200.00"))
-                .build());
-        Order order = Order.builder()
-                .orderCode("ORD-" + orderStatus.name())
-                .user(customer)
-                .subtotal(new BigDecimal("200.00"))
-                .shippingFee(BigDecimal.ZERO)
-                .discountAmount(BigDecimal.ZERO)
-                .totalAmount(new BigDecimal("200.00"))
-                .orderStatus(orderStatus)
-                .shippingRecipientName("Buyer")
-                .shippingPhoneNumber("0900000000")
-                .shippingAddressLine("123 Street")
-                .build();
-        order.getItems()
-                .add(OrderItem.builder()
-                        .order(order)
-                        .productId(savedProduct.getId())
-                        .productVariationId(savedVariation.getId())
-                        .productName(savedProduct.getProductName())
-                        .sku(savedVariation.getSku())
-                        .basePrice(new BigDecimal("100.00"))
-                        .additionalPrice(BigDecimal.ZERO)
-                        .discountAmount(BigDecimal.ZERO)
-                        .finalPrice(new BigDecimal("100.00"))
-                        .quantity(2)
-                        .build());
-        order.getPayments()
-                .add(Payment.builder()
-                        .order(order)
-                        .paymentGroup(group)
-                        .method(paymentMethod)
-                        .status(paymentStatus)
-                        .amount(new BigDecimal("200.00"))
-                        .build());
+        PaymentGroup group = paymentGroupRepository.save(PaymentGroup.builder().paymentCode("PAY-" + orderStatus.name())
+                .user(customer).method(paymentMethod).status(paymentStatus).amount(new BigDecimal("200.00")).build());
+        Order order = Order.builder().orderCode("ORD-" + orderStatus.name()).user(customer)
+                .subtotal(new BigDecimal("200.00")).shippingFee(BigDecimal.ZERO).discountAmount(BigDecimal.ZERO)
+                .totalAmount(new BigDecimal("200.00")).orderStatus(orderStatus).shippingRecipientName("Buyer")
+                .shippingPhoneNumber("0900000000").shippingAddressLine("123 Street").build();
+        order.getItems().add(OrderItem.builder().order(order).productId(savedProduct.getId())
+                .productVariationId(savedVariation.getId()).productName(savedProduct.getProductName())
+                .sku(savedVariation.getSku()).basePrice(new BigDecimal("100.00")).additionalPrice(BigDecimal.ZERO)
+                .discountAmount(BigDecimal.ZERO).finalPrice(new BigDecimal("100.00")).quantity(2).build());
+        order.getPayments().add(Payment.builder().order(order).paymentGroup(group).method(paymentMethod)
+                .status(paymentStatus).amount(new BigDecimal("200.00")).build());
         return orderRepository.save(order);
     }
 

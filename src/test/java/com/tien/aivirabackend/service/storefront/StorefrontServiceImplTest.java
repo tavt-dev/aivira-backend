@@ -41,8 +41,8 @@ class StorefrontServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        storefrontService = new StorefrontServiceImpl(
-                productRepository, categoryRepository, new ProductSpecifications(), new ProductMapper(), blogPostService);
+        storefrontService = new StorefrontServiceImpl(productRepository, categoryRepository,
+                new ProductSpecifications(), new ProductMapper(), blogPostService);
     }
 
     @Test
@@ -85,28 +85,12 @@ class StorefrontServiceImplTest {
     }
 
     private Product product(String sku, String name, int soldCount) {
-        return Product.builder()
-                .id((long) soldCount)
-                .category(Category.builder()
-                        .id(1L)
-                        .categoryName("Books")
-                        .slug("books")
-                        .description("Books")
-                        .active(true)
-                        .visible(true)
-                        .build())
-                .sku(sku)
-                .productName(name)
-                .slug(name.toLowerCase().replace(" ", "-"))
-                .description("Description")
-                .bookAuthor("Author")
-                .price(BigDecimal.TEN)
-                .stockQuantity(5)
-                .soldCount(soldCount)
-                .active(true)
-                .featured(true)
-                .status(ProductStatus.ACTIVE)
-                .build();
+        return Product.builder().id((long) soldCount)
+                .category(Category.builder().id(1L).categoryName("Books").slug("books").description("Books")
+                        .active(true).visible(true).build())
+                .sku(sku).productName(name).slug(name.toLowerCase().replace(" ", "-")).description("Description")
+                .bookAuthor("Author").price(BigDecimal.TEN).stockQuantity(5).soldCount(soldCount).active(true)
+                .featured(true).status(ProductStatus.ACTIVE).build();
     }
 
     private CategoryHighlightProjection categoryHighlight(Long id, String name, Long count) {

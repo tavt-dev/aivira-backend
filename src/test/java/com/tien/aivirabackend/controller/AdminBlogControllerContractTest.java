@@ -13,8 +13,8 @@ import com.tien.aivirabackend.domain.dto.request.BlogPostCreateRequest;
 class AdminBlogControllerContractTest {
     @Test
     void mutatingEndpoints_shouldDeclareCmsPermissions() throws Exception {
-        assertPermission(
-                AdminBlogController.class.getMethod("createCategory", BlogCategoryRequest.class), "CMS_CREATE");
+        assertPermission(AdminBlogController.class.getMethod("createCategory", BlogCategoryRequest.class),
+                "CMS_CREATE");
         assertPermission(AdminBlogController.class.getMethod("createPost", BlogPostCreateRequest.class), "CMS_CREATE");
         assertPermission(AdminBlogController.class.getMethod("publishPost", Long.class), "CMS_UPDATE");
         assertPermission(AdminBlogController.class.getMethod("deletePost", Long.class), "CMS_DELETE");

@@ -75,164 +75,82 @@ class ReviewIntegrationTest extends AbstractIntegrationTest {
         Order order = saveCompletedOrder("buyer");
         Long orderItemId = order.getItems().getFirst().getId();
 
-        MvcResult create = mockMvc.perform(
-                        post("/orders/{orderId}/items/{orderItemId}/review", order.getId(), orderItemId)
-                                .header("Authorization", "Bearer " + customerToken)
-                                .contentType(APPLICATION_JSON)
-                                .content(json(Map.of(
-                                        "rating",
-                                        5,
-                                        "comment",
-                                        "Great book",
-                                        "images",
-                                        java.util.List.of(Map.of(
-                                                "imageUrl", "https://cdn.example.com/review.jpg",
-                                                "imagePublicId", "review-img",
-                                                "sortOrder", 0))))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.approved").value(false))
-                .andReturn();
+        MvcResult create = mockMvc
+                .perform(post("/orders/{orderId}/items/{orderItemId}/review", order.getId(), orderItemId)
+                        .header("Authorization", "Bearer " + customerToken).contentType(APPLICATION_JSON)
+                        .content(json(Map.of("rating", 5, "comment", "Great book", "images",
+                                java.util.List.of(Map.of("imageUrl", "https://cdn.example.com/review.jpg",
+                                        "imagePublicId", "review-img", "sortOrder", 0))))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.approved").value(false)).andReturn();
         Long reviewId = read(create, "/data/id").asLong();
 
-        mockMvc.perform(get("/products/aivira-book/reviews"))
-                .andExpect(status().isOk())
+        mockMvc.perform(get("/products/aivira-book/reviews")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalElements").value(0));
 
-        mockMvc.perform(put("/admin/reviews/{reviewId}/moderate", reviewId)
-                        .header("Authorization", "Bearer " + adminToken)
-                        .contentType(APPLICATION_JSON)
-                        .content(json(Map.of("approved", true, "visible", true))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.approved").value(true));
-        mockMvc.perform(put("/admin/reviews/{reviewId}/reply", reviewId)
-                        .header("Authorization", "Bearer " + adminToken)
-                        .contentType(APPLICATION_JSON)
-                        .content(json(Map.of("adminReply", "Thanks for the review"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.adminReply").value("Thanks for the review"));
+        mockMvc.perform(
+                put("/admin/reviews/{reviewId}/moderate", reviewId).header("Authorization", "Bearer " + adminToken)
+                        .contentType(APPLICATION_JSON).content(json(Map.of("approved", true, "visible", true))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.approved").value(true));
+        mockMvc.perform(put("/admin/reviews/{reviewId}/reply", reviewId).header("Authorization", "Bearer " + adminToken)
+                .contentType(APPLICATION_JSON).content(json(Map.of("adminReply", "Thanks for the review"))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.adminReply").value("Thanks for the review"));
 
-        mockMvc.perform(get("/products/aivira-book/reviews"))
-                .andExpect(status().isOk())
+        mockMvc.perform(get("/products/aivira-book/reviews")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalElements").value(1))
                 .andExpect(jsonPath("$.data.data[0].adminReply").value("Thanks for the review"));
 
         mockMvc.perform(post("/orders/{orderId}/items/{orderItemId}/review", order.getId(), orderItemId)
-                        .header("Authorization", "Bearer " + customerToken)
-                        .contentType(APPLICATION_JSON)
-                        .content(json(Map.of("rating", 4, "comment", "duplicate"))))
-                .andExpect(status().isConflict());
+                .header("Authorization", "Bearer " + customerToken).contentType(APPLICATION_JSON)
+                .content(json(Map.of("rating", 4, "comment", "duplicate")))).andExpect(status().isConflict());
 
         mockMvc.perform(delete("/reviews/{reviewId}", reviewId).header("Authorization", "Bearer " + customerToken))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/products/aivira-book/reviews"))
-                .andExpect(status().isOk())
+        mockMvc.perform(get("/products/aivira-book/reviews")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalElements").value(0));
-        assertThat(reviewRepository.findById(reviewId).orElseThrow().getDeletedAt())
-                .isNotNull();
+        assertThat(reviewRepository.findById(reviewId).orElseThrow().getDeletedAt()).isNotNull();
     }
 
     private String userToken(String username, String email, PredefinedRole roleCode) throws Exception {
         var role = roleRepository.findByCode(roleCode).orElseThrow();
-        User user = User.builder()
-                .username(username)
-                .email(email)
-                .password(passwordEncoder.encode(PASSWORD))
-                .provider(SignInProvider.LOCAL)
-                .emailVerified(true)
-                .isActive(true)
-                .isLocked(false)
-                .isDeleted(false)
+        User user = User.builder().username(username).email(email).password(passwordEncoder.encode(PASSWORD))
+                .provider(SignInProvider.LOCAL).emailVerified(true).isActive(true).isLocked(false).isDeleted(false)
                 .build();
         user.getRoles().add(role);
         userRepository.save(user);
 
-        MvcResult login = mockMvc.perform(post("/auth/token")
-                        .contentType(APPLICATION_JSON)
+        MvcResult login = mockMvc
+                .perform(post("/auth/token").contentType(APPLICATION_JSON)
                         .content(json(Map.of("username", username, "password", PASSWORD))))
-                .andExpect(status().isOk())
-                .andReturn();
+                .andExpect(status().isOk()).andReturn();
         return read(login, "/data/token").asText();
     }
 
     private Order saveCompletedOrder(String username) {
         User customer = userRepository.findByUsername(username).orElseThrow();
-        Category category = categoryRepository.save(Category.builder()
-                .categoryName("Books")
-                .slug("books")
-                .description("Books")
-                .displayOrder(0)
-                .active(true)
-                .visible(true)
-                .build());
-        Product product = Product.builder()
-                .category(category)
-                .sku("BOOK-001")
-                .productName("Aivira Book")
-                .slug("aivira-book")
-                .description("Book")
-                .bookAuthor("Aivira")
-                .price(BigDecimal.valueOf(100))
-                .stockQuantity(3)
-                .soldCount(1)
-                .active(true)
-                .featured(false)
-                .status(ProductStatus.ACTIVE)
-                .build();
-        ProductVariation variation = ProductVariation.builder()
-                .product(product)
-                .sku("BOOK-001-PB")
-                .color("Default")
-                .size("Paperback")
-                .additionalPrice(BigDecimal.ZERO)
-                .stockQuantity(3)
-                .active(true)
-                .build();
+        Category category = categoryRepository.save(Category.builder().categoryName("Books").slug("books")
+                .description("Books").displayOrder(0).active(true).visible(true).build());
+        Product product = Product.builder().category(category).sku("BOOK-001").productName("Aivira Book")
+                .slug("aivira-book").description("Book").bookAuthor("Aivira").price(BigDecimal.valueOf(100))
+                .stockQuantity(3).soldCount(1).active(true).featured(false).status(ProductStatus.ACTIVE).build();
+        ProductVariation variation = ProductVariation.builder().product(product).sku("BOOK-001-PB").color("Default")
+                .size("Paperback").additionalPrice(BigDecimal.ZERO).stockQuantity(3).active(true).build();
         product.getProductVariations().add(variation);
         Product savedProduct = productRepository.save(product);
-        ProductVariation savedVariation =
-                savedProduct.getProductVariations().iterator().next();
+        ProductVariation savedVariation = savedProduct.getProductVariations().iterator().next();
 
-        PaymentGroup group = paymentGroupRepository.save(PaymentGroup.builder()
-                .paymentCode("PAY-REVIEW")
-                .user(customer)
-                .method(PaymentMethod.COD)
-                .status(PaymentStatus.SUCCESS)
-                .amount(new BigDecimal("100.00"))
-                .build());
-        Order order = Order.builder()
-                .orderCode("ORD-REVIEW")
-                .user(customer)
-                .subtotal(new BigDecimal("100.00"))
-                .shippingFee(BigDecimal.ZERO)
-                .discountAmount(BigDecimal.ZERO)
-                .totalAmount(new BigDecimal("100.00"))
-                .orderStatus(OrderStatus.COMPLETED)
-                .shippingRecipientName("Buyer")
-                .shippingPhoneNumber("0900000000")
-                .shippingAddressLine("123 Street")
-                .build();
-        order.getItems()
-                .add(OrderItem.builder()
-                        .order(order)
-                        .productId(savedProduct.getId())
-                        .productVariationId(savedVariation.getId())
-                        .productName(savedProduct.getProductName())
-                        .sku(savedVariation.getSku())
-                        .basePrice(new BigDecimal("100.00"))
-                        .additionalPrice(BigDecimal.ZERO)
-                        .discountAmount(BigDecimal.ZERO)
-                        .finalPrice(new BigDecimal("100.00"))
-                        .quantity(1)
-                        .build());
-        order.getPayments()
-                .add(Payment.builder()
-                        .order(order)
-                        .paymentGroup(group)
-                        .method(PaymentMethod.COD)
-                        .status(PaymentStatus.SUCCESS)
-                        .amount(new BigDecimal("100.00"))
-                        .build());
+        PaymentGroup group = paymentGroupRepository.save(PaymentGroup.builder().paymentCode("PAY-REVIEW").user(customer)
+                .method(PaymentMethod.COD).status(PaymentStatus.SUCCESS).amount(new BigDecimal("100.00")).build());
+        Order order = Order.builder().orderCode("ORD-REVIEW").user(customer).subtotal(new BigDecimal("100.00"))
+                .shippingFee(BigDecimal.ZERO).discountAmount(BigDecimal.ZERO).totalAmount(new BigDecimal("100.00"))
+                .orderStatus(OrderStatus.COMPLETED).shippingRecipientName("Buyer").shippingPhoneNumber("0900000000")
+                .shippingAddressLine("123 Street").build();
+        order.getItems().add(OrderItem.builder().order(order).productId(savedProduct.getId())
+                .productVariationId(savedVariation.getId()).productName(savedProduct.getProductName())
+                .sku(savedVariation.getSku()).basePrice(new BigDecimal("100.00")).additionalPrice(BigDecimal.ZERO)
+                .discountAmount(BigDecimal.ZERO).finalPrice(new BigDecimal("100.00")).quantity(1).build());
+        order.getPayments().add(Payment.builder().order(order).paymentGroup(group).method(PaymentMethod.COD)
+                .status(PaymentStatus.SUCCESS).amount(new BigDecimal("100.00")).build());
         return orderRepository.save(order);
     }
 

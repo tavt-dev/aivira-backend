@@ -51,16 +51,10 @@ class UserPermissionServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        Jwt jwt = new Jwt(
-                "token",
-                Instant.now(),
-                Instant.now().plusSeconds(3600),
-                Map.of("alg", "none"),
+        Jwt jwt = new Jwt("token", Instant.now(), Instant.now().plusSeconds(3600), Map.of("alg", "none"),
                 Map.of("user_id", "admin-1", "sub", "admin"));
         SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt, List.of()));
-        org.mockito.Mockito.lenient()
-                .when(currentUserService.findCurrentUserId())
-                .thenReturn(Optional.of("admin-1"));
+        org.mockito.Mockito.lenient().when(currentUserService.findCurrentUserId()).thenReturn(Optional.of("admin-1"));
     }
 
     @AfterEach
@@ -72,39 +66,30 @@ class UserPermissionServiceImplTest {
     void getUserPermissions_shouldReturnUnionOfRoleAndActiveDirectPermissions() {
         Permission rolePermission = buildPermission(PermissionCode.USER_READ_SELF);
         Permission directPermission = buildPermission(PermissionCode.REPORT_EXPORT_ALL);
-        UserPermission userPermission = UserPermission.builder()
-                .id(1L)
-                .permission(directPermission)
-                .grantedAt(Instant.now())
-                .active(true)
-                .build();
+        UserPermission userPermission = UserPermission.builder().id(1L).permission(directPermission)
+                .grantedAt(Instant.now()).active(true).build();
 
         when(userRepository.existsById("user-1")).thenReturn(true);
         when(userRepository.findRolePermissionCodesByUserId("user-1"))
                 .thenReturn(Set.of(PermissionCode.USER_READ_SELF));
-        when(userPermissionRepository.findActivePermissionCodesByUserId(
-                        org.mockito.ArgumentMatchers.eq("user-1"), any()))
-                .thenReturn(Set.of(PermissionCode.REPORT_EXPORT_ALL));
+        when(userPermissionRepository.findActivePermissionCodesByUserId(org.mockito.ArgumentMatchers.eq("user-1"),
+                any())).thenReturn(Set.of(PermissionCode.REPORT_EXPORT_ALL));
         when(permissionRepository.findByCodeIn(Set.of(PermissionCode.USER_READ_SELF, PermissionCode.REPORT_EXPORT_ALL)))
                 .thenReturn(List.of(rolePermission, directPermission));
         when(userPermissionRepository.findAllByUserId("user-1")).thenReturn(List.of(userPermission));
 
         var response = userPermissionService.getUserPermissions("user-1");
 
-        assertThat(response.getEffectivePermissions())
-                .extracting("code")
-                .containsExactly(PermissionCode.USER_READ_SELF, PermissionCode.REPORT_EXPORT_ALL);
+        assertThat(response.getEffectivePermissions()).extracting("code").containsExactly(PermissionCode.USER_READ_SELF,
+                PermissionCode.REPORT_EXPORT_ALL);
         assertThat(response.getDirectPermissions()).hasSize(1);
     }
 
     @Test
     void grantPermission_shouldRejectSelfGrant() {
-        assertThatThrownBy(() -> userPermissionService.grantPermission(
-                        "admin-1",
-                        GrantUserPermissionRequest.builder()
-                                .permissionCode(PermissionCode.REPORT_EXPORT_ALL)
-                                .build()))
-                .isInstanceOf(AppException.class);
+        assertThatThrownBy(() -> userPermissionService.grantPermission("admin-1",
+                GrantUserPermissionRequest.builder().permissionCode(PermissionCode.REPORT_EXPORT_ALL).build()))
+                        .isInstanceOf(AppException.class);
     }
 
     @Test
@@ -116,21 +101,16 @@ class UserPermissionServiceImplTest {
         when(userRepository.findById("user-1")).thenReturn(Optional.of(target));
         when(userRepository.findById("admin-1")).thenReturn(Optional.of(admin));
         when(permissionRepository.findByCode(PermissionCode.REPORT_EXPORT_ALL)).thenReturn(Optional.of(permission));
-        when(userPermissionRepository.existsByUser_IdAndPermission_CodeAndActiveTrue(
-                        "user-1", PermissionCode.REPORT_EXPORT_ALL))
-                .thenReturn(false);
+        when(userPermissionRepository.existsByUser_IdAndPermission_CodeAndActiveTrue("user-1",
+                PermissionCode.REPORT_EXPORT_ALL)).thenReturn(false);
         when(userPermissionRepository.save(any(UserPermission.class))).thenAnswer(invocation -> {
             UserPermission userPermission = invocation.getArgument(0);
             userPermission.setId(1L);
             return userPermission;
         });
 
-        userPermissionService.grantPermission(
-                "user-1",
-                GrantUserPermissionRequest.builder()
-                        .permissionCode(PermissionCode.REPORT_EXPORT_ALL)
-                        .reason("temporary report access")
-                        .build());
+        userPermissionService.grantPermission("user-1", GrantUserPermissionRequest.builder()
+                .permissionCode(PermissionCode.REPORT_EXPORT_ALL).reason("temporary report access").build());
 
         ArgumentCaptor<UserPermission> captor = ArgumentCaptor.forClass(UserPermission.class);
         verify(userPermissionRepository).save(captor.capture());
@@ -142,15 +122,11 @@ class UserPermissionServiceImplTest {
 
     @Test
     void revokePermission_shouldMarkDirectPermissionInactive() {
-        UserPermission userPermission = UserPermission.builder()
-                .id(1L)
-                .permission(buildPermission(PermissionCode.REPORT_EXPORT_ALL))
-                .grantedAt(Instant.now())
-                .active(true)
+        UserPermission userPermission = UserPermission.builder().id(1L)
+                .permission(buildPermission(PermissionCode.REPORT_EXPORT_ALL)).grantedAt(Instant.now()).active(true)
                 .build();
-        when(userPermissionRepository.findFirstByUser_IdAndPermission_CodeAndActiveTrueOrderByGrantedAtDesc(
-                        "user-1", PermissionCode.REPORT_EXPORT_ALL))
-                .thenReturn(Optional.of(userPermission));
+        when(userPermissionRepository.findFirstByUser_IdAndPermission_CodeAndActiveTrueOrderByGrantedAtDesc("user-1",
+                PermissionCode.REPORT_EXPORT_ALL)).thenReturn(Optional.of(userPermission));
 
         userPermissionService.revokePermission("user-1", PermissionCode.REPORT_EXPORT_ALL);
 
@@ -168,13 +144,7 @@ class UserPermissionServiceImplTest {
     }
 
     private Permission buildPermission(PermissionCode code) {
-        return Permission.builder()
-                .id((long) code.ordinal())
-                .code(code)
-                .name(code.name())
-                .description(code.name())
-                .group(code.getGroup())
-                .system(true)
-                .build();
+        return Permission.builder().id((long) code.ordinal()).code(code).name(code.name()).description(code.name())
+                .group(code.getGroup()).system(true).build();
     }
 }

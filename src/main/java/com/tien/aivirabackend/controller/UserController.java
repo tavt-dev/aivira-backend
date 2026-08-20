@@ -56,9 +56,7 @@ public class UserController {
     }
 
     @PutMapping("/password")
-    @Operation(
-            summary = "Change my password",
-            description = "Changes the authenticated user's password and revokes existing sessions.")
+    @Operation(summary = "Change my password", description = "Changes the authenticated user's password and revokes existing sessions.")
     public ResponseEntity<ApiResponse<Void>> changeMyPassword(@RequestBody UpdatePasswordRequest request) {
         log.info("change my password request");
         userService.changeMyPassword(request);
@@ -66,9 +64,7 @@ public class UserController {
     }
 
     @PostMapping("/deactivate")
-    @Operation(
-            summary = "Deactivate my account",
-            description = "Marks the authenticated user's account inactive/deleted and revokes sessions.")
+    @Operation(summary = "Deactivate my account", description = "Marks the authenticated user's account inactive/deleted and revokes sessions.")
     public ResponseEntity<ApiResponse<Void>> requestDeactivateMyAccount() {
         log.info("request deactivate my account");
         userService.requestDeactivateMyAccount();

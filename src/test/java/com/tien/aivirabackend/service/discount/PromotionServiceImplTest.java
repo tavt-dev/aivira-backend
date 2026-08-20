@@ -42,8 +42,8 @@ class PromotionServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        promotionService = new PromotionServiceImpl(
-                promotionRepository, productRepository, categoryRepository, new DiscountMapper());
+        promotionService = new PromotionServiceImpl(promotionRepository, productRepository, categoryRepository,
+                new DiscountMapper());
     }
 
     @Test
@@ -83,8 +83,7 @@ class PromotionServiceImplTest {
 
     @Test
     void deletePromotion_shouldDeactivateInsteadOfDeleting() {
-        Promotion promotion =
-                Promotion.builder().promotionName("Book Deal").active(true).build();
+        Promotion promotion = Promotion.builder().promotionName("Book Deal").active(true).build();
         when(promotionRepository.findById(1L)).thenReturn(Optional.of(promotion));
 
         promotionService.deletePromotion(1L);
@@ -95,16 +94,9 @@ class PromotionServiceImplTest {
     }
 
     private PromotionCreateRequest createRequest(PromotionScope scope, Long targetId) {
-        return PromotionCreateRequest.builder()
-                .promotionName(" Book Deal ")
-                .description("Deal for selected books")
-                .promotionType(PromotionType.PERCENT)
-                .value(BigDecimal.TEN)
-                .maxDiscountAmount(BigDecimal.valueOf(30))
-                .promotionScope(scope)
-                .targetId(targetId)
-                .startAt(LocalDateTime.now().minusDays(1))
-                .endAt(LocalDateTime.now().plusDays(1))
-                .build();
+        return PromotionCreateRequest.builder().promotionName(" Book Deal ").description("Deal for selected books")
+                .promotionType(PromotionType.PERCENT).value(BigDecimal.TEN).maxDiscountAmount(BigDecimal.valueOf(30))
+                .promotionScope(scope).targetId(targetId).startAt(LocalDateTime.now().minusDays(1))
+                .endAt(LocalDateTime.now().plusDays(1)).build();
     }
 }

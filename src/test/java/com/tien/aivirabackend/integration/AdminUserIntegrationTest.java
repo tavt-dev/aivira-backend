@@ -40,20 +40,13 @@ class AdminUserIntegrationTest extends AbstractIntegrationTest {
         User customer = saveUser("alice", PredefinedRole.USER);
         String token = loginToken(admin.getUsername());
 
-        mockMvc.perform(get("/admin/users")
-                        .header("Authorization", "Bearer " + token)
-                        .param("keyword", "alice")
-                        .param("role", "USER")
-                        .param("active", "true")
-                        .param("locked", "false")
-                        .param("emailVerified", "true"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.totalElements").value(1))
+        mockMvc.perform(get("/admin/users").header("Authorization", "Bearer " + token).param("keyword", "alice")
+                .param("role", "USER").param("active", "true").param("locked", "false").param("emailVerified", "true"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.totalElements").value(1))
                 .andExpect(jsonPath("$.data.data[0].id").value(customer.getId()));
 
         mockMvc.perform(get("/admin/users/{userId}", customer.getId()).header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.username").value("alice"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.username").value("alice"))
                 .andExpect(jsonPath("$.data.roles[0].code").value("USER"));
     }
 
@@ -63,17 +56,15 @@ class AdminUserIntegrationTest extends AbstractIntegrationTest {
         User customer = saveUser("bob", PredefinedRole.USER);
         String adminToken = loginToken(admin.getUsername());
 
-        mockMvc.perform(put("/admin/users/{userId}/lock", customer.getId())
-                        .header("Authorization", "Bearer " + adminToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.isLocked").value(true));
+        mockMvc.perform(
+                put("/admin/users/{userId}/lock", customer.getId()).header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.isLocked").value(true));
 
         login(customer.getUsername()).andExpect(status().isForbidden());
 
-        mockMvc.perform(put("/admin/users/{userId}/unlock", customer.getId())
-                        .header("Authorization", "Bearer " + adminToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.isLocked").value(false));
+        mockMvc.perform(
+                put("/admin/users/{userId}/unlock", customer.getId()).header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.isLocked").value(false));
 
         login(customer.getUsername()).andExpect(status().isOk());
     }
@@ -85,10 +76,8 @@ class AdminUserIntegrationTest extends AbstractIntegrationTest {
         String adminToken = loginToken(admin.getUsername());
 
         mockMvc.perform(put("/admin/users/{userId}/roles", customer.getId())
-                        .header("Authorization", "Bearer " + adminToken)
-                        .contentType(APPLICATION_JSON)
-                        .content(json(Map.of("roles", java.util.List.of("USER", "ADMIN")))))
-                .andExpect(status().isOk())
+                .header("Authorization", "Bearer " + adminToken).contentType(APPLICATION_JSON)
+                .content(json(Map.of("roles", java.util.List.of("USER", "ADMIN"))))).andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.roles.length()").value(2));
 
         String customerToken = loginToken(customer.getUsername());
@@ -103,32 +92,22 @@ class AdminUserIntegrationTest extends AbstractIntegrationTest {
 
         mockMvc.perform(put("/admin/users/{userId}/lock", admin.getId()).header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(put("/admin/users/{userId}/roles", admin.getId())
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(APPLICATION_JSON)
-                        .content(json(Map.of("roles", java.util.List.of("USER")))))
+        mockMvc.perform(put("/admin/users/{userId}/roles", admin.getId()).header("Authorization", "Bearer " + token)
+                .contentType(APPLICATION_JSON).content(json(Map.of("roles", java.util.List.of("USER")))))
                 .andExpect(status().isForbidden());
     }
 
     private User saveUser(String username, PredefinedRole roleCode) {
         var role = roleRepository.findByCode(roleCode).orElseThrow();
-        User user = User.builder()
-                .username(username)
-                .email(username + "@example.com")
-                .password(passwordEncoder.encode(PASSWORD))
-                .provider(SignInProvider.LOCAL)
-                .emailVerified(true)
-                .isActive(true)
-                .isLocked(false)
-                .isDeleted(false)
-                .build();
+        User user = User.builder().username(username).email(username + "@example.com")
+                .password(passwordEncoder.encode(PASSWORD)).provider(SignInProvider.LOCAL).emailVerified(true)
+                .isActive(true).isLocked(false).isDeleted(false).build();
         user.getRoles().add(role);
         return userRepository.save(user);
     }
 
     private org.springframework.test.web.servlet.ResultActions login(String username) throws Exception {
-        return mockMvc.perform(post("/auth/token")
-                .contentType(APPLICATION_JSON)
+        return mockMvc.perform(post("/auth/token").contentType(APPLICATION_JSON)
                 .content(json(Map.of("username", username, "password", PASSWORD))));
     }
 

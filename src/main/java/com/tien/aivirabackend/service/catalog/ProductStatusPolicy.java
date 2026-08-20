@@ -18,8 +18,7 @@ public class ProductStatusPolicy {
     }
 
     public void moveEditableProductToDraft(Product product) {
-        if (product.getStatus() == ProductStatus.ACTIVE
-                || product.getStatus() == ProductStatus.PENDING_REVIEW
+        if (product.getStatus() == ProductStatus.ACTIVE || product.getStatus() == ProductStatus.PENDING_REVIEW
                 || product.getStatus() == ProductStatus.REJECTED) {
             product.setStatus(ProductStatus.DRAFT);
             product.setSubmittedAt(null);
@@ -33,10 +32,8 @@ public class ProductStatusPolicy {
     }
 
     public boolean isPubliclyVisible(Product product) {
-        return product.getStatus() == ProductStatus.ACTIVE
-                && Boolean.TRUE.equals(product.getActive())
-                && product.getCategory() != null
-                && Boolean.TRUE.equals(product.getCategory().getActive())
+        return product.getStatus() == ProductStatus.ACTIVE && Boolean.TRUE.equals(product.getActive())
+                && product.getCategory() != null && Boolean.TRUE.equals(product.getCategory().getActive())
                 && Boolean.TRUE.equals(product.getCategory().getVisible());
     }
 }

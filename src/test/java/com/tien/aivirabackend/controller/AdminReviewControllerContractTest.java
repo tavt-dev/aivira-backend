@@ -34,55 +34,31 @@ class AdminReviewControllerContractTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(new AdminReviewController(reviewService))
-                .setControllerAdvice(new GlobalExceptionHandler())
-                .build();
+                .setControllerAdvice(new GlobalExceptionHandler()).build();
     }
 
     @Test
     void endpoints_shouldDeclareExpectedPermissions() throws Exception {
         assertPreAuthorize(
-                AdminReviewController.class.getMethod(
-                        "getAdminReviews",
-                        Boolean.class,
-                        Boolean.class,
-                        Integer.class,
-                        String.class,
-                        Long.class,
-                        String.class,
-                        int.class,
-                        int.class),
-                "REVIEW_MANAGE_ALL",
-                "REVIEW_READ_ALL");
+                AdminReviewController.class.getMethod("getAdminReviews", Boolean.class, Boolean.class, Integer.class,
+                        String.class, Long.class, String.class, int.class, int.class),
+                "REVIEW_MANAGE_ALL", "REVIEW_READ_ALL");
         assertPreAuthorize(
                 AdminReviewController.class.getMethod("moderateReview", Long.class, ReviewModerateRequest.class),
-                "REVIEW_MANAGE_ALL",
-                "REVIEW_MODERATE");
-        assertPreAuthorize(
-                AdminReviewController.class.getMethod("replyToReview", Long.class, ReviewReplyRequest.class),
-                "REVIEW_MANAGE_ALL",
-                "REVIEW_MODERATE");
+                "REVIEW_MANAGE_ALL", "REVIEW_MODERATE");
+        assertPreAuthorize(AdminReviewController.class.getMethod("replyToReview", Long.class, ReviewReplyRequest.class),
+                "REVIEW_MANAGE_ALL", "REVIEW_MODERATE");
     }
 
     @Test
     void endpoints_shouldDelegateToService() throws Exception {
-        mockMvc.perform(get("/admin/reviews")
-                        .param("approved", "true")
-                        .param("visible", "true")
-                        .param("rating", "5")
-                        .param("keyword", "book")
-                        .param("productId", "10")
-                        .param("userId", "user-1")
-                        .param("page", "2")
-                        .param("size", "10"))
-                .andExpect(status().isOk());
-        mockMvc.perform(put("/admin/reviews/99/moderate")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"approved\":true,\"visible\":false}"))
-                .andExpect(status().isOk());
-        mockMvc.perform(put("/admin/reviews/99/reply")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"adminReply\":\"Thanks\"}"))
-                .andExpect(status().isOk());
+        mockMvc.perform(get("/admin/reviews").param("approved", "true").param("visible", "true").param("rating", "5")
+                .param("keyword", "book").param("productId", "10").param("userId", "user-1").param("page", "2")
+                .param("size", "10")).andExpect(status().isOk());
+        mockMvc.perform(put("/admin/reviews/99/moderate").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"approved\":true,\"visible\":false}")).andExpect(status().isOk());
+        mockMvc.perform(put("/admin/reviews/99/reply").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"adminReply\":\"Thanks\"}")).andExpect(status().isOk());
 
         verify(reviewService).getAdminReviews(true, true, 5, "book", 10L, "user-1", 2, 10);
         verify(reviewService).moderateReview(eq(99L), any(ReviewModerateRequest.class));
@@ -91,9 +67,7 @@ class AdminReviewControllerContractTest {
 
     @Test
     void moderateReview_whenPayloadInvalid_shouldReturnValidationError() throws Exception {
-        mockMvc.perform(put("/admin/reviews/99/moderate")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
+        mockMvc.perform(put("/admin/reviews/99/moderate").contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isBadRequest());
     }
 

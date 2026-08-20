@@ -35,58 +35,38 @@ class AdminUserControllerContractTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(new AdminUserController(userService))
-                .setControllerAdvice(new GlobalExceptionHandler())
-                .build();
+                .setControllerAdvice(new GlobalExceptionHandler()).build();
     }
 
     @Test
     void listAndDetail_shouldRequireManageOrReadAllPermission() throws Exception {
-        assertPreAuthorize(
-                AdminUserController.class.getMethod(
-                        "getAdminUsers",
-                        String.class,
-                        PredefinedRole.class,
-                        Boolean.class,
-                        Boolean.class,
-                        Boolean.class,
-                        int.class,
-                        int.class),
-                "USER_MANAGE_ALL",
+        assertPreAuthorize(AdminUserController.class.getMethod("getAdminUsers", String.class, PredefinedRole.class,
+                Boolean.class, Boolean.class, Boolean.class, int.class, int.class), "USER_MANAGE_ALL", "USER_READ_ALL");
+        assertPreAuthorize(AdminUserController.class.getMethod("getAdminUser", String.class), "USER_MANAGE_ALL",
                 "USER_READ_ALL");
-        assertPreAuthorize(
-                AdminUserController.class.getMethod("getAdminUser", String.class), "USER_MANAGE_ALL", "USER_READ_ALL");
     }
 
     @Test
     void lockUnlockAndRoles_shouldRequireExpectedPermissions() throws Exception {
-        assertPreAuthorize(
-                AdminUserController.class.getMethod("lockUser", String.class), "USER_MANAGE_ALL", "USER_LOCK");
-        assertPreAuthorize(
-                AdminUserController.class.getMethod("unlockUser", String.class), "USER_MANAGE_ALL", "USER_UNLOCK");
+        assertPreAuthorize(AdminUserController.class.getMethod("lockUser", String.class), "USER_MANAGE_ALL",
+                "USER_LOCK");
+        assertPreAuthorize(AdminUserController.class.getMethod("unlockUser", String.class), "USER_MANAGE_ALL",
+                "USER_UNLOCK");
         assertPreAuthorize(
                 AdminUserController.class.getMethod("updateUserRoles", String.class, UpdateUserRolesRequest.class),
-                "USER_MANAGE_ALL",
-                "USER_ASSIGN_ROLE");
+                "USER_MANAGE_ALL", "USER_ASSIGN_ROLE");
     }
 
     @Test
     void endpoints_shouldDelegateToUserService() throws Exception {
-        mockMvc.perform(get("/admin/users")
-                        .param("keyword", "alice")
-                        .param("role", "USER")
-                        .param("active", "true")
-                        .param("locked", "false")
-                        .param("emailVerified", "true")
-                        .param("page", "2")
-                        .param("size", "10"))
+        mockMvc.perform(get("/admin/users").param("keyword", "alice").param("role", "USER").param("active", "true")
+                .param("locked", "false").param("emailVerified", "true").param("page", "2").param("size", "10"))
                 .andExpect(status().isOk());
         mockMvc.perform(get("/admin/users/user-1")).andExpect(status().isOk());
         mockMvc.perform(put("/admin/users/user-1/lock")).andExpect(status().isOk());
         mockMvc.perform(put("/admin/users/user-1/unlock")).andExpect(status().isOk());
-        mockMvc.perform(put("/admin/users/user-1/roles")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"roles\":[\"USER\",\"ADMIN\"]}"))
-                .andExpect(status().isOk());
+        mockMvc.perform(put("/admin/users/user-1/roles").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"roles\":[\"USER\",\"ADMIN\"]}")).andExpect(status().isOk());
 
         verify(userService).getAdminUsers("alice", PredefinedRole.USER, true, false, true, 2, 10);
         verify(userService).getAdminUser("user-1");
@@ -97,13 +77,10 @@ class AdminUserControllerContractTest {
 
     @Test
     void updateUserRoles_whenRolesEmpty_shouldReturnValidationError() throws Exception {
-        mockMvc.perform(put("/admin/users/user-1/roles")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"roles\":[]}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.errorCode").value("E1100"))
-                .andExpect(jsonPath("$.data.roles").exists());
+        mockMvc.perform(
+                put("/admin/users/user-1/roles").contentType(MediaType.APPLICATION_JSON).content("{\"roles\":[]}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.errorCode").value("E1100")).andExpect(jsonPath("$.data.roles").exists());
     }
 
     private void assertPreAuthorize(Method method, String... permissions) {

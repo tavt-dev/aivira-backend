@@ -45,10 +45,10 @@ public class CartController {
     @PutMapping("/items/{cartItemId}")
     @Operation(summary = "Update cart item quantity")
     @PreAuthorize("@authorizationService.hasPermission('CART_UPDATE_SELF')")
-    public ResponseEntity<ApiResponse<CartResponse>> updateItem(
-            @PathVariable Long cartItemId, @Valid @RequestBody CartItemUpdateRequest request) {
-        return ResponseEntity.ok(
-                ApiResponse.success("Update cart item successful", cartService.updateItem(cartItemId, request)));
+    public ResponseEntity<ApiResponse<CartResponse>> updateItem(@PathVariable Long cartItemId,
+            @Valid @RequestBody CartItemUpdateRequest request) {
+        return ResponseEntity
+                .ok(ApiResponse.success("Update cart item successful", cartService.updateItem(cartItemId, request)));
     }
 
     @DeleteMapping("/items/{cartItemId}")

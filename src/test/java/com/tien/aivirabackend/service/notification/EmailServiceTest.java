@@ -67,8 +67,7 @@ class EmailServiceTest {
         ReflectionTestUtils.setField(failingService, "fromName", "Aivira Store");
 
         assertThatThrownBy(() -> failingService.sendRegistrationOtpByEmail("alice@example.com", "Alice", "123456"))
-                .isInstanceOf(AppException.class)
-                .satisfies(ex -> assertThat(((AppException) ex).getErrorCode())
+                .isInstanceOf(AppException.class).satisfies(ex -> assertThat(((AppException) ex).getErrorCode())
                         .isEqualTo(EmailErrorCode.EMAIL_SEND_FAILED));
     }
 

@@ -46,11 +46,8 @@ public class ApplicationInitConfig {
 
     @Bean
     @ConditionalOnProperty(prefix = "app.seed", name = "enabled", havingValue = "true")
-    ApplicationRunner applicationRunner(
-            UserRepository userRepository,
-            RoleRepository roleRepository,
-            PermissionService permissionService,
-            DemoCatalogSeedService demoCatalogSeedService) {
+    ApplicationRunner applicationRunner(UserRepository userRepository, RoleRepository roleRepository,
+            PermissionService permissionService, DemoCatalogSeedService demoCatalogSeedService) {
         return args -> {
             log.info("[INIT] Seeding default data...");
 
@@ -68,8 +65,7 @@ public class ApplicationInitConfig {
     }
 
     private void seedAdmin(UserRepository userRepository, RoleRepository roleRepository) {
-        if (!StringUtils.hasText(adminUsername)
-                || !StringUtils.hasText(adminPassword)
+        if (!StringUtils.hasText(adminUsername) || !StringUtils.hasText(adminPassword)
                 || !StringUtils.hasText(adminEmail)) {
             log.warn("[INIT] Skip admin seeding: missing app.seed.admin.* config");
             return;
@@ -90,17 +86,9 @@ public class ApplicationInitConfig {
         roles.add(userRole);
         roles.add(adminRole);
 
-        User admin = User.builder()
-                .username(adminUsername)
-                .password(passwordEncoder.encode(adminPassword))
-                .email(adminEmail)
-                .emailVerified(true)
-                .isActive(true)
-                .roles(roles)
-                .provider(SignInProvider.LOCAL)
-                .isLocked(false)
-                .isDeleted(false)
-                .build();
+        User admin = User.builder().username(adminUsername).password(passwordEncoder.encode(adminPassword))
+                .email(adminEmail).emailVerified(true).isActive(true).roles(roles).provider(SignInProvider.LOCAL)
+                .isLocked(false).isDeleted(false).build();
 
         userRepository.save(admin);
 
@@ -108,9 +96,7 @@ public class ApplicationInitConfig {
     }
 
     private Role getOrCreateRole(RoleRepository roleRepository, PredefinedRole code, String description) {
-        return roleRepository
-                .findByCode(code)
-                .orElseGet(() -> roleRepository.save(
-                        Role.builder().code(code).description(description).build()));
+        return roleRepository.findByCode(code)
+                .orElseGet(() -> roleRepository.save(Role.builder().code(code).description(description).build()));
     }
 }

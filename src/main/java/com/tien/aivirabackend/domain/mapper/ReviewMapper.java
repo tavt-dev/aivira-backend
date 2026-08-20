@@ -16,47 +16,27 @@ public class ReviewMapper {
             return null;
         }
         var orderItem = review.getOrderItem();
-        return ReviewResponse.builder()
-                .id(review.getId())
-                .rating(review.getRating())
-                .comment(review.getComment())
-                .approved(review.isApproved())
-                .visible(review.isVisible())
-                .adminReply(review.getAdminReply())
-                .productId(
-                        review.getProduct() == null ? null : review.getProduct().getId())
-                .productVariationId(
-                        review.getProductVariation() == null
-                                ? null
-                                : review.getProductVariation().getId())
+        return ReviewResponse.builder().id(review.getId()).rating(review.getRating()).comment(review.getComment())
+                .approved(review.isApproved()).visible(review.isVisible()).adminReply(review.getAdminReply())
+                .productId(review.getProduct() == null ? null : review.getProduct().getId())
+                .productVariationId(review.getProductVariation() == null ? null : review.getProductVariation().getId())
                 .orderId(review.getOrder() == null ? null : review.getOrder().getId())
                 .orderItemId(orderItem == null ? null : orderItem.getId())
                 .productName(orderItem == null ? null : orderItem.getProductName())
                 .sku(orderItem == null ? null : orderItem.getSku())
                 .username(review.getUser() == null ? null : review.getUser().getUsername())
-                .userId(review.getUser() == null ? null : review.getUser().getId())
-                .moderatedBy(review.getModeratedBy())
-                .moderatedAt(review.getModeratedAt())
-                .repliedBy(review.getRepliedBy())
-                .repliedAt(review.getRepliedAt())
-                .deletedAt(review.getDeletedAt())
-                .createdAt(review.getCreatedAt())
-                .updatedAt(review.getUpdatedAt())
+                .userId(review.getUser() == null ? null : review.getUser().getId()).moderatedBy(review.getModeratedBy())
+                .moderatedAt(review.getModeratedAt()).repliedBy(review.getRepliedBy()).repliedAt(review.getRepliedAt())
+                .deletedAt(review.getDeletedAt()).createdAt(review.getCreatedAt()).updatedAt(review.getUpdatedAt())
                 .images(review.getImages().stream()
                         .sorted(Comparator.comparing(ReviewImage::getSortOrder).thenComparing(ReviewImage::getId))
-                        .map(this::toImageResponse)
-                        .toList())
+                        .map(this::toImageResponse).toList())
                 .build();
     }
 
     private ReviewImageResponse toImageResponse(ReviewImage image) {
-        return ReviewImageResponse.builder()
-                .id(image.getId())
-                .imageUrl(image.getImageUrl())
-                .imagePublicId(image.getImagePublicId())
-                .sortOrder(image.getSortOrder())
-                .createdAt(image.getCreatedAt())
-                .updatedAt(image.getUpdatedAt())
-                .build();
+        return ReviewImageResponse.builder().id(image.getId()).imageUrl(image.getImageUrl())
+                .imagePublicId(image.getImagePublicId()).sortOrder(image.getSortOrder()).createdAt(image.getCreatedAt())
+                .updatedAt(image.getUpdatedAt()).build();
     }
 }
