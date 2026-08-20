@@ -16,6 +16,5 @@ public interface AiAdviceMonthlyQuotaRepository extends JpaRepository<AiAdviceMo
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select q from AiAdviceMonthlyQuota q where q.user.id = :userId and q.periodKey = :periodKey")
-    Optional<AiAdviceMonthlyQuota> findForUpdate(
-            @Param("userId") String userId, @Param("periodKey") String periodKey);
+    Optional<AiAdviceMonthlyQuota> findForUpdate(@Param("userId") String userId, @Param("periodKey") String periodKey);
 }

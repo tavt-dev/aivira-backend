@@ -44,8 +44,8 @@ public class AdminPermissionController {
     @PreAuthorize("@authorizationService.hasAnyPermission('PERMISSION_MANAGE', 'ROLE_MANAGE')")
     public ResponseEntity<ApiResponse<List<PermissionResponse>>> getPermissions() {
         log.info("Get permissions request");
-        return ResponseEntity.ok(
-                ApiResponse.success("Get permissions successful", permissionService.getAllPermissions()));
+        return ResponseEntity
+                .ok(ApiResponse.success("Get permissions successful", permissionService.getAllPermissions()));
     }
 
     @GetMapping("/roles")
@@ -53,8 +53,8 @@ public class AdminPermissionController {
     @PreAuthorize("@authorizationService.hasAnyPermission('PERMISSION_MANAGE', 'ROLE_MANAGE')")
     public ResponseEntity<ApiResponse<List<RolePermissionResponse>>> getRoles() {
         log.info("Get roles request");
-        return ResponseEntity.ok(
-                ApiResponse.success("Get roles successful", permissionService.getAllRolesWithPermissions()));
+        return ResponseEntity
+                .ok(ApiResponse.success("Get roles successful", permissionService.getAllRolesWithPermissions()));
     }
 
     @GetMapping("/roles/{roleCode}/permissions")
@@ -73,42 +73,35 @@ public class AdminPermissionController {
     public ResponseEntity<ApiResponse<RolePermissionResponse>> updateRolePermissions(
             @PathVariable PredefinedRole roleCode, @Valid @RequestBody UpdateRolePermissionsRequest request) {
         log.info("Update role permissions request: roleCode={}", roleCode);
-        return ResponseEntity.ok(ApiResponse.success(
-                "Update role permissions successful", permissionService.updateRolePermissions(roleCode, request)));
+        return ResponseEntity.ok(ApiResponse.success("Update role permissions successful",
+                permissionService.updateRolePermissions(roleCode, request)));
     }
 
     @GetMapping("/users/{userId}/permissions")
-    @Operation(
-            summary = "Get user effective permissions",
-            description = "Returns role, direct, and effective permissions for one user.")
-    @PreAuthorize(
-            "@authorizationService.hasAnyPermission('PERMISSION_MANAGE', 'USER_PERMISSION_MANAGE', 'USER_PERMISSION_READ')")
+    @Operation(summary = "Get user effective permissions", description = "Returns role, direct, and effective permissions for one user.")
+    @PreAuthorize("@authorizationService.hasAnyPermission('PERMISSION_MANAGE', 'USER_PERMISSION_MANAGE', 'USER_PERMISSION_READ')")
     public ResponseEntity<ApiResponse<UserEffectivePermissionsResponse>> getUserPermissions(
             @PathVariable String userId) {
         log.info("Get user permissions request: userId={}", userId);
-        return ResponseEntity.ok(ApiResponse.success(
-                "Get user permissions successful", userPermissionService.getUserPermissions(userId)));
+        return ResponseEntity.ok(ApiResponse.success("Get user permissions successful",
+                userPermissionService.getUserPermissions(userId)));
     }
 
     @PostMapping("/users/{userId}/permissions")
     @Operation(summary = "Grant direct user permission", description = "Assigns one direct permission to one user.")
-    @PreAuthorize(
-            "@authorizationService.hasAnyPermission('PERMISSION_MANAGE', 'USER_PERMISSION_MANAGE', 'USER_PERMISSION_GRANT')")
-    public ResponseEntity<ApiResponse<UserPermissionResponse>> grantUserPermission(
-            @PathVariable String userId, @Valid @RequestBody GrantUserPermissionRequest request) {
+    @PreAuthorize("@authorizationService.hasAnyPermission('PERMISSION_MANAGE', 'USER_PERMISSION_MANAGE', 'USER_PERMISSION_GRANT')")
+    public ResponseEntity<ApiResponse<UserPermissionResponse>> grantUserPermission(@PathVariable String userId,
+            @Valid @RequestBody GrantUserPermissionRequest request) {
         log.info("Grant user permission request: userId={} permission={}", userId, request.getPermissionCode());
-        return ResponseEntity.ok(ApiResponse.success(
-                "Grant user permission successful", userPermissionService.grantPermission(userId, request)));
+        return ResponseEntity.ok(ApiResponse.success("Grant user permission successful",
+                userPermissionService.grantPermission(userId, request)));
     }
 
     @DeleteMapping("/users/{userId}/permissions/{permissionCode}")
-    @Operation(
-            summary = "Revoke direct user permission",
-            description = "Revokes one active direct permission from one user.")
-    @PreAuthorize(
-            "@authorizationService.hasAnyPermission('PERMISSION_MANAGE', 'USER_PERMISSION_MANAGE', 'USER_PERMISSION_REVOKE')")
-    public ResponseEntity<ApiResponse<Void>> revokeUserPermission(
-            @PathVariable String userId, @PathVariable PermissionCode permissionCode) {
+    @Operation(summary = "Revoke direct user permission", description = "Revokes one active direct permission from one user.")
+    @PreAuthorize("@authorizationService.hasAnyPermission('PERMISSION_MANAGE', 'USER_PERMISSION_MANAGE', 'USER_PERMISSION_REVOKE')")
+    public ResponseEntity<ApiResponse<Void>> revokeUserPermission(@PathVariable String userId,
+            @PathVariable PermissionCode permissionCode) {
         log.info("Revoke user permission request: userId={} permission={}", userId, permissionCode);
         userPermissionService.revokePermission(userId, permissionCode);
         return ResponseEntity.ok(ApiResponse.success("Revoke user permission successful", null));

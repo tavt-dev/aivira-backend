@@ -92,17 +92,11 @@ class UserServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        Jwt jwt = new Jwt(
-                "token",
-                Instant.now(),
-                Instant.now().plusSeconds(3600),
-                Map.of("alg", "none"),
+        Jwt jwt = new Jwt("token", Instant.now(), Instant.now().plusSeconds(3600), Map.of("alg", "none"),
                 Map.of("user_id", "user-1", "sub", "alice"));
         SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt, List.of()));
         org.mockito.Mockito.lenient().when(currentUserService.getCurrentUser()).thenReturn(buildUser());
-        org.mockito.Mockito.lenient()
-                .when(currentUserService.findCurrentUserId())
-                .thenReturn(Optional.of("admin-1"));
+        org.mockito.Mockito.lenient().when(currentUserService.findCurrentUserId()).thenReturn(Optional.of("admin-1"));
     }
 
     @AfterEach
@@ -112,20 +106,18 @@ class UserServiceImplTest {
 
     @Test
     void updateMyAvatar_shouldValidateUploadAndSaveAvatarFields() {
-        MockMultipartFile file =
-                new MockMultipartFile("avatar", "avatar.png", "image/png", new byte[] {(byte) 0x89, 0x50, 0x4E, 0x47});
+        MockMultipartFile file = new MockMultipartFile("avatar", "avatar.png", "image/png",
+                new byte[] { (byte) 0x89, 0x50, 0x4E, 0x47 });
         User user = buildUser();
-        UserResponse response = UserResponse.builder()
-                .id("user-1")
-                .avatarUrl("https://res.cloudinary.com/demo/avatar.png")
-                .build();
+        UserResponse response = UserResponse.builder().id("user-1")
+                .avatarUrl("https://res.cloudinary.com/demo/avatar.png").build();
 
         when(currentUserService.getCurrentUser()).thenReturn(user);
         when(cloudinaryProperties.getAvatarFolder()).thenReturn("aivira/users");
-        when(cloudinaryStorageService.uploadImage(
-                        eq(file), eq("aivira/users/user-1/avatar"), eq("avatar-user-1"), eq(400), eq(400)))
-                .thenReturn(new CloudinaryUploadResult(
-                        "https://res.cloudinary.com/demo/avatar.png", "aivira/users/user-1/avatar/avatar-user-1"));
+        when(cloudinaryStorageService.uploadImage(eq(file), eq("aivira/users/user-1/avatar"), eq("avatar-user-1"),
+                eq(400), eq(400)))
+                        .thenReturn(new CloudinaryUploadResult("https://res.cloudinary.com/demo/avatar.png",
+                                "aivira/users/user-1/avatar/avatar-user-1"));
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(userMapper.toUserResponse(any(User.class))).thenReturn(response);
 
@@ -146,8 +138,7 @@ class UserServiceImplTest {
 
         when(currentUserService.getCurrentUser()).thenReturn(user);
         org.mockito.Mockito.doThrow(new AppException(FileValidationErrorCode.INVALID_MIME_TYPE))
-                .when(fileValidatorService)
-                .validateFile(file, MediaType.IMAGE);
+                .when(fileValidatorService).validateFile(file, MediaType.IMAGE);
 
         assertThatThrownBy(() -> userService.updateMyAvatar(file)).isInstanceOf(AppException.class);
 
@@ -157,15 +148,14 @@ class UserServiceImplTest {
 
     @Test
     void updateMyAvatar_shouldNotSaveWhenCloudinaryUploadFails() {
-        MockMultipartFile file =
-                new MockMultipartFile("avatar", "avatar.png", "image/png", new byte[] {(byte) 0x89, 0x50, 0x4E, 0x47});
+        MockMultipartFile file = new MockMultipartFile("avatar", "avatar.png", "image/png",
+                new byte[] { (byte) 0x89, 0x50, 0x4E, 0x47 });
         User user = buildUser();
 
         when(currentUserService.getCurrentUser()).thenReturn(user);
         when(cloudinaryProperties.getAvatarFolder()).thenReturn("aivira/users");
-        when(cloudinaryStorageService.uploadImage(any(), any(), any(), eq(400), eq(400)))
-                .thenThrow(new AppException(
-                        com.tien.aivirabackend.exception.errorCode.UserErrorCode.AVATAR_UPLOAD_FAILED));
+        when(cloudinaryStorageService.uploadImage(any(), any(), any(), eq(400), eq(400))).thenThrow(
+                new AppException(com.tien.aivirabackend.exception.errorCode.UserErrorCode.AVATAR_UPLOAD_FAILED));
 
         assertThatThrownBy(() -> userService.updateMyAvatar(file)).isInstanceOf(AppException.class);
 
@@ -178,20 +168,16 @@ class UserServiceImplTest {
         Specification<User> specification = org.mockito.Mockito.mock(Specification.class);
         User user = buildUser("user-1");
         AdminUserResponse response = AdminUserResponse.builder().id("user-1").build();
-        when(userSpecifications.adminUsers("alice", PredefinedRole.USER, true, false, true))
-                .thenReturn(specification);
+        when(userSpecifications.adminUsers("alice", PredefinedRole.USER, true, false, true)).thenReturn(specification);
         when(userRepository.findAll(eq(specification), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(user)));
         when(userMapper.toAdminUserResponse(user)).thenReturn(response);
 
         var result = userService.getAdminUsers("alice", PredefinedRole.USER, true, false, true, 2, 10);
 
         assertThat(result.getData()).containsExactly(response);
-        verify(userRepository)
-                .findAll(
-                        eq(specification),
-                        org.mockito.ArgumentMatchers.<Pageable>argThat(pageable -> pageable.getPageNumber() == 1
-                                && pageable.getPageSize() == 10
-                                && pageable.getSort().getOrderFor("createdAt") != null));
+        verify(userRepository).findAll(eq(specification),
+                org.mockito.ArgumentMatchers.<Pageable> argThat(pageable -> pageable.getPageNumber() == 1
+                        && pageable.getPageSize() == 10 && pageable.getSort().getOrderFor("createdAt") != null));
     }
 
     @Test
@@ -208,9 +194,8 @@ class UserServiceImplTest {
     void getAdminUser_whenMissing_shouldThrowUserNotFoundById() {
         when(userRepository.findWithRolesById("missing")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> userService.getAdminUser("missing"))
-                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
-                        .isEqualTo(UserErrorCode.USER_NOT_FOUND_BY_ID));
+        assertThatThrownBy(() -> userService.getAdminUser("missing")).isInstanceOfSatisfying(AppException.class,
+                ex -> assertThat(ex.getErrorCode()).isEqualTo(UserErrorCode.USER_NOT_FOUND_BY_ID));
     }
 
     @Test
@@ -220,8 +205,7 @@ class UserServiceImplTest {
         user.setLockoutUntil(Instant.now().plusSeconds(300));
         user.setFailedLoginAttempts(3);
         user.setFirstFailedLoginAt(Instant.now());
-        AdminUserResponse response =
-                AdminUserResponse.builder().id("user-1").isLocked(true).build();
+        AdminUserResponse response = AdminUserResponse.builder().id("user-1").isLocked(true).build();
         when(userRepository.findWithRolesById("user-1")).thenReturn(Optional.of(user));
         when(userRepository.save(user)).thenReturn(user);
         when(userMapper.toAdminUserResponse(user)).thenReturn(response);
@@ -242,8 +226,7 @@ class UserServiceImplTest {
         user.setIsLocked(true);
         when(userRepository.findWithRolesById("user-1")).thenReturn(Optional.of(user));
         when(userMapper.toAdminUserResponse(user))
-                .thenReturn(
-                        AdminUserResponse.builder().id("user-1").isLocked(true).build());
+                .thenReturn(AdminUserResponse.builder().id("user-1").isLocked(true).build());
 
         userService.lockUser("user-1");
 
@@ -252,9 +235,8 @@ class UserServiceImplTest {
 
     @Test
     void lockUser_whenSelf_shouldThrowAccessDenied() {
-        assertThatThrownBy(() -> userService.lockUser("admin-1"))
-                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
-                        .isEqualTo(CommonErrorCode.ACCESS_DENIED));
+        assertThatThrownBy(() -> userService.lockUser("admin-1")).isInstanceOfSatisfying(AppException.class,
+                ex -> assertThat(ex.getErrorCode()).isEqualTo(CommonErrorCode.ACCESS_DENIED));
     }
 
     @Test
@@ -267,8 +249,7 @@ class UserServiceImplTest {
         when(userRepository.findWithRolesById("user-1")).thenReturn(Optional.of(user));
         when(userRepository.save(user)).thenReturn(user);
         when(userMapper.toAdminUserResponse(user))
-                .thenReturn(
-                        AdminUserResponse.builder().id("user-1").isLocked(false).build());
+                .thenReturn(AdminUserResponse.builder().id("user-1").isLocked(false).build());
 
         userService.unlockUser("user-1");
 
@@ -288,14 +269,10 @@ class UserServiceImplTest {
         when(roleRepository.findByCode(PredefinedRole.USER)).thenReturn(Optional.of(userRole));
         when(userRepository.countActiveUsersByRole(PredefinedRole.ADMIN)).thenReturn(2L);
         when(userRepository.save(user)).thenReturn(user);
-        when(userMapper.toAdminUserResponse(user))
-                .thenReturn(AdminUserResponse.builder().id("user-1").build());
+        when(userMapper.toAdminUserResponse(user)).thenReturn(AdminUserResponse.builder().id("user-1").build());
 
-        userService.updateUserRoles(
-                "user-1",
-                UpdateUserRolesRequest.builder()
-                        .roles(Set.of(PredefinedRole.USER))
-                        .build());
+        userService.updateUserRoles("user-1",
+                UpdateUserRolesRequest.builder().roles(Set.of(PredefinedRole.USER)).build());
 
         assertThat(user.getRoles()).containsExactly(userRole);
         verify(jwtService).revokeAllTokensOfUser("user-1", RevocationReason.USER_LOGOUT_ALL);
@@ -311,14 +288,10 @@ class UserServiceImplTest {
         when(roleRepository.findByCode(PredefinedRole.ADMIN)).thenReturn(Optional.of(adminRole));
         when(roleRepository.findByCode(PredefinedRole.USER)).thenReturn(Optional.of(userRole));
         when(userRepository.save(user)).thenReturn(user);
-        when(userMapper.toAdminUserResponse(user))
-                .thenReturn(AdminUserResponse.builder().id("user-1").build());
+        when(userMapper.toAdminUserResponse(user)).thenReturn(AdminUserResponse.builder().id("user-1").build());
 
-        userService.updateUserRoles(
-                "user-1",
-                UpdateUserRolesRequest.builder()
-                        .roles(EnumSet.of(PredefinedRole.USER, PredefinedRole.ADMIN))
-                        .build());
+        userService.updateUserRoles("user-1",
+                UpdateUserRolesRequest.builder().roles(EnumSet.of(PredefinedRole.USER, PredefinedRole.ADMIN)).build());
 
         assertThat(user.getRoles()).containsExactly(userRole, adminRole);
         verify(jwtService).revokeAllTokensOfUser("user-1", RevocationReason.USER_LOGOUT_ALL);
@@ -326,13 +299,10 @@ class UserServiceImplTest {
 
     @Test
     void updateUserRoles_whenSelf_shouldThrowAccessDenied() {
-        assertThatThrownBy(() -> userService.updateUserRoles(
-                        "admin-1",
-                        UpdateUserRolesRequest.builder()
-                                .roles(Set.of(PredefinedRole.USER))
-                                .build()))
-                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
-                        .isEqualTo(CommonErrorCode.ACCESS_DENIED));
+        assertThatThrownBy(() -> userService.updateUserRoles("admin-1",
+                UpdateUserRolesRequest.builder().roles(Set.of(PredefinedRole.USER)).build())).isInstanceOfSatisfying(
+                        AppException.class,
+                        ex -> assertThat(ex.getErrorCode()).isEqualTo(CommonErrorCode.ACCESS_DENIED));
     }
 
     @Test
@@ -342,13 +312,10 @@ class UserServiceImplTest {
         when(userRepository.findWithRolesById("user-1")).thenReturn(Optional.of(user));
         when(userRepository.countActiveUsersByRole(PredefinedRole.ADMIN)).thenReturn(1L);
 
-        assertThatThrownBy(() -> userService.updateUserRoles(
-                        "user-1",
-                        UpdateUserRolesRequest.builder()
-                                .roles(Set.of(PredefinedRole.USER))
-                                .build()))
-                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
-                        .isEqualTo(UserErrorCode.CANNOT_REMOVE_ROLE));
+        assertThatThrownBy(() -> userService.updateUserRoles("user-1",
+                UpdateUserRolesRequest.builder().roles(Set.of(PredefinedRole.USER)).build())).isInstanceOfSatisfying(
+                        AppException.class,
+                        ex -> assertThat(ex.getErrorCode()).isEqualTo(UserErrorCode.CANNOT_REMOVE_ROLE));
     }
 
     @Test
@@ -360,21 +327,16 @@ class UserServiceImplTest {
             when(userRepository.findWithRolesById("user-1")).thenReturn(Optional.of(user));
 
             assertThatThrownBy(() -> {
-                        if ("lock".equals(action)) {
-                            userService.lockUser("user-1");
-                        } else if ("unlock".equals(action)) {
-                            userService.unlockUser("user-1");
-                        } else {
-                            userService.updateUserRoles(
-                                    "user-1",
-                                    UpdateUserRolesRequest.builder()
-                                            .roles(Set.of(PredefinedRole.USER))
-                                            .build());
-                        }
-                    })
-                    .as(action)
-                    .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
-                            .isEqualTo(UserErrorCode.USER_ACCOUNT_DELETED));
+                if ("lock".equals(action)) {
+                    userService.lockUser("user-1");
+                } else if ("unlock".equals(action)) {
+                    userService.unlockUser("user-1");
+                } else {
+                    userService.updateUserRoles("user-1",
+                            UpdateUserRolesRequest.builder().roles(Set.of(PredefinedRole.USER)).build());
+                }
+            }).as(action).isInstanceOfSatisfying(AppException.class,
+                    ex -> assertThat(ex.getErrorCode()).isEqualTo(UserErrorCode.USER_ACCOUNT_DELETED));
         }
     }
 
@@ -397,10 +359,6 @@ class UserServiceImplTest {
     }
 
     private Role role(PredefinedRole code) {
-        return Role.builder()
-                .id((long) code.ordinal())
-                .code(code)
-                .description(code.name())
-                .build();
+        return Role.builder().id((long) code.ordinal()).code(code).description(code.name()).build();
     }
 }

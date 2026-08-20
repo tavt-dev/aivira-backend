@@ -69,9 +69,8 @@ public class OrderServiceImpl implements OrderService {
     public PageResponse<OrderSummaryResponse> getMyOrders(OrderStatus status, int page, int size) {
         String userId = currentUserService.getCurrentUserId();
         var pageable = PageRequestUtils.newestFirst(page, size);
-        Page<Order> orderPage = status == null
-                        ? orderRepository.findByUserId(userId, pageable)
-                        : orderRepository.findByUserIdAndOrderStatus(userId, status, pageable);
+        Page<Order> orderPage = status == null ? orderRepository.findByUserId(userId, pageable)
+                : orderRepository.findByUserIdAndOrderStatus(userId, status, pageable);
         return toOrderSummaryPage(orderPage);
     }
 
@@ -79,11 +78,9 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(readOnly = true)
     public OrderResponse getMyOrder(Long orderId) {
         String userId = currentUserService.getCurrentUserId();
-        Order order = orderRepository
-                .findWithItemsAndRefundByIdAndUserId(orderId, userId)
+        Order order = orderRepository.findWithItemsAndRefundByIdAndUserId(orderId, userId)
                 .orElseThrow(() -> new AppException(OrderErrorCode.ORDER_NOT_FOUND));
-        orderRepository
-                .findWithPaymentsByIdAndUserId(orderId, userId)
+        orderRepository.findWithPaymentsByIdAndUserId(orderId, userId)
                 .orElseThrow(() -> new AppException(OrderErrorCode.ORDER_NOT_FOUND));
         return commerceMapper.toOrderResponse(order);
     }
@@ -92,8 +89,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponse cancelMyOrder(Long orderId, OrderCancelRequest request) {
         String userId = currentUserService.getCurrentUserId();
-        Order order = orderRepository
-                .findByIdAndUserIdForUpdate(orderId, userId)
+        Order order = orderRepository.findByIdAndUserIdForUpdate(orderId, userId)
                 .orElseThrow(() -> new AppException(OrderErrorCode.ORDER_NOT_FOUND));
 
         PaymentGroup paymentGroup = resolvePaymentGroup(order);
@@ -103,12 +99,10 @@ public class OrderServiceImpl implements OrderService {
         order.setCancelReason(trimToNull(request == null ? null : request.getReason()));
         inventoryService.restoreStockForOrders(List.of(order));
         discountService.releaseReservedCouponUsagesForOrders(List.of(order));
-        order.getPayments().stream()
-                .filter(payment -> payment.getStatus() == PaymentStatus.PENDING)
+        order.getPayments().stream().filter(payment -> payment.getStatus() == PaymentStatus.PENDING)
                 .forEach(payment -> payment.setStatus(PaymentStatus.CANCELLED));
 
-        if (paymentGroup != null
-                && paymentGroup.getStatus() == PaymentStatus.PENDING
+        if (paymentGroup != null && paymentGroup.getStatus() == PaymentStatus.PENDING
                 && orderRepository.countByPaymentsPaymentGroupId(paymentGroup.getId()) == 1) {
             paymentGroup.setStatus(PaymentStatus.CANCELLED);
             paymentGroupRepository.save(paymentGroup);
@@ -120,8 +114,8 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<OrderSummaryResponse> getAdminOrders(
-            OrderStatus status, String keyword, Instant fromDate, Instant toDate, int page, int size) {
+    public PageResponse<OrderSummaryResponse> getAdminOrders(OrderStatus status, String keyword, Instant fromDate,
+            Instant toDate, int page, int size) {
         var pageable = PageRequestUtils.newestFirst(page, size);
         Specification<Order> specification = orderSpecifications.adminOrders(status, keyword, fromDate, toDate);
         return toOrderSummaryPage(orderRepository.findAll(specification, pageable));
@@ -133,21 +127,19 @@ public class OrderServiceImpl implements OrderService {
         }
 
         List<Long> orderIds = orderPage.getContent().stream().map(Order::getId).toList();
-        Map<Long, List<com.tien.aivirabackend.domain.entity.transaction.OrderItem>> itemsByOrderId =
-                orderItemRepository.findByOrderIdInOrderByOrderIdAscIdAsc(orderIds).stream()
-                        .collect(Collectors.groupingBy(item -> item.getOrder().getId()));
-        return PageResponse.from(orderPage.map(order -> commerceMapper.toOrderSummaryResponse(
-                order, itemsByOrderId.getOrDefault(order.getId(), Collections.emptyList()))));
+        Map<Long, List<com.tien.aivirabackend.domain.entity.transaction.OrderItem>> itemsByOrderId = orderItemRepository
+                .findByOrderIdInOrderByOrderIdAscIdAsc(orderIds).stream()
+                .collect(Collectors.groupingBy(item -> item.getOrder().getId()));
+        return PageResponse.from(orderPage.map(order -> commerceMapper.toOrderSummaryResponse(order,
+                itemsByOrderId.getOrDefault(order.getId(), Collections.emptyList()))));
     }
 
     @Override
     @Transactional(readOnly = true)
     public OrderResponse getAdminOrder(Long orderId) {
-        Order order = orderRepository
-                .findWithItemsAndRefundById(orderId)
+        Order order = orderRepository.findWithItemsAndRefundById(orderId)
                 .orElseThrow(() -> new AppException(OrderErrorCode.ORDER_NOT_FOUND));
-        orderRepository
-                .findWithPaymentsById(orderId)
+        orderRepository.findWithPaymentsById(orderId)
                 .orElseThrow(() -> new AppException(OrderErrorCode.ORDER_NOT_FOUND));
         return commerceMapper.toOrderResponse(order);
     }
@@ -155,8 +147,8 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderResponse confirmOrder(Long orderId) {
-        return transitionAny(
-                orderId, Set.of(OrderStatus.PENDING_CONFIRMATION, OrderStatus.PAID), OrderStatus.CONFIRMED);
+        return transitionAny(orderId, Set.of(OrderStatus.PENDING_CONFIRMATION, OrderStatus.PAID),
+                OrderStatus.CONFIRMED);
     }
 
     @Override
@@ -200,16 +192,9 @@ public class OrderServiceImpl implements OrderService {
         if (!StringUtils.hasText(adminUserId)) {
             adminUserId = "UNKNOWN";
         }
-        Refund refund = Refund.builder()
-                .refundCode(generateRefundCode())
-                .order(order)
-                .amount(request.getAmount())
-                .reason(trimRequired(request.getReason()))
-                .note(trimRequired(request.getNote()))
-                .status(RefundStatus.COMPLETED)
-                .refundedBy(adminUserId)
-                .refundedAt(now)
-                .build();
+        Refund refund = Refund.builder().refundCode(generateRefundCode()).order(order).amount(request.getAmount())
+                .reason(trimRequired(request.getReason())).note(trimRequired(request.getNote()))
+                .status(RefundStatus.COMPLETED).refundedBy(adminUserId).refundedAt(now).build();
 
         order.setOrderStatus(OrderStatus.REFUNDED);
         successfulPayments(order).forEach(payment -> {
@@ -223,12 +208,8 @@ public class OrderServiceImpl implements OrderService {
         order.setRefund(savedRefund);
         Order savedOrder = orderRepository.save(order);
 
-        log.info(
-                "admin_refund_marked orderId={} orderCode={} refundCode={} amount={} adminUserId={}",
-                savedOrder.getId(),
-                savedOrder.getOrderCode(),
-                savedRefund.getRefundCode(),
-                savedRefund.getAmount(),
+        log.info("admin_refund_marked orderId={} orderCode={} refundCode={} amount={} adminUserId={}",
+                savedOrder.getId(), savedOrder.getOrderCode(), savedRefund.getRefundCode(), savedRefund.getAmount(),
                 adminUserId);
         return commerceMapper.toOrderResponse(savedOrder);
     }
@@ -261,15 +242,15 @@ public class OrderServiceImpl implements OrderService {
         }
         order.setOrderStatus(target);
         if (target == OrderStatus.COMPLETED) {
-            order.getItems().forEach(item -> productRepository.incrementSoldCount(item.getProductId(), item.getQuantity()));
+            order.getItems()
+                    .forEach(item -> productRepository.incrementSoldCount(item.getProductId(), item.getQuantity()));
         }
         logAdminLifecycleChange(order, previousStatus, target);
         return commerceMapper.toOrderResponse(orderRepository.save(order));
     }
 
     private Order findOrderForAdminUpdate(Long orderId) {
-        return orderRepository
-                .findByIdForUpdate(orderId)
+        return orderRepository.findByIdForUpdate(orderId)
                 .orElseThrow(() -> new AppException(OrderErrorCode.ORDER_NOT_FOUND));
     }
 
@@ -285,13 +266,11 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void validateRefundable(Order order) {
-        if (order.getOrderStatus() == OrderStatus.REFUNDED
-                || order.getRefund() != null
+        if (order.getOrderStatus() == OrderStatus.REFUNDED || order.getRefund() != null
                 || refundRepository.existsByOrder_Id(order.getId())) {
             throw new AppException(OrderErrorCode.ORDER_REFUND_ALREADY_PROCESSED);
         }
-        if (!Set.of(OrderStatus.PAID, OrderStatus.CONFIRMED, OrderStatus.PACKING)
-                .contains(order.getOrderStatus())) {
+        if (!Set.of(OrderStatus.PAID, OrderStatus.CONFIRMED, OrderStatus.PACKING).contains(order.getOrderStatus())) {
             throw new AppException(OrderErrorCode.ORDER_REFUND_NOT_ALLOWED);
         }
         if (successfulPayments(order).isEmpty()) {
@@ -303,10 +282,8 @@ public class OrderServiceImpl implements OrderService {
         if (requestedAmount == null || requestedAmount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new AppException(OrderErrorCode.ORDER_REFUND_AMOUNT_INVALID);
         }
-        BigDecimal successfulPaymentAmount = successfulPayments(order).stream()
-                .map(Payment::getAmount)
-                .filter(amount -> amount != null)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal successfulPaymentAmount = successfulPayments(order).stream().map(Payment::getAmount)
+                .filter(amount -> amount != null).reduce(BigDecimal.ZERO, BigDecimal::add);
         if (requestedAmount.compareTo(successfulPaymentAmount) != 0
                 || requestedAmount.compareTo(order.getTotalAmount()) != 0) {
             throw new AppException(OrderErrorCode.ORDER_REFUND_AMOUNT_INVALID);
@@ -314,9 +291,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private List<Payment> successfulPayments(Order order) {
-        return order.getPayments().stream()
-                .filter(payment -> payment.getStatus() == PaymentStatus.SUCCESS)
-                .toList();
+        return order.getPayments().stream().filter(payment -> payment.getStatus() == PaymentStatus.SUCCESS).toList();
     }
 
     private void restoreStockAndCancel(Order order, String reason) {
@@ -324,19 +299,14 @@ public class OrderServiceImpl implements OrderService {
         order.setCancelReason(reason);
         inventoryService.restoreStockForOrders(List.of(order));
         discountService.releaseReservedCouponUsagesForOrders(List.of(order));
-        order.getPayments().stream()
-                .filter(payment -> payment.getStatus() == PaymentStatus.PENDING)
+        order.getPayments().stream().filter(payment -> payment.getStatus() == PaymentStatus.PENDING)
                 .forEach(payment -> payment.setStatus(PaymentStatus.CANCELLED));
     }
 
     private void logAdminLifecycleChange(Order order, OrderStatus previousStatus, OrderStatus targetStatus) {
         log.info(
                 "Admin order lifecycle change: orderId={} orderCode={} previousStatus={} targetStatus={} adminUserId={}",
-                order.getId(),
-                order.getOrderCode(),
-                previousStatus,
-                targetStatus,
-                resolveCurrentUserIdForLog());
+                order.getId(), order.getOrderCode(), previousStatus, targetStatus, resolveCurrentUserIdForLog());
     }
 
     private String resolveCurrentUserIdForLog() {
@@ -345,18 +315,14 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private PaymentGroup resolvePaymentGroup(Order order) {
-        return order.getPayments().stream()
-                .map(Payment::getPaymentGroup)
-                .filter(group -> group != null)
+        return order.getPayments().stream().map(Payment::getPaymentGroup).filter(group -> group != null)
                 .min(Comparator.comparing(PaymentGroup::getId, Comparator.nullsLast(Comparator.naturalOrder())))
                 .orElse(null);
     }
 
     private void cancelLatestPendingAttempt(PaymentGroup paymentGroup) {
-        paymentAttemptRepository
-                .findTopByPaymentGroupIdOrderByAttemptNoDesc(paymentGroup.getId())
-                .filter(attempt -> attempt.getStatus() == PaymentStatus.PENDING)
-                .ifPresent(this::cancelAttempt);
+        paymentAttemptRepository.findTopByPaymentGroupIdOrderByAttemptNoDesc(paymentGroup.getId())
+                .filter(attempt -> attempt.getStatus() == PaymentStatus.PENDING).ifPresent(this::cancelAttempt);
     }
 
     private void cancelAttempt(PaymentAttempt attempt) {
@@ -368,8 +334,7 @@ public class OrderServiceImpl implements OrderService {
     private String generateRefundCode() {
         String code;
         do {
-            code = "REF" + System.currentTimeMillis()
-                    + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+            code = "REF" + System.currentTimeMillis() + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
         } while (refundRepository.existsByRefundCode(code));
         return code;
     }

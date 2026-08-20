@@ -40,81 +40,53 @@ class CouponPromotionControllerContractTest {
     @BeforeEach
     void setUp() {
         couponMvc = MockMvcBuilders.standaloneSetup(new AdminCouponController(couponService))
-                .setControllerAdvice(new GlobalExceptionHandler())
-                .build();
+                .setControllerAdvice(new GlobalExceptionHandler()).build();
         promotionMvc = MockMvcBuilders.standaloneSetup(new AdminPromotionController(promotionService))
-                .setControllerAdvice(new GlobalExceptionHandler())
-                .build();
+                .setControllerAdvice(new GlobalExceptionHandler()).build();
     }
 
     @Test
     void couponEndpoints_shouldDeclareExpectedPermissions() throws Exception {
-        assertPreAuthorize(
-                AdminCouponController.class.getMethod("getCoupons", int.class, int.class), "COUPON_MANAGE_ALL");
+        assertPreAuthorize(AdminCouponController.class.getMethod("getCoupons", int.class, int.class),
+                "COUPON_MANAGE_ALL");
         assertPreAuthorize(AdminCouponController.class.getMethod("getCoupon", Long.class), "COUPON_MANAGE_ALL");
-        assertPreAuthorize(
-                AdminCouponController.class.getMethod("createCoupon", CouponCreateRequest.class),
-                "COUPON_MANAGE_ALL",
-                "COUPON_CREATE_ALL");
-        assertPreAuthorize(
-                AdminCouponController.class.getMethod("updateCoupon", Long.class, CouponUpdateRequest.class),
-                "COUPON_MANAGE_ALL",
-                "COUPON_UPDATE_ALL");
-        assertPreAuthorize(
-                AdminCouponController.class.getMethod("deleteCoupon", Long.class),
-                "COUPON_MANAGE_ALL",
+        assertPreAuthorize(AdminCouponController.class.getMethod("createCoupon", CouponCreateRequest.class),
+                "COUPON_MANAGE_ALL", "COUPON_CREATE_ALL");
+        assertPreAuthorize(AdminCouponController.class.getMethod("updateCoupon", Long.class, CouponUpdateRequest.class),
+                "COUPON_MANAGE_ALL", "COUPON_UPDATE_ALL");
+        assertPreAuthorize(AdminCouponController.class.getMethod("deleteCoupon", Long.class), "COUPON_MANAGE_ALL",
                 "COUPON_DELETE_ALL");
     }
 
     @Test
     void promotionEndpoints_shouldDeclareExpectedPermissions() throws Exception {
-        assertPreAuthorize(
-                AdminPromotionController.class.getMethod("getPromotions", int.class, int.class),
-                "PROMOTION_MANAGE_ALL",
+        assertPreAuthorize(AdminPromotionController.class.getMethod("getPromotions", int.class, int.class),
+                "PROMOTION_MANAGE_ALL", "PROMOTION_READ");
+        assertPreAuthorize(AdminPromotionController.class.getMethod("getPromotion", Long.class), "PROMOTION_MANAGE_ALL",
                 "PROMOTION_READ");
-        assertPreAuthorize(
-                AdminPromotionController.class.getMethod("getPromotion", Long.class),
-                "PROMOTION_MANAGE_ALL",
-                "PROMOTION_READ");
-        assertPreAuthorize(
-                AdminPromotionController.class.getMethod("createPromotion", PromotionCreateRequest.class),
-                "PROMOTION_MANAGE_ALL",
-                "PROMOTION_CREATE_ALL");
+        assertPreAuthorize(AdminPromotionController.class.getMethod("createPromotion", PromotionCreateRequest.class),
+                "PROMOTION_MANAGE_ALL", "PROMOTION_CREATE_ALL");
         assertPreAuthorize(
                 AdminPromotionController.class.getMethod("updatePromotion", Long.class, PromotionUpdateRequest.class),
-                "PROMOTION_MANAGE_ALL",
-                "PROMOTION_UPDATE_ALL");
-        assertPreAuthorize(
-                AdminPromotionController.class.getMethod("deletePromotion", Long.class),
-                "PROMOTION_MANAGE_ALL",
-                "PROMOTION_DELETE_ALL");
+                "PROMOTION_MANAGE_ALL", "PROMOTION_UPDATE_ALL");
+        assertPreAuthorize(AdminPromotionController.class.getMethod("deletePromotion", Long.class),
+                "PROMOTION_MANAGE_ALL", "PROMOTION_DELETE_ALL");
     }
 
     @Test
     void couponEndpoints_shouldDelegateToService() throws Exception {
-        couponMvc
-                .perform(get("/admin/coupons").param("page", "2").param("size", "10"))
-                .andExpect(status().isOk());
+        couponMvc.perform(get("/admin/coupons").param("page", "2").param("size", "10")).andExpect(status().isOk());
         couponMvc.perform(get("/admin/coupons/7")).andExpect(status().isOk());
-        couponMvc
-                .perform(
-                        post("/admin/coupons")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(
-                                        """
-								{
-								"code":"SAVE10",
-								"type":"PERCENT",
-								"value":10,
-								"startAt":"2026-01-01T00:00:00",
-								"endAt":"2026-12-31T23:59:59"
-								}
-								"""))
-                .andExpect(status().isOk());
-        couponMvc
-                .perform(put("/admin/coupons/7")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"active\":false}"))
+        couponMvc.perform(post("/admin/coupons").contentType(MediaType.APPLICATION_JSON).content("""
+                {
+                "code":"SAVE10",
+                "type":"PERCENT",
+                "value":10,
+                "startAt":"2026-01-01T00:00:00",
+                "endAt":"2026-12-31T23:59:59"
+                }
+                """)).andExpect(status().isOk());
+        couponMvc.perform(put("/admin/coupons/7").contentType(MediaType.APPLICATION_JSON).content("{\"active\":false}"))
                 .andExpect(status().isOk());
         couponMvc.perform(delete("/admin/coupons/7")).andExpect(status().isOk());
 
@@ -127,32 +99,23 @@ class CouponPromotionControllerContractTest {
 
     @Test
     void promotionEndpoints_shouldDelegateToService() throws Exception {
-        promotionMvc
-                .perform(get("/admin/promotions").param("page", "2").param("size", "10"))
+        promotionMvc.perform(get("/admin/promotions").param("page", "2").param("size", "10"))
                 .andExpect(status().isOk());
         promotionMvc.perform(get("/admin/promotions/9")).andExpect(status().isOk());
-        promotionMvc
-                .perform(
-                        post("/admin/promotions")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(
-                                        """
-								{
-								"promotionName":"Book Deal",
-								"description":"Selected books",
-								"promotionType":"PERCENT",
-								"value":10,
-								"promotionScope":"PRODUCT",
-								"targetId":1,
-								"startAt":"2026-01-01T00:00:00",
-								"endAt":"2026-12-31T23:59:59"
-								}
-								"""))
-                .andExpect(status().isOk());
-        promotionMvc
-                .perform(put("/admin/promotions/9")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"active\":false}"))
+        promotionMvc.perform(post("/admin/promotions").contentType(MediaType.APPLICATION_JSON).content("""
+                {
+                "promotionName":"Book Deal",
+                "description":"Selected books",
+                "promotionType":"PERCENT",
+                "value":10,
+                "promotionScope":"PRODUCT",
+                "targetId":1,
+                "startAt":"2026-01-01T00:00:00",
+                "endAt":"2026-12-31T23:59:59"
+                }
+                """)).andExpect(status().isOk());
+        promotionMvc.perform(
+                put("/admin/promotions/9").contentType(MediaType.APPLICATION_JSON).content("{\"active\":false}"))
                 .andExpect(status().isOk());
         promotionMvc.perform(delete("/admin/promotions/9")).andExpect(status().isOk());
 

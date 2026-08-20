@@ -16,30 +16,28 @@ import com.tien.aivirabackend.domain.entity.user.UserPermission;
 
 @Repository
 public interface UserPermissionRepository extends JpaRepository<UserPermission, Long> {
-    @Query(
-            """
-			select up.permission.code
-			from UserPermission up
-			where up.user.id = :userId
-			and up.active = true
-			and up.revokedAt is null
-			and (up.expiresAt is null or up.expiresAt > :now)
-			""")
+    @Query("""
+            select up.permission.code
+            from UserPermission up
+            where up.user.id = :userId
+            and up.active = true
+            and up.revokedAt is null
+            and (up.expiresAt is null or up.expiresAt > :now)
+            """)
     Set<PermissionCode> findActivePermissionCodesByUserId(@Param("userId") String userId, @Param("now") Instant now);
 
-    @EntityGraph(attributePaths = {"permission", "grantedBy"})
-    @Query(
-            """
-			select up
-			from UserPermission up
-			where up.user.id = :userId
-			order by up.active desc, up.grantedAt desc
-			""")
+    @EntityGraph(attributePaths = { "permission", "grantedBy" })
+    @Query("""
+            select up
+            from UserPermission up
+            where up.user.id = :userId
+            order by up.active desc, up.grantedAt desc
+            """)
     List<UserPermission> findAllByUserId(@Param("userId") String userId);
 
-    @EntityGraph(attributePaths = {"permission", "grantedBy"})
-    Optional<UserPermission> findFirstByUser_IdAndPermission_CodeAndActiveTrueOrderByGrantedAtDesc(
-            String userId, PermissionCode permissionCode);
+    @EntityGraph(attributePaths = { "permission", "grantedBy" })
+    Optional<UserPermission> findFirstByUser_IdAndPermission_CodeAndActiveTrueOrderByGrantedAtDesc(String userId,
+            PermissionCode permissionCode);
 
     boolean existsByUser_IdAndPermission_CodeAndActiveTrue(String userId, PermissionCode permissionCode);
 }

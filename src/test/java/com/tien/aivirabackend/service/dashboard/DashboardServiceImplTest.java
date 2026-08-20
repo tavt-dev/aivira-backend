@@ -50,8 +50,8 @@ class DashboardServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        dashboardService =
-                new DashboardServiceImpl(productRepository, orderRepository, paymentRepository, userRepository);
+        dashboardService = new DashboardServiceImpl(productRepository, orderRepository, paymentRepository,
+                userRepository);
     }
 
     @Test
@@ -96,11 +96,10 @@ class DashboardServiceImplTest {
 
     @Test
     void getSummary_whenInvalidRange_shouldReject() {
-        assertThatThrownBy(() -> dashboardService.getSummary(
-                        Instant.parse("2026-02-01T00:00:00Z"), Instant.parse("2026-01-01T00:00:00Z")))
-                .isInstanceOf(AppException.class)
-                .extracting(error -> ((AppException) error).getErrorCode())
-                .isEqualTo(CommonErrorCode.INVALID_INPUT);
+        assertThatThrownBy(() -> dashboardService.getSummary(Instant.parse("2026-02-01T00:00:00Z"),
+                Instant.parse("2026-01-01T00:00:00Z"))).isInstanceOf(AppException.class)
+                        .extracting(error -> ((AppException) error).getErrorCode())
+                        .isEqualTo(CommonErrorCode.INVALID_INPUT);
     }
 
     @Test
@@ -148,31 +147,24 @@ class DashboardServiceImplTest {
 
         assertThat(response.getBooks()).hasSize(1);
         assertThat(response.getBooks().getFirst().getQuantitySold()).isEqualTo(4L);
-        verify(orderRepository)
-                .findTopBooksBetween(
-                        anyCollection(), eq(from), eq(to), argThat(pageable -> pageable.getPageSize() == 50));
+        verify(orderRepository).findTopBooksBetween(anyCollection(), eq(from), eq(to),
+                argThat(pageable -> pageable.getPageSize() == 50));
         verify(productRepository, never()).findByActiveTrueAndStatusOrderBySoldCountDescCreatedAtDesc(any(), any());
     }
 
     @Test
     void getLowStock_shouldRespectThresholdAndLimit() {
-        when(productRepository.findByActiveTrueAndStatusAndStockQuantityLessThanEqual(
-                        eq(ProductStatus.ACTIVE), eq(3), any(Pageable.class)))
-                .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(Product.builder()
-                        .id(1L)
-                        .productName("Low")
-                        .slug("low")
-                        .sku("LOW")
-                        .stockQuantity(2)
-                        .build())));
+        when(productRepository.findByActiveTrueAndStatusAndStockQuantityLessThanEqual(eq(ProductStatus.ACTIVE), eq(3),
+                any(Pageable.class)))
+                        .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(Product.builder().id(1L)
+                                .productName("Low").slug("low").sku("LOW").stockQuantity(2).build())));
 
         var response = dashboardService.getLowStock(3, 4);
 
         assertThat(response.getBooks()).hasSize(1);
         assertThat(response.getBooks().getFirst().getStockQuantity()).isEqualTo(2);
-        verify(productRepository)
-                .findByActiveTrueAndStatusAndStockQuantityLessThanEqual(
-                        eq(ProductStatus.ACTIVE), eq(3), argThat(pageable -> pageable.getPageSize() == 4));
+        verify(productRepository).findByActiveTrueAndStatusAndStockQuantityLessThanEqual(eq(ProductStatus.ACTIVE),
+                eq(3), argThat(pageable -> pageable.getPageSize() == 4));
     }
 
     private SalesPointProjection sales(LocalDate date, BigDecimal revenue) {

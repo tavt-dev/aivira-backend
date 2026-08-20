@@ -77,17 +77,9 @@ class ReviewServiceImplTest {
     void setUp() {
         cloudinaryProperties = new CloudinaryProperties();
         cloudinaryProperties.setReviewImageFolder("aivira/reviews");
-        reviewService = new ReviewServiceImpl(
-                reviewRepository,
-                orderRepository,
-                productRepository,
-                productVariationRepository,
-                currentUserService,
-                new ReviewSpecifications(),
-                new ReviewMapper(),
-                fileValidatorService,
-                cloudinaryStorageService,
-                cloudinaryProperties);
+        reviewService = new ReviewServiceImpl(reviewRepository, orderRepository, productRepository,
+                productVariationRepository, currentUserService, new ReviewSpecifications(), new ReviewMapper(),
+                fileValidatorService, cloudinaryStorageService, cloudinaryProperties);
     }
 
     @Test
@@ -100,10 +92,8 @@ class ReviewServiceImplTest {
 
         assertThat(response.getData()).hasSize(1);
         assertThat(response.getData().getFirst().getRating()).isEqualTo(5);
-        verify(reviewRepository)
-                .findAll(
-                        any(Specification.class),
-                        argThat((Pageable pageable) -> pageable.getSort().getOrderFor("rating") != null));
+        verify(reviewRepository).findAll(any(Specification.class),
+                argThat((Pageable pageable) -> pageable.getSort().getOrderFor("rating") != null));
     }
 
     @Test
@@ -112,8 +102,7 @@ class ReviewServiceImplTest {
         Product product = product();
         ProductVariation variation = variation(product);
         when(currentUserService.getCurrentUserId()).thenReturn("user-1");
-        when(orderRepository.findWithItemsAndRefundByIdAndUserId(21L, "user-1"))
-                .thenReturn(Optional.of(order));
+        when(orderRepository.findWithItemsAndRefundByIdAndUserId(21L, "user-1")).thenReturn(Optional.of(order));
         when(productRepository.findById(10L)).thenReturn(Optional.of(product));
         when(productVariationRepository.findById(11L)).thenReturn(Optional.of(variation));
         when(reviewRepository.saveAndFlush(any(Review.class))).thenAnswer(invocation -> {
@@ -128,11 +117,8 @@ class ReviewServiceImplTest {
         assertThat(response.getApproved()).isFalse();
         assertThat(response.getVisible()).isTrue();
         assertThat(response.getImages()).hasSize(1);
-        verify(reviewRepository)
-                .saveAndFlush(argThat(review -> review.getOrderItem().getId().equals(31L)
-                        && review.getProduct().getId().equals(10L)
-                        && !review.isApproved()
-                        && review.isVisible()));
+        verify(reviewRepository).saveAndFlush(argThat(review -> review.getOrderItem().getId().equals(31L)
+                && review.getProduct().getId().equals(10L) && !review.isApproved() && review.isVisible()));
     }
 
     @Test
@@ -149,28 +135,27 @@ class ReviewServiceImplTest {
             return review;
         });
 
-        var response = reviewService.createReviewWithImages(
-                21L, 31L, ReviewCreateRequest.builder().rating(5).comment("Great").build(), List.of(first, second));
+        var response = reviewService.createReviewWithImages(21L, 31L,
+                ReviewCreateRequest.builder().rating(5).comment("Great").build(), List.of(first, second));
 
         assertThat(response.getImages()).extracting("imagePublicId").containsExactly("reviews/first", "reviews/second");
         assertThat(response.getImages()).extracting("sortOrder").containsExactly(0, 1);
         verify(fileValidatorService).validateFile(first, com.tien.aivirabackend.constant.MediaType.IMAGE);
         verify(fileValidatorService).validateFile(second, com.tien.aivirabackend.constant.MediaType.IMAGE);
-        verify(cloudinaryStorageService, times(2))
-                .uploadReviewImage(any(), eq("aivira/reviews/user-1/31"), eq("review-31"), eq(1600), eq(1600));
+        verify(cloudinaryStorageService, times(2)).uploadReviewImage(any(), eq("aivira/reviews/user-1/31"),
+                eq("review-31"), eq(1600), eq(1600));
     }
 
     @Test
     void createReviewWithImages_whenTooManyImages_shouldRejectBeforeValidationOrUpload() {
         stubEligibleReview();
-        List<MockMultipartFile> files = List.of(
-                imageFile("1.jpg"), imageFile("2.jpg"), imageFile("3.jpg"),
+        List<MockMultipartFile> files = List.of(imageFile("1.jpg"), imageFile("2.jpg"), imageFile("3.jpg"),
                 imageFile("4.jpg"), imageFile("5.jpg"), imageFile("6.jpg"));
 
-        assertThatThrownBy(() -> reviewService.createReviewWithImages(
-                        21L, 31L, ReviewCreateRequest.builder().rating(5).build(), List.copyOf(files)))
-                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
-                        .isEqualTo(ReviewErrorCode.REVIEW_INVALID_IMAGE));
+        assertThatThrownBy(() -> reviewService.createReviewWithImages(21L, 31L,
+                ReviewCreateRequest.builder().rating(5).build(), List.copyOf(files))).isInstanceOfSatisfying(
+                        AppException.class,
+                        ex -> assertThat(ex.getErrorCode()).isEqualTo(ReviewErrorCode.REVIEW_INVALID_IMAGE));
 
         verifyNoInteractions(fileValidatorService, cloudinaryStorageService);
     }
@@ -179,12 +164,11 @@ class ReviewServiceImplTest {
     void createReviewWithImages_whenValidationFails_shouldNotUploadAnything() {
         stubEligibleReview();
         MockMultipartFile image = imageFile("invalid.jpg");
-        doThrow(new AppException(ReviewErrorCode.REVIEW_INVALID_IMAGE))
-                .when(fileValidatorService).validateFile(image, com.tien.aivirabackend.constant.MediaType.IMAGE);
+        doThrow(new AppException(ReviewErrorCode.REVIEW_INVALID_IMAGE)).when(fileValidatorService).validateFile(image,
+                com.tien.aivirabackend.constant.MediaType.IMAGE);
 
-        assertThatThrownBy(() -> reviewService.createReviewWithImages(
-                        21L, 31L, ReviewCreateRequest.builder().rating(5).build(), List.of(image)))
-                .isInstanceOf(AppException.class);
+        assertThatThrownBy(() -> reviewService.createReviewWithImages(21L, 31L,
+                ReviewCreateRequest.builder().rating(5).build(), List.of(image))).isInstanceOf(AppException.class);
 
         verifyNoInteractions(cloudinaryStorageService);
     }
@@ -196,13 +180,11 @@ class ReviewServiceImplTest {
                 .thenReturn(new CloudinaryUploadResult("https://cdn.example.com/first.jpg", "reviews/first"))
                 .thenThrow(new AppException(ReviewErrorCode.REVIEW_IMAGE_UPLOAD_FAILED));
 
-        assertThatThrownBy(() -> reviewService.createReviewWithImages(
-                        21L,
-                        31L,
-                        ReviewCreateRequest.builder().rating(5).build(),
+        assertThatThrownBy(
+                () -> reviewService.createReviewWithImages(21L, 31L, ReviewCreateRequest.builder().rating(5).build(),
                         List.of(imageFile("first.jpg"), imageFile("second.jpg"))))
-                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
-                        .isEqualTo(ReviewErrorCode.REVIEW_IMAGE_UPLOAD_FAILED));
+                                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
+                                        .isEqualTo(ReviewErrorCode.REVIEW_IMAGE_UPLOAD_FAILED));
 
         verify(cloudinaryStorageService).deleteImage("reviews/first");
     }
@@ -214,9 +196,9 @@ class ReviewServiceImplTest {
                 .thenReturn(new CloudinaryUploadResult("https://cdn.example.com/first.jpg", "reviews/first"));
         when(reviewRepository.saveAndFlush(any(Review.class))).thenThrow(new IllegalStateException("database failed"));
 
-        assertThatThrownBy(() -> reviewService.createReviewWithImages(
-                        21L, 31L, ReviewCreateRequest.builder().rating(5).build(), List.of(imageFile("first.jpg"))))
-                .isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> reviewService.createReviewWithImages(21L, 31L,
+                ReviewCreateRequest.builder().rating(5).build(), List.of(imageFile("first.jpg"))))
+                        .isInstanceOf(IllegalStateException.class);
 
         verify(cloudinaryStorageService).deleteImage("reviews/first");
     }
@@ -224,12 +206,10 @@ class ReviewServiceImplTest {
     @Test
     void createReview_whenOrderMissingForCurrentUser_shouldThrowOrderNotFound() {
         when(currentUserService.getCurrentUserId()).thenReturn("user-1");
-        when(orderRepository.findWithItemsAndRefundByIdAndUserId(21L, "user-1"))
-                .thenReturn(Optional.empty());
+        when(orderRepository.findWithItemsAndRefundByIdAndUserId(21L, "user-1")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> reviewService.createReview(21L, 31L, createRequest()))
-                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
-                        .isEqualTo(OrderErrorCode.ORDER_NOT_FOUND));
+        assertThatThrownBy(() -> reviewService.createReview(21L, 31L, createRequest())).isInstanceOfSatisfying(
+                AppException.class, ex -> assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.ORDER_NOT_FOUND));
     }
 
     @Test
@@ -238,9 +218,9 @@ class ReviewServiceImplTest {
         when(orderRepository.findWithItemsAndRefundByIdAndUserId(21L, "user-1"))
                 .thenReturn(Optional.of(order(OrderStatus.CONFIRMED)));
 
-        assertThatThrownBy(() -> reviewService.createReview(21L, 31L, createRequest()))
-                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
-                        .isEqualTo(ReviewErrorCode.REVIEW_ORDER_NOT_COMPLETED));
+        assertThatThrownBy(() -> reviewService.createReview(21L, 31L, createRequest())).isInstanceOfSatisfying(
+                AppException.class,
+                ex -> assertThat(ex.getErrorCode()).isEqualTo(ReviewErrorCode.REVIEW_ORDER_NOT_COMPLETED));
     }
 
     @Test
@@ -250,9 +230,9 @@ class ReviewServiceImplTest {
                 .thenReturn(Optional.of(order(OrderStatus.COMPLETED)));
         when(reviewRepository.existsByOrderItem_Id(31L)).thenReturn(true);
 
-        assertThatThrownBy(() -> reviewService.createReview(21L, 31L, createRequest()))
-                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
-                        .isEqualTo(ReviewErrorCode.REVIEW_ALREADY_EXISTS));
+        assertThatThrownBy(() -> reviewService.createReview(21L, 31L, createRequest())).isInstanceOfSatisfying(
+                AppException.class,
+                ex -> assertThat(ex.getErrorCode()).isEqualTo(ReviewErrorCode.REVIEW_ALREADY_EXISTS));
     }
 
     @Test
@@ -261,9 +241,8 @@ class ReviewServiceImplTest {
         when(orderRepository.findWithItemsAndRefundByIdAndUserId(21L, "user-1"))
                 .thenReturn(Optional.of(order(OrderStatus.COMPLETED)));
 
-        assertThatThrownBy(() -> reviewService.createReview(21L, 999L, createRequest()))
-                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
-                        .isEqualTo(ReviewErrorCode.REVIEW_NOT_ALLOWED));
+        assertThatThrownBy(() -> reviewService.createReview(21L, 999L, createRequest())).isInstanceOfSatisfying(
+                AppException.class, ex -> assertThat(ex.getErrorCode()).isEqualTo(ReviewErrorCode.REVIEW_NOT_ALLOWED));
     }
 
     @Test
@@ -288,9 +267,8 @@ class ReviewServiceImplTest {
         when(currentUserService.getCurrentUserId()).thenReturn("user-1");
         when(reviewRepository.findDetailedByIdAndUserId(99L, "user-1")).thenReturn(Optional.of(review));
 
-        assertThatThrownBy(() -> reviewService.updateReview(99L, updateRequest()))
-                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
-                        .isEqualTo(ReviewErrorCode.REVIEW_DELETED));
+        assertThatThrownBy(() -> reviewService.updateReview(99L, updateRequest())).isInstanceOfSatisfying(
+                AppException.class, ex -> assertThat(ex.getErrorCode()).isEqualTo(ReviewErrorCode.REVIEW_DELETED));
     }
 
     @Test
@@ -314,8 +292,7 @@ class ReviewServiceImplTest {
         when(currentUserService.findCurrentUserId()).thenReturn(Optional.of("admin-1"));
         when(reviewRepository.save(review)).thenReturn(review);
 
-        var response = reviewService.moderateReview(
-                99L,
+        var response = reviewService.moderateReview(99L,
                 ReviewModerateRequest.builder().approved(true).visible(false).build());
 
         assertThat(response.getApproved()).isTrue();
@@ -331,26 +308,21 @@ class ReviewServiceImplTest {
         when(currentUserService.findCurrentUserId()).thenReturn(Optional.of("admin-1"));
         when(reviewRepository.save(review)).thenReturn(review);
 
-        var replied = reviewService.replyToReview(
-                99L, ReviewReplyRequest.builder().adminReply(" Thanks ").build());
+        var replied = reviewService.replyToReview(99L, ReviewReplyRequest.builder().adminReply(" Thanks ").build());
 
         assertThat(replied.getAdminReply()).isEqualTo("Thanks");
         assertThat(replied.getRepliedBy()).isEqualTo("admin-1");
         assertThat(replied.getRepliedAt()).isNotNull();
 
-        var cleared = reviewService.replyToReview(
-                99L, ReviewReplyRequest.builder().adminReply(" ").build());
+        var cleared = reviewService.replyToReview(99L, ReviewReplyRequest.builder().adminReply(" ").build());
 
         assertThat(cleared.getAdminReply()).isNull();
         assertThat(cleared.getRepliedBy()).isNull();
     }
 
     private ReviewCreateRequest createRequest() {
-        return ReviewCreateRequest.builder()
-                .rating(5)
-                .comment(" Great book ")
-                .images(List.of(imageRequest("https://cdn.example.com/review.jpg", "review-img")))
-                .build();
+        return ReviewCreateRequest.builder().rating(5).comment(" Great book ")
+                .images(List.of(imageRequest("https://cdn.example.com/review.jpg", "review-img"))).build();
     }
 
     private void stubEligibleReview() {
@@ -367,90 +339,51 @@ class ReviewServiceImplTest {
     }
 
     private MockMultipartFile imageFile(String name, String contentType) {
-        return new MockMultipartFile("images", name, contentType, new byte[] {1, 2, 3});
+        return new MockMultipartFile("images", name, contentType, new byte[] { 1, 2, 3 });
     }
 
     private ReviewUpdateRequest updateRequest() {
-        return ReviewUpdateRequest.builder()
-                .rating(4)
-                .comment("Updated")
-                .images(List.of(imageRequest("https://cdn.example.com/new.jpg", "review-new")))
-                .build();
+        return ReviewUpdateRequest.builder().rating(4).comment("Updated")
+                .images(List.of(imageRequest("https://cdn.example.com/new.jpg", "review-new"))).build();
     }
 
     private ReviewImageRequest imageRequest(String url, String publicId) {
-        return ReviewImageRequest.builder()
-                .imageUrl(url)
-                .imagePublicId(publicId)
-                .sortOrder(0)
-                .build();
+        return ReviewImageRequest.builder().imageUrl(url).imagePublicId(publicId).sortOrder(0).build();
     }
 
     private Review approvedReview() {
         Product product = product();
         ProductVariation variation = variation(product);
         Order order = order(OrderStatus.COMPLETED);
-        Review review = Review.builder()
-                .rating(5)
-                .comment("Great")
-                .approved(true)
-                .visible(true)
-                .user(order.getUser())
-                .product(product)
-                .productVariation(variation)
-                .order(order)
-                .orderItem(order.getItems().getFirst())
-                .moderatedBy("admin")
-                .moderatedAt(Instant.now())
-                .build();
+        Review review = Review.builder().rating(5).comment("Great").approved(true).visible(true).user(order.getUser())
+                .product(product).productVariation(variation).order(order).orderItem(order.getItems().getFirst())
+                .moderatedBy("admin").moderatedAt(Instant.now()).build();
         review.setId(99L);
-        review.getImages()
-                .add(com.tien.aivirabackend.domain.entity.review.ReviewImage.builder()
-                        .review(review)
-                        .imageUrl("https://cdn.example.com/review.jpg")
-                        .imagePublicId("review-img")
-                        .sortOrder(0)
-                        .build());
+        review.getImages().add(com.tien.aivirabackend.domain.entity.review.ReviewImage.builder().review(review)
+                .imageUrl("https://cdn.example.com/review.jpg").imagePublicId("review-img").sortOrder(0).build());
         return review;
     }
 
     private Order order(OrderStatus status) {
-        User user = User.builder()
-                .id("user-1")
-                .username("buyer")
-                .email("buyer@example.com")
-                .build();
-        Order order = Order.builder()
-                .user(user)
-                .orderCode("ORD123")
-                .orderStatus(status)
-                .build();
+        User user = User.builder().id("user-1").username("buyer").email("buyer@example.com").build();
+        Order order = Order.builder().user(user).orderCode("ORD123").orderStatus(status).build();
         order.setId(21L);
         order.getItems()
-                .add(OrderItem.builder()
-                        .order(order)
-                        .productId(10L)
-                        .productVariationId(11L)
-                        .productName("Aivira Book")
-                        .sku("BOOK-001")
-                        .basePrice(BigDecimal.valueOf(100))
-                        .finalPrice(BigDecimal.valueOf(100))
-                        .quantity(1)
-                        .build());
+                .add(OrderItem.builder().order(order).productId(10L).productVariationId(11L).productName("Aivira Book")
+                        .sku("BOOK-001").basePrice(BigDecimal.valueOf(100)).finalPrice(BigDecimal.valueOf(100))
+                        .quantity(1).build());
         order.getItems().getFirst().setId(31L);
         return order;
     }
 
     private Product product() {
-        Product product =
-                Product.builder().productName("Aivira Book").slug("aivira-book").build();
+        Product product = Product.builder().productName("Aivira Book").slug("aivira-book").build();
         product.setId(10L);
         return product;
     }
 
     private ProductVariation variation(Product product) {
-        ProductVariation variation =
-                ProductVariation.builder().product(product).sku("BOOK-001").build();
+        ProductVariation variation = ProductVariation.builder().product(product).sku("BOOK-001").build();
         variation.setId(11L);
         return variation;
     }

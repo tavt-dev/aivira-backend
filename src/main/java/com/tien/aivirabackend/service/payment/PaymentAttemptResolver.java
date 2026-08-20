@@ -22,10 +22,10 @@ public class PaymentAttemptResolver {
     PaymentGroupRepository paymentGroupRepository;
 
     public PaymentAttempt resolveForUpdate(PaymentProvider provider, PaymentProviderCallbackResult callbackResult) {
-        var attempt = java.util.Optional.<PaymentAttempt>empty();
+        var attempt = java.util.Optional.<PaymentAttempt> empty();
         if (hasText(callbackResult.providerTxnRef())) {
-            attempt = paymentAttemptRepository.findByProviderAndProviderTxnRefForUpdate(
-                    provider, callbackResult.providerTxnRef());
+            attempt = paymentAttemptRepository.findByProviderAndProviderTxnRefForUpdate(provider,
+                    callbackResult.providerTxnRef());
         }
         if (attempt.isEmpty() && hasText(callbackResult.requestId())) {
             attempt = paymentAttemptRepository.findByRequestIdForUpdate(callbackResult.requestId());
@@ -34,25 +34,14 @@ public class PaymentAttemptResolver {
             return attempt.get();
         }
         if (hasText(callbackResult.providerTxnRef())) {
-            return paymentGroupRepository
-                    .findByProviderTxnRef(callbackResult.providerTxnRef())
-                    .map(group -> paymentAttemptRepository.save(PaymentAttempt.builder()
-                            .paymentGroup(group)
-                            .provider(provider)
-                            .method(group.getMethod())
-                            .attemptNo(1)
-                            .providerTxnRef(group.getProviderTxnRef())
-                            .requestId(callbackResult.requestId())
-                            .status(group.getStatus())
-                            .amount(group.getAmount())
-                            .paymentUrl(group.getPaymentUrl())
-                            .deeplink(group.getDeeplink())
-                            .qrCodeUrl(group.getQrCodeUrl())
-                            .providerTransactionId(group.getProviderTransactionId())
-                            .rawResponse(group.getRawResponse())
-                            .expiresAt(group.getExpiresAt())
-                            .completedAt(group.getPaidAt())
-                            .build()))
+            return paymentGroupRepository.findByProviderTxnRef(callbackResult.providerTxnRef())
+                    .map(group -> paymentAttemptRepository.save(PaymentAttempt.builder().paymentGroup(group)
+                            .provider(provider).method(group.getMethod()).attemptNo(1)
+                            .providerTxnRef(group.getProviderTxnRef()).requestId(callbackResult.requestId())
+                            .status(group.getStatus()).amount(group.getAmount()).paymentUrl(group.getPaymentUrl())
+                            .deeplink(group.getDeeplink()).qrCodeUrl(group.getQrCodeUrl())
+                            .providerTransactionId(group.getProviderTransactionId()).rawResponse(group.getRawResponse())
+                            .expiresAt(group.getExpiresAt()).completedAt(group.getPaidAt()).build()))
                     .orElseThrow(() -> new AppException(PaymentErrorCode.PAYMENT_GROUP_NOT_FOUND));
         }
         throw new AppException(PaymentErrorCode.PAYMENT_GROUP_NOT_FOUND);

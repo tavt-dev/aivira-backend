@@ -80,16 +80,8 @@ class GoogleOAuthServiceImplTest {
 
         RestClient.Builder builder = RestClient.builder();
         server = MockRestServiceServer.bindTo(builder).build();
-        service = new GoogleOAuthServiceImpl(
-                properties,
-                stateRepository,
-                ticketRepository,
-                userRepository,
-                roleRepository,
-                jwtService,
-                accountAuthPolicy,
-                idTokenVerifier,
-                builder);
+        service = new GoogleOAuthServiceImpl(properties, stateRepository, ticketRepository, userRepository,
+                roleRepository, jwtService, accountAuthPolicy, idTokenVerifier, builder);
     }
 
     @Test
@@ -108,25 +100,20 @@ class GoogleOAuthServiceImplTest {
 
     @Test
     void handleCallback_whenGoogleUserIsNew_shouldCreateUserAndTicket() {
-        OAuthLoginState state = OAuthLoginState.builder()
-                .stateHash("hash")
-                .nextPath("/orders")
-                .expiresAt(Instant.now().plusSeconds(60))
-                .build();
+        OAuthLoginState state = OAuthLoginState.builder().stateHash("hash").nextPath("/orders")
+                .expiresAt(Instant.now().plusSeconds(60)).build();
         when(stateRepository.findByStateHashForUpdate(anyString())).thenReturn(Optional.of(state));
         server.expect(requestTo("https://oauth2.googleapis.com/token"))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("grant_type=authorization_code")))
                 .andRespond(withSuccess("{\"id_token\":\"google-id-token\"}", MediaType.APPLICATION_JSON));
-        when(idTokenVerifier.verify("google-id-token", "google-client-id"))
-                .thenReturn(new GoogleUserInfo(
-                        "google-sub", "reader@example.com", true, "Aivira", "Reader", "https://avatar.example/a.png"));
+        when(idTokenVerifier.verify("google-id-token", "google-client-id")).thenReturn(new GoogleUserInfo("google-sub",
+                "reader@example.com", true, "Aivira", "Reader", "https://avatar.example/a.png"));
         when(userRepository.findByProviderAndProviderUserId(SignInProvider.GOOGLE, "google-sub"))
                 .thenReturn(Optional.empty());
         when(userRepository.findByEmail("reader@example.com")).thenReturn(Optional.empty());
         when(userRepository.existsByUsername("reader")).thenReturn(false);
         when(roleRepository.findByCode(PredefinedRole.USER))
-                .thenReturn(Optional.of(
-                        Role.builder().id(1L).code(PredefinedRole.USER).build()));
+                .thenReturn(Optional.of(Role.builder().id(1L).code(PredefinedRole.USER).build()));
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
             User user = invocation.getArgument(0);
             user.setId("user-1");
@@ -151,9 +138,7 @@ class GoogleOAuthServiceImplTest {
 
     @Test
     void handleCallback_whenEmailNotVerified_shouldFail() {
-        OAuthLoginState state = OAuthLoginState.builder()
-                .stateHash("hash")
-                .expiresAt(Instant.now().plusSeconds(60))
+        OAuthLoginState state = OAuthLoginState.builder().stateHash("hash").expiresAt(Instant.now().plusSeconds(60))
                 .build();
         when(stateRepository.findByStateHashForUpdate(anyString())).thenReturn(Optional.of(state));
         server.expect(requestTo("https://oauth2.googleapis.com/token"))
@@ -162,18 +147,14 @@ class GoogleOAuthServiceImplTest {
                 .thenReturn(new GoogleUserInfo("google-sub", "reader@example.com", false, null, null, null));
 
         assertThatThrownBy(() -> service.handleCallback("code", "state", "ua", "127.0.0.1"))
-                .isInstanceOf(AppException.class)
-                .satisfies(ex -> assertThat(((AppException) ex).getErrorCode())
+                .isInstanceOf(AppException.class).satisfies(ex -> assertThat(((AppException) ex).getErrorCode())
                         .isEqualTo(GoogleOAuthErrorCode.GOOGLE_EMAIL_NOT_VERIFIED));
     }
 
     @Test
     void handleCallback_whenEmailMatchesLocalUser_shouldLinkGoogleAndKeepPassword() {
-        OAuthLoginState state = OAuthLoginState.builder()
-                .stateHash("hash")
-                .nextPath("/")
-                .expiresAt(Instant.now().plusSeconds(60))
-                .build();
+        OAuthLoginState state = OAuthLoginState.builder().stateHash("hash").nextPath("/")
+                .expiresAt(Instant.now().plusSeconds(60)).build();
         User localUser = buildActiveUser();
         localUser.setProvider(SignInProvider.LOCAL);
         localUser.setProviderUserId(null);
@@ -200,11 +181,8 @@ class GoogleOAuthServiceImplTest {
     @Test
     void exchangeTicket_shouldConsumeTicketAndReturnAiviraTokens() {
         User user = buildActiveUser();
-        OAuthLoginTicket ticket = OAuthLoginTicket.builder()
-                .ticketHash("hash")
-                .user(user)
-                .expiresAt(Instant.now().plusSeconds(60))
-                .build();
+        OAuthLoginTicket ticket = OAuthLoginTicket.builder().ticketHash("hash").user(user)
+                .expiresAt(Instant.now().plusSeconds(60)).build();
         when(ticketRepository.findByTicketHashForUpdate(anyString())).thenReturn(Optional.of(ticket));
         when(jwtService.createAccessToken(user)).thenReturn("access-token");
         when(jwtService.createRefreshToken(user, "ua", "127.0.0.1", null)).thenReturn("refresh-token");

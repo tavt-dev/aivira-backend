@@ -10,12 +10,8 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 @Entity
-@Table(
-        name = "user_permissions",
-        uniqueConstraints =
-                @UniqueConstraint(
-                        name = "uk_user_permission_active",
-                        columnNames = {"user_id", "permission_id", "is_active"}))
+@Table(name = "user_permissions", uniqueConstraints = @UniqueConstraint(name = "uk_user_permission_active", columnNames = {
+        "user_id", "permission_id", "is_active" }))
 @Getter
 @Setter
 @Builder

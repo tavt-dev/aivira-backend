@@ -34,11 +34,10 @@ public class OrderController {
     @Operation(summary = "List current customer orders")
     @PreAuthorize("@authorizationService.hasPermission('ORDER_READ_SELF')")
     public ResponseEntity<ApiResponse<PageResponse<OrderSummaryResponse>>> getMyOrders(
-            @RequestParam(required = false) OrderStatus status,
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(required = false) OrderStatus status, @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(
-                ApiResponse.success("Get orders successful", orderService.getMyOrders(status, page, size)));
+        return ResponseEntity
+                .ok(ApiResponse.success("Get orders successful", orderService.getMyOrders(status, page, size)));
     }
 
     @GetMapping("/{orderId}")
@@ -51,9 +50,9 @@ public class OrderController {
     @PostMapping("/{orderId}/cancel")
     @Operation(summary = "Cancel current customer order")
     @PreAuthorize("@authorizationService.hasPermission('ORDER_CANCEL_SELF')")
-    public ResponseEntity<ApiResponse<OrderResponse>> cancelMyOrder(
-            @PathVariable Long orderId, @Valid @RequestBody OrderCancelRequest request) {
-        return ResponseEntity.ok(
-                ApiResponse.success("Cancel order successful", orderService.cancelMyOrder(orderId, request)));
+    public ResponseEntity<ApiResponse<OrderResponse>> cancelMyOrder(@PathVariable Long orderId,
+            @Valid @RequestBody OrderCancelRequest request) {
+        return ResponseEntity
+                .ok(ApiResponse.success("Cancel order successful", orderService.cancelMyOrder(orderId, request)));
     }
 }

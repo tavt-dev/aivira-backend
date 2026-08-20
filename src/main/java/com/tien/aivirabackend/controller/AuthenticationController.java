@@ -65,23 +65,20 @@ public class AuthenticationController {
     long refreshTokenDuration;
 
     @PostMapping(value = "/token", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(
-            summary = "Login",
-            description = "Authenticates a verified local user and returns access and refresh tokens.")
+    @Operation(summary = "Login", description = "Authenticates a verified local user and returns access and refresh tokens.")
     public ResponseEntity<ApiResponse<AuthenticationResponse>> authenticate(
-            @Valid @RequestBody AuthenticationRequest request,
-            @Parameter(hidden = true) HttpServletRequest httpServlet,
+            @Valid @RequestBody AuthenticationRequest request, @Parameter(hidden = true) HttpServletRequest httpServlet,
             @Parameter(hidden = true) HttpServletResponse httpServletResponse) {
 
         log.info("Authenticate request: username={}", request.getUsername());
 
         RequestMetadata metadata = resolveRequestMetadata(httpServlet);
 
-        AuthenticationResponse response =
-                authenticationService.authenticate(request, metadata.deviceInfo(), metadata.ipAddress());
+        AuthenticationResponse response = authenticationService.authenticate(request, metadata.deviceInfo(),
+                metadata.ipAddress());
 
-        refreshTokenCookieService.writeRefreshTokenCookie(
-                httpServletResponse, response.getRefreshToken(), refreshTokenDuration);
+        refreshTokenCookieService.writeRefreshTokenCookie(httpServletResponse, response.getRefreshToken(),
+                refreshTokenDuration);
         hideRefreshTokenWhenLegacyBodyDisabled(response);
 
         return ResponseEntity.ok(ApiResponse.success("Authentication successful", response));
@@ -98,10 +95,7 @@ public class AuthenticationController {
     }
 
     @PostMapping(value = "/refresh-token")
-    @Operation(
-            summary = "Refresh token",
-            description =
-                    "Rotates the refresh token and returns a new access token. Refresh token can be supplied by cookie or request body.")
+    @Operation(summary = "Refresh token", description = "Rotates the refresh token and returns a new access token. Refresh token can be supplied by cookie or request body.")
     public ResponseEntity<ApiResponse<AuthenticationResponse>> refreshToken(
             @RequestBody(required = false) RefreshTokenRequest request,
             @Parameter(hidden = true) HttpServletRequest httpServlet,
@@ -118,22 +112,19 @@ public class AuthenticationController {
 
         RequestMetadata metadata = resolveRequestMetadata(httpServlet);
 
-        AuthenticationResponse response =
-                authenticationService.refreshToken(refreshToken, metadata.deviceInfo(), metadata.ipAddress());
+        AuthenticationResponse response = authenticationService.refreshToken(refreshToken, metadata.deviceInfo(),
+                metadata.ipAddress());
 
-        refreshTokenCookieService.writeRefreshTokenCookie(
-                httpServletResponse, response.getRefreshToken(), refreshTokenDuration);
+        refreshTokenCookieService.writeRefreshTokenCookie(httpServletResponse, response.getRefreshToken(),
+                refreshTokenDuration);
         hideRefreshTokenWhenLegacyBodyDisabled(response);
 
         return ResponseEntity.ok(ApiResponse.success("Token refreshed successfully", response));
     }
 
     @PostMapping(value = "/logout")
-    @Operation(
-            summary = "Logout",
-            description = "Revokes the supplied refresh token and clears the refresh-token cookie.")
-    public ResponseEntity<ApiResponse<Void>> logout(
-            @RequestBody(required = false) LogoutRequest request,
+    @Operation(summary = "Logout", description = "Revokes the supplied refresh token and clears the refresh-token cookie.")
+    public ResponseEntity<ApiResponse<Void>> logout(@RequestBody(required = false) LogoutRequest request,
             @Parameter(hidden = true) HttpServletRequest httpServlet,
             @Parameter(hidden = true) HttpServletResponse httpServletResponse) {
         log.info("Logout request");
@@ -152,9 +143,7 @@ public class AuthenticationController {
     }
 
     @PostMapping(value = "/logout-all")
-    @Operation(
-            summary = "Logout all sessions",
-            description = "Revokes all refresh-token sessions for the current user.")
+    @Operation(summary = "Logout all sessions", description = "Revokes all refresh-token sessions for the current user.")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<Void>> logoutAll(
             @Parameter(hidden = true) HttpServletResponse httpServletResponse) {
@@ -165,14 +154,12 @@ public class AuthenticationController {
     }
 
     @GetMapping("/sessions")
-    @Operation(
-            summary = "Get active sessions",
-            description = "Lists active refresh-token sessions for the current user.")
+    @Operation(summary = "Get active sessions", description = "Lists active refresh-token sessions for the current user.")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<List<ActiveSessionResponse>>> getActiveSessions() {
         log.info("Get active sessions request");
-        return ResponseEntity.ok(
-                ApiResponse.success("Get active sessions successful", authenticationService.getActiveSessions()));
+        return ResponseEntity
+                .ok(ApiResponse.success("Get active sessions successful", authenticationService.getActiveSessions()));
     }
 
     @DeleteMapping("/sessions/{sessionId}")
@@ -240,5 +227,6 @@ public class AuthenticationController {
         }
     }
 
-    private record RequestMetadata(String deviceInfo, String ipAddress) {}
+    private record RequestMetadata(String deviceInfo, String ipAddress) {
+    }
 }

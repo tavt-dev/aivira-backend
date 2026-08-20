@@ -17,46 +17,28 @@ import com.tien.aivirabackend.domain.dto.request.StockUpdateRequest;
 class ProductControllerContractTest {
     @Test
     void publicProductSearch_shouldExposeBookFilters() throws Exception {
-        Method method = ProductController.class.getMethod(
-                "getPublicProducts",
-                String.class,
-                String.class,
-                String.class,
-                String.class,
-                String.class,
-                String.class,
-                BigDecimal.class,
-                BigDecimal.class,
-                Boolean.class,
-                String.class,
-                int.class,
-                int.class);
+        Method method = ProductController.class.getMethod("getPublicProducts", String.class, String.class, String.class,
+                String.class, String.class, String.class, BigDecimal.class, BigDecimal.class, Boolean.class,
+                String.class, int.class, int.class);
 
         assertThat(method).isNotNull();
     }
 
     @Test
     void adminProductEndpoints_shouldRequireAdminProductPermissions() throws Exception {
-        assertPreAuthorizeContains(
-                ProductController.class.getMethod(
-                        "getAdminProducts", ProductStatus.class, Long.class, String.class, int.class, int.class),
-                "PRODUCT_MANAGE_ALL");
-        assertPreAuthorizeContains(
-                ProductController.class.getMethod("createAdminProduct", ProductCreateRequest.class),
+        assertPreAuthorizeContains(ProductController.class.getMethod("getAdminProducts", ProductStatus.class,
+                Long.class, String.class, int.class, int.class), "PRODUCT_MANAGE_ALL");
+        assertPreAuthorizeContains(ProductController.class.getMethod("createAdminProduct", ProductCreateRequest.class),
                 "PRODUCT_MANAGE_ALL");
         assertPreAuthorizeContains(
                 ProductController.class.getMethod("updateAdminProduct", Long.class, ProductUpdateRequest.class),
                 "PRODUCT_MANAGE_ALL");
-        assertPreAuthorizeContains(
-                ProductController.class.getMethod("deleteAdminProduct", Long.class), "PRODUCT_MANAGE_ALL");
-        assertPreAuthorizeContains(
-                ProductController.class.getMethod(
-                        "updateProductMedia", Long.class, Long.class, ProductMediaUpdateRequest.class),
-                "PRODUCT_MEDIA_MANAGE_ALL");
-        assertPreAuthorizeContains(
-                ProductController.class.getMethod(
-                        "updateVariationStock", Long.class, Long.class, StockUpdateRequest.class),
-                "INVENTORY_MANAGE_ALL");
+        assertPreAuthorizeContains(ProductController.class.getMethod("deleteAdminProduct", Long.class),
+                "PRODUCT_MANAGE_ALL");
+        assertPreAuthorizeContains(ProductController.class.getMethod("updateProductMedia", Long.class, Long.class,
+                ProductMediaUpdateRequest.class), "PRODUCT_MEDIA_MANAGE_ALL");
+        assertPreAuthorizeContains(ProductController.class.getMethod("updateVariationStock", Long.class, Long.class,
+                StockUpdateRequest.class), "INVENTORY_MANAGE_ALL");
     }
 
     private void assertPreAuthorizeContains(Method method, String permissionCode) {

@@ -6,7 +6,8 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 public final class PaymentSignatureUtils {
-    private PaymentSignatureUtils() {}
+    private PaymentSignatureUtils() {
+    }
 
     public static String hmacSha256(String data, String secret) {
         return hmac(data, secret, "HmacSHA256");

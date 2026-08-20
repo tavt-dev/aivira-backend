@@ -9,12 +9,8 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 @Entity
-@Table(
-        name = "payment_callbacks",
-        uniqueConstraints =
-                @UniqueConstraint(
-                        name = "uk_payment_callbacks_provider_event",
-                        columnNames = {"provider", "event_key"}))
+@Table(name = "payment_callbacks", uniqueConstraints = @UniqueConstraint(name = "uk_payment_callbacks_provider_event", columnNames = {
+        "provider", "event_key" }))
 @Getter
 @Setter
 @Builder

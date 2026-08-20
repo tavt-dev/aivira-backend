@@ -13,12 +13,8 @@ class ProductMapperTest {
 
     @Test
     void toResponse_shouldExposeComputedAverageRatingAndSoldCount() {
-        Product product = Product.builder()
-                .id(10L)
-                .productName("Decision Logs")
-                .averageRating(new BigDecimal("4.50"))
-                .soldCount(7)
-                .build();
+        Product product = Product.builder().id(10L).productName("Decision Logs").averageRating(new BigDecimal("4.50"))
+                .soldCount(7).build();
 
         var response = productMapper.toResponse(product);
 

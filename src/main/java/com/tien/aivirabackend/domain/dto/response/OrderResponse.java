@@ -18,9 +18,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Schema(
-        description =
-                "Order detail response with item snapshots, payment status, shipping address, and optional refund metadata.")
+@Schema(description = "Order detail response with item snapshots, payment status, shipping address, and optional refund metadata.")
 public class OrderResponse {
     @Schema(example = "120")
     Long id;

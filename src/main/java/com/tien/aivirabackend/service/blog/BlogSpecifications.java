@@ -14,30 +14,14 @@ import com.tien.aivirabackend.domain.entity.blog.BlogPost;
 @Component
 public class BlogSpecifications {
     public Specification<BlogPost> publicPosts(String keyword, String categorySlug, String productSlug) {
-        return Specification.allOf(
-                status(BlogPostStatus.PUBLISHED),
-                notDeleted(),
-                activeCategory(),
-                keyword(keyword),
-                categorySlug(categorySlug),
-                productSlug(productSlug));
+        return Specification.allOf(status(BlogPostStatus.PUBLISHED), notDeleted(), activeCategory(), keyword(keyword),
+                categorySlug(categorySlug), productSlug(productSlug));
     }
 
-    public Specification<BlogPost> adminPosts(
-            BlogPostStatus status,
-            Long categoryId,
-            String keyword,
-            String createdBy,
-            Instant publishedFrom,
-            Instant publishedTo) {
-        return Specification.allOf(
-                notDeleted(),
-                status(status),
-                categoryId(categoryId),
-                keyword(keyword),
-                createdBy(createdBy),
-                publishedFrom(publishedFrom),
-                publishedTo(publishedTo));
+    public Specification<BlogPost> adminPosts(BlogPostStatus status, Long categoryId, String keyword, String createdBy,
+            Instant publishedFrom, Instant publishedTo) {
+        return Specification.allOf(notDeleted(), status(status), categoryId(categoryId), keyword(keyword),
+                createdBy(createdBy), publishedFrom(publishedFrom), publishedTo(publishedTo));
     }
 
     private Specification<BlogPost> notDeleted() {
@@ -45,8 +29,7 @@ public class BlogSpecifications {
     }
 
     private Specification<BlogPost> activeCategory() {
-        return (root, query, cb) ->
-                cb.isTrue(root.join("category", JoinType.INNER).get("active"));
+        return (root, query, cb) -> cb.isTrue(root.join("category", JoinType.INNER).get("active"));
     }
 
     private Specification<BlogPost> status(BlogPostStatus status) {
@@ -54,13 +37,11 @@ public class BlogSpecifications {
     }
 
     private Specification<BlogPost> categoryId(Long categoryId) {
-        return (root, query, cb) ->
-                categoryId == null ? null : cb.equal(root.get("category").get("id"), categoryId);
+        return (root, query, cb) -> categoryId == null ? null : cb.equal(root.get("category").get("id"), categoryId);
     }
 
     private Specification<BlogPost> categorySlug(String categorySlug) {
-        return (root, query, cb) -> !StringUtils.hasText(categorySlug)
-                ? null
+        return (root, query, cb) -> !StringUtils.hasText(categorySlug) ? null
                 : cb.equal(root.get("category").get("slug"), categorySlug.trim().toLowerCase());
     }
 
@@ -70,15 +51,12 @@ public class BlogSpecifications {
                 return null;
             }
             query.distinct(true);
-            return cb.equal(
-                    root.join("relatedProducts", JoinType.INNER).get("slug"),
-                    productSlug.trim().toLowerCase());
+            return cb.equal(root.join("relatedProducts", JoinType.INNER).get("slug"), productSlug.trim().toLowerCase());
         };
     }
 
     private Specification<BlogPost> createdBy(String userId) {
-        return (root, query, cb) -> !StringUtils.hasText(userId)
-                ? null
+        return (root, query, cb) -> !StringUtils.hasText(userId) ? null
                 : cb.equal(root.get("createdBy").get("id"), userId);
     }
 
@@ -96,9 +74,7 @@ public class BlogSpecifications {
                 return null;
             }
             String pattern = "%" + keyword.trim().toLowerCase() + "%";
-            return cb.or(
-                    cb.like(cb.lower(root.get("title")), pattern),
-                    cb.like(cb.lower(root.get("excerpt")), pattern),
+            return cb.or(cb.like(cb.lower(root.get("title")), pattern), cb.like(cb.lower(root.get("excerpt")), pattern),
                     cb.like(cb.lower(root.get("contentHtml")), pattern));
         };
     }

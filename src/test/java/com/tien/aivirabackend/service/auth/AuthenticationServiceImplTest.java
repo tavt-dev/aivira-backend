@@ -61,16 +61,8 @@ class AuthenticationServiceImplTest {
         ReflectionTestUtils.setField(accountAuthPolicy, "maxFailedLoginAttempts", 2);
         ReflectionTestUtils.setField(accountAuthPolicy, "failedLoginWindowMinutes", 15);
         ReflectionTestUtils.setField(accountAuthPolicy, "lockMinutes", 15);
-        authenticationService = new AuthenticationServiceImpl(
-                passwordEncoder,
-                userRepository,
-                roleRepository,
-                userMapper,
-                jwtService,
-                userOtpService,
-                emailService,
-                currentUserService,
-                accountAuthPolicy);
+        authenticationService = new AuthenticationServiceImpl(passwordEncoder, userRepository, roleRepository,
+                userMapper, jwtService, userOtpService, emailService, currentUserService, accountAuthPolicy);
         ReflectionTestUtils.setField(authenticationService, "accessTokenExpiresIn", 3600L);
     }
 
@@ -80,14 +72,10 @@ class AuthenticationServiceImplTest {
         user.setEmailVerified(false);
         when(userRepository.findByUsername("alice")).thenReturn(Optional.of(user));
 
-        AuthenticationRequest request = AuthenticationRequest.builder()
-                .username("alice")
-                .password("secret")
-                .build();
+        AuthenticationRequest request = AuthenticationRequest.builder().username("alice").password("secret").build();
 
         assertThatThrownBy(() -> authenticationService.authenticate(request, "ua", "127.0.0.1"))
-                .isInstanceOf(AppException.class)
-                .satisfies(ex -> assertThat(((AppException) ex).getErrorCode())
+                .isInstanceOf(AppException.class).satisfies(ex -> assertThat(((AppException) ex).getErrorCode())
                         .isEqualTo(AccountErrorCode.ACCOUNT_NOT_VERIFIED));
 
         verify(passwordEncoder, never()).matches(any(), any());
@@ -99,31 +87,25 @@ class AuthenticationServiceImplTest {
         when(userRepository.findByUsername("alice")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("wrong", "hashed-password")).thenReturn(false);
 
-        AuthenticationRequest request = AuthenticationRequest.builder()
-                .username("alice")
-                .password("wrong")
-                .build();
+        AuthenticationRequest request = AuthenticationRequest.builder().username("alice").password("wrong").build();
 
         assertThatThrownBy(() -> authenticationService.authenticate(request, "ua", "127.0.0.1"))
-                .isInstanceOf(AppException.class)
-                .satisfies(ex ->
-                        assertThat(((AppException) ex).getErrorCode()).isEqualTo(PasswordErrorCode.PASSWORD_INCORRECT));
+                .isInstanceOf(AppException.class).satisfies(ex -> assertThat(((AppException) ex).getErrorCode())
+                        .isEqualTo(PasswordErrorCode.PASSWORD_INCORRECT));
 
         assertThat(user.getFailedLoginAttempts()).isEqualTo(1);
         assertThat(user.getLockoutUntil()).isNull();
 
         assertThatThrownBy(() -> authenticationService.authenticate(request, "ua", "127.0.0.1"))
-                .isInstanceOf(AppException.class)
-                .satisfies(ex ->
-                        assertThat(((AppException) ex).getErrorCode()).isEqualTo(PasswordErrorCode.PASSWORD_INCORRECT));
+                .isInstanceOf(AppException.class).satisfies(ex -> assertThat(((AppException) ex).getErrorCode())
+                        .isEqualTo(PasswordErrorCode.PASSWORD_INCORRECT));
 
         assertThat(user.getFailedLoginAttempts()).isEqualTo(0);
         assertThat(user.getLockoutUntil()).isNotNull();
 
         assertThatThrownBy(() -> authenticationService.authenticate(request, "ua", "127.0.0.1"))
-                .isInstanceOf(AppException.class)
-                .satisfies(ex ->
-                        assertThat(((AppException) ex).getErrorCode()).isEqualTo(AccountErrorCode.ACCOUNT_LOCKED));
+                .isInstanceOf(AppException.class).satisfies(ex -> assertThat(((AppException) ex).getErrorCode())
+                        .isEqualTo(AccountErrorCode.ACCOUNT_LOCKED));
     }
 
     private User buildUser() {

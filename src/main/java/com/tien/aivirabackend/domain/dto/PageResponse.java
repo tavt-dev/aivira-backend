@@ -27,14 +27,9 @@ public class PageResponse<T> {
     List<T> data = Collections.emptyList();
 
     public static <T> PageResponse<T> from(Page<T> page) {
-        return PageResponse.<T>builder()
-                .currentPage(page.getNumber() + 1) // Spring 0-based -> 1-based
-                .totalPages(page.getTotalPages())
-                .pageSize(page.getSize())
-                .totalElements(page.getTotalElements())
-                .hasNext(page.hasNext())
-                .hasPrevious(page.hasPrevious())
-                .data(page.getContent() == null ? Collections.emptyList() : page.getContent())
-                .build();
+        return PageResponse.<T> builder().currentPage(page.getNumber() + 1) // Spring 0-based -> 1-based
+                .totalPages(page.getTotalPages()).pageSize(page.getSize()).totalElements(page.getTotalElements())
+                .hasNext(page.hasNext()).hasPrevious(page.hasPrevious())
+                .data(page.getContent() == null ? Collections.emptyList() : page.getContent()).build();
     }
 }

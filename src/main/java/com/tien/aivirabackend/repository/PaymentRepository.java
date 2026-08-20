@@ -18,35 +18,31 @@ import com.tien.aivirabackend.repository.projection.SalesPointProjection;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
-    @EntityGraph(attributePaths = {"order", "paymentGroup"})
+    @EntityGraph(attributePaths = { "order", "paymentGroup" })
     Optional<Payment> findByIdAndOrderUserId(Long id, String userId);
 
     long countByStatus(PaymentStatus status);
 
     long countByStatusInAndCreatedAtBetween(Collection<PaymentStatus> statuses, Instant fromDate, Instant toDate);
 
-    @Query(
-            """
-			select coalesce(sum(p.amount), 0)
-			from Payment p
-			where p.status = com.tien.aivirabackend.constant.PaymentStatus.SUCCESS
-			and ((p.paidAt is not null and p.paidAt between :fromDate and :toDate)
-				or (p.paidAt is null and p.createdAt between :fromDate and :toDate))
-			""")
+    @Query("""
+            select coalesce(sum(p.amount), 0)
+            from Payment p
+            where p.status = com.tien.aivirabackend.constant.PaymentStatus.SUCCESS
+            and ((p.paidAt is not null and p.paidAt between :fromDate and :toDate)
+            	or (p.paidAt is null and p.createdAt between :fromDate and :toDate))
+            """)
     BigDecimal sumSuccessfulRevenueBetween(@Param("fromDate") Instant fromDate, @Param("toDate") Instant toDate);
 
-    @Query(
-            value =
-                    """
-					select date(coalesce(p.paid_at, p.created_at)) as salesDate,
-						coalesce(sum(p.amount), 0) as revenue
-					from payments p
-					where p.status = 'SUCCESS'
-					and coalesce(p.paid_at, p.created_at) between :fromDate and :toDate
-					group by date(coalesce(p.paid_at, p.created_at))
-					order by salesDate asc
-					""",
-            nativeQuery = true)
-    List<SalesPointProjection> aggregateDailySuccessfulRevenue(
-            @Param("fromDate") Instant fromDate, @Param("toDate") Instant toDate);
+    @Query(value = """
+            select date(coalesce(p.paid_at, p.created_at)) as salesDate,
+            	coalesce(sum(p.amount), 0) as revenue
+            from payments p
+            where p.status = 'SUCCESS'
+            and coalesce(p.paid_at, p.created_at) between :fromDate and :toDate
+            group by date(coalesce(p.paid_at, p.created_at))
+            order by salesDate asc
+            """, nativeQuery = true)
+    List<SalesPointProjection> aggregateDailySuccessfulRevenue(@Param("fromDate") Instant fromDate,
+            @Param("toDate") Instant toDate);
 }

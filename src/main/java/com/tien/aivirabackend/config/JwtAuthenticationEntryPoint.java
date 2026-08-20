@@ -30,9 +30,8 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     ObjectMapper objectMapper;
 
     @Override
-    public void commence(
-            HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
-            throws IOException {
+    public void commence(HttpServletRequest request, HttpServletResponse response,
+            AuthenticationException authException) throws IOException {
 
         if (response.isCommitted()) {
             return;
@@ -45,12 +44,8 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
 
         ApiResponse<?> apiResponse = ApiResponse.error(errorCode.getCode(), errorCode.getMessage());
-        log.warn(
-                "Unauthorized: method={} path={} ip={} reason={}",
-                request.getMethod(),
-                request.getRequestURI(),
-                request.getRemoteAddr(),
-                authException.getMessage());
+        log.warn("Unauthorized: method={} path={} ip={} reason={}", request.getMethod(), request.getRequestURI(),
+                request.getRemoteAddr(), authException.getMessage());
 
         objectMapper.writeValue(response.getWriter(), apiResponse);
 

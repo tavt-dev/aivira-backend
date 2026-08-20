@@ -48,15 +48,14 @@ public interface UserRepository extends JpaRepository<User, String>, JpaSpecific
     @Query("select u from User u where u.id = :id")
     Optional<User> findWithRolesById(@Param("id") String id);
 
-    @Query(
-            """
-			select count(distinct u)
-			from User u
-			join u.roles r
-			where r.code = :role
-			and u.isActive = true
-			and u.isDeleted = false
-			""")
+    @Query("""
+            select count(distinct u)
+            from User u
+            join u.roles r
+            where r.code = :role
+            and u.isActive = true
+            and u.isDeleted = false
+            """)
     long countActiveUsersByRole(@Param("role") PredefinedRole role);
 
     @Query("select distinct p.code from User u join u.roles r join r.permissions p where u.id = :userId")

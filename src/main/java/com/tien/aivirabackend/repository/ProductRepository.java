@@ -38,19 +38,19 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     boolean existsByIsbnAndIdNot(String isbn, Long id);
 
-    @EntityGraph(attributePaths = {"category", "productVariations", "productMedia"})
+    @EntityGraph(attributePaths = { "category", "productVariations", "productMedia" })
     Optional<Product> findDetailedById(Long id);
 
-    @EntityGraph(attributePaths = {"category", "productVariations", "productMedia"})
+    @EntityGraph(attributePaths = { "category", "productVariations", "productMedia" })
     Optional<Product> findDetailedBySlug(String slug);
 
-    Page<Product> findByActiveTrueAndStatusAndStockQuantityLessThanEqual(
-            ProductStatus status, Integer stockQuantity, Pageable pageable);
+    Page<Product> findByActiveTrueAndStatusAndStockQuantityLessThanEqual(ProductStatus status, Integer stockQuantity,
+            Pageable pageable);
 
     long countByActiveTrueAndStatusAndStockQuantityLessThanEqual(ProductStatus status, Integer stockQuantity);
 
     Page<Product> findByActiveTrueAndStatusOrderBySoldCountDescCreatedAtDesc(ProductStatus status, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"category"})
+    @EntityGraph(attributePaths = { "category" })
     List<Product> findByActiveTrueAndStatusAndStockQuantityGreaterThan(ProductStatus status, Integer stockQuantity);
 }

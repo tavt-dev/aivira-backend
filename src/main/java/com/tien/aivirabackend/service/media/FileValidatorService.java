@@ -21,11 +21,10 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j(topic = "FILE-VALIDATOR-SERVICE")
 public class FileValidatorService {
-    private static final Map<String, byte[]> MAGIC_PREFIXES = Map.of(
-            "image/jpeg", new byte[] {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF},
-            "image/png", new byte[] {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A},
-            "image/gif", new byte[] {0x47, 0x49, 0x46, 0x38},
-            "application/pdf", new byte[] {0x25, 0x50, 0x44, 0x46});
+    private static final Map<String, byte[]> MAGIC_PREFIXES = Map.of("image/jpeg",
+            new byte[] { (byte) 0xFF, (byte) 0xD8, (byte) 0xFF }, "image/png",
+            new byte[] { (byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A }, "image/gif",
+            new byte[] { 0x47, 0x49, 0x46, 0x38 }, "application/pdf", new byte[] { 0x25, 0x50, 0x44, 0x46 });
 
     private final FileUploadProperties properties;
 
@@ -40,11 +39,8 @@ public class FileValidatorService {
         validateMimeType(file, mediaType);
         validateMagicBytes(file);
 
-        log.debug(
-                "File validation passed: name={}, size={}, contentType={}",
-                file.getOriginalFilename(),
-                file.getSize(),
-                file.getContentType());
+        log.debug("File validation passed: name={}, size={}, contentType={}", file.getOriginalFilename(),
+                file.getSize(), file.getContentType());
     }
 
     private void validateNotEmpty(MultipartFile file) {
@@ -56,8 +52,7 @@ public class FileValidatorService {
     private void validateFileSize(MultipartFile file, MediaType mediaType) {
         long maxSize = getMaxSizeForType(mediaType);
         if (file.getSize() > maxSize) {
-            throw new AppException(FileValidationErrorCode.FILE_TOO_LARGE)
-                    .addDetail("maxSize", maxSize)
+            throw new AppException(FileValidationErrorCode.FILE_TOO_LARGE).addDetail("maxSize", maxSize)
                     .addDetail("actualSize", file.getSize());
         }
     }
@@ -68,8 +63,7 @@ public class FileValidatorService {
 
         if (!StringUtils.hasText(contentType) || !allowedMimeTypes.contains(contentType)) {
             throw new AppException(FileValidationErrorCode.INVALID_MIME_TYPE)
-                    .addDetail("contentType", file.getContentType())
-                    .addDetail("allowedTypes", allowedMimeTypes);
+                    .addDetail("contentType", file.getContentType()).addDetail("allowedTypes", allowedMimeTypes);
         }
     }
 
@@ -93,15 +87,8 @@ public class FileValidatorService {
     }
 
     private void validateWebpSignature(byte[] header) {
-        boolean valid = header.length >= 12
-                && header[0] == 'R'
-                && header[1] == 'I'
-                && header[2] == 'F'
-                && header[3] == 'F'
-                && header[8] == 'W'
-                && header[9] == 'E'
-                && header[10] == 'B'
-                && header[11] == 'P';
+        boolean valid = header.length >= 12 && header[0] == 'R' && header[1] == 'I' && header[2] == 'F'
+                && header[3] == 'F' && header[8] == 'W' && header[9] == 'E' && header[10] == 'B' && header[11] == 'P';
 
         if (!valid) {
             throw new AppException(FileValidationErrorCode.INVALID_FILE_SIGNATURE);
@@ -123,17 +110,17 @@ public class FileValidatorService {
 
     private List<String> getAllowedMimeTypes(MediaType mediaType) {
         return switch (mediaType) {
-            case IMAGE -> properties.getAllowedImageTypes();
-            case DOCUMENT -> properties.getAllowedDocumentTypes();
-            case VIDEO -> throw new AppException(FileValidationErrorCode.UNSUPPORTED_MEDIA_CATEGORY);
+        case IMAGE -> properties.getAllowedImageTypes();
+        case DOCUMENT -> properties.getAllowedDocumentTypes();
+        case VIDEO -> throw new AppException(FileValidationErrorCode.UNSUPPORTED_MEDIA_CATEGORY);
         };
     }
 
     private long getMaxSizeForType(MediaType mediaType) {
         return switch (mediaType) {
-            case IMAGE -> properties.getMaxImageSize();
-            case DOCUMENT -> properties.getMaxDocumentSize();
-            case VIDEO -> throw new AppException(FileValidationErrorCode.UNSUPPORTED_MEDIA_CATEGORY);
+        case IMAGE -> properties.getMaxImageSize();
+        case DOCUMENT -> properties.getMaxDocumentSize();
+        case VIDEO -> throw new AppException(FileValidationErrorCode.UNSUPPORTED_MEDIA_CATEGORY);
         };
     }
 

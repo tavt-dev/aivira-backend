@@ -15,11 +15,8 @@ class OpenApiConfigTest {
 
         assertThat(definition).isNotNull();
         assertThat(definition.info().title()).contains("Aivira");
-        assertThat(definition.info().description())
-                .contains("single-vendor online bookstore")
-                .contains("/api/v1")
-                .contains("ApiResponse")
-                .contains("PageResponse");
+        assertThat(definition.info().description()).contains("single-vendor online bookstore").contains("/api/v1")
+                .contains("ApiResponse").contains("PageResponse");
         assertThat(definition.servers()).hasSize(1);
         assertThat(definition.servers()[0].url()).isEqualTo("/api/v1");
     }

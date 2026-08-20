@@ -46,27 +46,19 @@ public class CartServiceImpl implements CartService {
     public CartResponse addItem(CartItemRequest request) {
         User user = currentUserService.getCurrentUser();
         Cart cart = getOrCreateCart(user);
-        ProductVariation variation = variationRepository
-                .findById(request.getProductVariationId())
+        ProductVariation variation = variationRepository.findById(request.getProductVariationId())
                 .orElseThrow(() -> new AppException(CartErrorCode.CART_PRODUCT_NOT_AVAILABLE));
         validateAvailable(variation, request.getQuantity());
-        cartItemRepository
-                .findByCartIdAndProductVariationId(cart.getId(), variation.getId())
-                .ifPresentOrElse(
-                        item -> {
-                            int newQuantity = item.getQuantity() + request.getQuantity();
-                            validateAvailable(variation, newQuantity);
-                            item.setQuantity(newQuantity);
-                            cartItemRepository.save(item);
-                        },
-                        () -> {
-                            CartItem created = CartItem.builder()
-                                    .cart(cart)
-                                    .productVariation(variation)
-                                    .quantity(request.getQuantity())
-                                    .build();
-                            cart.getItems().add(cartItemRepository.save(created));
-                        });
+        cartItemRepository.findByCartIdAndProductVariationId(cart.getId(), variation.getId()).ifPresentOrElse(item -> {
+            int newQuantity = item.getQuantity() + request.getQuantity();
+            validateAvailable(variation, newQuantity);
+            item.setQuantity(newQuantity);
+            cartItemRepository.save(item);
+        }, () -> {
+            CartItem created = CartItem.builder().cart(cart).productVariation(variation).quantity(request.getQuantity())
+                    .build();
+            cart.getItems().add(cartItemRepository.save(created));
+        });
         return commerceMapper.toCartResponse(getOrCreateCart(user));
     }
 
@@ -74,8 +66,7 @@ public class CartServiceImpl implements CartService {
     @Transactional
     public CartResponse updateItem(Long cartItemId, CartItemUpdateRequest request) {
         User user = currentUserService.getCurrentUser();
-        CartItem item = cartItemRepository
-                .findByIdAndCartUserIdAndCartActiveTrue(cartItemId, user.getId())
+        CartItem item = cartItemRepository.findByIdAndCartUserIdAndCartActiveTrue(cartItemId, user.getId())
                 .orElseThrow(() -> new AppException(CartErrorCode.CART_ITEM_NOT_FOUND));
         validateAvailable(item.getProductVariation(), request.getQuantity());
         item.setQuantity(request.getQuantity());
@@ -87,8 +78,7 @@ public class CartServiceImpl implements CartService {
     @Transactional
     public void removeItem(Long cartItemId) {
         User user = currentUserService.getCurrentUser();
-        CartItem item = cartItemRepository
-                .findByIdAndCartUserIdAndCartActiveTrue(cartItemId, user.getId())
+        CartItem item = cartItemRepository.findByIdAndCartUserIdAndCartActiveTrue(cartItemId, user.getId())
                 .orElseThrow(() -> new AppException(CartErrorCode.CART_ITEM_NOT_FOUND));
         cartItemRepository.delete(item);
     }
@@ -102,16 +92,13 @@ public class CartServiceImpl implements CartService {
     }
 
     private Cart getOrCreateCart(User user) {
-        return cartRepository
-                .findByUserIdAndActiveTrue(user.getId())
-                .orElseGet(() -> cartRepository.save(
-                        Cart.builder().user(user).active(true).build()));
+        return cartRepository.findByUserIdAndActiveTrue(user.getId())
+                .orElseGet(() -> cartRepository.save(Cart.builder().user(user).active(true).build()));
     }
 
     private void validateAvailable(ProductVariation variation, int quantity) {
         Product product = variation.getProduct();
-        if (!Boolean.TRUE.equals(variation.getActive())
-                || !Boolean.TRUE.equals(product.getActive())
+        if (!Boolean.TRUE.equals(variation.getActive()) || !Boolean.TRUE.equals(product.getActive())
                 || product.getStatus() != ProductStatus.ACTIVE) {
             throw new AppException(CartErrorCode.CART_PRODUCT_NOT_AVAILABLE);
         }

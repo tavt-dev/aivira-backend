@@ -30,16 +30,16 @@ public class CategoryController {
     @Tag(name = "Public Catalog")
     @Operation(summary = "List visible categories")
     public ResponseEntity<ApiResponse<List<CategoryResponse>>> getCategories() {
-        return ResponseEntity.ok(
-                ApiResponse.success("Get categories successful", categoryService.getVisibleCategories()));
+        return ResponseEntity
+                .ok(ApiResponse.success("Get categories successful", categoryService.getVisibleCategories()));
     }
 
     @GetMapping("/categories/tree")
     @Tag(name = "Public Catalog")
     @Operation(summary = "Get visible category tree")
     public ResponseEntity<ApiResponse<List<CategoryResponse>>> getCategoryTree() {
-        return ResponseEntity.ok(
-                ApiResponse.success("Get category tree successful", categoryService.getVisibleCategoryTree()));
+        return ResponseEntity
+                .ok(ApiResponse.success("Get category tree successful", categoryService.getVisibleCategoryTree()));
     }
 
     @PostMapping("/admin/categories")
@@ -56,10 +56,10 @@ public class CategoryController {
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Update category")
     @PreAuthorize("@authorizationService.hasAnyPermission('CATEGORY_MANAGE_ALL', 'CATEGORY_UPDATE')")
-    public ResponseEntity<ApiResponse<CategoryResponse>> update(
-            @PathVariable Long categoryId, @Valid @RequestBody CategoryRequest request) {
-        return ResponseEntity.ok(
-                ApiResponse.success("Update category successful", categoryService.update(categoryId, request)));
+    public ResponseEntity<ApiResponse<CategoryResponse>> update(@PathVariable Long categoryId,
+            @Valid @RequestBody CategoryRequest request) {
+        return ResponseEntity
+                .ok(ApiResponse.success("Update category successful", categoryService.update(categoryId, request)));
     }
 
     @DeleteMapping("/admin/categories/{categoryId}")

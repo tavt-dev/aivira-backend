@@ -28,8 +28,8 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Stri
     @Modifying
     @Query("UPDATE RefreshToken t SET t.revoked = true, t.revokedAt = :now, "
             + "t.revocationReason = :reason WHERE t.familyId = :familyId AND t.revoked = false")
-    int revokeAllByFamilyId(
-            @Param("familyId") String familyId, @Param("now") Instant now, @Param("reason") RevocationReason reason);
+    int revokeAllByFamilyId(@Param("familyId") String familyId, @Param("now") Instant now,
+            @Param("reason") RevocationReason reason);
 
     @Query("SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END "
             + "FROM RefreshToken t WHERE t.jti = :jti AND t.revoked = false AND t.expiresAt > :now")
@@ -38,8 +38,8 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Stri
     @Modifying
     @Query("UPDATE RefreshToken t SET t.revoked = true, t.revokedAt = :now, "
             + "t.revocationReason = :reason WHERE t.user.id = :userId AND t.revoked = false")
-    int revokeAllByUserId(
-            @Param("userId") String userId, @Param("now") Instant now, @Param("reason") RevocationReason reason);
+    int revokeAllByUserId(@Param("userId") String userId, @Param("now") Instant now,
+            @Param("reason") RevocationReason reason);
 
     @Modifying
     @Query("DELETE FROM RefreshToken t WHERE t.expiresAt < :cutoffTime")

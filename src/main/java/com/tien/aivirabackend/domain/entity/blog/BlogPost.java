@@ -84,10 +84,7 @@ public class BlogPost extends BaseEntity {
     User updatedBy;
 
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "blog_post_products",
-            joinColumns = @JoinColumn(name = "post_id"),
-            inverseJoinColumns = @JoinColumn(name = "product_id"))
+    @JoinTable(name = "blog_post_products", joinColumns = @JoinColumn(name = "post_id"), inverseJoinColumns = @JoinColumn(name = "product_id"))
     @Builder.Default
     Set<Product> relatedProducts = new HashSet<>();
 

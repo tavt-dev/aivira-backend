@@ -46,23 +46,19 @@ public class PermissionServiceImpl implements PermissionService {
     public List<PermissionResponse> getAllPermissions() {
         return permissionRepository.findAll().stream()
                 .sorted(Comparator.comparing(Permission::getGroup).thenComparing(Permission::getCode))
-                .map(this::toPermissionResponse)
-                .toList();
+                .map(this::toPermissionResponse).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<RolePermissionResponse> getAllRolesWithPermissions() {
-        return roleRepository.findAllByOrderByCodeAsc().stream()
-                .map(this::toRolePermissionResponse)
-                .toList();
+        return roleRepository.findAllByOrderByCodeAsc().stream().map(this::toRolePermissionResponse).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public RolePermissionResponse getRolePermissions(PredefinedRole roleCode) {
-        Role role = roleRepository
-                .findWithPermissionsByCode(roleCode)
+        Role role = roleRepository.findWithPermissionsByCode(roleCode)
                 .orElseThrow(() -> new AppException(UserErrorCode.ROLE_NOT_FOUND));
         return toRolePermissionResponse(role);
     }
@@ -70,14 +66,11 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     @Transactional
     public RolePermissionResponse updateRolePermissions(PredefinedRole roleCode, UpdateRolePermissionsRequest request) {
-        Role role = roleRepository
-                .findWithPermissionsByCode(roleCode)
+        Role role = roleRepository.findWithPermissionsByCode(roleCode)
                 .orElseThrow(() -> new AppException(UserErrorCode.ROLE_NOT_FOUND));
 
-        Set<PermissionCode> requestedCodes =
-                request.getPermissions() == null || request.getPermissions().isEmpty()
-                        ? EnumSet.noneOf(PermissionCode.class)
-                        : EnumSet.copyOf(request.getPermissions());
+        Set<PermissionCode> requestedCodes = request.getPermissions() == null || request.getPermissions().isEmpty()
+                ? EnumSet.noneOf(PermissionCode.class) : EnumSet.copyOf(request.getPermissions());
 
         validateRequiredRolePermissions(roleCode, requestedCodes);
 
@@ -98,26 +91,20 @@ public class PermissionServiceImpl implements PermissionService {
         Map<PermissionCode, Permission> permissionsByCode = seedPermissionCatalog();
 
         for (PredefinedRole roleCode : PredefinedRole.values()) {
-            Role role = roleRepository
-                    .findWithPermissionsByCode(roleCode)
-                    .orElseGet(() -> roleRepository.save(Role.builder()
-                            .code(roleCode)
-                            .description(roleCode.name() + " ROLE")
-                            .permissions(new HashSet<>())
-                            .build()));
+            Role role = roleRepository.findWithPermissionsByCode(roleCode)
+                    .orElseGet(() -> roleRepository.save(Role.builder().code(roleCode)
+                            .description(roleCode.name() + " ROLE").permissions(new HashSet<>()).build()));
 
             if (role.getPermissions() == null) {
                 role.setPermissions(new HashSet<>());
             }
 
             Set<PermissionCode> defaultCodes = DefaultPermissionMatrix.forRole(roleCode);
-            Set<PermissionCode> currentCodes =
-                    role.getPermissions().stream().map(Permission::getCode).collect(Collectors.toSet());
+            Set<PermissionCode> currentCodes = role.getPermissions().stream().map(Permission::getCode)
+                    .collect(Collectors.toSet());
 
-            Set<Permission> missingPermissions = defaultCodes.stream()
-                    .map(permissionsByCode::get)
-                    .filter(Objects::nonNull)
-                    .filter(permission -> !currentCodes.contains(permission.getCode()))
+            Set<Permission> missingPermissions = defaultCodes.stream().map(permissionsByCode::get)
+                    .filter(Objects::nonNull).filter(permission -> !currentCodes.contains(permission.getCode()))
                     .collect(Collectors.toSet());
 
             if (!missingPermissions.isEmpty()) {
@@ -130,56 +117,40 @@ public class PermissionServiceImpl implements PermissionService {
 
     private Map<PermissionCode, Permission> seedPermissionCatalog() {
         List<Permission> existingPermissions = permissionRepository.findAll();
-        Map<PermissionCode, Permission> permissionsByCode =
-                existingPermissions.stream().collect(Collectors.toMap(Permission::getCode, Function.identity()));
+        Map<PermissionCode, Permission> permissionsByCode = existingPermissions.stream()
+                .collect(Collectors.toMap(Permission::getCode, Function.identity()));
 
         for (PermissionCode code : PermissionCode.values()) {
-            permissionsByCode.computeIfAbsent(
-                    code,
-                    permissionCode -> permissionRepository.save(Permission.builder()
-                            .code(permissionCode)
-                            .name(toDisplayName(permissionCode))
-                            .description("System permission " + permissionCode.name())
-                            .group(permissionCode.getGroup())
-                            .system(true)
-                            .build()));
+            permissionsByCode.computeIfAbsent(code,
+                    permissionCode -> permissionRepository
+                            .save(Permission.builder().code(permissionCode).name(toDisplayName(permissionCode))
+                                    .description("System permission " + permissionCode.name())
+                                    .group(permissionCode.getGroup()).system(true).build()));
         }
 
         return permissionsByCode;
     }
 
     private void validateRequiredRolePermissions(PredefinedRole roleCode, Set<PermissionCode> requestedCodes) {
-        if (roleCode == PredefinedRole.ADMIN
-                && (!requestedCodes.contains(PermissionCode.ROLE_MANAGE)
-                        || !requestedCodes.contains(PermissionCode.PERMISSION_MANAGE))) {
+        if (roleCode == PredefinedRole.ADMIN && (!requestedCodes.contains(PermissionCode.ROLE_MANAGE)
+                || !requestedCodes.contains(PermissionCode.PERMISSION_MANAGE))) {
             throw new AppException(UserErrorCode.CANNOT_REMOVE_ROLE);
         }
     }
 
     private RolePermissionResponse toRolePermissionResponse(Role role) {
-        Set<PermissionResponse> permissions = role.getPermissions() == null
-                ? Set.of()
+        Set<PermissionResponse> permissions = role.getPermissions() == null ? Set.of()
                 : role.getPermissions().stream()
                         .sorted(Comparator.comparing(Permission::getGroup).thenComparing(Permission::getCode))
-                        .map(this::toPermissionResponse)
-                        .collect(Collectors.toCollection(LinkedHashSet::new));
+                        .map(this::toPermissionResponse).collect(Collectors.toCollection(LinkedHashSet::new));
 
-        return RolePermissionResponse.builder()
-                .id(role.getId())
-                .code(role.getCode())
-                .description(role.getDescription())
-                .permissions(permissions)
-                .build();
+        return RolePermissionResponse.builder().id(role.getId()).code(role.getCode()).description(role.getDescription())
+                .permissions(permissions).build();
     }
 
     private PermissionResponse toPermissionResponse(Permission permission) {
-        return PermissionResponse.builder()
-                .id(permission.getId())
-                .code(permission.getCode())
-                .name(permission.getName())
-                .description(permission.getDescription())
-                .group(permission.getGroup())
-                .system(permission.getSystem())
+        return PermissionResponse.builder().id(permission.getId()).code(permission.getCode()).name(permission.getName())
+                .description(permission.getDescription()).group(permission.getGroup()).system(permission.getSystem())
                 .build();
     }
 

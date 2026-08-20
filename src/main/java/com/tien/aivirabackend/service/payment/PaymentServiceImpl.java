@@ -76,8 +76,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional(readOnly = true)
     public PaymentGroupResponse getMyPaymentGroup(String paymentGroupCode) {
         User user = currentUserService.getCurrentUser();
-        PaymentGroup group = paymentGroupRepository
-                .findByPaymentCodeAndUserId(paymentGroupCode, user.getId())
+        PaymentGroup group = paymentGroupRepository.findByPaymentCodeAndUserId(paymentGroupCode, user.getId())
                 .orElseThrow(() -> new AppException(PaymentErrorCode.PAYMENT_GROUP_NOT_FOUND));
         return toPaymentGroupResponse(group);
     }
@@ -85,8 +84,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional(readOnly = true)
     public PaymentGroupResponse getAdminPaymentGroup(String paymentGroupCode) {
-        PaymentGroup group = paymentGroupRepository
-                .findByPaymentCode(paymentGroupCode)
+        PaymentGroup group = paymentGroupRepository.findByPaymentCode(paymentGroupCode)
                 .orElseThrow(() -> new AppException(PaymentErrorCode.PAYMENT_GROUP_NOT_FOUND));
         return toPaymentGroupResponse(group);
     }
@@ -95,8 +93,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional(readOnly = true)
     public PaymentResponse getMyPayment(Long paymentId) {
         User user = currentUserService.getCurrentUser();
-        Payment payment = paymentRepository
-                .findByIdAndOrderUserId(paymentId, user.getId())
+        Payment payment = paymentRepository.findByIdAndOrderUserId(paymentId, user.getId())
                 .orElseThrow(() -> new AppException(PaymentErrorCode.PAYMENT_NOT_FOUND));
         return commerceMapper.toPaymentResponse(payment);
     }
@@ -105,13 +102,10 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     public PaymentGroupResponse retry(String paymentGroupCode, RequestMetadata requestMetadata) {
         User user = currentUserService.getCurrentUser();
-        PaymentGroup group = paymentGroupRepository
-                .findByPaymentCodeAndUserId(paymentGroupCode, user.getId())
+        PaymentGroup group = paymentGroupRepository.findByPaymentCodeAndUserId(paymentGroupCode, user.getId())
                 .orElseThrow(() -> new AppException(PaymentErrorCode.PAYMENT_GROUP_NOT_FOUND));
-        if (group.getMethod() == PaymentMethod.COD
-                || (group.getStatus() != PaymentStatus.FAILED
-                        && group.getStatus() != PaymentStatus.CANCELLED
-                        && group.getStatus() != PaymentStatus.EXPIRED)) {
+        if (group.getMethod() == PaymentMethod.COD || (group.getStatus() != PaymentStatus.FAILED
+                && group.getStatus() != PaymentStatus.CANCELLED && group.getStatus() != PaymentStatus.EXPIRED)) {
             throw new AppException(PaymentErrorCode.PAYMENT_INVALID_STATUS);
         }
         List<Order> orders = orderRepository.findByPaymentsPaymentGroupId(group.getId());
@@ -130,8 +124,8 @@ public class PaymentServiceImpl implements PaymentService {
                 payment.setTransactionId(null);
             });
         });
-        PaymentProviderResult result = paymentProviderSupportService.createPaymentWithMetrics(
-                provider(group.getMethod()), group, attempt, requestMetadata);
+        PaymentProviderResult result = paymentProviderSupportService
+                .createPaymentWithMetrics(provider(group.getMethod()), group, attempt, requestMetadata);
         paymentProviderSupportService.applyProviderResult(group, attempt, result);
         paymentGroupRepository.save(group);
         paymentAttemptRepository.save(attempt);
@@ -148,14 +142,8 @@ public class PaymentServiceImpl implements PaymentService {
         }
         PaymentProviderCallbackResult result = provider.parseCallback(params);
         PaymentAttempt attempt = paymentAttemptResolver.resolveForUpdate(PaymentProvider.VNPAY, result);
-        return applyProviderState(
-                attempt,
-                result.amount(),
-                result.status(),
-                result.transactionId(),
-                PaymentProvider.VNPAY,
-                result.eventKey(),
-                result.rawPayload());
+        return applyProviderState(attempt, result.amount(), result.status(), result.transactionId(),
+                PaymentProvider.VNPAY, result.eventKey(), result.rawPayload());
     }
 
     @Override
@@ -167,8 +155,7 @@ public class PaymentServiceImpl implements PaymentService {
                 return new VnpayIpnResponse("97", "Invalid Checksum");
             }
             PaymentProviderCallbackResult result = provider.parseCallback(params);
-            if (paymentCallbackRepository
-                    .findByProviderAndEventKey(PaymentProvider.VNPAY, result.eventKey())
+            if (paymentCallbackRepository.findByProviderAndEventKey(PaymentProvider.VNPAY, result.eventKey())
                     .isPresent()) {
                 return new VnpayIpnResponse("02", "Order already confirmed");
             }
@@ -201,14 +188,8 @@ public class PaymentServiceImpl implements PaymentService {
         }
         PaymentProviderCallbackResult result = provider.parseCallback(params);
         PaymentAttempt attempt = paymentAttemptResolver.resolveForUpdate(PaymentProvider.MOMO, result);
-        return applyProviderState(
-                attempt,
-                result.amount(),
-                result.status(),
-                result.transactionId(),
-                PaymentProvider.MOMO,
-                result.eventKey(),
-                result.rawPayload());
+        return applyProviderState(attempt, result.amount(), result.status(), result.transactionId(),
+                PaymentProvider.MOMO, result.eventKey(), result.rawPayload());
     }
 
     @Override
@@ -220,94 +201,62 @@ public class PaymentServiceImpl implements PaymentService {
         }
         PaymentProviderCallbackResult result = provider.parseCallback(payload);
         PaymentAttempt attempt = paymentAttemptResolver.resolveForUpdate(PaymentProvider.MOMO, result);
-        return applyProviderState(
-                attempt,
-                result.amount(),
-                result.status(),
-                result.transactionId(),
-                PaymentProvider.MOMO,
-                result.eventKey(),
-                result.rawPayload());
+        return applyProviderState(attempt, result.amount(), result.status(), result.transactionId(),
+                PaymentProvider.MOMO, result.eventKey(), result.rawPayload());
     }
 
     @Override
     @Transactional
     public PaymentReconciliationResponse reconcile(String paymentGroupCode) {
-        PaymentGroup group = paymentGroupRepository
-                .findByPaymentCode(paymentGroupCode)
+        PaymentGroup group = paymentGroupRepository.findByPaymentCode(paymentGroupCode)
                 .orElseThrow(() -> new AppException(PaymentErrorCode.PAYMENT_GROUP_NOT_FOUND));
         if (group.getMethod() == PaymentMethod.COD) {
             throw new AppException(PaymentErrorCode.PAYMENT_INVALID_STATUS);
         }
-        PaymentAttempt attempt = paymentAttemptRepository
-                .findTopByPaymentGroupIdOrderByAttemptNoDesc(group.getId())
+        PaymentAttempt attempt = paymentAttemptRepository.findTopByPaymentGroupIdOrderByAttemptNoDesc(group.getId())
                 .orElseThrow(() -> new AppException(PaymentErrorCode.PAYMENT_GROUP_NOT_FOUND));
-        PaymentProviderQueryResult queryResult =
-                paymentProviderSupportService.queryPaymentWithMetrics(provider(group.getMethod()), attempt);
-        increment(
-                "payment_reconciliation_total",
-                "method",
-                group.getMethod().name(),
-                "result",
+        PaymentProviderQueryResult queryResult = paymentProviderSupportService
+                .queryPaymentWithMetrics(provider(group.getMethod()), attempt);
+        increment("payment_reconciliation_total", "method", group.getMethod().name(), "result",
                 queryResult.status().name());
         PaymentStatus before = group.getStatus();
         if (queryResult.amount().compareTo(group.getAmount()) != 0) {
             throw new AppException(PaymentErrorCode.PAYMENT_AMOUNT_MISMATCH);
         }
-        PaymentAttempt lockedAttempt = paymentAttemptRepository
-                .findByIdForUpdate(attempt.getId())
+        PaymentAttempt lockedAttempt = paymentAttemptRepository.findByIdForUpdate(attempt.getId())
                 .orElseThrow(() -> new AppException(PaymentErrorCode.PAYMENT_GROUP_NOT_FOUND));
-        applyProviderState(
-                lockedAttempt,
-                queryResult.amount(),
-                queryResult.status(),
-                queryResult.transactionId(),
+        applyProviderState(lockedAttempt, queryResult.amount(), queryResult.status(), queryResult.transactionId(),
                 PaymentProvider.valueOf(group.getMethod().name()),
                 "RECONCILE:" + lockedAttempt.getProvider() + ":" + lockedAttempt.getProviderTxnRef() + ":"
                         + Instant.now().toEpochMilli(),
                 Map.of("rawResponse", queryResult.rawResponse() == null ? "" : queryResult.rawResponse()));
         PaymentStatus after = lockedAttempt.getPaymentGroup().getStatus();
-        return PaymentReconciliationResponse.builder()
-                .paymentGroupCode(paymentGroupCode)
-                .method(group.getMethod())
-                .providerTxnRef(lockedAttempt.getProviderTxnRef())
-                .localStatusBefore(before)
-                .localStatusAfter(after)
-                .providerStatus(queryResult.status())
-                .changed(before != after)
-                .message(queryResult.message())
-                .checkedAt(Instant.now())
-                .build();
+        return PaymentReconciliationResponse.builder().paymentGroupCode(paymentGroupCode).method(group.getMethod())
+                .providerTxnRef(lockedAttempt.getProviderTxnRef()).localStatusBefore(before).localStatusAfter(after)
+                .providerStatus(queryResult.status()).changed(before != after).message(queryResult.message())
+                .checkedAt(Instant.now()).build();
     }
 
     @Override
     @Transactional
     public void expirePendingPayments() {
-        List<PaymentGroup> expiredGroups = paymentGroupRepository.findByStatusAndMethodNotAndExpiresAtBefore(
-                PaymentStatus.PENDING, PaymentMethod.COD, Instant.now());
+        List<PaymentGroup> expiredGroups = paymentGroupRepository
+                .findByStatusAndMethodNotAndExpiresAtBefore(PaymentStatus.PENDING, PaymentMethod.COD, Instant.now());
         for (PaymentGroup group : expiredGroups) {
-            paymentAttemptRepository
-                    .findTopByPaymentGroupIdOrderByAttemptNoDesc(group.getId())
-                    .ifPresent(attempt -> {
-                        attempt.setStatus(PaymentStatus.EXPIRED);
-                        attempt.setCompletedAt(Instant.now());
-                        paymentAttemptRepository.save(attempt);
-                    });
+            paymentAttemptRepository.findTopByPaymentGroupIdOrderByAttemptNoDesc(group.getId()).ifPresent(attempt -> {
+                attempt.setStatus(PaymentStatus.EXPIRED);
+                attempt.setCompletedAt(Instant.now());
+                paymentAttemptRepository.save(attempt);
+            });
             applyTerminalFailure(group, PaymentStatus.EXPIRED, OrderStatus.EXPIRED);
         }
     }
 
-    private PaymentGroupResponse applyProviderState(
-            PaymentAttempt attempt,
-            BigDecimal providerAmount,
-            PaymentStatus targetStatus,
-            String transactionId,
-            PaymentProvider provider,
-            String eventKey,
+    private PaymentGroupResponse applyProviderState(PaymentAttempt attempt, BigDecimal providerAmount,
+            PaymentStatus targetStatus, String transactionId, PaymentProvider provider, String eventKey,
             Map<String, ?> rawPayload) {
         Optional<PaymentCallback> existing = paymentCallbackRepository.findByProviderAndEventKey(provider, eventKey);
-        PaymentGroup group = paymentGroupRepository
-                .findByIdForUpdate(attempt.getPaymentGroup().getId())
+        PaymentGroup group = paymentGroupRepository.findByIdForUpdate(attempt.getPaymentGroup().getId())
                 .orElseThrow(() -> new AppException(PaymentErrorCode.PAYMENT_GROUP_NOT_FOUND));
         attempt.setPaymentGroup(group);
         if (existing.isPresent()) {
@@ -329,23 +278,14 @@ public class PaymentServiceImpl implements PaymentService {
             callbackStatus = "DUPLICATE_SUCCESS";
         } else if (targetStatus == PaymentStatus.SUCCESS) {
             callbackStatus = "CONFLICT_SUCCESS_AFTER_" + group.getStatus().name();
-            log.warn(
-                    "payment_late_success_conflict paymentGroupCode={} attemptId={} provider={} currentStatus={}",
-                    group.getPaymentCode(),
-                    attempt.getId(),
-                    provider,
-                    group.getStatus());
+            log.warn("payment_late_success_conflict paymentGroupCode={} attemptId={} provider={} currentStatus={}",
+                    group.getPaymentCode(), attempt.getId(), provider, group.getStatus());
         } else {
             callbackStatus = "DUPLICATE_" + group.getStatus().name();
         }
         paymentAttemptRepository.save(attempt);
-        paymentCallbackRepository.save(PaymentCallback.builder()
-                .provider(provider)
-                .eventKey(eventKey)
-                .paymentCode(group.getPaymentCode())
-                .status(callbackStatus)
-                .rawPayload(toJson(rawPayload))
-                .build());
+        paymentCallbackRepository.save(PaymentCallback.builder().provider(provider).eventKey(eventKey)
+                .paymentCode(group.getPaymentCode()).status(callbackStatus).rawPayload(toJson(rawPayload)).build());
         increment("payment_callback_total", "provider", provider.name(), "result", callbackStatus);
         return toPaymentGroupResponse(group);
     }
@@ -390,16 +330,15 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private void clearCartItemsForOrders(String userId, List<Order> orders) {
-        Set<Long> variationIds =
-                inventoryService.orderVariationQuantities(orders).keySet();
+        Set<Long> variationIds = inventoryService.orderVariationQuantities(orders).keySet();
         if (!variationIds.isEmpty()) {
             cartItemRepository.deleteActiveCartItemsByUserIdAndVariationIds(userId, variationIds);
         }
     }
 
     private PaymentProviderClient provider(PaymentMethod method) {
-        return paymentProviderSupportService.provider(
-                method, () -> new AppException(PaymentErrorCode.PAYMENT_PROVIDER_ERROR));
+        return paymentProviderSupportService.provider(method,
+                () -> new AppException(PaymentErrorCode.PAYMENT_PROVIDER_ERROR));
     }
 
     private PaymentGroupResponse toPaymentGroupResponse(PaymentGroup group) {

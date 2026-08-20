@@ -36,15 +36,11 @@ class CategoryServiceImplTest {
 
     @Test
     void create_shouldCreateVisibleCategoryWithGeneratedSlug() {
-        CategoryRequest request = CategoryRequest.builder()
-                .categoryName("Women's Fashion")
-                .description("Fashion")
+        CategoryRequest request = CategoryRequest.builder().categoryName("Women's Fashion").description("Fashion")
                 .build();
-        CategoryResponse response =
-                CategoryResponse.builder().id(1L).slug("women-s-fashion").build();
+        CategoryResponse response = CategoryResponse.builder().id(1L).slug("women-s-fashion").build();
 
-        when(categoryRepository.existsByCategoryNameIgnoreCase("Women's Fashion"))
-                .thenReturn(false);
+        when(categoryRepository.existsByCategoryNameIgnoreCase("Women's Fashion")).thenReturn(false);
         when(categoryRepository.existsBySlug("women-s-fashion")).thenReturn(false);
         when(categoryRepository.save(any(Category.class))).thenAnswer(invocation -> {
             Category category = invocation.getArgument(0);
@@ -65,10 +61,7 @@ class CategoryServiceImplTest {
 
     @Test
     void create_shouldRejectDuplicateName() {
-        CategoryRequest request = CategoryRequest.builder()
-                .categoryName("Fashion")
-                .description("Fashion")
-                .build();
+        CategoryRequest request = CategoryRequest.builder().categoryName("Fashion").description("Fashion").build();
         when(categoryRepository.existsByCategoryNameIgnoreCase("Fashion")).thenReturn(true);
 
         assertThatThrownBy(() -> categoryService.create(request)).isInstanceOf(AppException.class);
@@ -77,18 +70,9 @@ class CategoryServiceImplTest {
 
     @Test
     void update_shouldRejectSelfParent() {
-        Category category = Category.builder()
-                .id(1L)
-                .categoryName("Fashion")
-                .slug("fashion")
-                .description("Fashion")
-                .active(true)
-                .visible(true)
-                .build();
-        CategoryRequest request = CategoryRequest.builder()
-                .categoryName("Fashion")
-                .description("Fashion")
-                .parentId(1L)
+        Category category = Category.builder().id(1L).categoryName("Fashion").slug("fashion").description("Fashion")
+                .active(true).visible(true).build();
+        CategoryRequest request = CategoryRequest.builder().categoryName("Fashion").description("Fashion").parentId(1L)
                 .build();
 
         when(categoryRepository.findWithParentCategoryById(1L)).thenReturn(Optional.of(category));

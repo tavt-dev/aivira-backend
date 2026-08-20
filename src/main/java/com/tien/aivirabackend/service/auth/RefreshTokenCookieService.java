@@ -29,25 +29,15 @@ public class RefreshTokenCookieService {
     private boolean cookieHttpOnly;
 
     public void writeRefreshTokenCookie(HttpServletResponse response, String refreshToken, long maxAgeSeconds) {
-        ResponseCookie cookie = ResponseCookie.from(cookieName, refreshToken)
-                .httpOnly(cookieHttpOnly)
-                .secure(cookieSecure)
-                .sameSite(cookieSameSite)
-                .path(cookiePath)
-                .maxAge(maxAgeSeconds)
-                .build();
+        ResponseCookie cookie = ResponseCookie.from(cookieName, refreshToken).httpOnly(cookieHttpOnly)
+                .secure(cookieSecure).sameSite(cookieSameSite).path(cookiePath).maxAge(maxAgeSeconds).build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
     public void clearRefreshTokenCookie(HttpServletResponse response) {
-        ResponseCookie cookie = ResponseCookie.from(cookieName, "")
-                .httpOnly(cookieHttpOnly)
-                .secure(cookieSecure)
-                .sameSite(cookieSameSite)
-                .path(cookiePath)
-                .maxAge(0)
-                .build();
+        ResponseCookie cookie = ResponseCookie.from(cookieName, "").httpOnly(cookieHttpOnly).secure(cookieSecure)
+                .sameSite(cookieSameSite).path(cookiePath).maxAge(0).build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }

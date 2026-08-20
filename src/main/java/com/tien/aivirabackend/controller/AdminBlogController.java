@@ -41,22 +41,22 @@ public class AdminBlogController {
     @GetMapping("/categories")
     @PreAuthorize("@authorizationService.hasAnyPermission('CMS_READ', 'CMS_MANAGE_ALL')")
     public ResponseEntity<ApiResponse<List<BlogCategoryResponse>>> getCategories() {
-        return ResponseEntity.ok(
-                ApiResponse.success("Get admin blog categories successful", categoryService.getAdminCategories()));
+        return ResponseEntity
+                .ok(ApiResponse.success("Get admin blog categories successful", categoryService.getAdminCategories()));
     }
 
     @PostMapping("/categories")
     @PreAuthorize("@authorizationService.hasAnyPermission('CMS_CREATE', 'CMS_MANAGE_ALL')")
     public ResponseEntity<ApiResponse<BlogCategoryResponse>> createCategory(
             @Valid @RequestBody BlogCategoryRequest request) {
-        return ResponseEntity.ok(
-                ApiResponse.success("Create blog category successful", categoryService.createCategory(request)));
+        return ResponseEntity
+                .ok(ApiResponse.success("Create blog category successful", categoryService.createCategory(request)));
     }
 
     @PutMapping("/categories/{id}")
     @PreAuthorize("@authorizationService.hasAnyPermission('CMS_UPDATE', 'CMS_MANAGE_ALL')")
-    public ResponseEntity<ApiResponse<BlogCategoryResponse>> updateCategory(
-            @PathVariable Long id, @Valid @RequestBody BlogCategoryRequest request) {
+    public ResponseEntity<ApiResponse<BlogCategoryResponse>> updateCategory(@PathVariable Long id,
+            @Valid @RequestBody BlogCategoryRequest request) {
         return ResponseEntity.ok(
                 ApiResponse.success("Update blog category successful", categoryService.updateCategory(id, request)));
     }
@@ -71,18 +71,12 @@ public class AdminBlogController {
     @GetMapping("/posts")
     @PreAuthorize("@authorizationService.hasAnyPermission('CMS_READ', 'CMS_MANAGE_ALL')")
     public ResponseEntity<ApiResponse<PageResponse<BlogPostSummaryResponse>>> getPosts(
-            @RequestParam(required = false) BlogPostStatus status,
-            @RequestParam(required = false) Long categoryId,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String createdBy,
-            @RequestParam(required = false) Instant publishedFrom,
-            @RequestParam(required = false) Instant publishedTo,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(ApiResponse.success(
-                "Get admin blog posts successful",
-                postService.getAdminPosts(
-                        status, categoryId, keyword, createdBy, publishedFrom, publishedTo, page, size)));
+            @RequestParam(required = false) BlogPostStatus status, @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String keyword, @RequestParam(required = false) String createdBy,
+            @RequestParam(required = false) Instant publishedFrom, @RequestParam(required = false) Instant publishedTo,
+            @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(ApiResponse.success("Get admin blog posts successful", postService
+                .getAdminPosts(status, categoryId, keyword, createdBy, publishedFrom, publishedTo, page, size)));
     }
 
     @GetMapping("/posts/{id}")
@@ -99,10 +93,10 @@ public class AdminBlogController {
 
     @PutMapping("/posts/{id}")
     @PreAuthorize("@authorizationService.hasAnyPermission('CMS_UPDATE', 'CMS_MANAGE_ALL')")
-    public ResponseEntity<ApiResponse<BlogPostResponse>> updatePost(
-            @PathVariable Long id, @Valid @RequestBody BlogPostUpdateRequest request) {
-        return ResponseEntity.ok(
-                ApiResponse.success("Update blog post successful", postService.updatePost(id, request)));
+    public ResponseEntity<ApiResponse<BlogPostResponse>> updatePost(@PathVariable Long id,
+            @Valid @RequestBody BlogPostUpdateRequest request) {
+        return ResponseEntity
+                .ok(ApiResponse.success("Update blog post successful", postService.updatePost(id, request)));
     }
 
     @PutMapping("/posts/{id}/publish")
@@ -127,12 +121,10 @@ public class AdminBlogController {
     @PostMapping(value = "/posts/{id}/cover", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload or replace blog cover")
     @PreAuthorize("@authorizationService.hasAnyPermission('CMS_CREATE', 'CMS_MANAGE_ALL')")
-    public ResponseEntity<ApiResponse<BlogPostResponse>> uploadCover(
-            @PathVariable Long id,
-            @RequestPart("file") MultipartFile file,
-            @RequestParam(required = false) String altText) {
-        return ResponseEntity.ok(
-                ApiResponse.success("Upload blog cover successful", postService.uploadCover(id, file, altText)));
+    public ResponseEntity<ApiResponse<BlogPostResponse>> uploadCover(@PathVariable Long id,
+            @RequestPart("file") MultipartFile file, @RequestParam(required = false) String altText) {
+        return ResponseEntity
+                .ok(ApiResponse.success("Upload blog cover successful", postService.uploadCover(id, file, altText)));
     }
 
     @DeleteMapping("/posts/{id}/cover")
@@ -144,10 +136,8 @@ public class AdminBlogController {
     @PostMapping(value = "/posts/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload a rich-text blog image")
     @PreAuthorize("@authorizationService.hasAnyPermission('CMS_CREATE', 'CMS_MANAGE_ALL')")
-    public ResponseEntity<ApiResponse<BlogAssetResponse>> uploadContentImage(
-            @PathVariable Long id,
-            @RequestPart("file") MultipartFile file,
-            @RequestParam(required = false) String altText) {
+    public ResponseEntity<ApiResponse<BlogAssetResponse>> uploadContentImage(@PathVariable Long id,
+            @RequestPart("file") MultipartFile file, @RequestParam(required = false) String altText) {
         return ResponseEntity.ok(
                 ApiResponse.success("Upload blog image successful", postService.uploadContentImage(id, file, altText)));
     }

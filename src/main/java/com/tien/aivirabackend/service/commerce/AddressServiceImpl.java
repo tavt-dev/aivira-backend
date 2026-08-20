@@ -33,8 +33,7 @@ public class AddressServiceImpl implements AddressService {
     public List<AddressResponse> getMyAddresses() {
         User user = currentUserService.getCurrentUser();
         return addressRepository.findByUserIdAndActiveTrueOrderByDefaultAddressDescUpdatedAtDesc(user.getId()).stream()
-                .map(commerceMapper::toAddressResponse)
-                .toList();
+                .map(commerceMapper::toAddressResponse).toList();
     }
 
     @Override
@@ -46,17 +45,10 @@ public class AddressServiceImpl implements AddressService {
         if (shouldDefault) {
             addressRepository.clearDefaultAddresses(user.getId());
         }
-        Address address = Address.builder()
-                .user(user)
-                .recipientName(request.getRecipientName().trim())
-                .phoneNumber(request.getPhoneNumber().trim())
-                .addressLine(request.getAddressLine().trim())
-                .ward(trimToNull(request.getWard()))
-                .district(trimToNull(request.getDistrict()))
-                .city(trimToNull(request.getCity()))
-                .defaultAddress(shouldDefault)
-                .active(true)
-                .build();
+        Address address = Address.builder().user(user).recipientName(request.getRecipientName().trim())
+                .phoneNumber(request.getPhoneNumber().trim()).addressLine(request.getAddressLine().trim())
+                .ward(trimToNull(request.getWard())).district(trimToNull(request.getDistrict()))
+                .city(trimToNull(request.getCity())).defaultAddress(shouldDefault).active(true).build();
         return commerceMapper.toAddressResponse(addressRepository.save(address));
     }
 
@@ -89,8 +81,7 @@ public class AddressServiceImpl implements AddressService {
         addressRepository.save(address);
         if (wasDefault) {
             addressRepository.findByUserIdAndActiveTrueOrderByDefaultAddressDescUpdatedAtDesc(user.getId()).stream()
-                    .findFirst()
-                    .ifPresent(nextDefault -> {
+                    .findFirst().ifPresent(nextDefault -> {
                         nextDefault.setDefaultAddress(true);
                         addressRepository.save(nextDefault);
                     });
@@ -108,8 +99,7 @@ public class AddressServiceImpl implements AddressService {
     }
 
     private Address findMyAddress(Long addressId, String userId) {
-        return addressRepository
-                .findByIdAndUserIdAndActiveTrue(addressId, userId)
+        return addressRepository.findByIdAndUserIdAndActiveTrue(addressId, userId)
                 .orElseThrow(() -> new AppException(AddressErrorCode.ADDRESS_NOT_FOUND));
     }
 

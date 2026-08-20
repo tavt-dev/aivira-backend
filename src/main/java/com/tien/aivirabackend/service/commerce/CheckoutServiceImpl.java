@@ -74,8 +74,8 @@ public class CheckoutServiceImpl implements CheckoutService {
         User user = currentUserService.getCurrentUser();
         validatePaymentMethod(request.getPaymentMethod());
         CheckoutContext context = loadCheckoutContext(user, request, false);
-        DiscountCalculation calculation =
-                discountService.calculate(user, context.cartItems(), context.variations(), request.getCouponCode());
+        DiscountCalculation calculation = discountService.calculate(user, context.cartItems(), context.variations(),
+                request.getCouponCode());
         return discountService.toPreviewResponse(calculation);
     }
 
@@ -85,17 +85,12 @@ public class CheckoutServiceImpl implements CheckoutService {
         User user = currentUserService.getCurrentUser();
         validatePaymentMethod(request.getPaymentMethod());
         CheckoutContext context = loadCheckoutContext(user, request, true);
-        DiscountCalculation calculation =
-                discountService.calculate(user, context.cartItems(), context.variations(), request.getCouponCode());
+        DiscountCalculation calculation = discountService.calculate(user, context.cartItems(), context.variations(),
+                request.getCouponCode());
 
-        PaymentGroup paymentGroup = PaymentGroup.builder()
-                .paymentCode(generatePaymentCode())
-                .user(user)
-                .method(request.getPaymentMethod())
-                .status(PaymentStatus.PENDING)
-                .amount(ZERO)
-                .expiresAt(Instant.now().plusSeconds(paymentProperties.getPendingTtlMinutes() * 60))
-                .build();
+        PaymentGroup paymentGroup = PaymentGroup.builder().paymentCode(generatePaymentCode()).user(user)
+                .method(request.getPaymentMethod()).status(PaymentStatus.PENDING).amount(ZERO)
+                .expiresAt(Instant.now().plusSeconds(paymentProperties.getPendingTtlMinutes() * 60)).build();
 
         List<Order> orders = new ArrayList<>();
         Order checkoutOrder = buildOrder(user, context.address(), request, calculation);
@@ -104,16 +99,11 @@ public class CheckoutServiceImpl implements CheckoutService {
 
         PaymentGroup savedPaymentGroup = paymentGroupRepository.save(paymentGroup);
         OrderStatus initialOrderStatus = request.getPaymentMethod() == PaymentMethod.COD
-                ? OrderStatus.PENDING_CONFIRMATION
-                : OrderStatus.PENDING_PAYMENT;
+                ? OrderStatus.PENDING_CONFIRMATION : OrderStatus.PENDING_PAYMENT;
         for (Order order : orders) {
             order.setOrderStatus(initialOrderStatus);
-            Payment payment = Payment.builder()
-                    .order(order)
-                    .paymentGroup(savedPaymentGroup)
-                    .method(request.getPaymentMethod())
-                    .status(PaymentStatus.PENDING)
-                    .amount(order.getTotalAmount())
+            Payment payment = Payment.builder().order(order).paymentGroup(savedPaymentGroup)
+                    .method(request.getPaymentMethod()).status(PaymentStatus.PENDING).amount(order.getTotalAmount())
                     .build();
             order.getPayments().add(payment);
             savedPaymentGroup.getPayments().add(payment);
@@ -121,8 +111,8 @@ public class CheckoutServiceImpl implements CheckoutService {
 
         inventoryService.deductCartItems(context.cartItems(), context.variations());
         List<Order> savedOrders = orderRepository.saveAll(orders);
-        discountService.reserveOrFinalizeCoupon(
-                user, savedOrders.getFirst(), calculation, request.getPaymentMethod() == PaymentMethod.COD);
+        discountService.reserveOrFinalizeCoupon(user, savedOrders.getFirst(), calculation,
+                request.getPaymentMethod() == PaymentMethod.COD);
         PaymentAttempt attempt = paymentProviderSupportService.createAttempt(savedPaymentGroup);
         PaymentProviderResult providerResult = paymentProviderSupportService.createPaymentWithMetrics(
                 provider(request.getPaymentMethod()), savedPaymentGroup, attempt, requestMetadata);
@@ -134,61 +124,34 @@ public class CheckoutServiceImpl implements CheckoutService {
             cartItemRepository.deleteAll(context.cartItems());
         }
 
-        return CheckoutResponse.builder()
-                .paymentGroupCode(savedPaymentGroup.getPaymentCode())
-                .paymentMethod(savedPaymentGroup.getMethod())
-                .paymentStatus(savedPaymentGroup.getStatus())
-                .totalAmount(savedPaymentGroup.getAmount())
-                .paymentUrl(savedPaymentGroup.getPaymentUrl())
-                .deeplink(savedPaymentGroup.getDeeplink())
-                .qrCodeUrl(savedPaymentGroup.getQrCodeUrl())
+        return CheckoutResponse.builder().paymentGroupCode(savedPaymentGroup.getPaymentCode())
+                .paymentMethod(savedPaymentGroup.getMethod()).paymentStatus(savedPaymentGroup.getStatus())
+                .totalAmount(savedPaymentGroup.getAmount()).paymentUrl(savedPaymentGroup.getPaymentUrl())
+                .deeplink(savedPaymentGroup.getDeeplink()).qrCodeUrl(savedPaymentGroup.getQrCodeUrl())
                 .expiresAt(savedPaymentGroup.getExpiresAt())
-                .orders(savedOrders.stream()
-                        .map(commerceMapper::toOrderResponse)
-                        .toList())
-                .build();
+                .orders(savedOrders.stream().map(commerceMapper::toOrderResponse).toList()).build();
     }
 
     private Order buildOrder(User user, Address address, CheckoutRequest request, DiscountCalculation calculation) {
-        Order order = Order.builder()
-                .orderCode(generateOrderCode())
-                .user(user)
-                .shippingAddress(address)
-                .shippingRecipientName(address.getRecipientName())
-                .shippingPhoneNumber(address.getPhoneNumber())
-                .shippingAddressLine(address.getAddressLine())
-                .shippingWard(address.getWard())
-                .shippingDistrict(address.getDistrict())
-                .shippingCity(address.getCity())
-                .shippingFee(ZERO)
-                .discountAmount(calculation.discountAmount())
-                .couponCode(calculation.couponCode())
-                .notes(trimToNull(request.getNotes()))
-                .build();
+        Order order = Order.builder().orderCode(generateOrderCode()).user(user).shippingAddress(address)
+                .shippingRecipientName(address.getRecipientName()).shippingPhoneNumber(address.getPhoneNumber())
+                .shippingAddressLine(address.getAddressLine()).shippingWard(address.getWard())
+                .shippingDistrict(address.getDistrict()).shippingCity(address.getCity()).shippingFee(ZERO)
+                .discountAmount(calculation.discountAmount()).couponCode(calculation.couponCode())
+                .notes(trimToNull(request.getNotes())).build();
         for (DiscountItem discountItem : calculation.items()) {
             CartItem cartItem = discountItem.cartItem();
             ProductVariation variation = discountItem.variation();
             Product product = variation.getProduct();
             BigDecimal additionalPrice = nullToZero(variation.getAdditionalPrice());
-            OrderItem orderItem = OrderItem.builder()
-                    .order(order)
-                    .productId(product.getId())
-                    .productVariationId(variation.getId())
-                    .productName(product.getProductName())
-                    .sku(variation.getSku())
-                    .variationColor(variation.getColor())
-                    .variationSize(variation.getSize())
-                    .thumbnailUrl(
-                            StringUtils.hasText(variation.getImageUrl())
-                                    ? variation.getImageUrl()
-                                    : product.getThumbnailUrl())
-                    .basePrice(product.getPrice())
-                    .additionalPrice(additionalPrice)
-                    .discountAmount(discountItem.promotionDiscountAmount())
-                    .finalPrice(discountItem.unitPrice())
-                    .promotionName(discountItem.promotionName())
-                    .quantity(cartItem.getQuantity())
-                    .build();
+            OrderItem orderItem = OrderItem.builder().order(order).productId(product.getId())
+                    .productVariationId(variation.getId()).productName(product.getProductName()).sku(variation.getSku())
+                    .variationColor(variation.getColor()).variationSize(variation.getSize())
+                    .thumbnailUrl(StringUtils.hasText(variation.getImageUrl()) ? variation.getImageUrl()
+                            : product.getThumbnailUrl())
+                    .basePrice(product.getPrice()).additionalPrice(additionalPrice)
+                    .discountAmount(discountItem.promotionDiscountAmount()).finalPrice(discountItem.unitPrice())
+                    .promotionName(discountItem.promotionName()).quantity(cartItem.getQuantity()).build();
             order.getItems().add(orderItem);
         }
         order.setSubtotal(calculation.subtotal());
@@ -197,31 +160,27 @@ public class CheckoutServiceImpl implements CheckoutService {
     }
 
     private CheckoutContext loadCheckoutContext(User user, CheckoutRequest request, boolean lockInventory) {
-        Address address = addressRepository
-                .findByIdAndUserIdAndActiveTrue(request.getAddressId(), user.getId())
+        Address address = addressRepository.findByIdAndUserIdAndActiveTrue(request.getAddressId(), user.getId())
                 .orElseThrow(() -> new AppException(AddressErrorCode.ADDRESS_NOT_FOUND));
-        List<Long> selectedIds =
-                request.getCartItemIds().stream().distinct().sorted().toList();
+        List<Long> selectedIds = request.getCartItemIds().stream().distinct().sorted().toList();
         if (selectedIds.isEmpty()) {
             throw new AppException(CheckoutErrorCode.CHECKOUT_EMPTY_ITEMS);
         }
-        List<CartItem> cartItems =
-                cartItemRepository.findByIdInAndCartUserIdAndCartActiveTrue(selectedIds, user.getId());
+        List<CartItem> cartItems = cartItemRepository.findByIdInAndCartUserIdAndCartActiveTrue(selectedIds,
+                user.getId());
         if (cartItems.size() != selectedIds.size()) {
             throw new AppException(CheckoutErrorCode.CHECKOUT_CART_ITEM_MISMATCH);
         }
-        Map<Long, ProductVariation> variations = lockInventory
-                ? inventoryService.lockVariationsForCartItems(cartItems)
-                : cartItems.stream()
-                        .collect(java.util.stream.Collectors.toMap(
-                                item -> item.getProductVariation().getId(), CartItem::getProductVariation));
+        Map<Long, ProductVariation> variations = lockInventory ? inventoryService.lockVariationsForCartItems(cartItems)
+                : cartItems.stream().collect(java.util.stream.Collectors
+                        .toMap(item -> item.getProductVariation().getId(), CartItem::getProductVariation));
         inventoryService.validateCheckoutItems(cartItems, variations);
         return new CheckoutContext(address, cartItems, variations);
     }
 
     private PaymentProviderClient provider(PaymentMethod method) {
-        return paymentProviderSupportService.provider(
-                method, () -> new AppException(CheckoutErrorCode.CHECKOUT_PAYMENT_METHOD_UNSUPPORTED));
+        return paymentProviderSupportService.provider(method,
+                () -> new AppException(CheckoutErrorCode.CHECKOUT_PAYMENT_METHOD_UNSUPPORTED));
     }
 
     private void validatePaymentMethod(PaymentMethod method) {
@@ -234,8 +193,7 @@ public class CheckoutServiceImpl implements CheckoutService {
     private String generatePaymentCode() {
         String code;
         do {
-            code = "PAY" + System.currentTimeMillis()
-                    + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+            code = "PAY" + System.currentTimeMillis() + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
         } while (paymentGroupRepository.existsByPaymentCode(code));
         return code;
     }
@@ -243,8 +201,7 @@ public class CheckoutServiceImpl implements CheckoutService {
     private String generateOrderCode() {
         String code;
         do {
-            code = "ORD" + System.currentTimeMillis()
-                    + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+            code = "ORD" + System.currentTimeMillis() + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
         } while (orderRepository.existsByOrderCode(code));
         return code;
     }
@@ -257,5 +214,6 @@ public class CheckoutServiceImpl implements CheckoutService {
         return StringUtils.hasText(value) ? value.trim() : null;
     }
 
-    private record CheckoutContext(Address address, List<CartItem> cartItems, Map<Long, ProductVariation> variations) {}
+    private record CheckoutContext(Address address, List<CartItem> cartItems, Map<Long, ProductVariation> variations) {
+    }
 }

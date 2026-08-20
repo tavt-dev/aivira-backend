@@ -89,24 +89,13 @@ class PaymentServiceImplTest {
         PaymentProperties paymentProperties = new PaymentProperties();
         paymentProperties.setPendingTtlMinutes(15);
         meterRegistry = new SimpleMeterRegistry();
-        PaymentProviderSupportService paymentProviderSupportService =
-                new PaymentProviderSupportService(paymentAttemptRepository, List.of(providerClient), meterRegistry);
-        paymentService = new PaymentServiceImpl(
-                paymentGroupRepository,
-                paymentRepository,
-                paymentAttemptRepository,
-                paymentCallbackRepository,
-                orderRepository,
-                cartItemRepository,
-                paymentProperties,
-                currentUserService,
-                new CommerceMapper(),
-                paymentProviderSupportService,
-                new ObjectMapper(),
-                meterRegistry,
+        PaymentProviderSupportService paymentProviderSupportService = new PaymentProviderSupportService(
+                paymentAttemptRepository, List.of(providerClient), meterRegistry);
+        paymentService = new PaymentServiceImpl(paymentGroupRepository, paymentRepository, paymentAttemptRepository,
+                paymentCallbackRepository, orderRepository, cartItemRepository, paymentProperties, currentUserService,
+                new CommerceMapper(), paymentProviderSupportService, new ObjectMapper(), meterRegistry,
                 new InventoryService(variationRepository),
-                new PaymentAttemptResolver(paymentAttemptRepository, paymentGroupRepository),
-                discountService);
+                new PaymentAttemptResolver(paymentAttemptRepository, paymentGroupRepository), discountService);
         lenient().when(providerClient.method()).thenReturn(PaymentMethod.VNPAY);
     }
 
@@ -168,8 +157,7 @@ class PaymentServiceImplTest {
         when(paymentAttemptRepository.findByProviderAndProviderTxnRefForUpdate(PaymentProvider.VNPAY, "PAY123-A1"))
                 .thenReturn(Optional.of(attempt));
         when(paymentCallbackRepository.findByProviderAndEventKey(PaymentProvider.VNPAY, "EVT-1"))
-                .thenReturn(
-                        Optional.of(PaymentCallback.builder().eventKey("EVT-1").build()));
+                .thenReturn(Optional.of(PaymentCallback.builder().eventKey("EVT-1").build()));
         when(paymentGroupRepository.findByIdForUpdate(group.getId())).thenReturn(Optional.of(group));
         when(orderRepository.findByPaymentsPaymentGroupId(group.getId())).thenReturn(List.of());
 
@@ -235,13 +223,8 @@ class PaymentServiceImplTest {
     void handleCallback_whenAmountMismatch_shouldNotChangeState() {
         PaymentGroup group = paymentGroup(PaymentStatus.PENDING);
         PaymentAttempt attempt = attempt(group, PaymentStatus.PENDING);
-        PaymentProviderCallbackResult callbackResult = new PaymentProviderCallbackResult(
-                "PAY123-A1",
-                "PAY123-A1-REQ",
-                "TXN-1",
-                new BigDecimal("999.00"),
-                PaymentStatus.SUCCESS,
-                "EVT-MISMATCH",
+        PaymentProviderCallbackResult callbackResult = new PaymentProviderCallbackResult("PAY123-A1", "PAY123-A1-REQ",
+                "TXN-1", new BigDecimal("999.00"), PaymentStatus.SUCCESS, "EVT-MISMATCH",
                 Map.of("providerTxnRef", "PAY123-A1"));
 
         when(providerClient.verifyCallback(anyMap())).thenReturn(true);
@@ -269,16 +252,14 @@ class PaymentServiceImplTest {
         ProductVariation variation = variation(10);
 
         when(currentUserService.getCurrentUser()).thenReturn(user);
-        when(paymentGroupRepository.findByPaymentCodeAndUserId("PAY123", user.getId()))
-                .thenReturn(Optional.of(group));
+        when(paymentGroupRepository.findByPaymentCodeAndUserId("PAY123", user.getId())).thenReturn(Optional.of(group));
         when(orderRepository.findByPaymentsPaymentGroupId(group.getId())).thenReturn(List.of(order));
         when(variationRepository.findAllByIdInForUpdate(anyCollection())).thenReturn(List.of(variation));
         when(paymentAttemptRepository.countByPaymentGroupId(group.getId())).thenReturn(1);
         when(paymentAttemptRepository.save(any(PaymentAttempt.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
-        when(providerClient.createPayment(any(PaymentProviderRequest.class)))
-                .thenReturn(new PaymentProviderResult(
-                        "PAY123-A2-NEW", "PAY123-A2-NEW-REQ", null, "https://pay", null, null, "{}", "{}"));
+        when(providerClient.createPayment(any(PaymentProviderRequest.class))).thenReturn(new PaymentProviderResult(
+                "PAY123-A2-NEW", "PAY123-A2-NEW-REQ", null, "https://pay", null, null, "{}", "{}"));
 
         paymentService.retry("PAY123", new RequestMetadata("JUnit", "127.0.0.1"));
 
@@ -302,15 +283,8 @@ class PaymentServiceImplTest {
         when(paymentGroupRepository.findByPaymentCode("PAY123")).thenReturn(Optional.of(group));
         when(paymentAttemptRepository.findTopByPaymentGroupIdOrderByAttemptNoDesc(group.getId()))
                 .thenReturn(Optional.of(attempt));
-        when(providerClient.queryPayment(attempt))
-                .thenReturn(new PaymentProviderQueryResult(
-                        "PAY123-A1",
-                        "PAY123-A1-REQ",
-                        "TXN-QUERY",
-                        group.getAmount(),
-                        PaymentStatus.SUCCESS,
-                        "Query success",
-                        "{}"));
+        when(providerClient.queryPayment(attempt)).thenReturn(new PaymentProviderQueryResult("PAY123-A1",
+                "PAY123-A1-REQ", "TXN-QUERY", group.getAmount(), PaymentStatus.SUCCESS, "Query success", "{}"));
         when(paymentAttemptRepository.findByIdForUpdate(attempt.getId())).thenReturn(Optional.of(attempt));
         when(paymentCallbackRepository.findByProviderAndEventKey(eq(PaymentProvider.VNPAY), startsWith("RECONCILE:")))
                 .thenReturn(Optional.empty());
@@ -338,49 +312,26 @@ class PaymentServiceImplTest {
     }
 
     private PaymentGroup paymentGroup(PaymentStatus status) {
-        PaymentGroup group = PaymentGroup.builder()
-                .paymentCode("PAY123")
-                .user(user())
-                .method(PaymentMethod.VNPAY)
-                .status(status)
-                .amount(new BigDecimal("1234.00"))
-                .expiresAt(Instant.now().plusSeconds(900))
-                .build();
+        PaymentGroup group = PaymentGroup.builder().paymentCode("PAY123").user(user()).method(PaymentMethod.VNPAY)
+                .status(status).amount(new BigDecimal("1234.00")).expiresAt(Instant.now().plusSeconds(900)).build();
         group.setId(1L);
         return group;
     }
 
     private PaymentAttempt attempt(PaymentGroup group, PaymentStatus status) {
-        PaymentAttempt attempt = PaymentAttempt.builder()
-                .paymentGroup(group)
-                .provider(PaymentProvider.VNPAY)
-                .method(PaymentMethod.VNPAY)
-                .attemptNo(1)
-                .providerTxnRef("PAY123-A1")
-                .requestId("PAY123-A1-REQ")
-                .status(status)
-                .amount(group.getAmount())
-                .expiresAt(group.getExpiresAt())
-                .build();
+        PaymentAttempt attempt = PaymentAttempt.builder().paymentGroup(group).provider(PaymentProvider.VNPAY)
+                .method(PaymentMethod.VNPAY).attemptNo(1).providerTxnRef("PAY123-A1").requestId("PAY123-A1-REQ")
+                .status(status).amount(group.getAmount()).expiresAt(group.getExpiresAt()).build();
         attempt.setId(11L);
         return attempt;
     }
 
     private Order order(PaymentGroup group, OrderStatus orderStatus) {
-        Order order = Order.builder()
-                .orderCode("ORD123")
-                .user(group.getUser())
-                .orderStatus(orderStatus)
-                .totalAmount(group.getAmount())
-                .build();
+        Order order = Order.builder().orderCode("ORD123").user(group.getUser()).orderStatus(orderStatus)
+                .totalAmount(group.getAmount()).build();
         order.setId(21L);
-        Payment payment = Payment.builder()
-                .order(order)
-                .paymentGroup(group)
-                .method(PaymentMethod.VNPAY)
-                .status(group.getStatus())
-                .amount(group.getAmount())
-                .build();
+        Payment payment = Payment.builder().order(order).paymentGroup(group).method(PaymentMethod.VNPAY)
+                .status(group.getStatus()).amount(group.getAmount()).build();
         payment.setId(31L);
         order.getPayments().add(payment);
         group.getPayments().add(payment);
@@ -389,19 +340,13 @@ class PaymentServiceImplTest {
 
     private Order orderWithItem(PaymentGroup group, OrderStatus orderStatus) {
         Order order = order(group, orderStatus);
-        order.getItems()
-                .add(OrderItem.builder()
-                        .order(order)
-                        .productVariationId(41L)
-                        .quantity(2)
-                        .build());
+        order.getItems().add(OrderItem.builder().order(order).productVariationId(41L).quantity(2).build());
         return order;
     }
 
     private ProductVariation variation(int stock) {
         Product product = Product.builder().stockQuantity(stock).build();
-        ProductVariation variation =
-                ProductVariation.builder().product(product).stockQuantity(stock).build();
+        ProductVariation variation = ProductVariation.builder().product(product).stockQuantity(stock).build();
         variation.setId(41L);
         return variation;
     }
@@ -411,13 +356,7 @@ class PaymentServiceImplTest {
     }
 
     private PaymentProviderCallbackResult callbackResult(PaymentStatus status, String transactionId, String eventKey) {
-        return new PaymentProviderCallbackResult(
-                "PAY123-A1",
-                "PAY123-A1-REQ",
-                transactionId,
-                new BigDecimal("1234.00"),
-                status,
-                eventKey,
-                Map.of("providerTxnRef", "PAY123-A1", "transactionId", transactionId));
+        return new PaymentProviderCallbackResult("PAY123-A1", "PAY123-A1-REQ", transactionId, new BigDecimal("1234.00"),
+                status, eventKey, Map.of("providerTxnRef", "PAY123-A1", "transactionId", transactionId));
     }
 }

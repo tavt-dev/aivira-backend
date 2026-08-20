@@ -84,13 +84,8 @@ public class AccountAuthPolicy {
             user.setLockoutUntil(now.plus(lockMinutes, ChronoUnit.MINUTES));
             user.setFailedLoginAttempts(0);
             user.setFirstFailedLoginAt(null);
-            log.warn(
-                    "auth_login_lockout userId={} username={} ip={} device={} lockUntil={}",
-                    user.getId(),
-                    user.getUsername(),
-                    ipAddress,
-                    deviceInfo,
-                    user.getLockoutUntil());
+            log.warn("auth_login_lockout userId={} username={} ip={} device={} lockUntil={}", user.getId(),
+                    user.getUsername(), ipAddress, deviceInfo, user.getLockoutUntil());
         }
 
         userRepository.save(user);

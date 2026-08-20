@@ -13,9 +13,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Schema(
-        description =
-                "Non-mutating checkout preview totals. Preview does not lock stock, create an order, or consume coupon usage.")
+@Schema(description = "Non-mutating checkout preview totals. Preview does not lock stock, create an order, or consume coupon usage.")
 public class CheckoutPreviewResponse {
     @Schema(description = "Original cart subtotal before discounts.", example = "640000")
     BigDecimal subtotal;

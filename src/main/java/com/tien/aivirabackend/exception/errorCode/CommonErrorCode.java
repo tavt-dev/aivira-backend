@@ -12,15 +12,15 @@ import lombok.RequiredArgsConstructor;
 public enum CommonErrorCode implements ErrorCode {
     // === E10xx: Lỗi hệ thống / máy chủ ===
     INTERNAL_ERROR("E1000", "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.", HttpStatus.INTERNAL_SERVER_ERROR),
-    SERVICE_UNAVAILABLE(
-            "E1001", "Dịch vụ hiện tạm thời không khả dụng. Vui lòng thử lại sau.", HttpStatus.SERVICE_UNAVAILABLE),
+    SERVICE_UNAVAILABLE("E1001", "Dịch vụ hiện tạm thời không khả dụng. Vui lòng thử lại sau.",
+            HttpStatus.SERVICE_UNAVAILABLE),
     TIMEOUT("E1002", "Yêu cầu đã hết thời gian chờ. Vui lòng thử lại.", HttpStatus.REQUEST_TIMEOUT),
     DATABASE_ERROR("E1003", "Xảy ra lỗi khi thao tác với cơ sở dữ liệu.", HttpStatus.INTERNAL_SERVER_ERROR),
     EXTERNAL_SERVICE_ERROR("E1004", "Dịch vụ bên ngoài không phản hồi.", HttpStatus.BAD_GATEWAY),
 
     // === E11xx: Lỗi xác thực dữ liệu (Validation Errors) ===
-    VALIDATION_FAILED(
-            "E1100", "Xác thực dữ liệu thất bại. Vui lòng kiểm tra lại thông tin nhập.", HttpStatus.BAD_REQUEST),
+    VALIDATION_FAILED("E1100", "Xác thực dữ liệu thất bại. Vui lòng kiểm tra lại thông tin nhập.",
+            HttpStatus.BAD_REQUEST),
     INVALID_INPUT("E1101", "Dữ liệu nhập vào không hợp lệ.", HttpStatus.BAD_REQUEST),
     MISSING_REQUIRED_FIELD("E1102", "Thiếu trường dữ liệu bắt buộc.", HttpStatus.BAD_REQUEST),
     INVALID_FORMAT("E1103", "Định dạng dữ liệu không hợp lệ.", HttpStatus.BAD_REQUEST),

@@ -32,12 +32,8 @@ class AddressServiceImplTest {
     void create_shouldMakeFirstAddressDefault() {
         User user = User.builder().id("user-1").build();
         AddressServiceImpl service = new AddressServiceImpl(addressRepository, currentUserService, commerceMapper);
-        AddressRequest request = AddressRequest.builder()
-                .recipientName("Alice")
-                .phoneNumber("0900000000")
-                .addressLine("123 Street")
-                .defaultAddress(false)
-                .build();
+        AddressRequest request = AddressRequest.builder().recipientName("Alice").phoneNumber("0900000000")
+                .addressLine("123 Street").defaultAddress(false).build();
 
         when(currentUserService.getCurrentUser()).thenReturn(user);
         when(addressRepository.existsByUserIdAndActiveTrue("user-1")).thenReturn(false);
@@ -55,18 +51,8 @@ class AddressServiceImplTest {
     @Test
     void delete_shouldPromoteNextAddressWhenDefaultDeleted() {
         User user = User.builder().id("user-1").build();
-        Address current = Address.builder()
-                .id(1L)
-                .user(user)
-                .defaultAddress(true)
-                .active(true)
-                .build();
-        Address next = Address.builder()
-                .id(2L)
-                .user(user)
-                .defaultAddress(false)
-                .active(true)
-                .build();
+        Address current = Address.builder().id(1L).user(user).defaultAddress(true).active(true).build();
+        Address next = Address.builder().id(2L).user(user).defaultAddress(false).active(true).build();
         AddressServiceImpl service = new AddressServiceImpl(addressRepository, currentUserService, commerceMapper);
 
         when(currentUserService.getCurrentUser()).thenReturn(user);

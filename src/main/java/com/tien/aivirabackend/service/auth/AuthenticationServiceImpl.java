@@ -70,8 +70,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     @Transactional
     public AuthenticationResponse authenticate(AuthenticationRequest request, String deviceInfo, String ipAddress) {
-        User user = userRepository
-                .findByUsername(request.getUsername())
+        User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
 
         accountAuthPolicy.validateAccountForAuth(user);
@@ -80,12 +79,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         if (!isAuthenticated) {
             accountAuthPolicy.registerFailedLoginAttempt(user, ipAddress, deviceInfo);
-            log.warn(
-                    "auth_login_failed userId={} username={} ip={} device={} reason=invalid_password",
-                    user.getId(),
-                    user.getUsername(),
-                    ipAddress,
-                    deviceInfo);
+            log.warn("auth_login_failed userId={} username={} ip={} device={} reason=invalid_password", user.getId(),
+                    user.getUsername(), ipAddress, deviceInfo);
             throw new AppException(PasswordErrorCode.PASSWORD_INCORRECT);
         }
 
@@ -94,12 +89,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String accessToken = jwtService.createAccessToken(user);
         String refreshToken = jwtService.createRefreshToken(user, deviceInfo, ipAddress, null);
 
-        log.info(
-                "auth_login_success userId={} username={} ip={} device={}",
-                user.getId(),
-                user.getUsername(),
-                ipAddress,
-                deviceInfo);
+        log.info("auth_login_success userId={} username={} ip={} device={}", user.getId(), user.getUsername(),
+                ipAddress, deviceInfo);
 
         return buildAuthenticationResponse(accessToken, refreshToken);
     }
@@ -121,8 +112,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         initializeLocalUser(user, request.getPassword());
 
-        var role = roleRepository
-                .findByCode(PredefinedRole.USER)
+        var role = roleRepository.findByCode(PredefinedRole.USER)
                 .orElseThrow(() -> new AppException(UserErrorCode.ROLE_NOT_FOUND));
 
         user.getRoles().add(role);
@@ -145,8 +135,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             JWTClaimsSet jwtClaimsSet = signedJWT.getJWTClaimsSet();
             String username = jwtClaimsSet.getSubject();
 
-            User user = userRepository
-                    .findByUsername(username)
+            User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND));
 
             accountAuthPolicy.validateAccountForAuth(user);
@@ -159,13 +148,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             jwtService.revokeRefreshToken(refreshToken, RevocationReason.TOKEN_REFRESH, replacementJti);
 
-            log.info(
-                    "auth_refresh_success userId={} username={} ip={} device={} replacementJti={}",
-                    user.getId(),
-                    username,
-                    ipAddress,
-                    deviceInfo,
-                    replacementJti);
+            log.info("auth_refresh_success userId={} username={} ip={} device={} replacementJti={}", user.getId(),
+                    username, ipAddress, deviceInfo, replacementJti);
 
             return buildAuthenticationResponse(newAccessToken, newRefreshToken);
 
@@ -200,10 +184,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String currentSessionJti = getCurrentJwtFromSecurityContext().getId();
         List<ActiveSessionResponse> sessions = jwtService.getActiveSessions(user.getId(), currentSessionJti);
 
-        log.info(
-                "auth_get_sessions userId={} username={} activeSessionCount={}",
-                user.getId(),
-                user.getUsername(),
+        log.info("auth_get_sessions userId={} username={} activeSessionCount={}", user.getId(), user.getUsername(),
                 sessions.size());
         return sessions;
     }
@@ -213,10 +194,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public void revokeSession(String sessionId) {
         User user = getCurrentUserFromSecurityContext();
         jwtService.revokeSession(user.getId(), sessionId);
-        log.info(
-                "auth_revoke_session_success userId={} username={} sessionId={}",
-                user.getId(),
-                user.getUsername(),
+        log.info("auth_revoke_session_success userId={} username={} sessionId={}", user.getId(), user.getUsername(),
                 sessionId);
     }
 
@@ -267,21 +245,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         resetPasswordAndRevokeSessions(user, request.getNewPassword(), userOtp);
 
-        log.info(
-                "auth_reset_password_success userId={} username={} email={}",
-                user.getId(),
-                user.getUsername(),
+        log.info("auth_reset_password_success userId={} username={} email={}", user.getId(), user.getUsername(),
                 request.getEmail());
     }
 
     private AuthenticationResponse buildAuthenticationResponse(String accessToken, String refreshToken) {
-        return AuthenticationResponse.builder()
-                .token(accessToken)
-                .refreshToken(refreshToken)
-                .tokenType("Bearer")
-                .accessTokenExpiresIn(accessTokenExpiresIn)
-                .authenticated(true)
-                .build();
+        return AuthenticationResponse.builder().token(accessToken).refreshToken(refreshToken).tokenType("Bearer")
+                .accessTokenExpiresIn(accessTokenExpiresIn).authenticated(true).build();
     }
 
     private void initializeLocalUser(User user, String rawPassword) {
@@ -340,8 +310,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private User getCurrentUserFromSecurityContext() {
-        return userRepository
-                .findById(currentUserService.getCurrentUserId())
+        return userRepository.findById(currentUserService.getCurrentUserId())
                 .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND_BY_ID));
     }
 

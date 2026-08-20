@@ -35,8 +35,7 @@ class BrevoEmailClientTest {
                 .andExpect(content().string(containsString("\"subject\":\"Subject\"")))
                 .andExpect(content().string(containsString("\"htmlContent\":\"<p>Hello</p>\"")))
                 .andExpect(content().string(containsString("\"registration-otp\"")))
-                .andRespond(withStatus(HttpStatus.CREATED)
-                        .contentType(MediaType.APPLICATION_JSON)
+                .andRespond(withStatus(HttpStatus.CREATED).contentType(MediaType.APPLICATION_JSON)
                         .body("{\"messageId\":\"message-1\"}"));
 
         client.sendHtmlEmail(message());
@@ -51,12 +50,10 @@ class BrevoEmailClientTest {
         BrevoEmailClient client = new BrevoEmailClient(properties(), builder.build());
 
         server.expect(once(), requestTo("https://api.brevo.com/v3/smtp/email"))
-                .andRespond(withStatus(HttpStatus.UNAUTHORIZED)
-                        .contentType(MediaType.APPLICATION_JSON)
+                .andRespond(withStatus(HttpStatus.UNAUTHORIZED).contentType(MediaType.APPLICATION_JSON)
                         .body("{\"message\":\"invalid api key\"}"));
 
-        assertThatThrownBy(() -> client.sendHtmlEmail(message()))
-                .isInstanceOf(AppException.class)
+        assertThatThrownBy(() -> client.sendHtmlEmail(message())).isInstanceOf(AppException.class)
                 .satisfies(ex -> org.assertj.core.api.Assertions.assertThat(((AppException) ex).getErrorCode())
                         .isEqualTo(EmailErrorCode.EMAIL_SEND_FAILED));
 
@@ -71,8 +68,7 @@ class BrevoEmailClientTest {
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         BrevoEmailClient client = new BrevoEmailClient(properties, builder.build());
 
-        assertThatThrownBy(() -> client.sendHtmlEmail(message()))
-                .isInstanceOf(AppException.class)
+        assertThatThrownBy(() -> client.sendHtmlEmail(message())).isInstanceOf(AppException.class)
                 .satisfies(ex -> org.assertj.core.api.Assertions.assertThat(((AppException) ex).getErrorCode())
                         .isEqualTo(EmailErrorCode.EMAIL_SEND_FAILED));
 
@@ -88,13 +84,7 @@ class BrevoEmailClientTest {
     }
 
     private EmailMessage message() {
-        return new EmailMessage(
-                "alice@example.com",
-                "Alice",
-                "sender@example.com",
-                "Aivira Store",
-                "Subject",
-                "<p>Hello</p>",
-                "registration-otp");
+        return new EmailMessage("alice@example.com", "Alice", "sender@example.com", "Aivira Store", "Subject",
+                "<p>Hello</p>", "registration-otp");
     }
 }

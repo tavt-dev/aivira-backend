@@ -85,17 +85,9 @@ class OrderServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        orderService = new OrderServiceImpl(
-                orderRepository,
-                orderItemRepository,
-                refundRepository,
-                paymentGroupRepository,
-                paymentAttemptRepository,
-                productRepository,
-                currentUserService,
-                new CommerceMapper(),
-                new InventoryService(variationRepository),
-                new OrderSpecifications(),
+        orderService = new OrderServiceImpl(orderRepository, orderItemRepository, refundRepository,
+                paymentGroupRepository, paymentAttemptRepository, productRepository, currentUserService,
+                new CommerceMapper(), new InventoryService(variationRepository), new OrderSpecifications(),
                 discountService);
     }
 
@@ -105,8 +97,7 @@ class OrderServiceImplTest {
         when(currentUserService.getCurrentUserId()).thenReturn("user-1");
         when(orderRepository.findByUserId(eq("user-1"), any(PageRequest.class)))
                 .thenReturn(new PageImpl<>(List.of(order)));
-        when(orderItemRepository.findByOrderIdInOrderByOrderIdAscIdAsc(List.of(21L)))
-                .thenReturn(order.getItems());
+        when(orderItemRepository.findByOrderIdInOrderByOrderIdAscIdAsc(List.of(21L))).thenReturn(order.getItems());
 
         PageResponse<OrderSummaryResponse> response = orderService.getMyOrders(null, 1, 20);
 
@@ -115,27 +106,21 @@ class OrderServiceImplTest {
         assertThat(response.getData().getFirst().getItemCount()).isEqualTo(2);
         assertThat(response.getData().getFirst().getPreviewItem().getProductName()).isEqualTo("Dress");
         assertThat(response.getData().getFirst().getPreviewItem().getProductId()).isEqualTo(10L);
-        verify(orderRepository)
-                .findByUserId(
-                        eq("user-1"),
-                        argThat(pageable -> pageable.getPageNumber() == 0
-                                && pageable.getPageSize() == 20
-                                && pageable.getSort().getOrderFor("createdAt") != null));
+        verify(orderRepository).findByUserId(eq("user-1"), argThat(pageable -> pageable.getPageNumber() == 0
+                && pageable.getPageSize() == 20 && pageable.getSort().getOrderFor("createdAt") != null));
         verify(orderRepository, never()).findByUserIdAndOrderStatus(anyString(), any(), any());
     }
 
     @Test
     void getMyOrders_whenStatusProvided_shouldFilterByCurrentUserAndStatus() {
         when(currentUserService.getCurrentUserId()).thenReturn("user-1");
-        when(orderRepository.findByUserIdAndOrderStatus(
-                        eq("user-1"), eq(OrderStatus.CANCELLED), any(PageRequest.class)))
-                .thenReturn(new PageImpl<>(List.of()));
+        when(orderRepository.findByUserIdAndOrderStatus(eq("user-1"), eq(OrderStatus.CANCELLED),
+                any(PageRequest.class))).thenReturn(new PageImpl<>(List.of()));
 
         orderService.getMyOrders(OrderStatus.CANCELLED, 2, 10);
 
-        verify(orderRepository)
-                .findByUserIdAndOrderStatus(
-                        eq("user-1"), eq(OrderStatus.CANCELLED), argThat(pageable -> pageable.getPageNumber() == 1));
+        verify(orderRepository).findByUserIdAndOrderStatus(eq("user-1"), eq(OrderStatus.CANCELLED),
+                argThat(pageable -> pageable.getPageNumber() == 1));
         verify(orderRepository, never()).findByUserId(anyString(), any());
         verify(orderItemRepository, never()).findByOrderIdInOrderByOrderIdAscIdAsc(any());
     }
@@ -144,8 +129,7 @@ class OrderServiceImplTest {
     void getMyOrder_whenOwnedOrderExists_shouldReturnDetail() {
         Order order = order(paymentGroup(PaymentMethod.COD, PaymentStatus.PENDING), OrderStatus.PENDING_CONFIRMATION);
         when(currentUserService.getCurrentUserId()).thenReturn("user-1");
-        when(orderRepository.findWithItemsAndRefundByIdAndUserId(21L, "user-1"))
-                .thenReturn(Optional.of(order));
+        when(orderRepository.findWithItemsAndRefundByIdAndUserId(21L, "user-1")).thenReturn(Optional.of(order));
         when(orderRepository.findWithPaymentsByIdAndUserId(21L, "user-1")).thenReturn(Optional.of(order));
 
         var response = orderService.getMyOrder(21L);
@@ -160,12 +144,10 @@ class OrderServiceImplTest {
     @Test
     void getMyOrder_whenOrderDoesNotBelongToCurrentUser_shouldThrowNotFound() {
         when(currentUserService.getCurrentUserId()).thenReturn("user-1");
-        when(orderRepository.findWithItemsAndRefundByIdAndUserId(99L, "user-1"))
-                .thenReturn(Optional.empty());
+        when(orderRepository.findWithItemsAndRefundByIdAndUserId(99L, "user-1")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> orderService.getMyOrder(99L))
-                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
-                        .isEqualTo(OrderErrorCode.ORDER_NOT_FOUND));
+        assertThatThrownBy(() -> orderService.getMyOrder(99L)).isInstanceOfSatisfying(AppException.class,
+                ex -> assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.ORDER_NOT_FOUND));
         verify(orderRepository, never()).findWithPaymentsByIdAndUserId(anyLong(), anyString());
     }
 
@@ -175,22 +157,14 @@ class OrderServiceImplTest {
         when(orderRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(order)));
 
-        PageResponse<OrderSummaryResponse> response = orderService.getAdminOrders(
-                OrderStatus.PENDING_CONFIRMATION,
-                "ORD123",
-                Instant.parse("2026-01-01T00:00:00Z"),
-                Instant.parse("2026-12-31T23:59:59Z"),
-                1,
-                20);
+        PageResponse<OrderSummaryResponse> response = orderService.getAdminOrders(OrderStatus.PENDING_CONFIRMATION,
+                "ORD123", Instant.parse("2026-01-01T00:00:00Z"), Instant.parse("2026-12-31T23:59:59Z"), 1, 20);
 
         assertThat(response.getData()).hasSize(1);
         assertThat(response.getData().getFirst().getOrderCode()).isEqualTo("ORD123");
-        verify(orderRepository)
-                .findAll(
-                        any(Specification.class),
-                        ArgumentMatchers.<Pageable>argThat(pageable -> pageable.getPageNumber() == 0
-                                && pageable.getPageSize() == 20
-                                && pageable.getSort().getOrderFor("createdAt") != null));
+        verify(orderRepository).findAll(any(Specification.class),
+                ArgumentMatchers.<Pageable> argThat(pageable -> pageable.getPageNumber() == 0
+                        && pageable.getPageSize() == 20 && pageable.getSort().getOrderFor("createdAt") != null));
     }
 
     @Test
@@ -211,9 +185,8 @@ class OrderServiceImplTest {
     void getAdminOrder_whenMissing_shouldThrowNotFound() {
         when(orderRepository.findWithItemsAndRefundById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> orderService.getAdminOrder(99L))
-                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
-                        .isEqualTo(OrderErrorCode.ORDER_NOT_FOUND));
+        assertThatThrownBy(() -> orderService.getAdminOrder(99L)).isInstanceOfSatisfying(AppException.class,
+                ex -> assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.ORDER_NOT_FOUND));
         verify(orderRepository, never()).findWithPaymentsById(anyLong());
     }
 
@@ -230,8 +203,8 @@ class OrderServiceImplTest {
                 .thenReturn(Optional.empty());
         when(orderRepository.save(order)).thenReturn(order);
 
-        var response = orderService.cancelMyOrder(
-                21L, OrderCancelRequest.builder().reason("  wrong address  ").build());
+        var response = orderService.cancelMyOrder(21L,
+                OrderCancelRequest.builder().reason("  wrong address  ").build());
 
         assertThat(response.getOrderStatus()).isEqualTo(OrderStatus.CANCELLED);
         assertThat(response.getCancelReason()).isEqualTo("wrong address");
@@ -273,8 +246,7 @@ class OrderServiceImplTest {
         when(orderRepository.findByIdAndUserIdForUpdate(21L, "user-1")).thenReturn(Optional.of(order));
         when(orderRepository.countByPaymentsPaymentGroupId(group.getId())).thenReturn(2L);
 
-        assertThatThrownBy(() -> orderService.cancelMyOrder(
-                        21L, OrderCancelRequest.builder().build()))
+        assertThatThrownBy(() -> orderService.cancelMyOrder(21L, OrderCancelRequest.builder().build()))
                 .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
                         .isEqualTo(OrderErrorCode.ORDER_SHARED_PAYMENT_GROUP_CANCEL_NOT_SUPPORTED));
 
@@ -288,22 +260,15 @@ class OrderServiceImplTest {
         when(currentUserService.getCurrentUserId()).thenReturn("user-1");
         when(orderRepository.findByIdAndUserIdForUpdate(21L, "user-1")).thenReturn(Optional.of(order));
 
-        assertThatThrownBy(() -> orderService.cancelMyOrder(
-                        21L, OrderCancelRequest.builder().build()))
-                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
-                        .isEqualTo(OrderErrorCode.ORDER_CANCEL_REQUIRES_REFUND));
+        assertThatThrownBy(() -> orderService.cancelMyOrder(21L, OrderCancelRequest.builder().build()))
+                .isInstanceOfSatisfying(AppException.class,
+                        ex -> assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.ORDER_CANCEL_REQUIRES_REFUND));
     }
 
     @Test
     void cancelMyOrder_whenTerminalOrFulfillmentStatus_shouldRejectWithoutRestoringStock() {
-        List<OrderStatus> rejectedStatuses = List.of(
-                OrderStatus.CONFIRMED,
-                OrderStatus.PACKING,
-                OrderStatus.SHIPPING,
-                OrderStatus.COMPLETED,
-                OrderStatus.CANCELLED,
-                OrderStatus.PAYMENT_FAILED,
-                OrderStatus.EXPIRED,
+        List<OrderStatus> rejectedStatuses = List.of(OrderStatus.CONFIRMED, OrderStatus.PACKING, OrderStatus.SHIPPING,
+                OrderStatus.COMPLETED, OrderStatus.CANCELLED, OrderStatus.PAYMENT_FAILED, OrderStatus.EXPIRED,
                 OrderStatus.REFUNDED);
 
         for (OrderStatus status : rejectedStatuses) {
@@ -312,11 +277,9 @@ class OrderServiceImplTest {
             when(currentUserService.getCurrentUserId()).thenReturn("user-1");
             when(orderRepository.findByIdAndUserIdForUpdate(21L, "user-1")).thenReturn(Optional.of(order));
 
-            assertThatThrownBy(() -> orderService.cancelMyOrder(
-                            21L, OrderCancelRequest.builder().build()))
-                    .as("status %s", status)
-                    .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
-                            .isEqualTo(OrderErrorCode.ORDER_CANCEL_NOT_ALLOWED));
+            assertThatThrownBy(() -> orderService.cancelMyOrder(21L, OrderCancelRequest.builder().build()))
+                    .as("status %s", status).isInstanceOfSatisfying(AppException.class,
+                            ex -> assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.ORDER_CANCEL_NOT_ALLOWED));
 
             verify(variationRepository, never()).findAllByIdInForUpdate(anyCollection());
             assertThat(order.getOrderStatus()).isEqualTo(status);
@@ -359,9 +322,8 @@ class OrderServiceImplTest {
         Order order = order(paymentGroup(PaymentMethod.COD, PaymentStatus.PENDING), OrderStatus.PACKING);
         when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
 
-        assertThatThrownBy(() -> orderService.markCompleted(21L))
-                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
-                        .isEqualTo(OrderErrorCode.ORDER_INVALID_STATUS_TRANSITION));
+        assertThatThrownBy(() -> orderService.markCompleted(21L)).isInstanceOfSatisfying(AppException.class,
+                ex -> assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.ORDER_INVALID_STATUS_TRANSITION));
 
         verify(orderRepository, never()).save(any());
     }
@@ -374,8 +336,8 @@ class OrderServiceImplTest {
         when(variationRepository.findAllByIdInForUpdate(anyCollection())).thenReturn(List.of(variation));
         when(orderRepository.save(order)).thenReturn(order);
 
-        var response = orderService.cancelAdminOrder(
-                21L, OrderCancelRequest.builder().reason("  out of stock  ").build());
+        var response = orderService.cancelAdminOrder(21L,
+                OrderCancelRequest.builder().reason("  out of stock  ").build());
 
         assertThat(response.getOrderStatus()).isEqualTo(OrderStatus.CANCELLED);
         assertThat(response.getCancelReason()).isEqualTo("out of stock");
@@ -407,10 +369,9 @@ class OrderServiceImplTest {
         Order order = order(paymentGroup(PaymentMethod.VNPAY, PaymentStatus.SUCCESS), OrderStatus.PAID);
         when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
 
-        assertThatThrownBy(() -> orderService.cancelAdminOrder(
-                        21L, OrderCancelRequest.builder().build()))
-                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
-                        .isEqualTo(OrderErrorCode.ORDER_CANCEL_REQUIRES_REFUND));
+        assertThatThrownBy(() -> orderService.cancelAdminOrder(21L, OrderCancelRequest.builder().build()))
+                .isInstanceOfSatisfying(AppException.class,
+                        ex -> assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.ORDER_CANCEL_REQUIRES_REFUND));
 
         verify(variationRepository, never()).findAllByIdInForUpdate(anyCollection());
     }
@@ -422,11 +383,9 @@ class OrderServiceImplTest {
             Order order = order(paymentGroup(PaymentMethod.COD, PaymentStatus.PENDING), status);
             when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
 
-            assertThatThrownBy(() -> orderService.cancelAdminOrder(
-                            21L, OrderCancelRequest.builder().build()))
-                    .as("status %s", status)
-                    .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
-                            .isEqualTo(OrderErrorCode.ORDER_CANCEL_NOT_ALLOWED));
+            assertThatThrownBy(() -> orderService.cancelAdminOrder(21L, OrderCancelRequest.builder().build()))
+                    .as("status %s", status).isInstanceOfSatisfying(AppException.class,
+                            ex -> assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.ORDER_CANCEL_NOT_ALLOWED));
 
             verify(variationRepository, never()).findAllByIdInForUpdate(anyCollection());
             assertThat(order.getOrderStatus()).isEqualTo(status);
@@ -495,9 +454,9 @@ class OrderServiceImplTest {
         Order order = order(paymentGroup(PaymentMethod.COD, PaymentStatus.PENDING), OrderStatus.PENDING_CONFIRMATION);
         when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
 
-        assertThatThrownBy(() -> orderService.markRefunded(21L, refundRequest("100.00")))
-                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
-                        .isEqualTo(OrderErrorCode.ORDER_REFUND_NOT_ALLOWED));
+        assertThatThrownBy(() -> orderService.markRefunded(21L, refundRequest("100.00"))).isInstanceOfSatisfying(
+                AppException.class,
+                ex -> assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.ORDER_REFUND_NOT_ALLOWED));
 
         verify(refundRepository, never()).save(any());
         verify(variationRepository, never()).findAllByIdInForUpdate(anyCollection());
@@ -510,10 +469,9 @@ class OrderServiceImplTest {
             Order order = order(paymentGroup(PaymentMethod.VNPAY, PaymentStatus.SUCCESS), status);
             when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
 
-            assertThatThrownBy(() -> orderService.markRefunded(21L, refundRequest("100.00")))
-                    .as("status %s", status)
-                    .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
-                            .isEqualTo(OrderErrorCode.ORDER_REFUND_NOT_ALLOWED));
+            assertThatThrownBy(() -> orderService.markRefunded(21L, refundRequest("100.00"))).as("status %s", status)
+                    .isInstanceOfSatisfying(AppException.class,
+                            ex -> assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.ORDER_REFUND_NOT_ALLOWED));
 
             verify(refundRepository, never()).save(any());
             verify(variationRepository, never()).findAllByIdInForUpdate(anyCollection());
@@ -525,9 +483,9 @@ class OrderServiceImplTest {
         Order order = order(paymentGroup(PaymentMethod.VNPAY, PaymentStatus.REFUNDED), OrderStatus.REFUNDED);
         when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
 
-        assertThatThrownBy(() -> orderService.markRefunded(21L, refundRequest("100.00")))
-                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
-                        .isEqualTo(OrderErrorCode.ORDER_REFUND_ALREADY_PROCESSED));
+        assertThatThrownBy(() -> orderService.markRefunded(21L, refundRequest("100.00"))).isInstanceOfSatisfying(
+                AppException.class,
+                ex -> assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.ORDER_REFUND_ALREADY_PROCESSED));
 
         verify(refundRepository, never()).save(any());
     }
@@ -538,9 +496,9 @@ class OrderServiceImplTest {
         when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
         when(refundRepository.existsByOrder_Id(21L)).thenReturn(true);
 
-        assertThatThrownBy(() -> orderService.markRefunded(21L, refundRequest("100.00")))
-                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
-                        .isEqualTo(OrderErrorCode.ORDER_REFUND_ALREADY_PROCESSED));
+        assertThatThrownBy(() -> orderService.markRefunded(21L, refundRequest("100.00"))).isInstanceOfSatisfying(
+                AppException.class,
+                ex -> assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.ORDER_REFUND_ALREADY_PROCESSED));
 
         verify(refundRepository, never()).save(any());
     }
@@ -550,75 +508,44 @@ class OrderServiceImplTest {
         Order order = order(paymentGroup(PaymentMethod.VNPAY, PaymentStatus.SUCCESS), OrderStatus.PAID);
         when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
 
-        assertThatThrownBy(() -> orderService.markRefunded(21L, refundRequest("99.99")))
-                .isInstanceOfSatisfying(AppException.class, ex -> assertThat(ex.getErrorCode())
-                        .isEqualTo(OrderErrorCode.ORDER_REFUND_AMOUNT_INVALID));
+        assertThatThrownBy(() -> orderService.markRefunded(21L, refundRequest("99.99"))).isInstanceOfSatisfying(
+                AppException.class,
+                ex -> assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.ORDER_REFUND_AMOUNT_INVALID));
 
         verify(refundRepository, never()).save(any());
         verify(variationRepository, never()).findAllByIdInForUpdate(anyCollection());
     }
 
     private PaymentGroup paymentGroup(PaymentMethod method, PaymentStatus status) {
-        PaymentGroup group = PaymentGroup.builder()
-                .paymentCode("PAY123")
-                .user(user())
-                .method(method)
-                .status(status)
-                .amount(new BigDecimal("100.00"))
-                .build();
+        PaymentGroup group = PaymentGroup.builder().paymentCode("PAY123").user(user()).method(method).status(status)
+                .amount(new BigDecimal("100.00")).build();
         group.setId(1L);
         return group;
     }
 
     private PaymentAttempt attempt(PaymentGroup group, PaymentStatus status) {
-        PaymentAttempt attempt = PaymentAttempt.builder()
-                .paymentGroup(group)
-                .provider(PaymentProvider.valueOf(group.getMethod().name()))
-                .method(group.getMethod())
-                .attemptNo(1)
-                .providerTxnRef("PAY123-A1")
-                .status(status)
-                .amount(group.getAmount())
-                .build();
+        PaymentAttempt attempt = PaymentAttempt.builder().paymentGroup(group)
+                .provider(PaymentProvider.valueOf(group.getMethod().name())).method(group.getMethod()).attemptNo(1)
+                .providerTxnRef("PAY123-A1").status(status).amount(group.getAmount()).build();
         attempt.setId(11L);
         return attempt;
     }
 
     private Order order(PaymentGroup group, OrderStatus status) {
-        Order order = Order.builder()
-                .orderCode("ORD123")
-                .user(group.getUser())
-                .subtotal(new BigDecimal("100.00"))
-                .totalAmount(new BigDecimal("100.00"))
-                .orderStatus(status)
-                .shippingRecipientName("Buyer")
-                .shippingPhoneNumber("0900000000")
-                .shippingAddressLine("123 Street")
-                .build();
+        Order order = Order.builder().orderCode("ORD123").user(group.getUser()).subtotal(new BigDecimal("100.00"))
+                .totalAmount(new BigDecimal("100.00")).orderStatus(status).shippingRecipientName("Buyer")
+                .shippingPhoneNumber("0900000000").shippingAddressLine("123 Street").build();
         order.setId(21L);
         order.setCreatedAt(Instant.now());
         order.setUpdatedAt(Instant.now());
-        Payment payment = Payment.builder()
-                .order(order)
-                .paymentGroup(group)
-                .method(group.getMethod())
-                .status(group.getStatus())
-                .amount(group.getAmount())
-                .build();
+        Payment payment = Payment.builder().order(order).paymentGroup(group).method(group.getMethod())
+                .status(group.getStatus()).amount(group.getAmount()).build();
         payment.setId(31L);
         order.getPayments().add(payment);
         group.getPayments().add(payment);
-        OrderItem item = OrderItem.builder()
-                        .order(order)
-                        .productId(10L)
-                        .productVariationId(41L)
-                        .productName("Dress")
-                        .sku("DRESS-001")
-                        .basePrice(new BigDecimal("50.00"))
-                        .additionalPrice(BigDecimal.ZERO)
-                        .finalPrice(new BigDecimal("50.00"))
-                        .quantity(2)
-                        .build();
+        OrderItem item = OrderItem.builder().order(order).productId(10L).productVariationId(41L).productName("Dress")
+                .sku("DRESS-001").basePrice(new BigDecimal("50.00")).additionalPrice(BigDecimal.ZERO)
+                .finalPrice(new BigDecimal("50.00")).quantity(2).build();
         item.setId(51L);
         order.getItems().add(item);
         return order;
@@ -626,8 +553,7 @@ class OrderServiceImplTest {
 
     private ProductVariation variation(int stock) {
         Product product = Product.builder().stockQuantity(stock).build();
-        ProductVariation variation =
-                ProductVariation.builder().product(product).stockQuantity(stock).build();
+        ProductVariation variation = ProductVariation.builder().product(product).stockQuantity(stock).build();
         variation.setId(41L);
         return variation;
     }
@@ -637,11 +563,8 @@ class OrderServiceImplTest {
     }
 
     private ManualRefundRequest refundRequest(String amount) {
-        return ManualRefundRequest.builder()
-                .amount(new BigDecimal(amount))
-                .reason("  Customer refund  ")
-                .note("  Manual bank transfer completed  ")
-                .build();
+        return ManualRefundRequest.builder().amount(new BigDecimal(amount)).reason("  Customer refund  ")
+                .note("  Manual bank transfer completed  ").build();
     }
 
     private void assertTransition(OrderStatus source, OrderStatus target, java.util.function.Supplier<?> action) {

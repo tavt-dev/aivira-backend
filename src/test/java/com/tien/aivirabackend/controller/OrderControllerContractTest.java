@@ -35,8 +35,7 @@ class OrderControllerContractTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(new OrderController(orderService))
-                .setControllerAdvice(new GlobalExceptionHandler())
-                .build();
+                .setControllerAdvice(new GlobalExceptionHandler()).build();
     }
 
     @Test
@@ -70,10 +69,8 @@ class OrderControllerContractTest {
     void endpoints_shouldDelegateToOrderService() throws Exception {
         mockMvc.perform(get("/orders").param("page", "1").param("size", "20")).andExpect(status().isOk());
         mockMvc.perform(get("/orders/21")).andExpect(status().isOk());
-        mockMvc.perform(post("/orders/21/cancel")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"reason\":\"wrong address\"}"))
-                .andExpect(status().isOk());
+        mockMvc.perform(post("/orders/21/cancel").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"reason\":\"wrong address\"}")).andExpect(status().isOk());
 
         verify(orderService).getMyOrders(null, 1, 20);
         verify(orderService).getMyOrder(21L);
@@ -84,12 +81,9 @@ class OrderControllerContractTest {
     void cancelMyOrder_whenReasonTooLong_shouldReturnValidationError() throws Exception {
         String reason = "a".repeat(501);
 
-        mockMvc.perform(post("/orders/21/cancel")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"reason\":\"" + reason + "\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.errorCode").value("E1100"))
+        mockMvc.perform(post("/orders/21/cancel").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"reason\":\"" + reason + "\"}")).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false)).andExpect(jsonPath("$.errorCode").value("E1100"))
                 .andExpect(jsonPath("$.data.reason").exists());
     }
 }

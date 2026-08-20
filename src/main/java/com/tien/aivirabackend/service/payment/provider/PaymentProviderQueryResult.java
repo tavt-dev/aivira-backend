@@ -4,11 +4,6 @@ import java.math.BigDecimal;
 
 import com.tien.aivirabackend.constant.PaymentStatus;
 
-public record PaymentProviderQueryResult(
-        String providerTxnRef,
-        String requestId,
-        String transactionId,
-        BigDecimal amount,
-        PaymentStatus status,
-        String message,
-        String rawResponse) {}
+public record PaymentProviderQueryResult(String providerTxnRef, String requestId, String transactionId,
+        BigDecimal amount, PaymentStatus status, String message, String rawResponse) {
+}

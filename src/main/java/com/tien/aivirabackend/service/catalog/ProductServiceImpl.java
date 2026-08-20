@@ -68,23 +68,13 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<ProductResponse> getPublicProducts(
-            String keyword,
-            String categorySlug,
-            String brand,
-            String author,
-            String publisher,
-            String isbn,
-            BigDecimal minPrice,
-            BigDecimal maxPrice,
-            Boolean available,
-            String sort,
-            int page,
-            int size) {
+    public PageResponse<ProductResponse> getPublicProducts(String keyword, String categorySlug, String brand,
+            String author, String publisher, String isbn, BigDecimal minPrice, BigDecimal maxPrice, Boolean available,
+            String sort, int page, int size) {
         var productPage = productRepository
                 .findAll(
-                        productSpecifications.publicProducts(
-                                keyword, categorySlug, brand, author, publisher, isbn, minPrice, maxPrice, available),
+                        productSpecifications.publicProducts(keyword, categorySlug, brand, author, publisher, isbn,
+                                minPrice, maxPrice, available),
                         PageRequestUtils.of(page, size, resolvePublicSort(sort)))
                 .map(productMapper::toResponse);
         return PageResponse.from(productPage);
@@ -93,22 +83,17 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public ProductResponse getPublicProduct(String slug) {
-        Product product = productRepository
-                .findDetailedBySlug(slug)
-                .filter(productStatusPolicy::isPubliclyVisible)
+        Product product = productRepository.findDetailedBySlug(slug).filter(productStatusPolicy::isPubliclyVisible)
                 .orElseThrow(() -> new AppException(ProductErrorCode.PRODUCT_NOT_FOUND));
         return productMapper.toResponse(product);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<ProductResponse> getAdminProducts(
-            ProductStatus status, Long categoryId, String keyword, int page, int size) {
-        var productPage = productRepository
-                .findAll(
-                        productSpecifications.adminProducts(status, categoryId, keyword),
-                        PageRequestUtils.newestFirst(page, size))
-                .map(productMapper::toResponse);
+    public PageResponse<ProductResponse> getAdminProducts(ProductStatus status, Long categoryId, String keyword,
+            int page, int size) {
+        var productPage = productRepository.findAll(productSpecifications.adminProducts(status, categoryId, keyword),
+                PageRequestUtils.newestFirst(page, size)).map(productMapper::toResponse);
         return PageResponse.from(productPage);
     }
 
@@ -131,32 +116,16 @@ public class ProductServiceImpl implements ProductService {
         validatePublicationYear(request.getPublicationYear());
         validatePageCount(request.getPageCount());
 
-        Product product = Product.builder()
-                .category(category)
-                .sku(request.getSku().trim())
-                .productName(request.getProductName().trim())
-                .slug(slug)
-                .description(request.getDescription().trim())
-                .brand(trimToNull(request.getBrand()))
-                .material(trimToNull(request.getMaterial()))
-                .bookAuthor(request.getBookAuthor().trim())
-                .isbn(isbn)
-                .publisher(trimToNull(request.getPublisher()))
-                .publicationYear(request.getPublicationYear())
-                .bookLanguage(trimToNull(request.getBookLanguage()))
-                .pageCount(request.getPageCount())
-                .bookFormat(resolveBookFormat(request.getBookFormat()))
-                .dimensions(trimToNull(request.getDimensions()))
-                .price(request.getPrice())
-                .originalPrice(request.getOriginalPrice())
-                .discountPercentage(request.getDiscountPercentage())
-                .weight(request.getWeight())
-                .active(true)
-                .featured(false)
-                .status(ProductStatus.ACTIVE)
-                .approvedBy(getCurrentUserId())
-                .approvedAt(Instant.now())
-                .build();
+        Product product = Product.builder().category(category).sku(request.getSku().trim())
+                .productName(request.getProductName().trim()).slug(slug).description(request.getDescription().trim())
+                .brand(trimToNull(request.getBrand())).material(trimToNull(request.getMaterial()))
+                .bookAuthor(request.getBookAuthor().trim()).isbn(isbn).publisher(trimToNull(request.getPublisher()))
+                .publicationYear(request.getPublicationYear()).bookLanguage(trimToNull(request.getBookLanguage()))
+                .pageCount(request.getPageCount()).bookFormat(resolveBookFormat(request.getBookFormat()))
+                .dimensions(trimToNull(request.getDimensions())).price(request.getPrice())
+                .originalPrice(request.getOriginalPrice()).discountPercentage(request.getDiscountPercentage())
+                .weight(request.getWeight()).active(true).featured(false).status(ProductStatus.ACTIVE)
+                .approvedBy(getCurrentUserId()).approvedAt(Instant.now()).build();
 
         for (ProductVariationRequest variationRequest : request.getVariations()) {
             validateVariationSku(variationRequest.getSku(), null);
@@ -259,28 +228,19 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public ProductResponse uploadProductMedia(
-            Long productId, MultipartFile mediaFile, String altText, Integer sortOrder, Boolean primary) {
+    public ProductResponse uploadProductMedia(Long productId, MultipartFile mediaFile, String altText,
+            Integer sortOrder, Boolean primary) {
         Product product = findDetailedProduct(productId);
 
         fileValidatorService.validateFile(mediaFile, MediaType.IMAGE);
-        CloudinaryUploadResult uploadResult = cloudinaryStorageService.uploadImage(
-                mediaFile,
-                cloudinaryProperties.getProductMediaFolder() + "/" + product.getId(),
-                "product-" + product.getId(),
-                PRODUCT_MEDIA_WIDTH,
-                PRODUCT_MEDIA_HEIGHT);
+        CloudinaryUploadResult uploadResult = cloudinaryStorageService.uploadImage(mediaFile,
+                cloudinaryProperties.getProductMediaFolder() + "/" + product.getId(), "product-" + product.getId(),
+                PRODUCT_MEDIA_WIDTH, PRODUCT_MEDIA_HEIGHT);
 
-        ProductMedia media = ProductMedia.builder()
-                .product(product)
-                .mediaUrl(uploadResult.secureUrl())
-                .mediaPublicId(uploadResult.publicId())
-                .mediaType(MediaType.IMAGE)
-                .altText(trimToNull(altText))
+        ProductMedia media = ProductMedia.builder().product(product).mediaUrl(uploadResult.secureUrl())
+                .mediaPublicId(uploadResult.publicId()).mediaType(MediaType.IMAGE).altText(trimToNull(altText))
                 .sortOrder(sortOrder == null ? nextMediaSortOrder(product) : sortOrder)
-                .primary(Boolean.TRUE.equals(primary))
-                .active(true)
-                .build();
+                .primary(Boolean.TRUE.equals(primary)).active(true).build();
         if (Boolean.TRUE.equals(media.getPrimary())) {
             unsetPrimaryMedia(product);
             product.setThumbnailUrl(media.getMediaUrl());
@@ -382,14 +342,12 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private Product findDetailedProduct(Long productId) {
-        return productRepository
-                .findDetailedById(productId)
+        return productRepository.findDetailedById(productId)
                 .orElseThrow(() -> new AppException(ProductErrorCode.PRODUCT_NOT_FOUND));
     }
 
     private Category findVisibleCategory(Long categoryId) {
-        Category category = categoryRepository
-                .findById(categoryId)
+        Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new AppException(CategoryErrorCode.CATEGORY_NOT_FOUND));
         if (!Boolean.TRUE.equals(category.getActive()) || !Boolean.TRUE.equals(category.getVisible())) {
             throw new AppException(CategoryErrorCode.CATEGORY_NOT_FOUND);
@@ -398,14 +356,12 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private ProductVariation findProductVariation(Long productId, Long variationId) {
-        return variationRepository
-                .findByIdAndProductId(variationId, productId)
+        return variationRepository.findByIdAndProductId(variationId, productId)
                 .orElseThrow(() -> new AppException(ProductErrorCode.PRODUCT_VARIATION_NOT_FOUND));
     }
 
     private ProductMedia findProductMedia(Long productId, Long mediaId) {
-        return mediaRepository
-                .findByIdAndProductId(mediaId, productId)
+        return mediaRepository.findByIdAndProductId(mediaId, productId)
                 .orElseThrow(() -> new AppException(ProductErrorCode.PRODUCT_MEDIA_NOT_FOUND));
     }
 
@@ -429,8 +385,7 @@ public class ProductServiceImpl implements ProductService {
 
     private void validateProductSku(String sku, Long productId) {
         String trimmed = sku.trim();
-        boolean exists = productId == null
-                ? productRepository.existsBySku(trimmed)
+        boolean exists = productId == null ? productRepository.existsBySku(trimmed)
                 : productRepository.existsBySkuAndIdNot(trimmed, productId);
         if (exists) {
             throw new AppException(ProductErrorCode.PRODUCT_SKU_ALREADY_EXISTS);
@@ -438,8 +393,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private void validateProductSlug(String slug, Long productId) {
-        boolean exists = productId == null
-                ? productRepository.existsBySlug(slug)
+        boolean exists = productId == null ? productRepository.existsBySlug(slug)
                 : productRepository.existsBySlugAndIdNot(slug, productId);
         if (exists) {
             throw new AppException(ProductErrorCode.PRODUCT_SLUG_ALREADY_EXISTS);
@@ -448,8 +402,7 @@ public class ProductServiceImpl implements ProductService {
 
     private void validateVariationSku(String sku, Long variationId) {
         String trimmed = sku.trim();
-        boolean exists = variationId == null
-                ? variationRepository.existsBySku(trimmed)
+        boolean exists = variationId == null ? variationRepository.existsBySku(trimmed)
                 : variationRepository.existsBySkuAndIdNot(trimmed, variationId);
         if (exists) {
             throw new AppException(ProductErrorCode.PRODUCT_VARIATION_SKU_ALREADY_EXISTS);
@@ -466,8 +419,7 @@ public class ProductServiceImpl implements ProductService {
         if (!StringUtils.hasText(isbn)) {
             return;
         }
-        boolean exists = productId == null
-                ? productRepository.existsByIsbn(isbn)
+        boolean exists = productId == null ? productRepository.existsByIsbn(isbn)
                 : productRepository.existsByIsbnAndIdNot(isbn, productId);
         if (exists) {
             throw new AppException(ProductErrorCode.PRODUCT_ISBN_ALREADY_EXISTS);
@@ -500,11 +452,8 @@ public class ProductServiceImpl implements ProductService {
 
     private void recalculateStock(Product product) {
         int totalStock = product.getProductVariations().stream()
-                .filter(variation -> Boolean.TRUE.equals(variation.getActive()))
-                .map(ProductVariation::getStockQuantity)
-                .filter(stock -> stock != null)
-                .mapToInt(Integer::intValue)
-                .sum();
+                .filter(variation -> Boolean.TRUE.equals(variation.getActive())).map(ProductVariation::getStockQuantity)
+                .filter(stock -> stock != null).mapToInt(Integer::intValue).sum();
         product.setStockQuantity(totalStock);
     }
 
@@ -513,13 +462,8 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private int nextMediaSortOrder(Product product) {
-        return product.getProductMedia().stream()
-                        .map(ProductMedia::getSortOrder)
-                        .filter(sortOrder -> sortOrder != null)
-                        .mapToInt(Integer::intValue)
-                        .max()
-                        .orElse(-1)
-                + 1;
+        return product.getProductMedia().stream().map(ProductMedia::getSortOrder).filter(sortOrder -> sortOrder != null)
+                .mapToInt(Integer::intValue).max().orElse(-1) + 1;
     }
 
     private Sort resolvePublicSort(String sort) {
@@ -527,12 +471,12 @@ public class ProductServiceImpl implements ProductService {
             return Sort.by(Sort.Direction.DESC, "createdAt");
         }
         return switch (sort.trim().toLowerCase(Locale.ROOT)) {
-            case "price_asc" -> Sort.by(Sort.Direction.ASC, "price");
-            case "price_desc" -> Sort.by(Sort.Direction.DESC, "price");
-            case "best_selling" -> Sort.by(Sort.Direction.DESC, "soldCount");
-            case "name_asc" -> Sort.by(Sort.Direction.ASC, "productName");
-            case "newest" -> Sort.by(Sort.Direction.DESC, "createdAt");
-            default -> Sort.by(Sort.Direction.DESC, "createdAt");
+        case "price_asc" -> Sort.by(Sort.Direction.ASC, "price");
+        case "price_desc" -> Sort.by(Sort.Direction.DESC, "price");
+        case "best_selling" -> Sort.by(Sort.Direction.DESC, "soldCount");
+        case "name_asc" -> Sort.by(Sort.Direction.ASC, "productName");
+        case "newest" -> Sort.by(Sort.Direction.DESC, "createdAt");
+        default -> Sort.by(Sort.Direction.DESC, "createdAt");
         };
     }
 

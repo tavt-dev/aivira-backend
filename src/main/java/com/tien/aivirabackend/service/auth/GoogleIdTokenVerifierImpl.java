@@ -38,12 +38,8 @@ public class GoogleIdTokenVerifierImpl implements GoogleIdTokenVerifier {
             if (!StringUtils.hasText(subject) || !StringUtils.hasText(email)) {
                 throw new AppException(GoogleOAuthErrorCode.GOOGLE_OAUTH_ID_TOKEN_INVALID);
             }
-            return new GoogleUserInfo(
-                    subject,
-                    email,
-                    Boolean.TRUE.equals(emailVerified),
-                    jwt.getClaimAsString("given_name"),
-                    jwt.getClaimAsString("family_name"),
+            return new GoogleUserInfo(subject, email, Boolean.TRUE.equals(emailVerified),
+                    jwt.getClaimAsString("given_name"), jwt.getClaimAsString("family_name"),
                     jwt.getClaimAsString("picture"));
         } catch (AppException e) {
             throw e;
@@ -54,8 +50,7 @@ public class GoogleIdTokenVerifierImpl implements GoogleIdTokenVerifier {
 
     private JwtDecoder decoder() {
         if (jwtDecoder == null) {
-            jwtDecoder = NimbusJwtDecoder.withIssuerLocation(properties.getIssuerUri())
-                    .build();
+            jwtDecoder = NimbusJwtDecoder.withIssuerLocation(properties.getIssuerUri()).build();
         }
         return jwtDecoder;
     }

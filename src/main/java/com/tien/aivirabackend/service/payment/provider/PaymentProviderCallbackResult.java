@@ -5,11 +5,6 @@ import java.util.Map;
 
 import com.tien.aivirabackend.constant.PaymentStatus;
 
-public record PaymentProviderCallbackResult(
-        String providerTxnRef,
-        String requestId,
-        String transactionId,
-        BigDecimal amount,
-        PaymentStatus status,
-        String eventKey,
-        Map<String, ?> rawPayload) {}
+public record PaymentProviderCallbackResult(String providerTxnRef, String requestId, String transactionId,
+        BigDecimal amount, PaymentStatus status, String eventKey, Map<String, ?> rawPayload) {
+}

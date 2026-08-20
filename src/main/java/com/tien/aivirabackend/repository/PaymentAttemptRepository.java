@@ -28,10 +28,9 @@ public interface PaymentAttemptRepository extends JpaRepository<PaymentAttempt, 
     Optional<PaymentAttempt> findByIdForUpdate(@Param("id") Long id);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query(
-            "select a from PaymentAttempt a join fetch a.paymentGroup g where a.provider = :provider and a.providerTxnRef = :providerTxnRef")
-    Optional<PaymentAttempt> findByProviderAndProviderTxnRefForUpdate(
-            @Param("provider") PaymentProvider provider, @Param("providerTxnRef") String providerTxnRef);
+    @Query("select a from PaymentAttempt a join fetch a.paymentGroup g where a.provider = :provider and a.providerTxnRef = :providerTxnRef")
+    Optional<PaymentAttempt> findByProviderAndProviderTxnRefForUpdate(@Param("provider") PaymentProvider provider,
+            @Param("providerTxnRef") String providerTxnRef);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select a from PaymentAttempt a join fetch a.paymentGroup g where a.requestId = :requestId")

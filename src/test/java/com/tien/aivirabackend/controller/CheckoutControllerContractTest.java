@@ -36,14 +36,13 @@ class CheckoutControllerContractTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(new CheckoutController(checkoutService, new RequestMetadataService()))
-                .setControllerAdvice(new GlobalExceptionHandler())
-                .build();
+                .setControllerAdvice(new GlobalExceptionHandler()).build();
     }
 
     @Test
     void previewAndCheckout_shouldRequireCheckoutCreateSelfPermission() throws Exception {
-        assertPreAuthorize(
-                CheckoutController.class.getMethod("preview", CheckoutRequest.class), "CHECKOUT_CREATE_SELF");
+        assertPreAuthorize(CheckoutController.class.getMethod("preview", CheckoutRequest.class),
+                "CHECKOUT_CREATE_SELF");
         assertPreAuthorize(
                 CheckoutController.class.getMethod("checkout", CheckoutRequest.class, HttpServletRequest.class),
                 "CHECKOUT_CREATE_SELF");
@@ -51,9 +50,7 @@ class CheckoutControllerContractTest {
 
     @Test
     void preview_shouldAcceptCouponCodeAndDelegateToService() throws Exception {
-        mockMvc.perform(post("/checkout/preview")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(validCheckoutJson()))
+        mockMvc.perform(post("/checkout/preview").contentType(MediaType.APPLICATION_JSON).content(validCheckoutJson()))
                 .andExpect(status().isOk());
 
         verify(checkoutService).preview(argThat(request -> "SAVE10".equals(request.getCouponCode())));
@@ -61,25 +58,23 @@ class CheckoutControllerContractTest {
 
     @Test
     void checkout_shouldAcceptCouponCodeAndDelegateToService() throws Exception {
-        mockMvc.perform(post("/checkout")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(validCheckoutJson()))
+        mockMvc.perform(post("/checkout").contentType(MediaType.APPLICATION_JSON).content(validCheckoutJson()))
                 .andExpect(status().isOk());
 
-        verify(checkoutService)
-                .checkout(argThat(request -> "SAVE10".equals(request.getCouponCode())), any(RequestMetadata.class));
+        verify(checkoutService).checkout(argThat(request -> "SAVE10".equals(request.getCouponCode())),
+                any(RequestMetadata.class));
     }
 
     private String validCheckoutJson() {
         return """
-				{
-				"addressId":1,
-				"cartItemIds":[10,11],
-				"paymentMethod":"COD",
-				"couponCode":"SAVE10",
-				"notes":"deliver after 6pm"
-				}
-				""";
+                {
+                "addressId":1,
+                "cartItemIds":[10,11],
+                "paymentMethod":"COD",
+                "couponCode":"SAVE10",
+                "notes":"deliver after 6pm"
+                }
+                """;
     }
 
     private void assertPreAuthorize(Method method, String permission) {

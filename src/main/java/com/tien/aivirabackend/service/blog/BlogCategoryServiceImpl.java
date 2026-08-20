@@ -26,15 +26,13 @@ public class BlogCategoryServiceImpl implements BlogCategoryService {
     @Transactional(readOnly = true)
     public java.util.List<BlogCategoryResponse> getPublicCategories() {
         return categoryRepository.findByActiveTrueOrderByDisplayOrderAscNameAsc().stream()
-                .map(blogMapper::toCategoryResponse)
-                .toList();
+                .map(blogMapper::toCategoryResponse).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public java.util.List<BlogCategoryResponse> getAdminCategories() {
-        return categoryRepository.findAllByOrderByDisplayOrderAscNameAsc().stream()
-                .map(blogMapper::toCategoryResponse)
+        return categoryRepository.findAllByOrderByDisplayOrderAscNameAsc().stream().map(blogMapper::toCategoryResponse)
                 .toList();
     }
 
@@ -45,13 +43,10 @@ public class BlogCategoryServiceImpl implements BlogCategoryService {
         if (categoryRepository.existsBySlug(slug)) {
             throw new AppException(BlogErrorCode.BLOG_SLUG_ALREADY_EXISTS);
         }
-        BlogCategory category = BlogCategory.builder()
-                .name(request.getName().trim())
-                .slug(slug)
+        BlogCategory category = BlogCategory.builder().name(request.getName().trim()).slug(slug)
                 .description(request.getDescription())
                 .displayOrder(request.getDisplayOrder() == null ? 0 : request.getDisplayOrder())
-                .active(request.getActive() == null || request.getActive())
-                .build();
+                .active(request.getActive() == null || request.getActive()).build();
         return blogMapper.toCategoryResponse(categoryRepository.save(category));
     }
 
@@ -82,8 +77,7 @@ public class BlogCategoryServiceImpl implements BlogCategoryService {
     }
 
     private BlogCategory findCategory(Long id) {
-        return categoryRepository
-                .findById(id)
+        return categoryRepository.findById(id)
                 .orElseThrow(() -> new AppException(BlogErrorCode.BLOG_CATEGORY_NOT_FOUND));
     }
 }

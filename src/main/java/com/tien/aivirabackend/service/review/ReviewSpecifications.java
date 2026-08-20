@@ -11,19 +11,14 @@ import com.tien.aivirabackend.domain.entity.review.Review;
 @Component
 public class ReviewSpecifications {
     public Specification<Review> publicReviews(String productSlug, Integer rating) {
-        return Specification.allOf(
-                productSlug(productSlug), rating(rating), approved(true), visible(true), notDeleted());
+        return Specification.allOf(productSlug(productSlug), rating(rating), approved(true), visible(true),
+                notDeleted());
     }
 
-    public Specification<Review> adminReviews(
-            Boolean approved, Boolean visible, Integer rating, String keyword, Long productId, String userId) {
-        return Specification.allOf(
-                approved(approved),
-                visible(visible),
-                rating(rating),
-                productId(productId),
-                userId(userId),
-                keyword(keyword));
+    public Specification<Review> adminReviews(Boolean approved, Boolean visible, Integer rating, String keyword,
+            Long productId, String userId) {
+        return Specification.allOf(approved(approved), visible(visible), rating(rating), productId(productId),
+                userId(userId), keyword(keyword));
     }
 
     private Specification<Review> productSlug(String slug) {
@@ -36,13 +31,11 @@ public class ReviewSpecifications {
     }
 
     private Specification<Review> productId(Long productId) {
-        return (root, query, cb) ->
-                productId == null ? null : cb.equal(root.get("product").get("id"), productId);
+        return (root, query, cb) -> productId == null ? null : cb.equal(root.get("product").get("id"), productId);
     }
 
     private Specification<Review> userId(String userId) {
-        return (root, query, cb) ->
-                !StringUtils.hasText(userId) ? null : cb.equal(root.get("user").get("id"), userId);
+        return (root, query, cb) -> !StringUtils.hasText(userId) ? null : cb.equal(root.get("user").get("id"), userId);
     }
 
     private Specification<Review> rating(Integer rating) {
@@ -70,11 +63,9 @@ public class ReviewSpecifications {
             var user = root.join("user", JoinType.LEFT);
             var product = root.join("product", JoinType.LEFT);
             var order = root.join("order", JoinType.LEFT);
-            return cb.or(
-                    cb.like(cb.lower(root.get("comment")), pattern),
+            return cb.or(cb.like(cb.lower(root.get("comment")), pattern),
                     cb.like(cb.lower(root.get("adminReply")), pattern),
-                    cb.like(cb.lower(user.get("username")), pattern),
-                    cb.like(cb.lower(user.get("email")), pattern),
+                    cb.like(cb.lower(user.get("username")), pattern), cb.like(cb.lower(user.get("email")), pattern),
                     cb.like(cb.lower(product.get("productName")), pattern),
                     cb.like(cb.lower(order.get("orderCode")), pattern));
         };

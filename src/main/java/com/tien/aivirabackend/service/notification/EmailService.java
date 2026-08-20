@@ -32,8 +32,7 @@ public class EmailService {
     @Async("emailTaskExecutor")
     public void sendRegistrationOtpByEmail(String to, String name, String otp) {
         String subject = "X\u00e1c th\u1ef1c t\u00e0i kho\u1ea3n Aivira - M\u00e3 OTP c\u1ee7a b\u1ea1n";
-        String htmlContent =
-                loadTemplate("registration-otp").replace("{{name}}", name).replace("{{otp}}", otp);
+        String htmlContent = loadTemplate("registration-otp").replace("{{name}}", name).replace("{{otp}}", otp);
 
         sendHtmlEmail(to, name, subject, htmlContent, "registration-otp");
         log.info("Registration OTP email sent to: {}", to);
@@ -42,8 +41,7 @@ public class EmailService {
     @Async("emailTaskExecutor")
     public void sendForgotPasswordOtpByEmail(String to, String name, String otp) {
         String subject = "\u0110\u1eb7t l\u1ea1i m\u1eadt kh\u1ea9u Aivira - M\u00e3 OTP c\u1ee7a b\u1ea1n";
-        String htmlContent =
-                loadTemplate("forgot-password-otp").replace("{{name}}", name).replace("{{otp}}", otp);
+        String htmlContent = loadTemplate("forgot-password-otp").replace("{{name}}", name).replace("{{otp}}", otp);
 
         sendHtmlEmail(to, name, subject, htmlContent, "forgot-password-otp");
         log.info("Forgot password OTP email sent to: {}", to);

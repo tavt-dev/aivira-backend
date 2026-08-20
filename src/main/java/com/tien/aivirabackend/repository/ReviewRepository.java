@@ -14,12 +14,12 @@ import com.tien.aivirabackend.domain.entity.review.Review;
 public interface ReviewRepository extends JpaRepository<Review, Long>, JpaSpecificationExecutor<Review> {
     boolean existsByOrderItem_Id(Long orderItemId);
 
-    @EntityGraph(attributePaths = {"images", "user", "product", "productVariation", "order", "orderItem"})
+    @EntityGraph(attributePaths = { "images", "user", "product", "productVariation", "order", "orderItem" })
     Optional<Review> findDetailedById(Long id);
 
-    @EntityGraph(attributePaths = {"images", "user", "product", "productVariation", "order", "orderItem"})
+    @EntityGraph(attributePaths = { "images", "user", "product", "productVariation", "order", "orderItem" })
     Optional<Review> findDetailedByIdAndUserId(Long id, String userId);
 
-    @EntityGraph(attributePaths = {"product", "product.category"})
+    @EntityGraph(attributePaths = { "product", "product.category" })
     List<Review> findTop20ByUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(String userId);
 }

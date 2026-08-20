@@ -46,11 +46,7 @@ public class AuthCleanupService {
 
         log.info(
                 "auth_cleanup completed expiredRefreshTokens={} expiredOrUsedOtps={} expiredOrUsedOauthStates={} expiredOrUsedOauthTickets={} usedBefore={} oauthUsedBefore={}",
-                expiredRefreshTokens,
-                expiredOrUsedOtps,
-                expiredOrUsedOauthStates,
-                expiredOrUsedOauthTickets,
-                usedBefore,
-                oauthUsedBefore);
+                expiredRefreshTokens, expiredOrUsedOtps, expiredOrUsedOauthStates, expiredOrUsedOauthTickets,
+                usedBefore, oauthUsedBefore);
     }
 }

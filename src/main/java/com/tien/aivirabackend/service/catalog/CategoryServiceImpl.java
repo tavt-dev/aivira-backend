@@ -31,22 +31,16 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional(readOnly = true)
     public List<CategoryResponse> getVisibleCategories() {
         return categoryRepository
-                .findAllByActiveTrueAndVisibleTrue(
-                        Sort.by("displayOrder").ascending().and(Sort.by("categoryName")))
-                .stream()
-                .map(categoryMapper::toResponse)
-                .toList();
+                .findAllByActiveTrueAndVisibleTrue(Sort.by("displayOrder").ascending().and(Sort.by("categoryName")))
+                .stream().map(categoryMapper::toResponse).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<CategoryResponse> getVisibleCategoryTree() {
         return categoryRepository
-                .findAllByActiveTrueAndVisibleTrue(
-                        Sort.by("displayOrder").ascending().and(Sort.by("categoryName")))
-                .stream()
-                .filter(category -> category.getParentCategory() == null)
-                .map(categoryMapper::toTreeResponse)
+                .findAllByActiveTrueAndVisibleTrue(Sort.by("displayOrder").ascending().and(Sort.by("categoryName")))
+                .stream().filter(category -> category.getParentCategory() == null).map(categoryMapper::toTreeResponse)
                 .toList();
     }
 
@@ -64,17 +58,12 @@ public class CategoryServiceImpl implements CategoryService {
         }
 
         Category parent = request.getParentId() == null ? null : findCategory(request.getParentId());
-        Category category = Category.builder()
-                .categoryName(categoryName)
-                .slug(slug)
-                .description(request.getDescription().trim())
-                .imageUrl(trimToNull(request.getImageUrl()))
+        Category category = Category.builder().categoryName(categoryName).slug(slug)
+                .description(request.getDescription().trim()).imageUrl(trimToNull(request.getImageUrl()))
                 .imagePublicId(trimToNull(request.getImagePublicId()))
-                .displayOrder(request.getDisplayOrder() == null ? 0 : request.getDisplayOrder())
-                .parentCategory(parent)
+                .displayOrder(request.getDisplayOrder() == null ? 0 : request.getDisplayOrder()).parentCategory(parent)
                 .active(request.getActive() == null ? true : request.getActive())
-                .visible(request.getVisible() == null ? true : request.getVisible())
-                .build();
+                .visible(request.getVisible() == null ? true : request.getVisible()).build();
 
         return categoryMapper.toResponse(categoryRepository.save(category));
     }
@@ -82,8 +71,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public CategoryResponse update(Long categoryId, CategoryRequest request) {
-        Category category = categoryRepository
-                .findWithParentCategoryById(categoryId)
+        Category category = categoryRepository.findWithParentCategoryById(categoryId)
                 .orElseThrow(() -> new AppException(CategoryErrorCode.CATEGORY_NOT_FOUND));
 
         String categoryName = request.getCategoryName().trim();
@@ -122,8 +110,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     private Category findCategory(Long categoryId) {
-        return categoryRepository
-                .findById(categoryId)
+        return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new AppException(CategoryErrorCode.CATEGORY_NOT_FOUND));
     }
 

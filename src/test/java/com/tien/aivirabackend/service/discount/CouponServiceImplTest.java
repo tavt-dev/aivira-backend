@@ -66,9 +66,8 @@ class CouponServiceImplTest {
         CouponCreateRequest request = createRequest("SAVE10");
         request.setValue(BigDecimal.valueOf(101));
 
-        assertThatThrownBy(() -> couponService.createCoupon(request))
-                .isInstanceOfSatisfying(AppException.class, exception -> assertThat(exception.getErrorCode())
-                        .isEqualTo(PromotionErrorCode.DISCOUNT_INVALID_VALUE));
+        assertThatThrownBy(() -> couponService.createCoupon(request)).isInstanceOfSatisfying(AppException.class,
+                exception -> assertThat(exception.getErrorCode()).isEqualTo(PromotionErrorCode.DISCOUNT_INVALID_VALUE));
     }
 
     @Test
@@ -84,16 +83,9 @@ class CouponServiceImplTest {
     }
 
     private CouponCreateRequest createRequest(String code) {
-        return CouponCreateRequest.builder()
-                .code(code)
-                .type(CouponType.PERCENT)
-                .value(BigDecimal.TEN)
-                .maxDiscountAmount(BigDecimal.valueOf(50))
-                .minOrderAmount(BigDecimal.ZERO)
-                .usageLimit(100)
-                .usageLimitPerUser(1)
-                .startAt(LocalDateTime.now().minusDays(1))
-                .endAt(LocalDateTime.now().plusDays(1))
+        return CouponCreateRequest.builder().code(code).type(CouponType.PERCENT).value(BigDecimal.TEN)
+                .maxDiscountAmount(BigDecimal.valueOf(50)).minOrderAmount(BigDecimal.ZERO).usageLimit(100)
+                .usageLimitPerUser(1).startAt(LocalDateTime.now().minusDays(1)).endAt(LocalDateTime.now().plusDays(1))
                 .build();
     }
 }

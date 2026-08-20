@@ -18,6 +18,6 @@ public interface AiAdviceMessageRepository extends JpaRepository<AiAdviceMessage
 
     Optional<AiAdviceMessage> findByIdAndSessionId(Long id, String sessionId);
 
-    Optional<AiAdviceMessage> findFirstBySessionIdAndRoleAndIdGreaterThanOrderByIdAsc(
-            String sessionId, AiAdviceRole role, Long id);
+    Optional<AiAdviceMessage> findFirstBySessionIdAndRoleAndIdGreaterThanOrderByIdAsc(String sessionId,
+            AiAdviceRole role, Long id);
 }

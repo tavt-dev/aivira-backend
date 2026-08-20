@@ -11,8 +11,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum GoogleOAuthErrorCode implements ErrorCode {
     GOOGLE_OAUTH_DISABLED("AUTH-GOOGLE-001", "Google OAuth login is disabled", HttpStatus.SERVICE_UNAVAILABLE),
-    GOOGLE_OAUTH_CONFIG_INVALID(
-            "AUTH-GOOGLE-002", "Google OAuth configuration is invalid", HttpStatus.INTERNAL_SERVER_ERROR),
+    GOOGLE_OAUTH_CONFIG_INVALID("AUTH-GOOGLE-002", "Google OAuth configuration is invalid",
+            HttpStatus.INTERNAL_SERVER_ERROR),
     GOOGLE_OAUTH_STATE_INVALID("AUTH-GOOGLE-003", "Google OAuth state is invalid or expired", HttpStatus.BAD_REQUEST),
     GOOGLE_OAUTH_CODE_INVALID("AUTH-GOOGLE-004", "Google OAuth authorization code is invalid", HttpStatus.BAD_REQUEST),
     GOOGLE_OAUTH_ID_TOKEN_INVALID("AUTH-GOOGLE-005", "Google ID token is invalid", HttpStatus.UNAUTHORIZED),

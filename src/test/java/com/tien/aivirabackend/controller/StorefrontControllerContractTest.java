@@ -29,21 +29,16 @@ class StorefrontControllerContractTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(new StorefrontController(storefrontService))
-                .setControllerAdvice(new GlobalExceptionHandler())
-                .build();
+                .setControllerAdvice(new GlobalExceptionHandler()).build();
     }
 
     @Test
     void getHome_shouldBePublicAndReturnApiEnvelope() throws Exception {
-        assertThat(StorefrontController.class.getMethod("getHome").getAnnotation(PreAuthorize.class))
-                .isNull();
+        assertThat(StorefrontController.class.getMethod("getHome").getAnnotation(PreAuthorize.class)).isNull();
 
-        org.mockito.Mockito.when(storefrontService.getHome())
-                .thenReturn(StorefrontHomeResponse.builder().build());
+        org.mockito.Mockito.when(storefrontService.getHome()).thenReturn(StorefrontHomeResponse.builder().build());
 
-        mockMvc.perform(get("/storefront/home"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
+        mockMvc.perform(get("/storefront/home")).andExpect(status().isOk()).andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.featuredBooks").isArray())
                 .andExpect(jsonPath("$.data.newArrivals").isArray())
                 .andExpect(jsonPath("$.data.bestsellingBooks").isArray())

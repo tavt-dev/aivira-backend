@@ -10,8 +10,8 @@ import com.tien.aivirabackend.domain.entity.transaction.Order;
 import com.tien.aivirabackend.domain.entity.user.User;
 
 public interface DiscountService {
-    DiscountCalculation calculate(
-            User user, List<CartItem> cartItems, Map<Long, ProductVariation> variations, String couponCode);
+    DiscountCalculation calculate(User user, List<CartItem> cartItems, Map<Long, ProductVariation> variations,
+            String couponCode);
 
     CheckoutPreviewResponse toPreviewResponse(DiscountCalculation calculation);
 

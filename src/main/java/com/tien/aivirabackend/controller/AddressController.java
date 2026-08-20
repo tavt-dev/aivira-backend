@@ -46,10 +46,10 @@ public class AddressController {
     @PutMapping("/{addressId}")
     @Operation(summary = "Update my address")
     @PreAuthorize("@authorizationService.hasPermission('ADDRESS_UPDATE_SELF')")
-    public ResponseEntity<ApiResponse<AddressResponse>> update(
-            @PathVariable Long addressId, @Valid @RequestBody AddressRequest request) {
-        return ResponseEntity.ok(
-                ApiResponse.success("Update address successful", addressService.update(addressId, request)));
+    public ResponseEntity<ApiResponse<AddressResponse>> update(@PathVariable Long addressId,
+            @Valid @RequestBody AddressRequest request) {
+        return ResponseEntity
+                .ok(ApiResponse.success("Update address successful", addressService.update(addressId, request)));
     }
 
     @DeleteMapping("/{addressId}")
@@ -64,7 +64,7 @@ public class AddressController {
     @Operation(summary = "Set default address")
     @PreAuthorize("@authorizationService.hasPermission('ADDRESS_SET_DEFAULT_SELF')")
     public ResponseEntity<ApiResponse<AddressResponse>> setDefault(@PathVariable Long addressId) {
-        return ResponseEntity.ok(
-                ApiResponse.success("Set default address successful", addressService.setDefault(addressId)));
+        return ResponseEntity
+                .ok(ApiResponse.success("Set default address successful", addressService.setDefault(addressId)));
     }
 }

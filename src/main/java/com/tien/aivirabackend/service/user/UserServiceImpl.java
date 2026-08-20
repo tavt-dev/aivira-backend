@@ -105,12 +105,8 @@ public class UserServiceImpl implements UserService {
 
         fileValidatorService.validateFile(avatarFile, MediaType.IMAGE);
 
-        CloudinaryUploadResult uploadResult = cloudinaryStorageService.uploadImage(
-                avatarFile,
-                buildAvatarFolder(currentUser.getId()),
-                "avatar-" + currentUser.getId(),
-                AVATAR_WIDTH,
-                AVATAR_HEIGHT);
+        CloudinaryUploadResult uploadResult = cloudinaryStorageService.uploadImage(avatarFile,
+                buildAvatarFolder(currentUser.getId()), "avatar-" + currentUser.getId(), AVATAR_WIDTH, AVATAR_HEIGHT);
 
         currentUser.setAvatarUrl(uploadResult.secureUrl());
         currentUser.setAvatarPublicId(uploadResult.publicId());
@@ -165,17 +161,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<AdminUserResponse> getAdminUsers(
-            String keyword,
-            PredefinedRole role,
-            Boolean active,
-            Boolean locked,
-            Boolean emailVerified,
-            int page,
-            int size) {
+    public PageResponse<AdminUserResponse> getAdminUsers(String keyword, PredefinedRole role, Boolean active,
+            Boolean locked, Boolean emailVerified, int page, int size) {
         Specification<User> specification = userSpecifications.adminUsers(keyword, role, active, locked, emailVerified);
-        var userPage = userRepository
-                .findAll(specification, PageRequestUtils.newestFirst(page, size))
+        var userPage = userRepository.findAll(specification, PageRequestUtils.newestFirst(page, size))
                 .map(userMapper::toAdminUserResponse);
         return PageResponse.from(userPage);
     }
@@ -236,21 +225,15 @@ public class UserServiceImpl implements UserService {
         Set<PredefinedRole> currentRoleCodes = roleCodes(user);
         validateLastActiveAdmin(user, currentRoleCodes, requestedRoleCodes);
 
-        Set<Role> requestedRoles = requestedRoleCodes.stream()
-                .sorted()
-                .map(this::findRole)
+        Set<Role> requestedRoles = requestedRoleCodes.stream().sorted().map(this::findRole)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
         if (!Objects.equals(currentRoleCodes, requestedRoleCodes)) {
             user.setRoles(requestedRoles);
             userRepository.save(user);
             jwtService.revokeAllTokensOfUser(userId, RevocationReason.USER_LOGOUT_ALL);
-            log.info(
-                    "admin_user_roles_updated targetUserId={} adminUserId={} oldRoles={} newRoles={}",
-                    userId,
-                    currentAdminUserId(),
-                    currentRoleCodes,
-                    requestedRoleCodes);
+            log.info("admin_user_roles_updated targetUserId={} adminUserId={} oldRoles={} newRoles={}", userId,
+                    currentAdminUserId(), currentRoleCodes, requestedRoleCodes);
         }
 
         return userMapper.toAdminUserResponse(user);
@@ -261,8 +244,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private User findUserWithRoles(String userId) {
-        return userRepository
-                .findWithRolesById(userId)
+        return userRepository.findWithRolesById(userId)
                 .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_FOUND_BY_ID));
     }
 
@@ -289,8 +271,8 @@ public class UserServiceImpl implements UserService {
         user.setFirstFailedLoginAt(null);
     }
 
-    private void validateLastActiveAdmin(
-            User user, Set<PredefinedRole> currentRoleCodes, Set<PredefinedRole> requestedRoleCodes) {
+    private void validateLastActiveAdmin(User user, Set<PredefinedRole> currentRoleCodes,
+            Set<PredefinedRole> requestedRoleCodes) {
         if (!currentRoleCodes.contains(PredefinedRole.ADMIN) || requestedRoleCodes.contains(PredefinedRole.ADMIN)) {
             return;
         }
@@ -306,9 +288,7 @@ public class UserServiceImpl implements UserService {
         if (user.getRoles() == null || user.getRoles().isEmpty()) {
             return EnumSet.noneOf(PredefinedRole.class);
         }
-        return user.getRoles().stream()
-                .map(Role::getCode)
-                .filter(Objects::nonNull)
+        return user.getRoles().stream().map(Role::getCode).filter(Objects::nonNull)
                 .collect(Collectors.toCollection(() -> EnumSet.noneOf(PredefinedRole.class)));
     }
 

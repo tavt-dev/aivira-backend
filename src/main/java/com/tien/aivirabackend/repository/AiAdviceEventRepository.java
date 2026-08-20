@@ -8,9 +8,9 @@ import com.tien.aivirabackend.constant.AiAdviceEventType;
 import com.tien.aivirabackend.domain.entity.ai.AiAdviceEvent;
 
 public interface AiAdviceEventRepository extends JpaRepository<AiAdviceEvent, Long> {
-    Optional<AiAdviceEvent> findBySessionIdAndMessageIdAndEventTypeIn(
-            String sessionId, Long messageId, Iterable<AiAdviceEventType> eventTypes);
+    Optional<AiAdviceEvent> findBySessionIdAndMessageIdAndEventTypeIn(String sessionId, Long messageId,
+            Iterable<AiAdviceEventType> eventTypes);
 
-    boolean existsBySessionIdAndRecommendationIdAndEventType(
-            String sessionId, Long recommendationId, AiAdviceEventType eventType);
+    boolean existsBySessionIdAndRecommendationIdAndEventType(String sessionId, Long recommendationId,
+            AiAdviceEventType eventType);
 }

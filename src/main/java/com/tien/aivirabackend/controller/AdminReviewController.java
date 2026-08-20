@@ -30,41 +30,32 @@ public class AdminReviewController {
     ReviewService reviewService;
 
     @GetMapping
-    @Operation(
-            summary = "List reviews for admin",
-            description = "Lists reviews with moderation filters and keyword search.")
+    @Operation(summary = "List reviews for admin", description = "Lists reviews with moderation filters and keyword search.")
     @PreAuthorize("@authorizationService.hasAnyPermission('REVIEW_MANAGE_ALL', 'REVIEW_READ_ALL')")
     public ResponseEntity<ApiResponse<PageResponse<ReviewResponse>>> getAdminReviews(
-            @RequestParam(required = false) Boolean approved,
-            @RequestParam(required = false) Boolean visible,
-            @RequestParam(required = false) Integer rating,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) Long productId,
-            @RequestParam(required = false) String userId,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(ApiResponse.success(
-                "Get admin reviews successful",
+            @RequestParam(required = false) Boolean approved, @RequestParam(required = false) Boolean visible,
+            @RequestParam(required = false) Integer rating, @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long productId, @RequestParam(required = false) String userId,
+            @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(ApiResponse.success("Get admin reviews successful",
                 reviewService.getAdminReviews(approved, visible, rating, keyword, productId, userId, page, size)));
     }
 
     @PutMapping("/{reviewId}/moderate")
     @Operation(summary = "Moderate review", description = "Sets review approval and visibility metadata.")
     @PreAuthorize("@authorizationService.hasAnyPermission('REVIEW_MANAGE_ALL', 'REVIEW_MODERATE')")
-    public ResponseEntity<ApiResponse<ReviewResponse>> moderateReview(
-            @PathVariable Long reviewId, @Valid @RequestBody ReviewModerateRequest request) {
-        return ResponseEntity.ok(
-                ApiResponse.success("Moderate review successful", reviewService.moderateReview(reviewId, request)));
+    public ResponseEntity<ApiResponse<ReviewResponse>> moderateReview(@PathVariable Long reviewId,
+            @Valid @RequestBody ReviewModerateRequest request) {
+        return ResponseEntity
+                .ok(ApiResponse.success("Moderate review successful", reviewService.moderateReview(reviewId, request)));
     }
 
     @PutMapping("/{reviewId}/reply")
-    @Operation(
-            summary = "Reply to review",
-            description = "Sets or clears the admin reply shown on approved public reviews.")
+    @Operation(summary = "Reply to review", description = "Sets or clears the admin reply shown on approved public reviews.")
     @PreAuthorize("@authorizationService.hasAnyPermission('REVIEW_MANAGE_ALL', 'REVIEW_MODERATE')")
-    public ResponseEntity<ApiResponse<ReviewResponse>> replyToReview(
-            @PathVariable Long reviewId, @Valid @RequestBody ReviewReplyRequest request) {
-        return ResponseEntity.ok(
-                ApiResponse.success("Reply to review successful", reviewService.replyToReview(reviewId, request)));
+    public ResponseEntity<ApiResponse<ReviewResponse>> replyToReview(@PathVariable Long reviewId,
+            @Valid @RequestBody ReviewReplyRequest request) {
+        return ResponseEntity
+                .ok(ApiResponse.success("Reply to review successful", reviewService.replyToReview(reviewId, request)));
     }
 }

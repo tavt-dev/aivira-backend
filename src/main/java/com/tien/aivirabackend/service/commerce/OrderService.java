@@ -16,8 +16,8 @@ public interface OrderService {
 
     OrderResponse cancelMyOrder(Long orderId, OrderCancelRequest request);
 
-    PageResponse<OrderSummaryResponse> getAdminOrders(
-            OrderStatus status, String keyword, Instant fromDate, Instant toDate, int page, int size);
+    PageResponse<OrderSummaryResponse> getAdminOrders(OrderStatus status, String keyword, Instant fromDate,
+            Instant toDate, int page, int size);
 
     OrderResponse getAdminOrder(Long orderId);
 

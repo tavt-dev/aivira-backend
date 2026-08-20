@@ -35,14 +35,11 @@ class BlogCategoryServiceImplTest {
 
     @Test
     void deleteCategory_whenCategoryIsUsed_shouldRejectDeletion() {
-        BlogCategory category =
-                BlogCategory.builder().id(1L).name("News").slug("news").build();
+        BlogCategory category = BlogCategory.builder().id(1L).name("News").slug("news").build();
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
         when(postRepository.existsByCategory_IdAndDeletedAtIsNull(1L)).thenReturn(true);
 
-        assertThatThrownBy(() -> service.deleteCategory(1L))
-                .isInstanceOf(AppException.class)
-                .extracting("errorCode")
+        assertThatThrownBy(() -> service.deleteCategory(1L)).isInstanceOf(AppException.class).extracting("errorCode")
                 .isEqualTo(BlogErrorCode.BLOG_CATEGORY_IN_USE);
         verify(categoryRepository, never()).delete(any());
     }

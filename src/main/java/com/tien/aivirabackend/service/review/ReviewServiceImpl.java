@@ -68,12 +68,12 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<ReviewResponse> getPublicReviews(
-            String productSlug, Integer rating, String sort, int page, int size) {
+    public PageResponse<ReviewResponse> getPublicReviews(String productSlug, Integer rating, String sort, int page,
+            int size) {
         var pageable = PageRequestUtils.of(page, size, reviewSort(sort));
-        return PageResponse.from(reviewRepository
-                .findAll(reviewSpecifications.publicReviews(productSlug, rating), pageable)
-                .map(reviewMapper::toResponse));
+        return PageResponse
+                .from(reviewRepository.findAll(reviewSpecifications.publicReviews(productSlug, rating), pageable)
+                        .map(reviewMapper::toResponse));
     }
 
     @Override
@@ -85,8 +85,8 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     @Transactional
-    public ReviewResponse createReviewWithImages(
-            Long orderId, Long orderItemId, ReviewCreateRequest request, List<MultipartFile> imageFiles) {
+    public ReviewResponse createReviewWithImages(Long orderId, Long orderItemId, ReviewCreateRequest request,
+            List<MultipartFile> imageFiles) {
         ReviewContext context = resolveReviewContext(orderId, orderItemId);
         List<MultipartFile> files = imageFiles == null ? List.of() : List.copyOf(imageFiles);
         if (files.size() > MAX_IMAGES) {
@@ -97,22 +97,16 @@ public class ReviewServiceImpl implements ReviewService {
         List<CloudinaryUploadResult> uploadedImages = new ArrayList<>();
         try {
             for (MultipartFile file : files) {
-                uploadedImages.add(cloudinaryStorageService.uploadReviewImage(
-                        file,
-                        buildReviewImageFolder(context.userId(), orderItemId),
-                        "review-" + orderItemId,
-                        REVIEW_IMAGE_MAX_WIDTH,
-                        REVIEW_IMAGE_MAX_HEIGHT));
+                uploadedImages.add(cloudinaryStorageService.uploadReviewImage(file,
+                        buildReviewImageFolder(context.userId(), orderItemId), "review-" + orderItemId,
+                        REVIEW_IMAGE_MAX_WIDTH, REVIEW_IMAGE_MAX_HEIGHT));
             }
 
             List<ReviewImageRequest> imageRequests = new ArrayList<>();
             for (int index = 0; index < uploadedImages.size(); index++) {
                 CloudinaryUploadResult image = uploadedImages.get(index);
-                imageRequests.add(ReviewImageRequest.builder()
-                        .imageUrl(image.secureUrl())
-                        .imagePublicId(image.publicId())
-                        .sortOrder(index)
-                        .build());
+                imageRequests.add(ReviewImageRequest.builder().imageUrl(image.secureUrl())
+                        .imagePublicId(image.publicId()).sortOrder(index).build());
             }
             return persistReview(context, request, imageRequests);
         } catch (RuntimeException exception) {
@@ -123,8 +117,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     private ReviewContext resolveReviewContext(Long orderId, Long orderItemId) {
         String userId = currentUserService.getCurrentUserId();
-        Order order = orderRepository
-                .findWithItemsAndRefundByIdAndUserId(orderId, userId)
+        Order order = orderRepository.findWithItemsAndRefundByIdAndUserId(orderId, userId)
                 .orElseThrow(() -> new AppException(OrderErrorCode.ORDER_NOT_FOUND));
         if (order.getOrderStatus() != OrderStatus.COMPLETED) {
             throw new AppException(ReviewErrorCode.REVIEW_ORDER_NOT_COMPLETED);
@@ -133,14 +126,12 @@ public class ReviewServiceImpl implements ReviewService {
         if (reviewRepository.existsByOrderItem_Id(orderItemId)) {
             throw new AppException(ReviewErrorCode.REVIEW_ALREADY_EXISTS);
         }
-        Product product = productRepository
-                .findById(orderItem.getProductId())
+        Product product = productRepository.findById(orderItem.getProductId())
                 .orElseThrow(() -> new AppException(ReviewErrorCode.REVIEW_NOT_ALLOWED));
         if (orderItem.getProductVariationId() == null) {
             throw new AppException(ReviewErrorCode.REVIEW_NOT_ALLOWED);
         }
-        ProductVariation variation = productVariationRepository
-                .findById(orderItem.getProductVariationId())
+        ProductVariation variation = productVariationRepository.findById(orderItem.getProductVariationId())
                 .orElseThrow(() -> new AppException(ReviewErrorCode.REVIEW_NOT_ALLOWED));
         if (!Objects.equals(variation.getProduct().getId(), product.getId())) {
             throw new AppException(ReviewErrorCode.REVIEW_NOT_ALLOWED);
@@ -149,19 +140,11 @@ public class ReviewServiceImpl implements ReviewService {
         return new ReviewContext(userId, order, orderItem, product, variation);
     }
 
-    private ReviewResponse persistReview(
-            ReviewContext context, ReviewCreateRequest request, List<ReviewImageRequest> imageRequests) {
-        Review review = Review.builder()
-                .rating(request.getRating())
-                .comment(trimToNull(request.getComment()))
-                .approved(false)
-                .visible(true)
-                .user(context.order().getUser())
-                .product(context.product())
-                .productVariation(context.variation())
-                .order(context.order())
-                .orderItem(context.orderItem())
-                .build();
+    private ReviewResponse persistReview(ReviewContext context, ReviewCreateRequest request,
+            List<ReviewImageRequest> imageRequests) {
+        Review review = Review.builder().rating(request.getRating()).comment(trimToNull(request.getComment()))
+                .approved(false).visible(true).user(context.order().getUser()).product(context.product())
+                .productVariation(context.variation()).order(context.order()).orderItem(context.orderItem()).build();
         replaceImages(review, imageRequests);
         return reviewMapper.toResponse(reviewRepository.saveAndFlush(review));
     }
@@ -170,8 +153,7 @@ public class ReviewServiceImpl implements ReviewService {
     @Transactional
     public ReviewResponse updateReview(Long reviewId, ReviewUpdateRequest request) {
         String userId = currentUserService.getCurrentUserId();
-        Review review = reviewRepository
-                .findDetailedByIdAndUserId(reviewId, userId)
+        Review review = reviewRepository.findDetailedByIdAndUserId(reviewId, userId)
                 .orElseThrow(() -> new AppException(ReviewErrorCode.REVIEW_NOT_FOUND));
         rejectDeleted(review);
         review.setRating(request.getRating());
@@ -187,8 +169,7 @@ public class ReviewServiceImpl implements ReviewService {
     @Transactional
     public void deleteReview(Long reviewId) {
         String userId = currentUserService.getCurrentUserId();
-        Review review = reviewRepository
-                .findDetailedByIdAndUserId(reviewId, userId)
+        Review review = reviewRepository.findDetailedByIdAndUserId(reviewId, userId)
                 .orElseThrow(() -> new AppException(ReviewErrorCode.REVIEW_NOT_FOUND));
         if (review.getDeletedAt() != null) {
             return;
@@ -200,19 +181,11 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<ReviewResponse> getAdminReviews(
-            Boolean approved,
-            Boolean visible,
-            Integer rating,
-            String keyword,
-            Long productId,
-            String userId,
-            int page,
-            int size) {
+    public PageResponse<ReviewResponse> getAdminReviews(Boolean approved, Boolean visible, Integer rating,
+            String keyword, Long productId, String userId, int page, int size) {
         var pageable = PageRequestUtils.newestFirst(page, size);
         return PageResponse.from(reviewRepository
-                .findAll(
-                        reviewSpecifications.adminReviews(approved, visible, rating, keyword, productId, userId),
+                .findAll(reviewSpecifications.adminReviews(approved, visible, rating, keyword, productId, userId),
                         pageable)
                 .map(reviewMapper::toResponse));
     }
@@ -226,12 +199,8 @@ public class ReviewServiceImpl implements ReviewService {
         review.setVisible(Boolean.TRUE.equals(request.getVisible()));
         review.setModeratedBy(resolveAdminId());
         review.setModeratedAt(now);
-        log.info(
-                "admin_review_moderated reviewId={} approved={} visible={} adminUserId={}",
-                review.getId(),
-                review.isApproved(),
-                review.isVisible(),
-                review.getModeratedBy());
+        log.info("admin_review_moderated reviewId={} approved={} visible={} adminUserId={}", review.getId(),
+                review.isApproved(), review.isVisible(), review.getModeratedBy());
         return reviewMapper.toResponse(reviewRepository.save(review));
     }
 
@@ -252,15 +221,12 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     private Review findDetailedReview(Long reviewId) {
-        return reviewRepository
-                .findDetailedById(reviewId)
+        return reviewRepository.findDetailedById(reviewId)
                 .orElseThrow(() -> new AppException(ReviewErrorCode.REVIEW_NOT_FOUND));
     }
 
     private OrderItem findOrderItem(Order order, Long orderItemId) {
-        return order.getItems().stream()
-                .filter(item -> Objects.equals(item.getId(), orderItemId))
-                .findFirst()
+        return order.getItems().stream().filter(item -> Objects.equals(item.getId(), orderItemId)).findFirst()
                 .orElseThrow(() -> new AppException(ReviewErrorCode.REVIEW_NOT_ALLOWED));
     }
 
@@ -277,12 +243,9 @@ public class ReviewServiceImpl implements ReviewService {
                 throw new AppException(ReviewErrorCode.REVIEW_INVALID_IMAGE);
             }
             review.getImages()
-                    .add(ReviewImage.builder()
-                            .review(review)
-                            .imageUrl(request.getImageUrl().trim())
+                    .add(ReviewImage.builder().review(review).imageUrl(request.getImageUrl().trim())
                             .imagePublicId(request.getImagePublicId().trim())
-                            .sortOrder(request.getSortOrder() == null ? 0 : request.getSortOrder())
-                            .build());
+                            .sortOrder(request.getSortOrder() == null ? 0 : request.getSortOrder()).build());
         }
     }
 
@@ -297,10 +260,10 @@ public class ReviewServiceImpl implements ReviewService {
             return Sort.by(Sort.Direction.DESC, "createdAt");
         }
         return switch (sort.trim().toLowerCase()) {
-            case "oldest" -> Sort.by(Sort.Direction.ASC, "createdAt");
-            case "rating_desc" -> Sort.by(Sort.Direction.DESC, "rating");
-            case "rating_asc" -> Sort.by(Sort.Direction.ASC, "rating");
-            default -> Sort.by(Sort.Direction.DESC, "createdAt");
+        case "oldest" -> Sort.by(Sort.Direction.ASC, "createdAt");
+        case "rating_desc" -> Sort.by(Sort.Direction.DESC, "rating");
+        case "rating_asc" -> Sort.by(Sort.Direction.ASC, "rating");
+        default -> Sort.by(Sort.Direction.DESC, "createdAt");
         };
     }
 
@@ -316,6 +279,7 @@ public class ReviewServiceImpl implements ReviewService {
         return cloudinaryProperties.getReviewImageFolder() + "/" + userId + "/" + orderItemId;
     }
 
-    private record ReviewContext(
-            String userId, Order order, OrderItem orderItem, Product product, ProductVariation variation) {}
+    private record ReviewContext(String userId, Order order, OrderItem orderItem, Product product,
+            ProductVariation variation) {
+    }
 }

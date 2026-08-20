@@ -15,9 +15,9 @@ public interface BlogPostRepository extends JpaRepository<BlogPost, Long>, JpaSp
 
     boolean existsByCategory_IdAndDeletedAtIsNull(Long categoryId);
 
-    @EntityGraph(attributePaths = {"category", "createdBy", "updatedBy", "relatedProducts", "assets"})
+    @EntityGraph(attributePaths = { "category", "createdBy", "updatedBy", "relatedProducts", "assets" })
     Optional<BlogPost> findDetailedById(Long id);
 
-    @EntityGraph(attributePaths = {"category", "createdBy", "updatedBy", "relatedProducts", "assets"})
+    @EntityGraph(attributePaths = { "category", "createdBy", "updatedBy", "relatedProducts", "assets" })
     Optional<BlogPost> findDetailedBySlug(String slug);
 }

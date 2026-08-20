@@ -32,65 +32,38 @@ public class PaymentProviderSupportService {
     List<PaymentProviderClient> paymentProviderClients;
     MeterRegistry meterRegistry;
 
-    public PaymentProviderClient provider(
-            PaymentMethod method, Supplier<? extends RuntimeException> exceptionSupplier) {
-        return paymentProviderClients.stream()
-                .filter(client -> client.method() == method)
-                .findFirst()
+    public PaymentProviderClient provider(PaymentMethod method,
+            Supplier<? extends RuntimeException> exceptionSupplier) {
+        return paymentProviderClients.stream().filter(client -> client.method() == method).findFirst()
                 .orElseThrow(exceptionSupplier);
     }
 
     public PaymentAttempt createAttempt(PaymentGroup paymentGroup) {
         int attemptNo = paymentAttemptRepository.countByPaymentGroupId(paymentGroup.getId()) + 1;
-        String suffix = "A" + attemptNo + "-"
-                + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
-        String providerRef = paymentGroup.getMethod() == PaymentMethod.COD
-                ? paymentGroup.getPaymentCode()
+        String suffix = "A" + attemptNo + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+        String providerRef = paymentGroup.getMethod() == PaymentMethod.COD ? paymentGroup.getPaymentCode()
                 : paymentGroup.getPaymentCode() + "-" + suffix;
-        return paymentAttemptRepository.save(PaymentAttempt.builder()
-                .paymentGroup(paymentGroup)
-                .provider(PaymentProvider.valueOf(paymentGroup.getMethod().name()))
-                .method(paymentGroup.getMethod())
-                .attemptNo(attemptNo)
-                .providerTxnRef(providerRef)
-                .requestId(providerRef + "-REQ")
-                .status(PaymentStatus.PENDING)
-                .amount(paymentGroup.getAmount())
-                .expiresAt(paymentGroup.getExpiresAt())
+        return paymentAttemptRepository.save(PaymentAttempt.builder().paymentGroup(paymentGroup)
+                .provider(PaymentProvider.valueOf(paymentGroup.getMethod().name())).method(paymentGroup.getMethod())
+                .attemptNo(attemptNo).providerTxnRef(providerRef).requestId(providerRef + "-REQ")
+                .status(PaymentStatus.PENDING).amount(paymentGroup.getAmount()).expiresAt(paymentGroup.getExpiresAt())
                 .build());
     }
 
-    public PaymentProviderResult createPaymentWithMetrics(
-            PaymentProviderClient provider,
-            PaymentGroup paymentGroup,
-            PaymentAttempt attempt,
-            RequestMetadata requestMetadata) {
+    public PaymentProviderResult createPaymentWithMetrics(PaymentProviderClient provider, PaymentGroup paymentGroup,
+            PaymentAttempt attempt, RequestMetadata requestMetadata) {
         Timer.Sample sample = Timer.start(meterRegistry);
         try {
-            PaymentProviderResult result =
-                    provider.createPayment(new PaymentProviderRequest(paymentGroup, attempt, requestMetadata));
-            increment(
-                    "payment_provider_create_total",
-                    "method",
-                    paymentGroup.getMethod().name(),
-                    "status",
-                    "SUCCESS");
+            PaymentProviderResult result = provider
+                    .createPayment(new PaymentProviderRequest(paymentGroup, attempt, requestMetadata));
+            increment("payment_provider_create_total", "method", paymentGroup.getMethod().name(), "status", "SUCCESS");
             return result;
         } catch (RuntimeException ex) {
-            increment(
-                    "payment_provider_create_total",
-                    "method",
-                    paymentGroup.getMethod().name(),
-                    "status",
-                    "FAILED");
+            increment("payment_provider_create_total", "method", paymentGroup.getMethod().name(), "status", "FAILED");
             throw ex;
         } finally {
-            sample.stop(meterRegistry.timer(
-                    "payment_provider_request_seconds",
-                    "provider",
-                    provider.method().name(),
-                    "operation",
-                    "create"));
+            sample.stop(meterRegistry.timer("payment_provider_request_seconds", "provider", provider.method().name(),
+                    "operation", "create"));
         }
     }
 
@@ -99,12 +72,8 @@ public class PaymentProviderSupportService {
         try {
             return provider.queryPayment(attempt);
         } finally {
-            sample.stop(meterRegistry.timer(
-                    "payment_provider_request_seconds",
-                    "provider",
-                    provider.method().name(),
-                    "operation",
-                    "query"));
+            sample.stop(meterRegistry.timer("payment_provider_request_seconds", "provider", provider.method().name(),
+                    "operation", "query"));
         }
     }
 
