@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tien.aivirabackend.domain.dto.ApiResponse;
+import com.tien.aivirabackend.domain.dto.RequestMetadata;
 import com.tien.aivirabackend.domain.dto.request.AuthenticationRequest;
 import com.tien.aivirabackend.domain.dto.request.ForgotPasswordRequest;
 import com.tien.aivirabackend.domain.dto.request.LogoutRequest;
@@ -35,6 +35,7 @@ import com.tien.aivirabackend.exception.AppException;
 import com.tien.aivirabackend.exception.errorCode.JwtErrorCode;
 import com.tien.aivirabackend.service.auth.AuthenticationService;
 import com.tien.aivirabackend.service.auth.RefreshTokenCookieService;
+import com.tien.aivirabackend.service.auth.RequestMetadataService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -55,6 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthenticationController {
     AuthenticationService authenticationService;
     RefreshTokenCookieService refreshTokenCookieService;
+    RequestMetadataService requestMetadataService;
 
     @NonFinal
     @Value("${auth.refresh-token.body-enabled:true}")
@@ -70,12 +72,12 @@ public class AuthenticationController {
             @Valid @RequestBody AuthenticationRequest request, @Parameter(hidden = true) HttpServletRequest httpServlet,
             @Parameter(hidden = true) HttpServletResponse httpServletResponse) {
 
-        log.info("Authenticate request: username={}", request.getUsername());
+        log.debug("Authenticate request: username={}", request.getUsername());
 
-        RequestMetadata metadata = resolveRequestMetadata(httpServlet);
+        RequestMetadata metadata = requestMetadataService.from(httpServlet);
 
-        AuthenticationResponse response = authenticationService.authenticate(request, metadata.deviceInfo(),
-                metadata.ipAddress());
+        AuthenticationResponse response = authenticationService.authenticate(request, metadata.userAgent(),
+                metadata.clientIp());
 
         refreshTokenCookieService.writeRefreshTokenCookie(httpServletResponse, response.getRefreshToken(),
                 refreshTokenDuration);
@@ -87,7 +89,7 @@ public class AuthenticationController {
     @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Register user", description = "Creates a local user and sends a registration OTP to email.")
     public ResponseEntity<ApiResponse<UserResponse>> register(@Valid @RequestBody UserRegisterRequest request) {
-        log.info("Register request: email={}", request.getEmail());
+        log.debug("Register request: email={}", request.getEmail());
 
         UserResponse response = authenticationService.register(request);
 
@@ -104,16 +106,14 @@ public class AuthenticationController {
         log.info("Refresh token request");
 
         String requestRefreshToken = request == null ? null : request.getRefreshToken();
-        String refreshToken = resolveRefreshToken(httpServlet, requestRefreshToken);
+        String refreshToken = refreshTokenCookieService
+                .resolveRefreshToken(httpServlet, requestRefreshToken, refreshTokenBodyEnabled)
+                .orElseThrow(() -> new AppException(JwtErrorCode.TOKEN_MISSING));
 
-        if (!StringUtils.hasText(refreshToken)) {
-            throw new AppException(JwtErrorCode.TOKEN_MISSING);
-        }
+        RequestMetadata metadata = requestMetadataService.from(httpServlet);
 
-        RequestMetadata metadata = resolveRequestMetadata(httpServlet);
-
-        AuthenticationResponse response = authenticationService.refreshToken(refreshToken, metadata.deviceInfo(),
-                metadata.ipAddress());
+        AuthenticationResponse response = authenticationService.refreshToken(refreshToken, metadata.userAgent(),
+                metadata.clientIp());
 
         refreshTokenCookieService.writeRefreshTokenCookie(httpServletResponse, response.getRefreshToken(),
                 refreshTokenDuration);
@@ -130,11 +130,9 @@ public class AuthenticationController {
         log.info("Logout request");
 
         String requestRefreshToken = request == null ? null : request.getRefreshToken();
-        String refreshToken = resolveRefreshToken(httpServlet, requestRefreshToken);
-
-        if (!StringUtils.hasText(refreshToken)) {
-            throw new AppException(JwtErrorCode.TOKEN_MISSING);
-        }
+        String refreshToken = refreshTokenCookieService
+                .resolveRefreshToken(httpServlet, requestRefreshToken, refreshTokenBodyEnabled)
+                .orElseThrow(() -> new AppException(JwtErrorCode.TOKEN_MISSING));
 
         authenticationService.logout(refreshToken);
         refreshTokenCookieService.clearRefreshTokenCookie(httpServletResponse);
@@ -175,7 +173,7 @@ public class AuthenticationController {
     @PostMapping(value = "/verify-user")
     @Operation(summary = "Verify user", description = "Verifies a newly registered user using the email OTP.")
     public ResponseEntity<ApiResponse<Void>> verifyUser(@Valid @RequestBody VerifyUserRequest request) {
-        log.info("Verify user request: email={}", request.getEmail());
+        log.debug("Verify user request: email={}", request.getEmail());
         authenticationService.verifyUser(request);
         return ResponseEntity.ok(ApiResponse.success("User verified successfully", null));
     }
@@ -183,7 +181,7 @@ public class AuthenticationController {
     @PostMapping("/resend-verification")
     @Operation(summary = "Resend verification OTP", description = "Sends a new registration OTP to an unverified user.")
     public ResponseEntity<ApiResponse<Void>> resendVerificationEmail(@Valid @RequestBody ResendOtpRequest request) {
-        log.info("Resend verification email request: email={}", request.getEmail());
+        log.debug("Resend verification email request: email={}", request.getEmail());
         authenticationService.resendVerificationOtp(request);
         return ResponseEntity.ok(ApiResponse.success("Verification email resent successfully", null));
     }
@@ -191,7 +189,7 @@ public class AuthenticationController {
     @PostMapping("/forgot-password")
     @Operation(summary = "Forgot password", description = "Sends a password-reset OTP to a verified user's email.")
     public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
-        log.info("Forgot password request: email={}", request.getEmail());
+        log.debug("Forgot password request: email={}", request.getEmail());
         authenticationService.forgotPassword(request);
         return ResponseEntity.ok(ApiResponse.success("Password reset OTP sent successfully", null));
     }
@@ -199,34 +197,14 @@ public class AuthenticationController {
     @PostMapping("/reset-password")
     @Operation(summary = "Reset password", description = "Resets the user's password using the password-reset OTP.")
     public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-        log.info("Reset password request: email={}", request.getEmail());
+        log.debug("Reset password request: email={}", request.getEmail());
         authenticationService.resetPassword(request);
         return ResponseEntity.ok(ApiResponse.success("Password reset successful", null));
-    }
-
-    private RequestMetadata resolveRequestMetadata(HttpServletRequest request) {
-        return new RequestMetadata(request.getHeader("User-Agent"), request.getRemoteAddr());
-    }
-
-    private String resolveRefreshToken(HttpServletRequest request, String requestRefreshToken) {
-        String refreshTokenFromCookie = refreshTokenCookieService.extractRefreshToken(request);
-        if (StringUtils.hasText(refreshTokenFromCookie)) {
-            return refreshTokenFromCookie;
-        }
-
-        if (refreshTokenBodyEnabled && StringUtils.hasText(requestRefreshToken)) {
-            return requestRefreshToken;
-        }
-
-        return null;
     }
 
     private void hideRefreshTokenWhenLegacyBodyDisabled(AuthenticationResponse response) {
         if (!refreshTokenBodyEnabled) {
             response.setRefreshToken(null);
         }
-    }
-
-    private record RequestMetadata(String deviceInfo, String ipAddress) {
     }
 }

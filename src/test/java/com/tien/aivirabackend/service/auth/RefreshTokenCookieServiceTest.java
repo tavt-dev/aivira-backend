@@ -58,4 +58,28 @@ class RefreshTokenCookieServiceTest {
 
         assertThat(refreshToken).isEqualTo("token-from-cookie");
     }
+
+    @Test
+    void resolveRefreshToken_shouldPreferCookieOverRequestBody() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setCookies(new Cookie("refreshToken", "token-from-cookie"));
+
+        assertThat(refreshTokenCookieService.resolveRefreshToken(request, "token-from-body", true))
+                .contains("token-from-cookie");
+    }
+
+    @Test
+    void resolveRefreshToken_shouldUseRequestBodyWhenEnabledAndCookieIsMissing() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+
+        assertThat(refreshTokenCookieService.resolveRefreshToken(request, "token-from-body", true))
+                .contains("token-from-body");
+    }
+
+    @Test
+    void resolveRefreshToken_shouldIgnoreRequestBodyWhenDisabled() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+
+        assertThat(refreshTokenCookieService.resolveRefreshToken(request, "token-from-body", false)).isEmpty();
+    }
 }

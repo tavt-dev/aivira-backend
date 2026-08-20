@@ -1,5 +1,7 @@
 package com.tien.aivirabackend.service.auth;
 
+import java.util.Optional;
+
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -55,5 +57,19 @@ public class RefreshTokenCookieService {
         }
 
         return null;
+    }
+
+    public Optional<String> resolveRefreshToken(HttpServletRequest request, String requestBodyToken,
+            boolean requestBodyEnabled) {
+        String cookieToken = extractRefreshToken(request);
+        if (StringUtils.hasText(cookieToken)) {
+            return Optional.of(cookieToken);
+        }
+
+        if (requestBodyEnabled && StringUtils.hasText(requestBodyToken)) {
+            return Optional.of(requestBodyToken);
+        }
+
+        return Optional.empty();
     }
 }
