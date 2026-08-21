@@ -40,6 +40,9 @@ import com.tien.aivirabackend.repository.ProductRepository;
 import com.tien.aivirabackend.repository.RefundRepository;
 import com.tien.aivirabackend.service.auth.CurrentUserService;
 import com.tien.aivirabackend.service.discount.DiscountService;
+import com.tien.aivirabackend.service.notification.OrderNotificationAction;
+import com.tien.aivirabackend.service.notification.OrderNotificationEvent;
+import com.tien.aivirabackend.service.notification.OrderNotificationProducer;
 import com.tien.aivirabackend.util.PageRequestUtils;
 
 import lombok.AccessLevel;
@@ -63,6 +66,7 @@ public class OrderServiceImpl implements OrderService {
     InventoryService inventoryService;
     OrderSpecifications orderSpecifications;
     DiscountService discountService;
+    OrderNotificationProducer orderNotificationProducer;
 
     @Override
     @Transactional(readOnly = true)
@@ -177,7 +181,9 @@ public class OrderServiceImpl implements OrderService {
         OrderStatus previousStatus = order.getOrderStatus();
         restoreStockAndCancel(order, trimToNull(request == null ? null : request.getReason()));
         logAdminLifecycleChange(order, previousStatus, OrderStatus.CANCELLED);
-        return commerceMapper.toOrderResponse(orderRepository.save(order));
+        Order savedOrder = orderRepository.save(order);
+        notifyAdminStatusChange(savedOrder, previousStatus, OrderStatus.CANCELLED, savedOrder.getCancelReason());
+        return commerceMapper.toOrderResponse(savedOrder);
     }
 
     @Override
@@ -186,6 +192,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = findOrderForAdminUpdate(orderId);
         validateRefundable(order);
         validateRefundAmount(order, request == null ? null : request.getAmount());
+        OrderStatus previousStatus = order.getOrderStatus();
 
         Instant now = Instant.now();
         String adminUserId = resolveCurrentUserIdForLog();
@@ -211,6 +218,7 @@ public class OrderServiceImpl implements OrderService {
         log.info("admin_refund_marked orderId={} orderCode={} refundCode={} amount={} adminUserId={}",
                 savedOrder.getId(), savedOrder.getOrderCode(), savedRefund.getRefundCode(), savedRefund.getAmount(),
                 adminUserId);
+        notifyAdminStatusChange(savedOrder, previousStatus, OrderStatus.REFUNDED, null);
         return commerceMapper.toOrderResponse(savedOrder);
     }
 
@@ -246,7 +254,17 @@ public class OrderServiceImpl implements OrderService {
                     .forEach(item -> productRepository.incrementSoldCount(item.getProductId(), item.getQuantity()));
         }
         logAdminLifecycleChange(order, previousStatus, target);
-        return commerceMapper.toOrderResponse(orderRepository.save(order));
+        Order savedOrder = orderRepository.save(order);
+        notifyAdminStatusChange(savedOrder, previousStatus, target, null);
+        return commerceMapper.toOrderResponse(savedOrder);
+    }
+
+    private void notifyAdminStatusChange(Order order, OrderStatus previousStatus, OrderStatus currentStatus,
+            String cancelReason) {
+        orderNotificationProducer.adminStatusUpdated(new OrderNotificationEvent(UUID.randomUUID().toString(),
+                order.getId(), order.getOrderCode(), order.getUser().getId(), previousStatus, currentStatus,
+                OrderNotificationAction.ADMIN_STATUS_UPDATED, cancelReason, resolveCurrentUserIdForLog(),
+                Instant.now()));
     }
 
     private Order findOrderForAdminUpdate(Long orderId) {

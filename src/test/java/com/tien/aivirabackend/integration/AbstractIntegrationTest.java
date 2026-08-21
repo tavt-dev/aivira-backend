@@ -64,6 +64,10 @@ public abstract class AbstractIntegrationTest {
                 .build();
 
         jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
+        jdbcTemplate.execute("TRUNCATE TABLE notification_outbox");
+        jdbcTemplate.execute("TRUNCATE TABLE notifications");
+        jdbcTemplate.execute("TRUNCATE TABLE rag_index_jobs");
+        jdbcTemplate.execute("TRUNCATE TABLE rag_product_index");
         jdbcTemplate.execute("TRUNCATE TABLE review_images");
         jdbcTemplate.execute("TRUNCATE TABLE reviews");
         jdbcTemplate.execute("TRUNCATE TABLE coupon_usages");

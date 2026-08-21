@@ -19,7 +19,9 @@ public enum AiAdviceErrorCode implements ErrorCode {
     AI_ADVISOR_UNAVAILABLE("E9005", "Tư vấn AI hiện tạm thời không khả dụng. Vui lòng thử lại.",
             HttpStatus.SERVICE_UNAVAILABLE),
     INVALID_AI_RESPONSE("E9006", "AI trả về dữ liệu không hợp lệ.", HttpStatus.BAD_GATEWAY),
-    INVALID_EVENT("E9007", "Dữ liệu tương tác tư vấn không hợp lệ.", HttpStatus.BAD_REQUEST);
+    INVALID_EVENT("E9007", "Dữ liệu tương tác tư vấn không hợp lệ.", HttpStatus.BAD_REQUEST),
+    RAG_JOB_NOT_FOUND("E9008", "Không tìm thấy tác vụ chỉ mục RAG.", HttpStatus.NOT_FOUND),
+    RAG_JOB_CONFLICT("E9009", "Một tác vụ lập lại chỉ mục RAG đang chạy.", HttpStatus.CONFLICT);
 
     private final String code;
     private final String message;

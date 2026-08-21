@@ -45,6 +45,7 @@ import com.tien.aivirabackend.service.discount.DiscountService;
 import com.tien.aivirabackend.service.payment.PaymentProviderSupportService;
 import com.tien.aivirabackend.service.payment.provider.PaymentProviderClient;
 import com.tien.aivirabackend.service.payment.provider.PaymentProviderResult;
+import com.tien.aivirabackend.service.notification.OrderNotificationProducer;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -61,6 +62,7 @@ public class CheckoutServiceImpl implements CheckoutService {
     OrderRepository orderRepository;
     PaymentGroupRepository paymentGroupRepository;
     PaymentAttemptRepository paymentAttemptRepository;
+    OrderNotificationProducer orderNotificationProducer;
     PaymentProperties paymentProperties;
     CurrentUserService currentUserService;
     CommerceMapper commerceMapper;
@@ -111,6 +113,8 @@ public class CheckoutServiceImpl implements CheckoutService {
 
         inventoryService.deductCartItems(context.cartItems(), context.variations());
         List<Order> savedOrders = orderRepository.saveAll(orders);
+        savedOrders.forEach(order -> orderNotificationProducer.orderCreated(order.getId(), order.getOrderCode(),
+                user.getId(), order.getOrderStatus()));
         discountService.reserveOrFinalizeCoupon(user, savedOrders.getFirst(), calculation,
                 request.getPaymentMethod() == PaymentMethod.COD);
         PaymentAttempt attempt = paymentProviderSupportService.createAttempt(savedPaymentGroup);

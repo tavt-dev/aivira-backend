@@ -2,6 +2,7 @@ package com.tien.aivirabackend.repository;
 
 import java.util.Optional;
 import java.util.List;
+import java.util.Collection;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -53,4 +54,9 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     @EntityGraph(attributePaths = { "category" })
     List<Product> findByActiveTrueAndStatusAndStockQuantityGreaterThan(ProductStatus status, Integer stockQuantity);
+
+    @EntityGraph(attributePaths = { "category" })
+    List<Product> findByIdIn(Collection<Long> ids);
+
+    List<Product> findByCategoryId(Long categoryId);
 }

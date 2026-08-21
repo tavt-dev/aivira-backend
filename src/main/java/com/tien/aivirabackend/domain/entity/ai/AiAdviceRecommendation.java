@@ -37,4 +37,8 @@ public class AiAdviceRecommendation extends BaseEntity {
 
     @Column(name = "matched_criteria", columnDefinition = "TEXT")
     String matchedCriteria;
+
+    @Column(name = "semantic_score") Double semanticScore;
+    @Column(name = "lexical_score") Double lexicalScore;
+    @Column(name = "final_score") Double finalScore;
 }

@@ -1,0 +1,6 @@
+package com.tien.aivirabackend.constant;
+
+public enum NotificationType {
+    ORDER_CREATED, ADMIN_NEW_ORDER, ORDER_CONFIRMED, ORDER_PACKING, ORDER_SHIPPING, ORDER_COMPLETED, ORDER_CANCELLED,
+    ORDER_REFUNDED
+}

@@ -21,3 +21,6 @@ cloudinary:
   cloud-name: test-cloud
   api-key: test-key
   api-secret: test-secret
+
+rag:
+  enabled: false

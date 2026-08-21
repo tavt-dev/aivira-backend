@@ -17,6 +17,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import com.tien.aivirabackend.config.properties.CloudinaryProperties;
 import com.tien.aivirabackend.constant.BookFormat;
@@ -65,6 +66,9 @@ class ProductServiceImplTest {
     @Mock
     CurrentUserService currentUserService;
 
+    @Mock
+    ApplicationEventPublisher eventPublisher;
+
     CloudinaryProperties cloudinaryProperties;
 
     @InjectMocks
@@ -75,7 +79,7 @@ class ProductServiceImplTest {
         cloudinaryProperties = new CloudinaryProperties();
         productService = new ProductServiceImpl(productRepository, variationRepository, mediaRepository,
                 categoryRepository, productMapper, fileValidatorService, cloudinaryStorageService, cloudinaryProperties,
-                currentUserService, new ProductSpecifications(), new ProductStatusPolicy());
+                currentUserService, new ProductSpecifications(), new ProductStatusPolicy(), eventPublisher);
     }
 
     @Test

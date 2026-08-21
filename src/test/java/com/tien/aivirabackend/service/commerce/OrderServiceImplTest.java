@@ -51,6 +51,7 @@ import com.tien.aivirabackend.repository.ProductVariationRepository;
 import com.tien.aivirabackend.repository.RefundRepository;
 import com.tien.aivirabackend.service.auth.CurrentUserService;
 import com.tien.aivirabackend.service.discount.DiscountService;
+import com.tien.aivirabackend.service.notification.OrderNotificationProducer;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceImplTest {
@@ -81,6 +82,9 @@ class OrderServiceImplTest {
     @Mock
     DiscountService discountService;
 
+    @Mock
+    OrderNotificationProducer orderNotificationProducer;
+
     OrderServiceImpl orderService;
 
     @BeforeEach
@@ -88,7 +92,7 @@ class OrderServiceImplTest {
         orderService = new OrderServiceImpl(orderRepository, orderItemRepository, refundRepository,
                 paymentGroupRepository, paymentAttemptRepository, productRepository, currentUserService,
                 new CommerceMapper(), new InventoryService(variationRepository), new OrderSpecifications(),
-                discountService);
+                discountService, orderNotificationProducer);
     }
 
     @Test

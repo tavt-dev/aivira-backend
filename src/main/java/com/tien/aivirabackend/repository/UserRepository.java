@@ -2,6 +2,7 @@ package com.tien.aivirabackend.repository;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.List;
 import java.util.Set;
 
 import jakarta.persistence.LockModeType;
@@ -65,4 +66,19 @@ public interface UserRepository extends JpaRepository<User, String>, JpaSpecific
     Set<PermissionCode> findRolePermissionCodesByUserId(@Param("userId") String userId);
 
     long countByIsDeletedFalseAndCreatedAtBetween(Instant fromDate, Instant toDate);
+
+    @Query("""
+            select distinct u.id from User u join u.roles r join r.permissions p
+            where p.code in :codes and u.isActive = true and u.isLocked = false and u.isDeleted = false
+            """)
+    List<String> findActiveUserIdsWithRolePermissions(@Param("codes") Set<PermissionCode> codes);
+
+    @Query("""
+            select distinct up.user.id from UserPermission up
+            where up.permission.code in :codes and up.active = true and up.revokedAt is null
+              and (up.expiresAt is null or up.expiresAt > :now)
+              and up.user.isActive = true and up.user.isLocked = false and up.user.isDeleted = false
+            """)
+    List<String> findActiveUserIdsWithDirectPermissions(@Param("codes") Set<PermissionCode> codes,
+            @Param("now") Instant now);
 }

@@ -133,6 +133,25 @@ Practical local/dev configuration is environment-driven:
 
 If the Gemini key is absent, the application remains healthy and the advisor returns deterministic degraded recommendations. Set `AI_ADVICE_FAIL_FAST=true` in an environment where startup must fail when the selected provider has no key. Never commit real provider keys; copy `.env.example` to a local `.env` instead.
 
+### Semantic RAG book search
+
+The advisor can combine the existing catalog ranker with semantic retrieval from Qdrant. Start Qdrant locally with:
+
+```bash
+docker compose -f docker-compose.rag.yml up -d
+```
+
+Set `RAG_ENABLED=true`, `RAG_QDRANT_URL=http://localhost:6333`, and the API key for the selected AI provider. Gemini uses `gemini-embedding-001` (768 dimensions) by default; OpenAI uses `text-embedding-3-small` (1536 dimensions). Changing provider, model, or dimensions creates a versioned Qdrant collection, so run a full rebuild after such a change.
+
+An administrator with `PRODUCT_MANAGE_ALL` can manage the index through:
+
+- `POST /api/v1/admin/ai-advice/index/rebuild`
+- `POST /api/v1/admin/ai-advice/index/products/{productId}`
+- `GET /api/v1/admin/ai-advice/index/jobs/{jobId}`
+- `GET /api/v1/admin/ai-advice/index/status`
+
+Catalog writes enqueue an after-commit update and the reconcile schedule repairs missing or failed entries. If Qdrant or the embedding API is unavailable, user advice automatically falls back to lexical catalog ranking. Keep `RAG_DEBUG_SCORES=false` in public environments unless retrieval diagnostics are required.
+
 Production should provide secrets through the deployment environment, not committed config files. `JWT_SIGNER_KEY` and provider secrets must be treated as required outside test/local-only setups.
 
 ## Error Contract
