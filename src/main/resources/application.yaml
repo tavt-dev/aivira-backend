@@ -158,6 +158,24 @@ openai:
   connect-timeout: ${OPENAI_CONNECT_TIMEOUT:5s}
   read-timeout: ${OPENAI_READ_TIMEOUT:45s}
 
+rag:
+  enabled: ${RAG_ENABLED:false}
+  qdrant-url: ${RAG_QDRANT_URL:http://localhost:6333}
+  qdrant-api-key: ${RAG_QDRANT_API_KEY:}
+  collection-alias: ${RAG_COLLECTION_ALIAS:aivira-books-current}
+  candidate-limit: ${RAG_CANDIDATE_LIMIT:100}
+  score-threshold: ${RAG_SCORE_THRESHOLD:0.25}
+  index-batch-size: ${RAG_INDEX_BATCH_SIZE:25}
+  max-retries: ${RAG_MAX_RETRIES:5}
+  debug-scores: ${RAG_DEBUG_SCORES:false}
+  connect-timeout: ${RAG_CONNECT_TIMEOUT:5s}
+  read-timeout: ${RAG_READ_TIMEOUT:20s}
+  reconcile-cron: ${RAG_RECONCILE_CRON:0 */15 * * * *}
+  gemini-embedding-model: ${GEMINI_EMBEDDING_MODEL:gemini-embedding-001}
+  gemini-embedding-dimensions: ${GEMINI_EMBEDDING_DIMENSIONS:768}
+  open-ai-embedding-model: ${OPENAI_EMBEDDING_MODEL:text-embedding-3-small}
+  open-ai-embedding-dimensions: ${OPENAI_EMBEDDING_DIMENSIONS:1536}
+
 management:
   endpoints:
     web:
@@ -167,3 +185,21 @@ management:
     health:
       probes:
         enabled: true
+
+notification:
+  enabled: ${NOTIFICATION_ENABLED:true}
+  page-size-max: ${NOTIFICATION_PAGE_SIZE_MAX:100}
+  outbox:
+    batch-size: ${NOTIFICATION_OUTBOX_BATCH_SIZE:100}
+    poll-delay-ms: ${NOTIFICATION_OUTBOX_POLL_DELAY_MS:1000}
+    max-attempts: ${NOTIFICATION_OUTBOX_MAX_ATTEMPTS:5}
+    stale-lock-minutes: ${NOTIFICATION_OUTBOX_STALE_LOCK_MINUTES:5}
+  sse:
+    timeout-ms: ${NOTIFICATION_SSE_TIMEOUT_MS:1800000}
+    heartbeat-ms: ${NOTIFICATION_SSE_HEARTBEAT_MS:25000}
+    max-connections-per-user: ${NOTIFICATION_SSE_MAX_CONNECTIONS_PER_USER:5}
+  retention:
+    read-days: ${NOTIFICATION_READ_RETENTION_DAYS:90}
+    unread-days: ${NOTIFICATION_UNREAD_RETENTION_DAYS:180}
+    completed-outbox-days: ${NOTIFICATION_OUTBOX_RETENTION_DAYS:14}
+    cleanup-cron: ${NOTIFICATION_CLEANUP_CRON:0 40 3 * * *}

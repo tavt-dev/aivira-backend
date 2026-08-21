@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.data.domain.PageRequest;
 
 import com.tien.aivirabackend.constant.OrderStatus;
 import com.tien.aivirabackend.constant.PaymentMethod;
@@ -32,6 +34,7 @@ import com.tien.aivirabackend.domain.entity.transaction.payment.PaymentGroup;
 import com.tien.aivirabackend.domain.entity.user.User;
 import com.tien.aivirabackend.repository.CategoryRepository;
 import com.tien.aivirabackend.repository.OrderRepository;
+import com.tien.aivirabackend.repository.NotificationRepository;
 import com.tien.aivirabackend.repository.PaymentGroupRepository;
 import com.tien.aivirabackend.repository.ProductRepository;
 import com.tien.aivirabackend.repository.ProductVariationRepository;
@@ -70,6 +73,9 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     RefundRepository refundRepository;
+
+    @Autowired
+    NotificationRepository notificationRepository;
 
     @Test
     void adminOrders_shouldListAndFilterByStatusAndKeyword() throws Exception {
@@ -127,6 +133,19 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
 
         assertThat(orderRepository.findById(order.getId()).orElseThrow().getOrderStatus())
                 .isEqualTo(OrderStatus.COMPLETED);
+        var notifications = notificationRepository
+                .findInbox(order.getUser().getId(), null, null, PageRequest.of(0, 20)).getContent();
+        assertThat(notifications).extracting(notification -> notification.getType().name())
+                .containsExactlyInAnyOrder("ORDER_COMPLETED", "ORDER_SHIPPING", "ORDER_PACKING", "ORDER_CONFIRMED");
+
+        String customerToken = loginExistingUser("buyer");
+        mockMvc.perform(get("/notifications").header("Authorization", "Bearer " + customerToken))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.totalElements").value(4));
+        mockMvc.perform(get("/notifications/unread-count").header("Authorization", "Bearer " + customerToken))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.unreadCount").value(4));
+        mockMvc.perform(patch("/notifications/{id}/read", notifications.getFirst().getId())
+                .header("Authorization", "Bearer " + customerToken)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.read").value(true));
     }
 
     @Test
@@ -186,7 +205,16 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
 
         MvcResult login = mockMvc
                 .perform(post("/auth/token").contentType(APPLICATION_JSON)
+                        .header("User-Agent", "integration-test")
                         .content(json(Map.of("username", username, "password", PASSWORD))))
+                .andExpect(status().isOk()).andReturn();
+        return read(login, "/data/token").asText();
+    }
+
+    private String loginExistingUser(String username) throws Exception {
+        MvcResult login = mockMvc.perform(post("/auth/token").contentType(APPLICATION_JSON)
+                .header("User-Agent", "integration-test")
+                .content(json(Map.of("username", username, "password", PASSWORD))))
                 .andExpect(status().isOk()).andReturn();
         return read(login, "/data/token").asText();
     }
@@ -199,7 +227,8 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
             PaymentMethod paymentMethod) {
         User customer = userRepository.save(
                 User.builder().username("buyer").email("buyer@example.com").password(passwordEncoder.encode(PASSWORD))
-                        .provider(SignInProvider.LOCAL).emailVerified(true).isActive(true).build());
+                        .provider(SignInProvider.LOCAL).emailVerified(true).isActive(true).isLocked(false)
+                        .isDeleted(false).build());
         return saveOrderForCustomer(customer, orderStatus, paymentStatus, variationStock, paymentMethod);
     }
 

@@ -15,6 +15,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import com.tien.aivirabackend.domain.dto.request.CategoryRequest;
 import com.tien.aivirabackend.domain.dto.response.CategoryResponse;
@@ -30,6 +31,9 @@ class CategoryServiceImplTest {
 
     @Mock
     CategoryMapper categoryMapper;
+
+    @Mock
+    ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     CategoryServiceImpl categoryService;

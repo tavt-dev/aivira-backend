@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 import com.tien.aivirabackend.constant.AiAdviceResponseStatus;
 import com.tien.aivirabackend.constant.AiAdviceRole;
+import com.tien.aivirabackend.constant.RetrievalMode;
 import com.tien.aivirabackend.domain.entity.BaseEntity;
 
 import lombok.*;
@@ -45,6 +46,16 @@ public class AiAdviceMessage extends BaseEntity {
 
     @Column(length = 30)
     String provider;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "retrieval_mode", length = 30)
+    RetrievalMode retrievalMode;
+
+    @Column(name = "embedding_provider", length = 30)
+    String embeddingProvider;
+
+    @Column(name = "embedding_model", length = 100)
+    String embeddingModel;
 
     @Column(name = "input_tokens")
     Integer inputTokens;

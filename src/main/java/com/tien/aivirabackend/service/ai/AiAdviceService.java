@@ -20,6 +20,7 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 import com.tien.aivirabackend.config.properties.AiAdviceProperties;
+import com.tien.aivirabackend.config.properties.RagProperties;
 import com.tien.aivirabackend.constant.*;
 import com.tien.aivirabackend.domain.dto.request.*;
 import com.tien.aivirabackend.domain.dto.response.*;
@@ -55,7 +56,9 @@ public class AiAdviceService {
     private final AiAdvisorClient advisorClient;
     private final AiAdviceQuotaService quotaService;
     private final AiCatalogRanker catalogRanker;
+    private final HybridCatalogRetriever hybridRetriever;
     private final AiAdviceProperties properties;
+    private final RagProperties ragProperties;
     private final ObjectMapper objectMapper;
     private final TransactionTemplate transactionTemplate;
 
@@ -122,22 +125,23 @@ public class AiAdviceService {
 
             if (profile.needsClarification()) {
                 return finalizeRequest(sessionId, request, usageId, profile.clarificationQuestion(),
-                        AiAdviceResponseStatus.CLARIFICATION, analyzed, List.of(), profile, List.of(), null, false);
+                        AiAdviceResponseStatus.CLARIFICATION, analyzed, List.of(), profile, List.of(), null, null, false);
             }
-            List<Product> ranked = catalogRanker.rank(profile,
+            HybridCatalogRetriever.Result retrieval = hybridRetriever.retrieve(profile, request.content().trim(),
                     session.isPersonalizationEnabled() ? purchasedIds(userId) : Set.of());
+            List<Product> ranked = retrieval.products();
             if (ranked.isEmpty()) {
                 String text = session.getLocale().startsWith("en")
                         ? "I could not find an available book matching those preferences. Try broadening the topic or budget."
                         : "Mình chưa tìm thấy sách đang bán phù hợp. Bạn thử mở rộng chủ đề hoặc khoảng giá nhé.";
                 return finalizeRequest(sessionId, request, usageId, text, AiAdviceResponseStatus.NO_RESULTS, analyzed,
-                        List.of(), profile, List.of(), null, false);
+                        List.of(), profile, List.of(), null, retrieval, false);
             }
             AiModelResult<AiAdviceDraft> explained = advisorClient.explain(profile, toCandidates(ranked),
                     session.getLocale(), safetyIdentifier(actorId));
             return finalizeRequest(sessionId, request, usageId, explained.value().message(),
                     AiAdviceResponseStatus.RECOMMENDATION, combine(analyzed, explained),
-                    explained.value().suggestedPrompts(), profile, ranked, explained.value(), true);
+                    explained.value().suggestedPrompts(), profile, ranked, explained.value(), retrieval, true);
         } catch (RuntimeException ex) {
             return degradedResponse(session, request, usageId, ex);
         }
@@ -146,16 +150,16 @@ public class AiAdviceService {
     private AiAdviceMessageResponse finalizeRequest(String sessionId, AiAdviceMessageRequest request, Long usageId,
             String content, AiAdviceResponseStatus responseStatus, AiModelResult<?> result,
             List<String> suggestedPrompts, AiSearchProfile profile, List<Product> products, AiAdviceDraft draft,
-            boolean successfulUsage) {
+            HybridCatalogRetriever.Result retrieval, boolean successfulUsage) {
         return transactionTemplate.execute(transactionStatus -> {
             AiAdviceSession managedSession = sessionRepository.findById(sessionId)
                     .orElseThrow(() -> new AppException(AiAdviceErrorCode.SESSION_NOT_FOUND));
             messageRepository.save(AiAdviceMessage.builder().session(managedSession).role(AiAdviceRole.USER)
                     .content(request.content().trim()).clientMessageId(request.clientMessageId()).build());
             AiAdviceMessage assistant = saveAssistant(managedSession, content, responseStatus, result,
-                    suggestedPrompts);
+                    suggestedPrompts, retrieval);
             if (draft != null && !products.isEmpty()) {
-                persistSnapshot(assistant, profile, products, draft);
+                persistSnapshot(assistant, profile, products, draft, retrieval);
             }
             touch(managedSession);
             if (usageId != null) {
@@ -188,7 +192,7 @@ public class AiAdviceService {
         AiModelResult<Object> fallbackResult = new AiModelResult<>(null, "deterministic", "catalog-ranking", 0, 0, 0);
         AiAdviceMessageResponse response = finalizeRequest(session.getId(), request, usageId, message,
                 AiAdviceResponseStatus.DEGRADED_RECOMMENDATION, fallbackResult, List.of(), fallbackProfile, products,
-                draft, false);
+                draft, null, false);
         return response;
     }
 
@@ -266,9 +270,14 @@ public class AiAdviceService {
     }
 
     private AiAdviceMessage saveAssistant(AiAdviceSession session, String content, AiAdviceResponseStatus status,
-            AiModelResult<?> result, List<String> suggestedPrompts) {
+            AiModelResult<?> result, List<String> suggestedPrompts, HybridCatalogRetriever.Result retrieval) {
         return messageRepository.save(AiAdviceMessage.builder().session(session).role(AiAdviceRole.ASSISTANT)
                 .content(content).responseStatus(status).provider(result.provider()).model(result.model())
+                .retrievalMode(retrieval == null
+                        ? status == AiAdviceResponseStatus.DEGRADED_RECOMMENDATION ? RetrievalMode.LEXICAL_FALLBACK : null
+                        : retrieval.mode())
+                .embeddingProvider(retrieval == null ? null : retrieval.embeddingProvider())
+                .embeddingModel(retrieval == null ? null : retrieval.embeddingModel())
                 .inputTokens(result.inputTokens()).outputTokens(result.outputTokens()).latencyMs(result.latencyMs())
                 .errorCode(status == AiAdviceResponseStatus.DEGRADED_RECOMMENDATION
                         ? AiAdviceErrorCode.AI_ADVISOR_UNAVAILABLE.getCode() : null)
@@ -276,7 +285,7 @@ public class AiAdviceService {
     }
 
     private void persistSnapshot(AiAdviceMessage assistant, AiSearchProfile profile, List<Product> products,
-            AiAdviceDraft draft) {
+            AiAdviceDraft draft, HybridCatalogRetriever.Result retrieval) {
         AiAdviceResultSnapshot snapshot = snapshotRepository.save(AiAdviceResultSnapshot.builder().message(assistant)
                 .searchProfile(writeJson(profile)).totalResults(products.size()).build());
         assistant.setSnapshot(snapshot);
@@ -290,7 +299,10 @@ public class AiAdviceService {
             AiAdviceDraft.BookReason reason = reasonByProduct.get(product.getId());
             recommendations.add(AiAdviceRecommendation.builder().snapshot(snapshot).product(product).rankPosition(i + 1)
                     .reason(reason == null ? null : reason.reason())
-                    .matchedCriteria(reason == null ? null : writeJson(reason.matchedCriteria())).build());
+                    .matchedCriteria(reason == null ? null : writeJson(reason.matchedCriteria()))
+                    .semanticScore(retrieval == null ? null : retrieval.semanticScores().get(product.getId()))
+                    .lexicalScore(retrieval == null ? null : retrieval.lexicalScores().get(product.getId()))
+                    .finalScore(retrieval == null ? null : retrieval.finalScores().get(product.getId())).build());
         }
         recommendationRepository.saveAll(recommendations);
         snapshot.setRecommendations(recommendations);
@@ -356,7 +368,8 @@ public class AiAdviceService {
         }
         return new AiAdviceMessageResponse(message.getId(), message.getRole(), message.getContent(),
                 message.getResponseStatus(), message.getCreatedAt(), readStringList(message.getSuggestedPrompts()),
-                page, includeQuota ? quotaFor(message.getSession()) : null);
+                page, includeQuota ? quotaFor(message.getSession()) : null, message.getRetrievalMode(),
+                message.getEmbeddingProvider(), message.getEmbeddingModel());
     }
 
     private AiAdviceQuotaResponse quotaFor(AiAdviceSession session) {
@@ -370,7 +383,9 @@ public class AiAdviceService {
         List<AiAdviceRecommendationResponse> items = rows.stream()
                 .map(row -> new AiAdviceRecommendationResponse(row.getId(), row.getRankPosition(),
                         productMapper.toResponse(row.getProduct()), row.getReason(),
-                        readStringList(row.getMatchedCriteria())))
+                        readStringList(row.getMatchedCriteria()), ragProperties.debugScores() ? row.getSemanticScore() : null,
+                        ragProperties.debugScores() ? row.getLexicalScore() : null,
+                        ragProperties.debugScores() ? row.getFinalScore() : null))
                 .toList();
         int pages = (int) Math.ceil(snapshot.getTotalResults() / (double) properties.pageSize());
         return new AiAdviceRecommendationPageResponse(items, page, properties.pageSize(), snapshot.getTotalResults(),

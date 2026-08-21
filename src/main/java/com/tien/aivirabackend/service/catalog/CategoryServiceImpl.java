@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
@@ -15,6 +16,7 @@ import com.tien.aivirabackend.exception.AppException;
 import com.tien.aivirabackend.exception.errorCode.CategoryErrorCode;
 import com.tien.aivirabackend.repository.CategoryRepository;
 import com.tien.aivirabackend.util.SlugUtils;
+import com.tien.aivirabackend.service.ai.CategoryCatalogChangedEvent;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,7 @@ import lombok.experimental.FieldDefaults;
 public class CategoryServiceImpl implements CategoryService {
     CategoryRepository categoryRepository;
     CategoryMapper categoryMapper;
+    ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional(readOnly = true)
@@ -65,7 +68,9 @@ public class CategoryServiceImpl implements CategoryService {
                 .active(request.getActive() == null ? true : request.getActive())
                 .visible(request.getVisible() == null ? true : request.getVisible()).build();
 
-        return categoryMapper.toResponse(categoryRepository.save(category));
+        Category saved = categoryRepository.save(category);
+        eventPublisher.publishEvent(new CategoryCatalogChangedEvent(saved.getId()));
+        return categoryMapper.toResponse(saved);
     }
 
     @Override
@@ -97,7 +102,9 @@ public class CategoryServiceImpl implements CategoryService {
         category.setActive(request.getActive() == null ? category.getActive() : request.getActive());
         category.setVisible(request.getVisible() == null ? category.getVisible() : request.getVisible());
 
-        return categoryMapper.toResponse(categoryRepository.save(category));
+        Category saved = categoryRepository.save(category);
+        eventPublisher.publishEvent(new CategoryCatalogChangedEvent(saved.getId()));
+        return categoryMapper.toResponse(saved);
     }
 
     @Override
@@ -107,6 +114,7 @@ public class CategoryServiceImpl implements CategoryService {
         category.setActive(false);
         category.setVisible(false);
         categoryRepository.save(category);
+        eventPublisher.publishEvent(new CategoryCatalogChangedEvent(categoryId));
     }
 
     private Category findCategory(Long categoryId) {

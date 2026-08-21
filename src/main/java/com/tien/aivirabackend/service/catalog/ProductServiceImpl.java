@@ -7,6 +7,7 @@ import java.util.Locale;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -38,6 +39,7 @@ import com.tien.aivirabackend.service.auth.CurrentUserService;
 import com.tien.aivirabackend.service.media.CloudinaryStorageService;
 import com.tien.aivirabackend.service.media.CloudinaryUploadResult;
 import com.tien.aivirabackend.service.media.FileValidatorService;
+import com.tien.aivirabackend.service.ai.ProductCatalogChangedEvent;
 import com.tien.aivirabackend.util.PageRequestUtils;
 import com.tien.aivirabackend.util.SlugUtils;
 
@@ -65,6 +67,7 @@ public class ProductServiceImpl implements ProductService {
     CurrentUserService currentUserService;
     ProductSpecifications productSpecifications;
     ProductStatusPolicy productStatusPolicy;
+    ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional(readOnly = true)
@@ -136,6 +139,7 @@ public class ProductServiceImpl implements ProductService {
         productStatusPolicy.requireActiveVariation(product);
 
         Product savedProduct = productRepository.save(product);
+        eventPublisher.publishEvent(new ProductCatalogChangedEvent(savedProduct.getId()));
         log.info("Admin created product {}", savedProduct.getId());
         return productMapper.toResponse(savedProduct);
     }
@@ -214,7 +218,9 @@ public class ProductServiceImpl implements ProductService {
             product.setFeatured(request.getFeatured());
         }
 
-        return productMapper.toResponse(productRepository.save(product));
+        Product saved = productRepository.save(product);
+        eventPublisher.publishEvent(new ProductCatalogChangedEvent(saved.getId()));
+        return productMapper.toResponse(saved);
     }
 
     @Override
@@ -224,6 +230,7 @@ public class ProductServiceImpl implements ProductService {
         product.setStatus(ProductStatus.INACTIVE);
         product.setActive(false);
         productRepository.save(product);
+        eventPublisher.publishEvent(new ProductCatalogChangedEvent(productId));
     }
 
     @Override
@@ -302,7 +309,9 @@ public class ProductServiceImpl implements ProductService {
         validateVariationSku(request.getSku(), null);
         product.getProductVariations().add(buildVariation(request, product));
         recalculateStock(product);
-        return productMapper.toResponse(productRepository.save(product));
+        Product saved = productRepository.save(product);
+        eventPublisher.publishEvent(new ProductCatalogChangedEvent(productId));
+        return productMapper.toResponse(saved);
     }
 
     @Override
@@ -315,7 +324,9 @@ public class ProductServiceImpl implements ProductService {
         recalculateStock(product);
         productStatusPolicy.requireActiveVariation(product);
         variationRepository.save(variation);
-        return productMapper.toResponse(productRepository.save(product));
+        Product saved = productRepository.save(product);
+        eventPublisher.publishEvent(new ProductCatalogChangedEvent(productId));
+        return productMapper.toResponse(saved);
     }
 
     @Override
@@ -328,6 +339,7 @@ public class ProductServiceImpl implements ProductService {
         productStatusPolicy.requireActiveVariation(product);
         variationRepository.save(variation);
         productRepository.save(product);
+        eventPublisher.publishEvent(new ProductCatalogChangedEvent(productId));
     }
 
     @Override
@@ -338,7 +350,9 @@ public class ProductServiceImpl implements ProductService {
         variation.setStockQuantity(request.getStockQuantity());
         recalculateStock(product);
         variationRepository.save(variation);
-        return productMapper.toResponse(productRepository.save(product));
+        Product saved = productRepository.save(product);
+        eventPublisher.publishEvent(new ProductCatalogChangedEvent(productId));
+        return productMapper.toResponse(saved);
     }
 
     private Product findDetailedProduct(Long productId) {
