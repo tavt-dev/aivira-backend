@@ -3,6 +3,7 @@ package com.tien.aivirabackend.service.commerce;
 import java.time.Instant;
 
 import com.tien.aivirabackend.constant.OrderStatus;
+import com.tien.aivirabackend.constant.PaymentStatus;
 import com.tien.aivirabackend.domain.dto.PageResponse;
 import com.tien.aivirabackend.domain.dto.request.ManualRefundRequest;
 import com.tien.aivirabackend.domain.dto.request.OrderCancelRequest;
@@ -16,7 +17,7 @@ public interface OrderService {
 
     OrderResponse cancelMyOrder(Long orderId, OrderCancelRequest request);
 
-    PageResponse<OrderSummaryResponse> getAdminOrders(OrderStatus status, String keyword, Instant fromDate,
+    PageResponse<OrderSummaryResponse> getAdminOrders(OrderStatus status, PaymentStatus paymentStatus, String keyword, Instant fromDate,
             Instant toDate, int page, int size);
 
     OrderResponse getAdminOrder(Long orderId);

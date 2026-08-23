@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.tien.aivirabackend.constant.OrderStatus;
+import com.tien.aivirabackend.constant.PaymentStatus;
 import com.tien.aivirabackend.domain.dto.request.ManualRefundRequest;
 import com.tien.aivirabackend.domain.dto.request.OrderCancelRequest;
 import com.tien.aivirabackend.exception.GlobalExceptionHandler;
@@ -41,7 +42,8 @@ class AdminOrderControllerContractTest {
 
     @Test
     void listAndDetail_shouldRequireManageOrReadAllPermission() throws Exception {
-        assertPreAuthorize(AdminOrderController.class.getMethod("getAdminOrders", OrderStatus.class, String.class,
+        assertPreAuthorize(AdminOrderController.class.getMethod("getAdminOrders", OrderStatus.class,
+                PaymentStatus.class, String.class,
                 Instant.class, Instant.class, int.class, int.class), "ORDER_MANAGE_ALL", "ORDER_READ_ALL");
         assertPreAuthorize(AdminOrderController.class.getMethod("getAdminOrder", Long.class), "ORDER_MANAGE_ALL",
                 "ORDER_READ_ALL");
@@ -70,7 +72,8 @@ class AdminOrderControllerContractTest {
 
     @Test
     void endpoints_shouldDelegateToOrderService() throws Exception {
-        mockMvc.perform(get("/admin/orders").param("status", "CONFIRMED").param("keyword", "ORD")
+        mockMvc.perform(get("/admin/orders").param("status", "CONFIRMED").param("paymentStatus", "SUCCESS")
+                .param("keyword", "ORD")
                 .param("fromDate", "2026-01-01T00:00:00Z").param("toDate", "2026-12-31T23:59:59Z").param("page", "2")
                 .param("size", "10")).andExpect(status().isOk());
         mockMvc.perform(get("/admin/orders/21")).andExpect(status().isOk());
@@ -88,7 +91,7 @@ class AdminOrderControllerContractTest {
                 }
                 """)).andExpect(status().isOk());
 
-        verify(orderService).getAdminOrders(eq(OrderStatus.CONFIRMED), eq("ORD"),
+        verify(orderService).getAdminOrders(eq(OrderStatus.CONFIRMED), eq(PaymentStatus.SUCCESS), eq("ORD"),
                 eq(Instant.parse("2026-01-01T00:00:00Z")), eq(Instant.parse("2026-12-31T23:59:59Z")), eq(2), eq(10));
         verify(orderService).getAdminOrder(21L);
         verify(orderService).confirmOrder(21L);

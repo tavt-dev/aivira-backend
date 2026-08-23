@@ -162,7 +162,8 @@ class OrderServiceImplTest {
                 .thenReturn(new PageImpl<>(List.of(order)));
 
         PageResponse<OrderSummaryResponse> response = orderService.getAdminOrders(OrderStatus.PENDING_CONFIRMATION,
-                "ORD123", Instant.parse("2026-01-01T00:00:00Z"), Instant.parse("2026-12-31T23:59:59Z"), 1, 20);
+                PaymentStatus.PENDING, "ORD123", Instant.parse("2026-01-01T00:00:00Z"),
+                Instant.parse("2026-12-31T23:59:59Z"), 1, 20);
 
         assertThat(response.getData()).hasSize(1);
         assertThat(response.getData().getFirst().getOrderCode()).isEqualTo("ORD123");
