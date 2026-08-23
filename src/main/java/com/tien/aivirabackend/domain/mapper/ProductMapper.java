@@ -1,5 +1,6 @@
 package com.tien.aivirabackend.domain.mapper;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
@@ -16,15 +17,21 @@ import com.tien.aivirabackend.domain.entity.catalog.ProductVariation;
 @Component
 public class ProductMapper {
     public ProductResponse toResponse(Product product) {
+        return toResponse(product, product == null ? List.of() : product.getProductVariations(),
+                product == null ? List.of() : product.getProductMedia());
+    }
+
+    public ProductResponse toResponse(Product product, Collection<ProductVariation> productVariations,
+            Collection<ProductMedia> productMedia) {
         if (product == null) {
             return null;
         }
 
         Category category = product.getCategory();
-        List<ProductVariationResponse> variations = product.getProductVariations().stream()
+        List<ProductVariationResponse> variations = productVariations.stream()
                 .sorted(Comparator.comparing(ProductVariation::getId, Comparator.nullsLast(Long::compareTo)))
                 .map(this::toVariationResponse).toList();
-        List<ProductMediaResponse> media = product.getProductMedia().stream()
+        List<ProductMediaResponse> media = productMedia.stream()
                 .sorted(Comparator.comparing(ProductMedia::getSortOrder).thenComparing(ProductMedia::getId))
                 .map(this::toMediaResponse).toList();
 

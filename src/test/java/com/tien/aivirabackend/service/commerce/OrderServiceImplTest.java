@@ -46,6 +46,7 @@ import com.tien.aivirabackend.repository.OrderRepository;
 import com.tien.aivirabackend.repository.OrderItemRepository;
 import com.tien.aivirabackend.repository.PaymentAttemptRepository;
 import com.tien.aivirabackend.repository.PaymentGroupRepository;
+import com.tien.aivirabackend.repository.PaymentRepository;
 import com.tien.aivirabackend.repository.ProductRepository;
 import com.tien.aivirabackend.repository.ProductVariationRepository;
 import com.tien.aivirabackend.repository.RefundRepository;
@@ -71,6 +72,9 @@ class OrderServiceImplTest {
     PaymentAttemptRepository paymentAttemptRepository;
 
     @Mock
+    PaymentRepository paymentRepository;
+
+    @Mock
     ProductRepository productRepository;
 
     @Mock
@@ -90,7 +94,7 @@ class OrderServiceImplTest {
     @BeforeEach
     void setUp() {
         orderService = new OrderServiceImpl(orderRepository, orderItemRepository, refundRepository,
-                paymentGroupRepository, paymentAttemptRepository, productRepository, currentUserService,
+                paymentGroupRepository, paymentAttemptRepository, paymentRepository, productRepository, currentUserService,
                 new CommerceMapper(), new InventoryService(variationRepository), new OrderSpecifications(),
                 discountService, orderNotificationProducer);
     }
@@ -102,6 +106,7 @@ class OrderServiceImplTest {
         when(orderRepository.findByUserId(eq("user-1"), any(PageRequest.class)))
                 .thenReturn(new PageImpl<>(List.of(order)));
         when(orderItemRepository.findByOrderIdInOrderByOrderIdAscIdAsc(List.of(21L))).thenReturn(order.getItems());
+        when(paymentRepository.findByOrderIdInOrderByOrderIdAscIdAsc(List.of(21L))).thenReturn(order.getPayments());
 
         PageResponse<OrderSummaryResponse> response = orderService.getMyOrders(null, 1, 20);
 
@@ -127,6 +132,7 @@ class OrderServiceImplTest {
                 argThat(pageable -> pageable.getPageNumber() == 1));
         verify(orderRepository, never()).findByUserId(anyString(), any());
         verify(orderItemRepository, never()).findByOrderIdInOrderByOrderIdAscIdAsc(any());
+        verify(paymentRepository, never()).findByOrderIdInOrderByOrderIdAscIdAsc(any());
     }
 
     @Test
@@ -160,6 +166,8 @@ class OrderServiceImplTest {
         Order order = order(paymentGroup(PaymentMethod.COD, PaymentStatus.PENDING), OrderStatus.PENDING_CONFIRMATION);
         when(orderRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(order)));
+        when(orderItemRepository.findByOrderIdInOrderByOrderIdAscIdAsc(List.of(21L))).thenReturn(order.getItems());
+        when(paymentRepository.findByOrderIdInOrderByOrderIdAscIdAsc(List.of(21L))).thenReturn(order.getPayments());
 
         PageResponse<OrderSummaryResponse> response = orderService.getAdminOrders(OrderStatus.PENDING_CONFIRMATION,
                 PaymentStatus.PENDING, "ORD123", Instant.parse("2026-01-01T00:00:00Z"),

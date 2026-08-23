@@ -71,6 +71,19 @@ class DashboardStorefrontIntegrationTest extends AbstractIntegrationTest {
                 ProductStatus.ACTIVE);
         saveBook(category, "BOOK-002", "Inactive Book", "inactive-book", 10, 1, true, ProductStatus.INACTIVE);
         savePaidOrder(customer, bestseller);
+        String customerToken = token("buyer");
+
+        mockMvc.perform(get("/orders").header("Authorization", "Bearer " + customerToken).param("page", "1")
+                .param("size", "20")).andExpect(status().isOk()).andExpect(jsonPath("$.data.currentPage").value(1))
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.data[0].orderCode").value("ORD-DASHBOARD"))
+                .andExpect(jsonPath("$.data.data[0].paymentGroupCode").value("PAY-DASHBOARD"))
+                .andExpect(jsonPath("$.data.data[0].itemCount").value(2));
+
+        mockMvc.perform(get("/orders").header("Authorization", "Bearer " + customerToken)
+                .param("status", "CANCELLED").param("page", "1").param("size", "20"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.totalElements").value(0))
+                .andExpect(jsonPath("$.data.data").isEmpty());
 
         mockMvc.perform(get("/storefront/home")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.featuredBooks[0].productName").value("Bestseller"))
@@ -102,9 +115,13 @@ class DashboardStorefrontIntegrationTest extends AbstractIntegrationTest {
         admin.getRoles().add(role);
         userRepository.save(admin);
 
+        return token("admin");
+    }
+
+    private String token(String username) throws Exception {
         MvcResult login = mockMvc
                 .perform(post("/auth/token").contentType(APPLICATION_JSON)
-                        .content(json(Map.of("username", "admin", "password", PASSWORD))))
+                        .content(json(Map.of("username", username, "password", PASSWORD))))
                 .andExpect(status().isOk()).andReturn();
         return read(login, "/data/token").asText();
     }

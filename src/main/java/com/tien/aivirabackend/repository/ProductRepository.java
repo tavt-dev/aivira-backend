@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -19,6 +20,10 @@ import com.tien.aivirabackend.domain.entity.catalog.Product;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
+    @Override
+    @EntityGraph(attributePaths = "category")
+    Page<Product> findAll(Specification<Product> specification, Pageable pageable);
+
     @Modifying(flushAutomatically = true)
     @Query("update Product p set p.soldCount = coalesce(p.soldCount, 0) + :quantity where p.id = :productId")
     int incrementSoldCount(@Param("productId") Long productId, @Param("quantity") Integer quantity);

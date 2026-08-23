@@ -164,9 +164,12 @@ public class UserServiceImpl implements UserService {
     public PageResponse<AdminUserResponse> getAdminUsers(String keyword, PredefinedRole role, Boolean active,
             Boolean locked, Boolean emailVerified, int page, int size) {
         Specification<User> specification = userSpecifications.adminUsers(keyword, role, active, locked, emailVerified);
-        var userPage = userRepository.findAll(specification, PageRequestUtils.newestFirst(page, size))
-                .map(userMapper::toAdminUserResponse);
-        return PageResponse.from(userPage);
+        var userPage = userRepository.findAll(specification, PageRequestUtils.newestFirst(page, size));
+        if (userPage.hasContent()) {
+            userRepository.findWithRolesByIdIn(userPage.getContent().stream().map(User::getId).toList());
+        }
+        var responsePage = userPage.map(userMapper::toAdminUserResponse);
+        return PageResponse.from(responsePage);
     }
 
     @Override

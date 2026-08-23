@@ -21,6 +21,9 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     @EntityGraph(attributePaths = { "order", "paymentGroup" })
     Optional<Payment> findByIdAndOrderUserId(Long id, String userId);
 
+    @EntityGraph(attributePaths = "paymentGroup")
+    List<Payment> findByOrderIdInOrderByOrderIdAscIdAsc(Collection<Long> orderIds);
+
     long countByStatus(PaymentStatus status);
 
     long countByStatusInAndCreatedAtBetween(Collection<PaymentStatus> statuses, Instant fromDate, Instant toDate);

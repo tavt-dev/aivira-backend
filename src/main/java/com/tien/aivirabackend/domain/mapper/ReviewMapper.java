@@ -1,6 +1,7 @@
 package com.tien.aivirabackend.domain.mapper;
 
 import java.util.Comparator;
+import java.util.List;
 
 import org.springframework.stereotype.Component;
 
@@ -12,6 +13,10 @@ import com.tien.aivirabackend.domain.entity.review.ReviewImage;
 @Component
 public class ReviewMapper {
     public ReviewResponse toResponse(Review review) {
+        return toResponse(review, review == null ? List.of() : review.getImages());
+    }
+
+    public ReviewResponse toResponse(Review review, List<ReviewImage> images) {
         if (review == null) {
             return null;
         }
@@ -28,7 +33,7 @@ public class ReviewMapper {
                 .userId(review.getUser() == null ? null : review.getUser().getId()).moderatedBy(review.getModeratedBy())
                 .moderatedAt(review.getModeratedAt()).repliedBy(review.getRepliedBy()).repliedAt(review.getRepliedAt())
                 .deletedAt(review.getDeletedAt()).createdAt(review.getCreatedAt()).updatedAt(review.getUpdatedAt())
-                .images(review.getImages().stream()
+                .images(images.stream()
                         .sorted(Comparator.comparing(ReviewImage::getSortOrder).thenComparing(ReviewImage::getId))
                         .map(this::toImageResponse).toList())
                 .build();
