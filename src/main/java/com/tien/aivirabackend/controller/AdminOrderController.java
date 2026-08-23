@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.tien.aivirabackend.constant.OrderStatus;
+import com.tien.aivirabackend.constant.PaymentStatus;
 import com.tien.aivirabackend.domain.dto.ApiResponse;
 import com.tien.aivirabackend.domain.dto.PageResponse;
 import com.tien.aivirabackend.domain.dto.request.ManualRefundRequest;
@@ -38,12 +39,14 @@ public class AdminOrderController {
     @Operation(summary = "List orders for admin", description = "Lists all bookstore orders with status, keyword, date range, and pagination filters.")
     @PreAuthorize("@authorizationService.hasAnyPermission('ORDER_MANAGE_ALL', 'ORDER_READ_ALL')")
     public ResponseEntity<ApiResponse<PageResponse<OrderSummaryResponse>>> getAdminOrders(
-            @RequestParam(required = false) OrderStatus status, @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) OrderStatus status,
+            @RequestParam(required = false) PaymentStatus paymentStatus,
+            @RequestParam(required = false) String keyword,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant fromDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant toDate,
             @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(ApiResponse.success("Get admin orders successful",
-                orderService.getAdminOrders(status, keyword, fromDate, toDate, page, size)));
+                orderService.getAdminOrders(status, paymentStatus, keyword, fromDate, toDate, page, size)));
     }
 
     @GetMapping("/{orderId}")

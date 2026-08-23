@@ -9,13 +9,25 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.tien.aivirabackend.constant.OrderStatus;
+import com.tien.aivirabackend.constant.PaymentStatus;
 import com.tien.aivirabackend.domain.entity.transaction.Order;
 
 @Component
 public class OrderSpecifications {
-    public Specification<Order> adminOrders(OrderStatus status, String keyword, Instant fromDate, Instant toDate) {
-        return Specification.where(hasStatus(status)).and(createdFrom(fromDate)).and(createdTo(toDate))
+    public Specification<Order> adminOrders(OrderStatus status, PaymentStatus paymentStatus, String keyword,
+            Instant fromDate, Instant toDate) {
+        return Specification.where(hasStatus(status)).and(hasPaymentStatus(paymentStatus)).and(createdFrom(fromDate)).and(createdTo(toDate))
                 .and(keywordContains(keyword));
+    }
+
+    private Specification<Order> hasPaymentStatus(PaymentStatus paymentStatus) {
+        return (root, query, criteriaBuilder) -> {
+            if (paymentStatus == null) {
+                return null;
+            }
+            query.distinct(true);
+            return criteriaBuilder.equal(root.join("payments", JoinType.INNER).get("status"), paymentStatus);
+        };
     }
 
     private Specification<Order> hasStatus(OrderStatus status) {

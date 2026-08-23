@@ -118,10 +118,10 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<OrderSummaryResponse> getAdminOrders(OrderStatus status, String keyword, Instant fromDate,
+    public PageResponse<OrderSummaryResponse> getAdminOrders(OrderStatus status, PaymentStatus paymentStatus, String keyword, Instant fromDate,
             Instant toDate, int page, int size) {
         var pageable = PageRequestUtils.newestFirst(page, size);
-        Specification<Order> specification = orderSpecifications.adminOrders(status, keyword, fromDate, toDate);
+        Specification<Order> specification = orderSpecifications.adminOrders(status, paymentStatus, keyword, fromDate, toDate);
         return toOrderSummaryPage(orderRepository.findAll(specification, pageable));
     }
 
