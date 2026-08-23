@@ -51,6 +51,26 @@ public class CategoryController {
         return ResponseEntity.ok(ApiResponse.success("Create category successful", categoryService.create(request)));
     }
 
+    @GetMapping("/admin/categories")
+    @Tag(name = "Admin Categories")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "List all categories for admin")
+    @PreAuthorize("@authorizationService.hasAnyPermission('CATEGORY_MANAGE_ALL', 'CATEGORY_READ')")
+    public ResponseEntity<ApiResponse<List<CategoryResponse>>> getAdminCategories() {
+        return ResponseEntity.ok(ApiResponse.success("Get admin categories successful",
+                categoryService.getAdminCategories()));
+    }
+
+    @GetMapping("/admin/categories/tree")
+    @Tag(name = "Admin Categories")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Get complete category tree for admin")
+    @PreAuthorize("@authorizationService.hasAnyPermission('CATEGORY_MANAGE_ALL', 'CATEGORY_READ')")
+    public ResponseEntity<ApiResponse<List<CategoryResponse>>> getAdminCategoryTree() {
+        return ResponseEntity.ok(ApiResponse.success("Get admin category tree successful",
+                categoryService.getAdminCategoryTree()));
+    }
+
     @PutMapping("/admin/categories/{categoryId}")
     @Tag(name = "Admin Categories")
     @SecurityRequirement(name = "bearerAuth")

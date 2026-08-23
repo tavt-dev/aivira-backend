@@ -35,4 +35,16 @@ public class CategoryMapper {
         response.setChildren(children);
         return response;
     }
+
+    public CategoryResponse toAdminTreeResponse(Category category) {
+        CategoryResponse response = toResponse(category);
+        if (response == null) {
+            return null;
+        }
+        List<CategoryResponse> children = category.getChildCategories().stream()
+                .sorted(Comparator.comparing(Category::getDisplayOrder).thenComparing(Category::getCategoryName))
+                .map(this::toAdminTreeResponse).toList();
+        response.setChildren(children);
+        return response;
+    }
 }
