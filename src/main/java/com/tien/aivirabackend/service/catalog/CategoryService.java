@@ -10,6 +10,10 @@ public interface CategoryService {
 
     List<CategoryResponse> getVisibleCategoryTree();
 
+    List<CategoryResponse> getAdminCategories();
+
+    List<CategoryResponse> getAdminCategoryTree();
+
     CategoryResponse create(CategoryRequest request);
 
     CategoryResponse update(Long categoryId, CategoryRequest request);

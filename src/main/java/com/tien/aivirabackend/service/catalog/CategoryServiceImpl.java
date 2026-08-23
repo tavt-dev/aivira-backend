@@ -48,6 +48,21 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<CategoryResponse> getAdminCategories() {
+        return categoryRepository.findAll(Sort.by("displayOrder").ascending().and(Sort.by("categoryName"))).stream()
+                .map(categoryMapper::toResponse).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CategoryResponse> getAdminCategoryTree() {
+        return categoryRepository.findAll(Sort.by("displayOrder").ascending().and(Sort.by("categoryName"))).stream()
+                .filter(category -> category.getParentCategory() == null).map(categoryMapper::toAdminTreeResponse)
+                .toList();
+    }
+
+    @Override
     @Transactional
     public CategoryResponse create(CategoryRequest request) {
         String categoryName = request.getCategoryName().trim();
