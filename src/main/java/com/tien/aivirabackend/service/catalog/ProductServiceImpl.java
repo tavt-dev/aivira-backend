@@ -4,6 +4,12 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.Year;
 import java.util.Locale;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -74,13 +80,11 @@ public class ProductServiceImpl implements ProductService {
     public PageResponse<ProductResponse> getPublicProducts(String keyword, String categorySlug, String brand,
             String author, String publisher, String isbn, BigDecimal minPrice, BigDecimal maxPrice, Boolean available,
             String sort, int page, int size) {
-        var productPage = productRepository
-                .findAll(
-                        productSpecifications.publicProducts(keyword, categorySlug, brand, author, publisher, isbn,
-                                minPrice, maxPrice, available),
-                        PageRequestUtils.of(page, size, resolvePublicSort(sort)))
-                .map(productMapper::toResponse);
-        return PageResponse.from(productPage);
+        var productPage = productRepository.findAll(
+                productSpecifications.publicProducts(keyword, categorySlug, brand, author, publisher, isbn, minPrice,
+                        maxPrice, available),
+                PageRequestUtils.of(page, size, resolvePublicSort(sort)));
+        return toProductPage(productPage);
     }
 
     @Override
@@ -96,8 +100,24 @@ public class ProductServiceImpl implements ProductService {
     public PageResponse<ProductResponse> getAdminProducts(ProductStatus status, Long categoryId, String keyword,
             int page, int size) {
         var productPage = productRepository.findAll(productSpecifications.adminProducts(status, categoryId, keyword),
-                PageRequestUtils.newestFirst(page, size)).map(productMapper::toResponse);
-        return PageResponse.from(productPage);
+                PageRequestUtils.newestFirst(page, size));
+        return toProductPage(productPage);
+    }
+
+    private PageResponse<ProductResponse> toProductPage(Page<Product> productPage) {
+        if (productPage.isEmpty()) {
+            return PageResponse.from(productPage.map(productMapper::toResponse));
+        }
+        List<Long> productIds = productPage.getContent().stream().map(Product::getId).toList();
+        Map<Long, List<ProductVariation>> variationsByProductId = variationRepository
+                .findByProductIdInOrderByProductIdAscIdAsc(productIds).stream()
+                .collect(Collectors.groupingBy(variation -> variation.getProduct().getId()));
+        Map<Long, List<ProductMedia>> mediaByProductId = mediaRepository
+                .findByProductIdInOrderByProductIdAscSortOrderAscIdAsc(productIds).stream()
+                .collect(Collectors.groupingBy(media -> media.getProduct().getId()));
+        return PageResponse.from(productPage.map(product -> productMapper.toResponse(product,
+                variationsByProductId.getOrDefault(product.getId(), Collections.emptyList()),
+                mediaByProductId.getOrDefault(product.getId(), Collections.emptyList()))));
     }
 
     @Override

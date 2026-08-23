@@ -36,6 +36,7 @@ import com.tien.aivirabackend.repository.OrderRepository;
 import com.tien.aivirabackend.repository.OrderItemRepository;
 import com.tien.aivirabackend.repository.PaymentAttemptRepository;
 import com.tien.aivirabackend.repository.PaymentGroupRepository;
+import com.tien.aivirabackend.repository.PaymentRepository;
 import com.tien.aivirabackend.repository.ProductRepository;
 import com.tien.aivirabackend.repository.RefundRepository;
 import com.tien.aivirabackend.service.auth.CurrentUserService;
@@ -60,6 +61,7 @@ public class OrderServiceImpl implements OrderService {
     RefundRepository refundRepository;
     PaymentGroupRepository paymentGroupRepository;
     PaymentAttemptRepository paymentAttemptRepository;
+    PaymentRepository paymentRepository;
     ProductRepository productRepository;
     CurrentUserService currentUserService;
     CommerceMapper commerceMapper;
@@ -127,15 +129,20 @@ public class OrderServiceImpl implements OrderService {
 
     private PageResponse<OrderSummaryResponse> toOrderSummaryPage(Page<Order> orderPage) {
         if (orderPage.isEmpty()) {
-            return PageResponse.from(orderPage.map(order -> commerceMapper.toOrderSummaryResponse(order, List.of())));
+            return PageResponse.from(
+                    orderPage.map(order -> commerceMapper.toOrderSummaryResponse(order, List.of(), List.of())));
         }
 
         List<Long> orderIds = orderPage.getContent().stream().map(Order::getId).toList();
         Map<Long, List<com.tien.aivirabackend.domain.entity.transaction.OrderItem>> itemsByOrderId = orderItemRepository
                 .findByOrderIdInOrderByOrderIdAscIdAsc(orderIds).stream()
                 .collect(Collectors.groupingBy(item -> item.getOrder().getId()));
+        Map<Long, List<Payment>> paymentsByOrderId = paymentRepository
+                .findByOrderIdInOrderByOrderIdAscIdAsc(orderIds).stream()
+                .collect(Collectors.groupingBy(payment -> payment.getOrder().getId()));
         return PageResponse.from(orderPage.map(order -> commerceMapper.toOrderSummaryResponse(order,
-                itemsByOrderId.getOrDefault(order.getId(), Collections.emptyList()))));
+                itemsByOrderId.getOrDefault(order.getId(), Collections.emptyList()),
+                paymentsByOrderId.getOrDefault(order.getId(), Collections.emptyList()))));
     }
 
     @Override

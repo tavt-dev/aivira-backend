@@ -27,10 +27,8 @@ import com.tien.aivirabackend.repository.projection.TopBookProjection;
 public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecificationExecutor<Order> {
     boolean existsByOrderCode(String orderCode);
 
-    @EntityGraph(attributePaths = { "payments", "payments.paymentGroup" })
     Page<Order> findByUserId(String userId, Pageable pageable);
 
-    @EntityGraph(attributePaths = { "payments", "payments.paymentGroup" })
     Page<Order> findByUserIdAndOrderStatus(String userId, OrderStatus orderStatus, Pageable pageable);
 
     @EntityGraph(attributePaths = { "items" })

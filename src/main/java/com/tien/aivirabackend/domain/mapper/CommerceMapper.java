@@ -88,8 +88,9 @@ public class CommerceMapper {
                 .updatedAt(refund.getUpdatedAt()).build();
     }
 
-    public OrderSummaryResponse toOrderSummaryResponse(Order order, List<OrderItem> summaryItems) {
-        Payment payment = primaryPayment(order);
+    public OrderSummaryResponse toOrderSummaryResponse(Order order, List<OrderItem> summaryItems,
+            List<Payment> summaryPayments) {
+        Payment payment = primaryPayment(summaryPayments);
         List<OrderItem> orderedItems = summaryItems == null ? List.of()
                 : summaryItems.stream().sorted(Comparator.comparing(OrderItem::getId)).toList();
         int itemCount = orderedItems.stream().map(OrderItem::getQuantity).filter(quantity -> quantity != null)
@@ -101,7 +102,8 @@ public class CommerceMapper {
         return OrderSummaryResponse.builder().id(order.getId()).orderCode(order.getOrderCode())
                 .totalAmount(order.getTotalAmount()).orderStatus(order.getOrderStatus())
                 .cancelReason(order.getCancelReason())
-                .paymentGroupCode(payment == null ? null : payment.getPaymentGroup().getPaymentCode())
+                .paymentGroupCode(payment == null || payment.getPaymentGroup() == null ? null
+                        : payment.getPaymentGroup().getPaymentCode())
                 .paymentMethod(payment == null ? null : payment.getMethod())
                 .paymentStatus(payment == null ? null : payment.getStatus())
                 .paidAt(payment == null ? null : payment.getPaidAt()).itemCount(itemCount).previewItem(previewItem)
@@ -142,7 +144,11 @@ public class CommerceMapper {
     }
 
     private Payment primaryPayment(Order order) {
-        return order.getPayments().stream()
+        return primaryPayment(order.getPayments());
+    }
+
+    private Payment primaryPayment(List<Payment> payments) {
+        return payments.stream()
                 .min(Comparator.comparing(Payment::getId, Comparator.nullsLast(Comparator.naturalOrder())))
                 .orElse(null);
     }

@@ -1,5 +1,7 @@
 package com.tien.aivirabackend.repository;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,4 +14,6 @@ import com.tien.aivirabackend.domain.entity.catalog.ProductMedia;
 public interface ProductMediaRepository
         extends JpaRepository<ProductMedia, Long>, JpaSpecificationExecutor<ProductMedia> {
     Optional<ProductMedia> findByIdAndProductId(Long id, Long productId);
+
+    List<ProductMedia> findByProductIdInOrderByProductIdAscSortOrderAscIdAsc(Collection<Long> productIds);
 }

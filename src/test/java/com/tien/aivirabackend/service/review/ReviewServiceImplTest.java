@@ -40,6 +40,7 @@ import com.tien.aivirabackend.exception.errorCode.ReviewErrorCode;
 import com.tien.aivirabackend.repository.OrderRepository;
 import com.tien.aivirabackend.repository.ProductRepository;
 import com.tien.aivirabackend.repository.ProductVariationRepository;
+import com.tien.aivirabackend.repository.ReviewImageRepository;
 import com.tien.aivirabackend.repository.ReviewRepository;
 import com.tien.aivirabackend.service.auth.CurrentUserService;
 import com.tien.aivirabackend.service.media.CloudinaryStorageService;
@@ -50,6 +51,9 @@ import com.tien.aivirabackend.service.media.FileValidatorService;
 class ReviewServiceImplTest {
     @Mock
     ReviewRepository reviewRepository;
+
+    @Mock
+    ReviewImageRepository reviewImageRepository;
 
     @Mock
     OrderRepository orderRepository;
@@ -77,7 +81,7 @@ class ReviewServiceImplTest {
     void setUp() {
         cloudinaryProperties = new CloudinaryProperties();
         cloudinaryProperties.setReviewImageFolder("aivira/reviews");
-        reviewService = new ReviewServiceImpl(reviewRepository, orderRepository, productRepository,
+        reviewService = new ReviewServiceImpl(reviewRepository, reviewImageRepository, orderRepository, productRepository,
                 productVariationRepository, currentUserService, new ReviewSpecifications(), new ReviewMapper(),
                 fileValidatorService, cloudinaryStorageService, cloudinaryProperties);
     }

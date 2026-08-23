@@ -4,6 +4,11 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Collections;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -35,6 +40,7 @@ import com.tien.aivirabackend.repository.OrderRepository;
 import com.tien.aivirabackend.repository.ProductRepository;
 import com.tien.aivirabackend.repository.ProductVariationRepository;
 import com.tien.aivirabackend.repository.ReviewRepository;
+import com.tien.aivirabackend.repository.ReviewImageRepository;
 import com.tien.aivirabackend.service.auth.CurrentUserService;
 import com.tien.aivirabackend.service.media.CloudinaryStorageService;
 import com.tien.aivirabackend.service.media.CloudinaryUploadResult;
@@ -56,6 +62,7 @@ public class ReviewServiceImpl implements ReviewService {
     private static final int REVIEW_IMAGE_MAX_HEIGHT = 1600;
 
     ReviewRepository reviewRepository;
+    ReviewImageRepository reviewImageRepository;
     OrderRepository orderRepository;
     ProductRepository productRepository;
     ProductVariationRepository productVariationRepository;
@@ -71,9 +78,7 @@ public class ReviewServiceImpl implements ReviewService {
     public PageResponse<ReviewResponse> getPublicReviews(String productSlug, Integer rating, String sort, int page,
             int size) {
         var pageable = PageRequestUtils.of(page, size, reviewSort(sort));
-        return PageResponse
-                .from(reviewRepository.findAll(reviewSpecifications.publicReviews(productSlug, rating), pageable)
-                        .map(reviewMapper::toResponse));
+        return toReviewPage(reviewRepository.findAll(reviewSpecifications.publicReviews(productSlug, rating), pageable));
     }
 
     @Override
@@ -184,10 +189,20 @@ public class ReviewServiceImpl implements ReviewService {
     public PageResponse<ReviewResponse> getAdminReviews(Boolean approved, Boolean visible, Integer rating,
             String keyword, Long productId, String userId, int page, int size) {
         var pageable = PageRequestUtils.newestFirst(page, size);
-        return PageResponse.from(reviewRepository
-                .findAll(reviewSpecifications.adminReviews(approved, visible, rating, keyword, productId, userId),
-                        pageable)
-                .map(reviewMapper::toResponse));
+        return toReviewPage(reviewRepository.findAll(
+                reviewSpecifications.adminReviews(approved, visible, rating, keyword, productId, userId), pageable));
+    }
+
+    private PageResponse<ReviewResponse> toReviewPage(Page<Review> reviewPage) {
+        if (reviewPage.isEmpty()) {
+            return PageResponse.from(reviewPage.map(reviewMapper::toResponse));
+        }
+        List<Long> reviewIds = reviewPage.getContent().stream().map(Review::getId).toList();
+        Map<Long, List<ReviewImage>> imagesByReviewId = reviewImageRepository
+                .findByReviewIdInOrderByReviewIdAscSortOrderAscIdAsc(reviewIds).stream()
+                .collect(Collectors.groupingBy(image -> image.getReview().getId()));
+        return PageResponse.from(reviewPage.map(review -> reviewMapper.toResponse(review,
+                imagesByReviewId.getOrDefault(review.getId(), Collections.emptyList()))));
     }
 
     @Override

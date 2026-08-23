@@ -42,8 +42,10 @@ public interface UserRepository extends JpaRepository<User, String>, JpaSpecific
     boolean existsByUsernameAndIdNot(String username, String id);
 
     @Override
-    @EntityGraph(attributePaths = "roles")
     Page<User> findAll(Specification<User> specification, Pageable pageable);
+
+    @Query("select distinct u from User u left join fetch u.roles where u.id in :ids")
+    List<User> findWithRolesByIdIn(@Param("ids") List<String> ids);
 
     @EntityGraph(attributePaths = "roles")
     @Query("select u from User u where u.id = :id")
