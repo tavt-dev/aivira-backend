@@ -24,4 +24,15 @@ class BlogHtmlSanitizerTest {
         assertThat(result).doesNotContain("http://example.com/a.jpg");
         assertThat(result).contains("https://example.com/b.jpg");
     }
+
+    @Test
+    void sanitize_shouldKeepSafeInternalLinksAndRejectExecutableLinks() {
+        String result = sanitizer.sanitize("<a href='/product/clean-code'>Book</a>"
+                + "<a href='/category/programming?sort=newest'>Category</a>"
+                + "<a href='javascript:alert(1)'>Bad</a>");
+
+        assertThat(result).contains("href=\"/product/clean-code\"",
+                "href=\"/category/programming?sort=newest\"");
+        assertThat(result).doesNotContain("javascript:");
+    }
 }
