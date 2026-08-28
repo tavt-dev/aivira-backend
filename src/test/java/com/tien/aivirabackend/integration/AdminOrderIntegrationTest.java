@@ -159,6 +159,9 @@ class AdminOrderIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.data.orderStatus").value("CANCELLED"))
                 .andExpect(jsonPath("$.data.cancelReason").value("out of stock"));
 
+        Long paymentGroupId = order.getPayments().getFirst().getPaymentGroup().getId();
+        assertThat(paymentGroupRepository.findById(paymentGroupId).orElseThrow().getStatus())
+                .isEqualTo(PaymentStatus.CANCELLED);
         assertThat(productVariationRepository.findById(variationId).orElseThrow().getStockQuantity()).isEqualTo(5);
     }
 

@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.tien.aivirabackend.constant.OrderStatus;
+import com.tien.aivirabackend.constant.PaymentMethod;
 import com.tien.aivirabackend.constant.PaymentStatus;
 import com.tien.aivirabackend.constant.RefundStatus;
 import com.tien.aivirabackend.domain.dto.PageResponse;
@@ -187,6 +188,7 @@ public class OrderServiceImpl implements OrderService {
         validateAdminCancelable(order);
         OrderStatus previousStatus = order.getOrderStatus();
         restoreStockAndCancel(order, trimToNull(request == null ? null : request.getReason()));
+        cancelPaymentGroupIfUnshared(order);
         logAdminLifecycleChange(order, previousStatus, OrderStatus.CANCELLED);
         Order savedOrder = orderRepository.save(order);
         notifyAdminStatusChange(savedOrder, previousStatus, OrderStatus.CANCELLED, savedOrder.getCancelReason());
@@ -230,7 +232,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void validateCancelable(Order order, PaymentGroup paymentGroup) {
-        if (order.getOrderStatus() == OrderStatus.PAID) {
+        if (order.getOrderStatus() == OrderStatus.PAID || !successfulPayments(order).isEmpty()) {
             throw new AppException(OrderErrorCode.ORDER_CANCEL_REQUIRES_REFUND);
         }
         if (order.getOrderStatus() == OrderStatus.PENDING_PAYMENT) {
@@ -257,6 +259,7 @@ public class OrderServiceImpl implements OrderService {
         }
         order.setOrderStatus(target);
         if (target == OrderStatus.COMPLETED) {
+            completeCodPayment(order);
             order.getItems()
                     .forEach(item -> productRepository.incrementSoldCount(item.getProductId(), item.getQuantity()));
         }
@@ -264,6 +267,32 @@ public class OrderServiceImpl implements OrderService {
         Order savedOrder = orderRepository.save(order);
         notifyAdminStatusChange(savedOrder, previousStatus, target, null);
         return commerceMapper.toOrderResponse(savedOrder);
+    }
+
+    private void completeCodPayment(Order order) {
+        Instant paidAt = Instant.now();
+        order.getPayments().stream()
+                .filter(payment -> payment.getMethod() == PaymentMethod.COD
+                        && payment.getStatus() == PaymentStatus.PENDING)
+                .forEach(payment -> {
+                    payment.setStatus(PaymentStatus.SUCCESS);
+                    payment.setPaidAt(paidAt);
+
+                    PaymentGroup paymentGroup = payment.getPaymentGroup();
+                    if (paymentGroup != null && paymentGroup.getPayments().stream()
+                            .allMatch(groupPayment -> groupPayment.getStatus() == PaymentStatus.SUCCESS)) {
+                        paymentGroup.setStatus(PaymentStatus.SUCCESS);
+                        paymentGroup.setPaidAt(paidAt);
+                        paymentGroupRepository.save(paymentGroup);
+                        paymentAttemptRepository.findTopByPaymentGroupIdOrderByAttemptNoDesc(paymentGroup.getId())
+                                .filter(attempt -> attempt.getStatus() == PaymentStatus.PENDING)
+                                .ifPresent(attempt -> {
+                                    attempt.setStatus(PaymentStatus.SUCCESS);
+                                    attempt.setCompletedAt(paidAt);
+                                    paymentAttemptRepository.save(attempt);
+                                });
+                    }
+                });
     }
 
     private void notifyAdminStatusChange(Order order, OrderStatus previousStatus, OrderStatus currentStatus,
@@ -280,7 +309,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void validateAdminCancelable(Order order) {
-        if (order.getOrderStatus() == OrderStatus.PAID) {
+        if (order.getOrderStatus() == OrderStatus.PAID || !successfulPayments(order).isEmpty()) {
             throw new AppException(OrderErrorCode.ORDER_CANCEL_REQUIRES_REFUND);
         }
         if (Set.of(OrderStatus.PENDING_CONFIRMATION, OrderStatus.CONFIRMED, OrderStatus.PACKING)
@@ -326,6 +355,17 @@ public class OrderServiceImpl implements OrderService {
         discountService.releaseReservedCouponUsagesForOrders(List.of(order));
         order.getPayments().stream().filter(payment -> payment.getStatus() == PaymentStatus.PENDING)
                 .forEach(payment -> payment.setStatus(PaymentStatus.CANCELLED));
+    }
+
+    private void cancelPaymentGroupIfUnshared(Order order) {
+        PaymentGroup paymentGroup = resolvePaymentGroup(order);
+        if (paymentGroup == null || paymentGroup.getStatus() != PaymentStatus.PENDING
+                || orderRepository.countByPaymentsPaymentGroupId(paymentGroup.getId()) != 1) {
+            return;
+        }
+        paymentGroup.setStatus(PaymentStatus.CANCELLED);
+        paymentGroupRepository.save(paymentGroup);
+        cancelLatestPendingAttempt(paymentGroup);
     }
 
     private void logAdminLifecycleChange(Order order, OrderStatus previousStatus, OrderStatus targetStatus) {
