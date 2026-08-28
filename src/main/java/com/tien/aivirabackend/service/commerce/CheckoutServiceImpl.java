@@ -112,7 +112,9 @@ public class CheckoutServiceImpl implements CheckoutService {
         }
 
         inventoryService.deductCartItems(context.cartItems(), context.variations());
-        List<Order> savedOrders = orderRepository.saveAll(orders);
+        // Flush before mapping the checkout response so Hibernate-generated audit
+        // timestamps (createdAt/updatedAt) are available immediately to the client.
+        List<Order> savedOrders = orderRepository.saveAllAndFlush(orders);
         savedOrders.forEach(order -> orderNotificationProducer.orderCreated(order.getId(), order.getOrderCode(),
                 user.getId(), order.getOrderStatus()));
         discountService.reserveOrFinalizeCoupon(user, savedOrders.getFirst(), calculation,

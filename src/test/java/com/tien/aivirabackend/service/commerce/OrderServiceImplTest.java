@@ -331,6 +331,29 @@ class OrderServiceImplTest {
     }
 
     @Test
+    void markCompleted_whenCod_shouldMarkPaymentAsSuccessful() {
+        PaymentGroup group = paymentGroup(PaymentMethod.COD, PaymentStatus.PENDING);
+        Order order = order(group, OrderStatus.SHIPPING);
+        PaymentAttempt attempt = attempt(group, PaymentStatus.PENDING);
+        when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(order)).thenReturn(order);
+        when(paymentAttemptRepository.findTopByPaymentGroupIdOrderByAttemptNoDesc(group.getId()))
+                .thenReturn(Optional.of(attempt));
+
+        var response = orderService.markCompleted(21L);
+
+        assertThat(response.getOrderStatus()).isEqualTo(OrderStatus.COMPLETED);
+        assertThat(response.getPaymentStatus()).isEqualTo(PaymentStatus.SUCCESS);
+        assertThat(order.getPayments().getFirst().getPaidAt()).isNotNull();
+        assertThat(group.getStatus()).isEqualTo(PaymentStatus.SUCCESS);
+        assertThat(group.getPaidAt()).isNotNull();
+        assertThat(attempt.getStatus()).isEqualTo(PaymentStatus.SUCCESS);
+        assertThat(attempt.getCompletedAt()).isNotNull();
+        verify(paymentGroupRepository).save(group);
+        verify(paymentAttemptRepository).save(attempt);
+    }
+
+    @Test
     void markCompleted_whenPacking_shouldThrowInvalidTransition() {
         Order order = order(paymentGroup(PaymentMethod.COD, PaymentStatus.PENDING), OrderStatus.PACKING);
         when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
@@ -343,9 +366,14 @@ class OrderServiceImplTest {
 
     @Test
     void cancelAdminOrder_whenPendingConfirmation_shouldRestoreStockCancelPendingPaymentAndSetReason() {
-        Order order = order(paymentGroup(PaymentMethod.COD, PaymentStatus.PENDING), OrderStatus.PENDING_CONFIRMATION);
+        PaymentGroup group = paymentGroup(PaymentMethod.COD, PaymentStatus.PENDING);
+        Order order = order(group, OrderStatus.PENDING_CONFIRMATION);
+        PaymentAttempt attempt = attempt(group, PaymentStatus.PENDING);
         ProductVariation variation = variation(5);
         when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
+        when(orderRepository.countByPaymentsPaymentGroupId(group.getId())).thenReturn(1L);
+        when(paymentAttemptRepository.findTopByPaymentGroupIdOrderByAttemptNoDesc(group.getId()))
+                .thenReturn(Optional.of(attempt));
         when(variationRepository.findAllByIdInForUpdate(anyCollection())).thenReturn(List.of(variation));
         when(orderRepository.save(order)).thenReturn(order);
 
@@ -355,9 +383,12 @@ class OrderServiceImplTest {
         assertThat(response.getOrderStatus()).isEqualTo(OrderStatus.CANCELLED);
         assertThat(response.getCancelReason()).isEqualTo("out of stock");
         assertThat(order.getPayments().getFirst().getStatus()).isEqualTo(PaymentStatus.CANCELLED);
+        assertThat(group.getStatus()).isEqualTo(PaymentStatus.CANCELLED);
+        assertThat(attempt.getStatus()).isEqualTo(PaymentStatus.CANCELLED);
+        assertThat(attempt.getCompletedAt()).isNotNull();
         assertThat(variation.getStockQuantity()).isEqualTo(7);
-        verify(paymentGroupRepository, never()).save(any());
-        verify(paymentAttemptRepository, never()).save(any());
+        verify(paymentGroupRepository).save(group);
+        verify(paymentAttemptRepository).save(attempt);
     }
 
     @Test
@@ -386,6 +417,19 @@ class OrderServiceImplTest {
                 .isInstanceOfSatisfying(AppException.class,
                         ex -> assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.ORDER_CANCEL_REQUIRES_REFUND));
 
+        verify(variationRepository, never()).findAllByIdInForUpdate(anyCollection());
+    }
+
+    @Test
+    void cancelAdminOrder_whenOnlinePaymentSucceededAndConfirmed_shouldRequireRefund() {
+        Order order = order(paymentGroup(PaymentMethod.VNPAY, PaymentStatus.SUCCESS), OrderStatus.CONFIRMED);
+        when(orderRepository.findByIdForUpdate(21L)).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderService.cancelAdminOrder(21L, OrderCancelRequest.builder().build()))
+                .isInstanceOfSatisfying(AppException.class,
+                        ex -> assertThat(ex.getErrorCode()).isEqualTo(OrderErrorCode.ORDER_CANCEL_REQUIRES_REFUND));
+
+        verify(orderRepository, never()).save(any());
         verify(variationRepository, never()).findAllByIdInForUpdate(anyCollection());
     }
 
